@@ -9,8 +9,6 @@ apk update --no-cache \
                                     libffi-dev \
                                     gcc \
                                     libc-dev \
-                                    jpeg-dev \
-                                    zlib-dev \
                                     tzdata \
     && pip3 --no-cache-dir install -U Flask \
                                       Flask-Login \
