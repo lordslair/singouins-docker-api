@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sep-backend-nginx
+  labels:
+    tier: sep-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+      tier: sep-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nginx
+        tier: sep-backend
+    spec:
+      containers:
+      - name: sep-backend-nginx
+        image: nginx:stable-alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/conf.d
+        - name: htpasswd
+          mountPath: /etc/nginx/htpasswd
+      restartPolicy: Always
+      volumes:
+      - name: config
+        configMap:
+          name: sep-backend-nginx
+          items:
+          - key: config
+            path: site.conf
+      - name: htpasswd
+        configMap:
+          name: sep-backend-nginx-htpasswd
+          items:
+          - key: htpasswd
+            path: htpasswd
