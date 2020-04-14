@@ -29,4 +29,4 @@ apk update --no-cache \
 
 echo "`date +"%F %X"` Build done ..."
 
-exec wiki web --host=$FLASK_HOST --port=$FLASK_PORT
+exec wiki --directory=$FLASK_DIR web --host=$FLASK_HOST --port=$FLASK_PORT
