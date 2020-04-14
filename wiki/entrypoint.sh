@@ -24,7 +24,7 @@ apk update --no-cache \
     && apk del .build-deps \
     && mkdir /usr/local/flask-wiki \
     && cd /usr/local/flask-wiki \
-    && git clone https://github.com/mjiao5151/wiki.git .
+    && git clone https://github.com/mjiao5151/wiki.git . \
     && pip3 install -e .
 
 echo "`date +"%F %X"` Build done ..."
