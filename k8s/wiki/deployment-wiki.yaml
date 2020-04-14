@@ -48,6 +48,10 @@ spec:
           value: '5000'
         - name: FLASK_DIR
           value: '/wiki'
+        - name: FLASK_ENV
+          value: 'development'
+        - name: FLASK_DEBUG
+          value: '--debug'
         volumeMounts:
         - mountPath: /wiki
           name: wiki
