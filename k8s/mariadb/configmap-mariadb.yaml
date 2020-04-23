@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sep-backend-mariadb
+  labels:
+    tier: sep-backend
+data:
+  config : |
+    [mysqld]
+    #
+    # * Custom Settings
+    #
+    # To avoid :
+    # [ERROR] Invalid (old?) table or database name 'lost+found'
+    ignore-db-dir = lost+found

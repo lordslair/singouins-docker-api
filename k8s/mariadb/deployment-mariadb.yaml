@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sep-backend-mariadb
+  labels:
+    tier: sep-backend
+spec:
+  selector:
+    matchLabels:
+      app: mariadb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mariadb
+        tier: sep-backend
+    spec:
+
+      containers:
+        - image: mariadb:10.4
+          name: sep-backend-mariadb
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sep-backend-mariadb-secret
+                  key: pass
+          volumeMounts:
+            - name: db
+              mountPath: /var/lib/mysql
+            - name: config
+              mountPath: /etc/mysql/mariadb.conf.d
+
+      volumes:
+        - name: db
+          persistentVolumeClaim:
+            claimName: sep-backend-mariadb-db
+        - name: config
+          configMap:
+            name: sep-backend-mariadb
+            items:
+              - key: config
+                path: custom.cnf
