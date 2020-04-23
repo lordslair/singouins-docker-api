@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sep-backend-phpmyadmin
+  labels:
+    tier: sep-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+      tier: sep-backend
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+        tier: sep-backend
+    spec:
+
+      containers:
+        - name: sep-backend-phpmyadmin
+          image: phpmyadmin/phpmyadmin:latest
+          env:
+            - name: PMA_HOST
+              value: sep-backend-mariadb-svc
+            - name: PMA_PORT
+              value: '3306'
+            - name: PMA_ABSOLUTE_URI
+              value: 'http://sql.sep.lordslair.net/'
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sep-backend-mariadb-secret
+                  key: pass
