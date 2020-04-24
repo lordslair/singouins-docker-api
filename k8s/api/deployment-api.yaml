@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sep-backend-api
+  labels:
+    tier: sep-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+      tier: sep-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: api
+        tier: sep-backend
+    spec:
+
+      initContainers:
+      - name: sep-backend-api-init
+        image: busybox
+        volumeMounts:
+        - name: code
+          mountPath: /code
+        command: ["/bin/sh"]
+        args: [
+         "-c",
+         "(
+              wget   https://github.com/lordslair/sep-backend/archive/master.zip -O /tmp/sep.zip &&
+              unzip  /tmp/sep.zip -d /tmp/ &&
+              cp -a  /tmp/sep-backend-master/api/* /code/ &&
+              rm -rf /tmp/sep-backend-master &&
+              rm -rf /tmp/sep.zip
+          ) || echo 1"
+        ]
+
+      containers:
+      - name: sep-backend-api
+        image: alpine
+        command: ["/code/entrypoint.sh"]
+        env:
+        - name: FLASK_DEBUG
+          value: '--debugger'
+        - name: FLASK_THREAD
+          value: '--without-threads'
+        - name: FLASK_ENV
+          value: 'development'
+        - name: FLASK_APP
+          value: '/code/app.py'
+        - name: FLASK_HOST
+          value: '0.0.0.0'
+        - name: FLASK_PORT
+          value: '5000'
+        volumeMounts:
+        - mountPath: /code
+          name: code
+      restartPolicy: Always
+
+      volumes:
+      - name: code
+        persistentVolumeClaim:
+          claimName: sep-backend-code-api

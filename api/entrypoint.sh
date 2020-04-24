@@ -9,7 +9,8 @@ apk update --no-cache \
     && pip3 --no-cache-dir install -U Flask \
                                       pytest \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
-    && apk del .build-deps
+    && apk del .build-deps \
+    && pytest /code/tests
 
 echo "`date +"%F %X"` Build done ..."
 
