@@ -7,12 +7,13 @@ from flask_jwt_extended import (JWTManager,
 from flask_bcrypt       import check_password_hash
 
 from queries            import query_get_user_exists, query_get_password
-from variables          import SEP_SECRET_KEY
+from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE
 
 app = Flask(__name__)
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
+app.config['JWT_HEADER_TYPE'] = SEP_HEADER_TYPE
 jwt = JWTManager(app)
 
 # Auth route to send the JWT Token
