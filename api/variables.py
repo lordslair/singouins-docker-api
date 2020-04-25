@@ -3,10 +3,10 @@
 import os
 
 # JWT variables
-SEP_SECRET_KEY = eval(os.environ['SEP_SECRET_KEY'])
+SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
 
 # MySQL variables
-MYSQL_USER     = eval(os.environ['SEP_MYSQL_USERY'])
-MYSQL_PASSWORD = eval(os.environ['SEP_MYSQL_PASSWORDY'])
-MYSQL_DB       = eval(os.environ['SEP_MYSQL_DBY'])
-MYSQL_HOST     = eval(os.environ['SEP_MYSQL_HOSTY'])
+MYSQL_USER     = os.environ['SEP_MYSQL_USER']
+MYSQL_PASSWORD = os.environ['SEP_MYSQL_PASSWORD']
+MYSQL_DB       = os.environ['SEP_MYSQL_DB']
+MYSQL_HOST     = os.environ['SEP_MYSQL_HOST']
