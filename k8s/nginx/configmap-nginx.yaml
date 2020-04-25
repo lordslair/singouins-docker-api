@@ -60,3 +60,11 @@ data:
                 proxy_read_timeout  90;
         }
     }
+
+    server {
+      listen        80 default_server;
+      access_log    off;
+      error_log     off;
+      log_not_found off;
+      deny          all;
+    }
