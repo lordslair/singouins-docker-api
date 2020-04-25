@@ -43,5 +43,13 @@ def post_auth_login():
     access_token = create_access_token(identity=username)
     return jsonify(access_token=access_token), 200
 
+# Info route when authenticated
+@app.route('/auth/infos', methods=['GET'])
+@jwt_required
+def get_auth_infos():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
 if __name__ == '__main__':
     app.run()
