@@ -43,6 +43,30 @@ def post_auth_login():
     access_token = create_access_token(identity=username)
     return jsonify(access_token=access_token), 200
 
+# Auth route to register the user
+@app.route('/auth/register', methods=['POST'])
+def post_auth_register():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    mail     = request.json.get('mail', None)
+    if not username:
+        return jsonify({"msg": "Missing username parameter"}), 400
+    if not password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+    if not mail:
+        return jsonify({"msg": "Missing mail parameter"}), 400
+
+    code = query_set_pjauth(username,password,mail)
+    if code == 201:
+        return jsonify({"msg": "User successfully added"}), code
+    elif code == 409:
+        return jsonify({"msg": "User already exists"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 # Info route when authenticated
 @app.route('/auth/infos', methods=['GET'])
 @jwt_required
