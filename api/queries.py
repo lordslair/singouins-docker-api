@@ -1,30 +1,24 @@
 # -*- coding: utf8 -*-
 
-import mysql.connector
+import sqlalchemy as db
 
-from variables import MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_HOST
+from variables import SQL_DSN
 
-db = mysql.connector.connect(
-     host=MYSQL_HOST,
-     port=3306,
-     user=MYSQL_USER,
-     database=MYSQL_DB,
-     password=MYSQL_PASSWORD)
+engine     = db.create_engine('mysql+pymysql://' + SQL_DSN)
+connection = engine.connect()
+metadata   = db.MetaData()
+t_pjsAuth  = db.Table('pjsAuth', metadata, autoload=True, autoload_with=engine)
 
 def query_get_user_exists(username):
-    SQL = """SELECT name FROM pjsAuth WHERE name = %s"""
-    cursor = db.cursor()
-    cursor.execute(SQL, (username,))
-    row = cursor.fetchone()
-    if row:
+    query = db.select([t_pjsAuth.columns.name]).where(t_pjsAuth.columns.name == username)
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchone()
+    if ResultSet:
         return True
 
 def query_get_password(username):
-    SQL = """SELECT pass FROM pjsAuth WHERE name = %s"""
-    cursor = db.cursor()
-    cursor.execute(SQL, (username,))
-    row = cursor.fetchone()
-    if row:
-        return row[0]
-
-#db.close()
+    query = db.select([t_pjsAuth.columns.hash]).where(t_pjsAuth.columns.name == username)
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchone()
+    if ResultSet:
+        return ResultSet[0]

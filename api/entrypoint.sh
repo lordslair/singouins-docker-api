@@ -14,7 +14,8 @@ apk update --no-cache \
                                       Flask-bcrypt \
                                       Flask-cors \
                                       Flask-JWT-Extended \
-                                      mysql-connector-python \
+                                      pyMySQL \
+                                      SQLAlchemy \
                                       pytest \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps \
