@@ -6,7 +6,9 @@ from flask_jwt_extended import (JWTManager,
                                 get_jwt_identity)
 from flask_bcrypt       import check_password_hash
 
-from queries            import query_get_user_exists, query_get_password
+from queries            import (query_get_user_exists,
+                                query_get_password,
+                                query_set_pjauth)
 from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE
 
 app = Flask(__name__)
