@@ -61,7 +61,13 @@ def post_auth_register():
 
     code = query_set_pjauth(username,password,mail)
     if code == 201:
-        return jsonify({"msg": "User successfully added"}), code
+        from utils.mail import send
+        subject = '[🐒&🐖] Bienvenue {} !'.format(username)
+        body    = 'Bienvenue parmi nous'
+        if send(mail,subject,body):
+            return jsonify({"msg": "User successfully added | mail OK"}), code
+        else:
+            return jsonify({"msg": "User successfully added | mail KO"}), 206
     elif code == 409:
         return jsonify({"msg": "User already exists"}), code
     else:
