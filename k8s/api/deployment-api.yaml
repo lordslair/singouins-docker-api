@@ -70,6 +70,31 @@ spec:
           value: 'sep'
         - name: SEP_MYSQL_HOST
           value: 'sep-backend-mariadb-svc'
+        - name: SEP_SMTP_FROM
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: smtp-from
+        - name: SEP_SMTP_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: smtp-server
+        - name: SEP_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: smtp-user
+        - name: SEP_SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: smtp-pass
+        - name: SEP_SMTP_HOSTNAME
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: smtp-host
         volumeMounts:
         - mountPath: /code
           name: code
