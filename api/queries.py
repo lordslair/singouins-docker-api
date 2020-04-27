@@ -5,7 +5,7 @@ import sqlalchemy as db
 from datetime  import datetime
 from variables import SQL_DSN
 
-engine     = db.create_engine('mysql+pymysql://' + SQL_DSN)
+engine     = db.create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
 connection = engine.connect()
 metadata   = db.MetaData()
 t_pjsAuth  = db.Table('pjsAuth', metadata, autoload=True, autoload_with=engine)
