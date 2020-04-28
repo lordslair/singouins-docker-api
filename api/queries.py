@@ -28,8 +28,10 @@ def query_set_pjauth(username,password,usermail):
     if query_get_user_exists(username):
         return (409)
     else:
+        from flask_bcrypt import generate_password_hash
+        hash  = generate_password_hash(password)
         query = db.insert(t_pjsAuth).values(name    = username,
-                                            hash    = password,
+                                            hash    = hash,
                                             mail    = usermail,
                                             created = datetime.now(),
                                             active  = False)
