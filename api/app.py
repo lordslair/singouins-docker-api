@@ -64,8 +64,12 @@ def post_auth_register():
     code = query_set_pjauth(username,password,mail)
     if code == 201:
         from utils.mail import send
+        from utils.token import generate_confirmation_token
+
         subject = '[🐒&🐖] Bienvenue {} !'.format(username)
-        body    = 'Bienvenue parmi nous'
+        token   = generate_confirmation_token(mail)
+        url     = 'https://api.sep.lordslair.net/auth/confirm/' + token
+        body    = 'Bienvenue parmi nous.<br>Voici le lien de validation: ' + url
         if send(mail,subject,body):
             return jsonify({"msg": "User successfully added | mail OK"}), code
         else:
@@ -74,6 +78,21 @@ def post_auth_register():
         return jsonify({"msg": "User already exists"}), code
     else:
         return jsonify({"msg": "Oops!"}), 422
+
+@app.route('/auth/confirm/<token>')
+def confirm_email(token):
+    from utils.token import confirm_token
+    from queries     import query_set_user_confirmed
+
+    if confirm_token(token):
+        mail = confirm_token(token)
+        code = query_set_user_confirmed(mail)
+        if code == 201:
+            return jsonify({"msg": "User successfully confirmed"}), code
+        else:
+            return jsonify({"msg": "Oops!"}), 422
+    else:
+        return jsonify({"msg": "Confirmation link invalid or has expired"}), 200
 
 # Info route when authenticated
 @app.route('/auth/infos', methods=['GET'])

@@ -32,8 +32,14 @@ def query_set_pjauth(username,password,usermail):
                                             hash    = password,
                                             mail    = usermail,
                                             created = datetime.now(),
-                                            active  = True)
+                                            active  = False)
         ResultProxy = connection.execute(query)
 
         if ResultProxy.inserted_primary_key[0] > 0:
             return (201)
+
+def query_set_user_confirmed(usermail):
+    query = db.update(t_pjsAuth).where(t_pjsAuth.c.mail==usermail).values(active = True)
+    ResultProxy = connection.execute(query)
+    if ResultProxy.rowcount == 1:
+        return (201)
