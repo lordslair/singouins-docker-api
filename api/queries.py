@@ -17,6 +17,13 @@ def query_get_user_exists(username):
     if ResultSet:
         return True
 
+def query_get_mail_exists(usermail):
+    query = db.select([t_pjsAuth.columns.name]).where(t_pjsAuth.columns.mail == usermail)
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchone()
+    if ResultSet:
+        return True
+
 def query_get_password(username):
     query = db.select([t_pjsAuth.columns.hash]).where(t_pjsAuth.columns.name == username)
     ResultProxy = connection.execute(query)
@@ -25,7 +32,7 @@ def query_get_password(username):
         return ResultSet[0]
 
 def query_set_pjauth(username,password,usermail):
-    if query_get_user_exists(username):
+    if query_get_user_exists(username) or query_get_mail_exists(usermail):
         return (409)
     else:
         from flask_bcrypt import generate_password_hash

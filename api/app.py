@@ -75,7 +75,7 @@ def post_auth_register():
         else:
             return jsonify({"msg": "User successfully added | mail KO"}), 206
     elif code == 409:
-        return jsonify({"msg": "User already exists"}), code
+        return jsonify({"msg": "User or Email already exists"}), code
     else:
         return jsonify({"msg": "Oops!"}), 422
 
