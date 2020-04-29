@@ -84,7 +84,7 @@ def post_auth_register():
         subject = '[🐒&🐖] Bienvenue {} !'.format(username)
         token   = generate_confirmation_token(mail)
         url     = 'https://api.sep.lordslair.net/auth/confirm/' + token
-        body    = 'Bienvenue parmi nous.<br>Voici le lien de validation: ' + url
+        body    = 'Bienvenue parmi nous. Voici le lien de validation: ' + url
         if send(mail,subject,body):
             return jsonify({"msg": "User successfully added | mail OK"}), code
         else:
