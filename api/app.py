@@ -2,7 +2,9 @@
 
 from flask              import Flask, jsonify, request
 from flask_jwt_extended import (JWTManager,
-                                jwt_required, create_access_token,
+                                jwt_required,
+                                create_access_token,
+                                create_refresh_token,
                                 get_jwt_identity)
 from flask_bcrypt       import check_password_hash
 
@@ -42,8 +44,21 @@ def post_auth_login():
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
-    access_token = create_access_token(identity=username)
-    return jsonify(access_token=access_token), 200
+    ret = {
+        'access_token': create_access_token(identity=username),
+        'refresh_token': create_refresh_token(identity=username)
+    }
+    return jsonify(ret), 200
+
+# Auth route to refresh the token
+@app.route('/auth/refresh', methods=['POST'])
+@jwt_refresh_token_required
+def refresh():
+    current_user = get_jwt_identity()
+    ret = {
+        'access_token': create_access_token(identity=current_user)
+    }
+    return jsonify(ret), 200
 
 # Auth route to register the user
 @app.route('/auth/register', methods=['POST'])
