@@ -4,7 +4,7 @@ from flask              import Flask, jsonify, request
 from flask_jwt_extended import (JWTManager,
                                 jwt_required,
                                 create_access_token,
-                                create_refresh_token,
+                                create_refresh_token, jwt_refresh_token_required,
                                 get_jwt_identity)
 from flask_bcrypt       import check_password_hash
 
