@@ -11,7 +11,7 @@ from flask_bcrypt       import check_password_hash
 from queries            import (query_get_user_exists,
                                 query_get_password,
                                 query_set_pjauth)
-from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE
+from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE, SEP_URL
 
 app = Flask(__name__)
 
@@ -83,7 +83,7 @@ def post_auth_register():
 
         subject = '[🐒&🐖] Bienvenue {} !'.format(username)
         token   = generate_confirmation_token(mail)
-        url     = 'https://api.sep.lordslair.net/auth/confirm/' + token
+        url     = SEP_URL + '/auth/confirm/' + token
         body    = 'Bienvenue parmi nous. Voici le lien de validation: ' + url
         if send(mail,subject,body):
             return jsonify({"msg": "User successfully added | mail OK"}), code
