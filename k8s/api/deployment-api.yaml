@@ -60,12 +60,15 @@ spec:
               name: sep-backend-api-secret
               key: jwt-secret
         - name: SEP_MYSQL_USER
-          value: 'root'
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: sql-user
         - name: SEP_MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: sep-backend-mariadb-secret
-              key: pass
+              name: sep-backend-api-secret
+              key: sql-pass
         - name: SEP_MYSQL_DB
           value: 'sep'
         - name: SEP_MYSQL_HOST
