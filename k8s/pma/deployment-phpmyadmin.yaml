@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
+  namespace: singouins
   name: sep-backend-phpmyadmin
   labels:
     tier: sep-backend
