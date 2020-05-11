@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS pjsAuth (
+id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+name      TEXT     NOT NULL,
+mail      TEXT     NOT NULL,
+hash      TEXT     NOT NULL, /* BCRYPT hashed */
+created   DATETIME NOT NULL,
+active    BOOLEAN,
+date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
