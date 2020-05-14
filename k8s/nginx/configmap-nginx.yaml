@@ -147,6 +147,40 @@ data:
     }
 
     #
+    # <GRAPH>
+    #
+
+    server {
+      listen      80;
+      server_name <GRAPH>;
+      access_log  /var/log/nginx/access.log seplog;
+      location    = / { return 418; }
+      location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
+
+      location /.well-known/acme-challenge/ {
+          root /var/www/certbot;
+      }
+    }
+    server {
+      listen      443 ssl;
+      server_name <GRAPH>;
+      access_log  /var/log/nginx/access.log seplogssl;
+      add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
+
+      ssl_certificate     /etc/letsencrypt/live/<GRAPH>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<GRAPH>/privkey.pem;
+
+      location / {
+        auth_basic          "Basic Auth";
+        auth_basic_user_file /etc/nginx/htpasswd/htpasswd;
+        proxy_pass          http://sep-backend-redis-grafana-svc:3000;
+        proxy_http_version  1.1;
+        proxy_buffers       16 16k;
+        proxy_buffer_size   16k;
+      }
+    }
+
+    #
     # Default server
     #
 
