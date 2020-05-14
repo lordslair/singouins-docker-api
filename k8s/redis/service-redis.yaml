@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Service
 
 metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
   namespace: singouins
   name: sep-backend-redis-svc
   labels:
@@ -14,3 +17,6 @@ spec:
   - protocol: TCP
     port: 6379
     name: redis
+  - protocol: TCP
+    port: 9121
+    name: metrics

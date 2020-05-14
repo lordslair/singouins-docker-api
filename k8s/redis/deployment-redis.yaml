@@ -16,6 +16,9 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9121"
       labels:
         app: redis
         tier: sep-backend
@@ -25,3 +28,13 @@ spec:
       containers:
       - name: sep-backend-redis
         image: redis:alpine
+        ports:
+        - containerPort: 6379
+      - name: redis-exporter
+        image: oliver006/redis_exporter:v1.6.0
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+        ports:
+        - containerPort: 9121
