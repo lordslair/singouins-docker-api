@@ -7,6 +7,7 @@ from flask_jwt_extended import (JWTManager,
                                 create_refresh_token, jwt_refresh_token_required,
                                 get_jwt_identity)
 from flask_bcrypt       import check_password_hash
+from flask_cors         import CORS
 
 from prometheus_flask_exporter import PrometheusMetrics
 
@@ -16,6 +17,7 @@ from queries            import (query_get_user_exists,
 from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE, SEP_URL
 
 app = Flask(__name__)
+CORS(app)                        # We wrap around all the app the CORS
 metrics = PrometheusMetrics(app) # We wrap around all the app the metrics
 
 # Setup the Flask-JWT-Extended extension
