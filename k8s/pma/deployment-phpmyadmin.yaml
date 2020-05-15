@@ -27,8 +27,6 @@ spec:
               value: sep-backend-mariadb-svc
             - name: PMA_PORT
               value: '3306'
-            - name: PMA_ABSOLUTE_URI
-              value: 'http://sql.sep.lordslair.net/'
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
