@@ -17,3 +17,6 @@ spec:
   - protocol: TCP
     port: 443
     name: https
+  - protocol: TCP
+    port: 9113
+    name: metrics

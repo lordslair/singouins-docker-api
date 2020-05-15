@@ -16,6 +16,9 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9113"
       labels:
         app: nginx
         tier: sep-backend
@@ -45,6 +48,13 @@ spec:
            mountPath: /var/www/certbot
          - name: certs
            mountPath: /etc/letsencrypt
+      - name: nginx-exporter
+        image: nginx/nginx-prometheus-exporter
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+
       restartPolicy: Always
 
       volumes:

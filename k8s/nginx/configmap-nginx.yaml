@@ -25,6 +25,20 @@ data:
     ssl_ciphers         ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
 
     #
+    # <nginx-exporter>
+    #
+
+    server {
+      listen      8080;
+
+      location /stub_status {
+          stub_status;
+          allow 127.0.0.1;
+          deny all;
+      }
+    }
+
+    #
     # <WIKI>
     #
 
