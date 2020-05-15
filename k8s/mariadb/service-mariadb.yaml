@@ -9,5 +9,10 @@ spec:
     app: mariadb
     tier: sep-backend
   ports:
-  - port: 3306
+  - name: mariadb
+    port: 3306
+    protocol: TCP
+  - name: metrics
+    port: 9104
+    protocol: TCP
   clusterIP: None
