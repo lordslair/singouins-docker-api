@@ -102,6 +102,8 @@ spec:
             secretKeyRef:
               name: sep-backend-api-secret
               key: smtp-host
+        - name: DEBUG_METRICS
+          value: true
         volumeMounts:
         - mountPath: /code
           name: code

@@ -16,6 +16,7 @@ apk update --no-cache \
                                       Flask-JWT-Extended \
                                       pyMySQL \
                                       SQLAlchemy \
+                                      prometheus-flask-exporter \
                                       pytest \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps \

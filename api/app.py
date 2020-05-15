@@ -8,12 +8,15 @@ from flask_jwt_extended import (JWTManager,
                                 get_jwt_identity)
 from flask_bcrypt       import check_password_hash
 
+from prometheus_flask_exporter import PrometheusMetrics
+
 from queries            import (query_get_user_exists,
                                 query_get_password,
                                 query_set_pjauth)
 from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE, SEP_URL
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app) # We wrap around all the app the metrics
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
