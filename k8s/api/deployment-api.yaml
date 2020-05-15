@@ -16,6 +16,9 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
       labels:
         app: api
         tier: sep-backend
