@@ -17,7 +17,7 @@
   "gnetId": 763,
   "graphTooltip": 0,
   "id": 5,
-  "iteration": 1589473512982,
+  "iteration": 1589544101661,
   "links": [],
   "panels": [
     {
@@ -85,7 +85,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(max_over_time(redis_uptime_in_seconds{app=\"redis\",instance=~\"$instance\"}[$__interval]))",
+          "expr": "max(max_over_time(redis_uptime_in_seconds{instance=~\"$instance\"}[$__interval]))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -174,7 +174,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "redis_connected_clients{app=\"redis\", instance=~\"$instance\"}",
+          "expr": "redis_connected_clients{instance=~\"$instance\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -265,7 +265,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "100 * (redis_memory_used_bytes{app=\"redis\", instance=~\"$instance\"}  / redis_memory_max_bytes{app=\"redis\", instance=~\"$instance\"} )",
+          "expr": "100 * (redis_memory_used_bytes{instance=~\"$instance\"}  / redis_memory_max_bytes{instance=~\"$instance\"} )",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -336,7 +336,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(redis_commands_processed_total{app=\"redis\",instance=~\"$instance\"}[1m])",
+          "expr": "rate(redis_commands_processed_total{instance=~\"$instance\"}[1m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -438,7 +438,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(redis_keyspace_hits_total{app=\"redis\",instance=~\"$instance\"}[5m])",
+          "expr": "irate(redis_keyspace_hits_total{instance=~\"$instance\"}[5m])",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -450,7 +450,7 @@
           "target": ""
         },
         {
-          "expr": "irate(redis_keyspace_misses_total{app=\"redis\",instance=~\"$instance\"}[5m])",
+          "expr": "irate(redis_keyspace_misses_total{instance=~\"$instance\"}[5m])",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -555,7 +555,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "redis_memory_used_bytes{app=\"redis\",instance=~\"$instance\"} ",
+          "expr": "redis_memory_used_bytes{instance=~\"$instance\"} ",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -566,7 +566,7 @@
           "target": ""
         },
         {
-          "expr": "redis_memory_max_bytes{app=\"redis\",instance=~\"$instance\"} ",
+          "expr": "redis_memory_max_bytes{instance=~\"$instance\"} ",
           "format": "time_series",
           "hide": false,
           "interval": "",
@@ -665,7 +665,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(redis_net_input_bytes_total{app=\"redis\",instance=~\"$instance\"}[5m])",
+          "expr": "rate(redis_net_input_bytes_total{instance=~\"$instance\"}[5m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -674,7 +674,7 @@
           "step": 240
         },
         {
-          "expr": "rate(redis_net_output_bytes_total{app=\"redis\",instance=~\"$instance\"}[5m])",
+          "expr": "rate(redis_net_output_bytes_total{instance=~\"$instance\"}[5m])",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -1191,7 +1191,7 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -1220,10 +1220,10 @@
     ]
   },
   "timezone": "browser",
-  "title": "K8s Redis Dashboard",
+  "title": "App | Redis Dashboard",
   "uid": "8v-BZdRGk",
   "variables": {
     "list": []
   },
-  "version": 6
+  "version": 10
 }
