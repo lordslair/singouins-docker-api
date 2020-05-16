@@ -36,7 +36,7 @@ def query_set_pjauth(username,password,usermail):
         return (409)
     else:
         from flask_bcrypt import generate_password_hash
-        hash  = generate_password_hash(password)
+        hash  = generate_password_hash(password, rounds = 10) # 10: Way better perf ratio
         query = db.insert(t_pjsAuth).values(name    = username,
                                             hash    = hash,
                                             mail    = usermail,
