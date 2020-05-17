@@ -15,6 +15,7 @@ apk update --no-cache \
                                       Flask-cors \
                                       Flask-JWT-Extended \
                                       pyMySQL \
+                                      redis \
                                       SQLAlchemy \
                                       prometheus-flask-exporter \
                                       pytest \
