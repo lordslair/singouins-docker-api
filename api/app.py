@@ -14,11 +14,14 @@ from prometheus_flask_exporter import PrometheusMetrics
 from queries            import (query_get_user_exists,
                                 query_get_password,
                                 query_set_pjauth)
-from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE, SEP_URL
+from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
 metrics = PrometheusMetrics(app) # We wrap around all the app the metrics
+
+# static information as metric
+metrics.info('app_info', 'Application info', version='0.0.1', commit=SHA[0:7])
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY

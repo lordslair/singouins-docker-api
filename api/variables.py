@@ -17,3 +17,6 @@ SQL_DSN        = MYSQL_USER + ':' + MYSQL_PASSWORD + '@' + MYSQL_HOST + ':3306/'
 
 # External URL
 SEP_URL        = os.environ['SEP_URL']
+
+# Latest commit used in this apps
+SEP_SHA        = open('/code/.git', 'r').read().rstrip()
