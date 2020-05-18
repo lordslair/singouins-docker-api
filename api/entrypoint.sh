@@ -14,6 +14,7 @@ apk update --no-cache \
                                       Flask-bcrypt \
                                       Flask-cors \
                                       Flask-JWT-Extended \
+                                      Flask-Swagger-UI \
                                       pyMySQL \
                                       redis \
                                       SQLAlchemy \

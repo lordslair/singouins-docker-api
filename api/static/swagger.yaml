@@ -1,0 +1,50 @@
+openapi: 3.0.0
+info:
+  description: ''
+  version: 0.0.1
+  title: S&P Internal API
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      tags:
+        - '/auth: Authentificaton Requests'
+      summary: Returns access_token & refresh_token
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginPostBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginResponse'
+        '400':
+          description: KO - Missing information in request
+        '401':
+          description: KO - Bad information in request
+components:
+  schemas:
+    AuthLoginPostBody:
+      type: object
+      properties:
+        username:
+          type: string
+          format: string
+        password:
+          type: string
+          format: string
+    AuthLoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          format: string
+        refresh_token:
+          type: string
+          format: string
