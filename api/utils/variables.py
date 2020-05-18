@@ -10,6 +10,6 @@ SMTP_PASS     = os.environ['SEP_SMTP_PASS']
 SMTP_HOSTNAME = os.environ['SEP_SMTP_HOSTNAME']
 
 # Redis variables
-REDIS_HOST    = os.environ['SEP_REDIS_HOST']
-REDIS_PORT    = 6379
+REDIS_HOST    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST']
+REDIS_PORT    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT']
 REDIS_DB_NAME = 0

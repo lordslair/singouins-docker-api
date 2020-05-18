@@ -106,11 +106,6 @@ spec:
             secretKeyRef:
               name: sep-backend-api-secret
               key: smtp-host
-        - name: SEP_REDIS_HOSTNAME
-          valueFrom:
-            secretKeyRef:
-              name: sep-backend-api-secret
-              key: redis-host
         - name: DEBUG_METRICS
           value: 'true'
         volumeMounts:
