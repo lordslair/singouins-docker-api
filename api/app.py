@@ -21,7 +21,7 @@ CORS(app)                        # We wrap around all the app the CORS
 metrics = PrometheusMetrics(app) # We wrap around all the app the metrics
 
 # static information as metric
-metrics.info('app_info', 'Application info', version='0.0.1', commit=SHA[0:7])
+metrics.info('app_info', 'Application info', version='0.0.1', commit=SEP_SHA[0:7])
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
