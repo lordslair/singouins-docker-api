@@ -64,6 +64,33 @@ paths:
         '422':
           description: KO - Wrong token
 
+  /auth/delete/{username}:
+    delete:
+      tags:
+        - '/auth: Authentificaton Requests'
+      summary: Permanently delete a PJ from DB
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthDeleteResponse'
+        '400':
+          description: KO - Missing information in request
+        '404':
+          description: KO - User not found
+        '422':
+          description: KO - Wrong token
+
 components:
   schemas:
     AuthLoginPostBody:
@@ -94,6 +121,12 @@ components:
       type: object
       properties:
         logged_in_as:
+          type: string
+          format: string
+    AuthDeleteResponse:
+      type: object
+      properties:
+        msg:
           type: string
           format: string
   securitySchemes:
