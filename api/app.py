@@ -14,7 +14,8 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from queries            import (query_get_user_exists,
                                 query_get_password,
-                                query_set_pjauth)
+                                query_set_pjauth,
+                                query_del_pjauth)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -30,7 +31,7 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     '/static/swagger.yaml',
     config = { 'app_name': "S&P Internal API" }
 )
-app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix='/swagger'
+app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix='/swagger')
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
