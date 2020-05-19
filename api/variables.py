@@ -4,7 +4,6 @@ import os
 
 # JWT variables
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
-SEP_HEADER_TYPE = 'JWT'
 
 # MySQL variables
 MYSQL_USER     = os.environ['SEP_MYSQL_USER']

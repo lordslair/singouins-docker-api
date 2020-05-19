@@ -15,7 +15,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 from queries            import (query_get_user_exists,
                                 query_get_password,
                                 query_set_pjauth)
-from variables          import SEP_SECRET_KEY, SEP_HEADER_TYPE, SEP_URL, SEP_SHA
+from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
@@ -34,7 +34,6 @@ app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix='/swagger'
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
-app.config['JWT_HEADER_TYPE'] = SEP_HEADER_TYPE
 jwt = JWTManager(app)
 
 # Auth route to send the JWT Token
