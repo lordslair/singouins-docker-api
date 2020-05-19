@@ -36,7 +36,7 @@ paths:
         - '/auth: Authentificaton Requests'
       summary: Returns new access_token from refresh_token
       security:
-        - bearerAuth: []
+        - refresh_token: []
       responses:
         '200':
           description: OK
@@ -71,13 +71,11 @@ components:
         access_token:
           type: string
           format: string
-
-components:
   securitySchemes:
-    bearerAuth:            # arbitrary name for the security scheme
+    refresh_token:
       type: http
       scheme: bearer
-      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+      bearerFormat: JWT
 
 security:
-  - bearerAuth: []         # use the same name as above
+  - refresh_token: []
