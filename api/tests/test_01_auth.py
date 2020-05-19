@@ -28,7 +28,7 @@ def test_singouins_auth_infos():
     login     = json.loads(response.data)
 
     route     = '/auth/infos'
-    jwt       = json.loads('{"Authorization": "JWT '+ login['access_token'] + '"}')
+    jwt       = json.loads('{"Authorization": "Bearer '+ login['access_token'] + '"}')
     response  = app.test_client().get(route, headers = jwt)
     infos     = json.loads(response.data)
 
@@ -41,7 +41,7 @@ def test_singouins_auth_refresh():
     login     = json.loads(response.data)
 
     route     = '/auth/refresh'
-    jwt       = json.loads('{"Authorization": "JWT '+ login['refresh_token'] + '"}')
+    jwt       = json.loads('{"Authorization": "Bearer '+ login['refresh_token'] + '"}')
     response  = app.test_client().post(route, headers = jwt)
     refresh   = json.loads(response.data)
 
