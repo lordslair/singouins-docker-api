@@ -5,6 +5,7 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
+
   /auth/login:
     post:
       tags:
@@ -28,6 +29,22 @@ paths:
           description: KO - Missing information in request
         '401':
           description: KO - Bad information in request
+
+  /auth/refresh:
+    post:
+      tags:
+        - '/auth: Authentificaton Requests'
+      summary: Returns new access_token from refresh_token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRefreshResponse'
+
 components:
   schemas:
     AuthLoginPostBody:
@@ -48,3 +65,19 @@ components:
         refresh_token:
           type: string
           format: string
+    AuthRefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          format: string
+
+components:
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+
+security:
+  - bearerAuth: []         # use the same name as above
