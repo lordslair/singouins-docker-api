@@ -52,3 +52,12 @@ def query_set_user_confirmed(usermail):
     ResultProxy = connection.execute(query)
     if ResultProxy.rowcount == 1:
         return (201)
+
+def query_del_pjauth(username):
+    if not query_get_user_exists(username):
+        return (404)
+    else:
+        query = db.delete(t_pjsAuth).where(t_pjsAuth.c.name == username)
+        ResultProxy = connection.execute(query)
+        if ResultProxy.rowcount == 1:
+            return (200)

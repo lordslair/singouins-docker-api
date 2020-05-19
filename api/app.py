@@ -125,6 +125,28 @@ def confirm_email(token):
     else:
         return jsonify({"msg": "Confirmation link invalid or has expired"}), 200
 
+# Auth route to delete the user
+@app.route('/auth/delete', methods=['DELETE'])
+@jwt_required
+def delete_auth_leave():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    username     = request.json.get('username', None)
+    current_user = get_jwt_identity()
+    if not username:
+        return jsonify({"msg": "Missing username parameter"}), 400
+    if username != current_user:
+        return jsonify({"msg": "Token/username mismatch"}), 400
+
+    code = query_del_pjauth(username)
+    if code == 200:
+        return jsonify({"msg": "User successfully deleted"}), code
+    if code == 404:
+        return jsonify({"msg": "Bad username"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 # Info route when authenticated
 @app.route('/auth/infos', methods=['GET'])
 @jwt_required
