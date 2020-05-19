@@ -45,6 +45,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthRefreshResponse'
 
+  /auth/infos:
+    get:
+      tags:
+        - '/auth: Authentificaton Requests'
+      summary: Get informations from an authenticated user
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthInfosResponse'
+        '401':
+          description: KO - Expired/Missing token
+        '422':
+          description: KO - Wrong token
+
 components:
   schemas:
     AuthLoginPostBody:
@@ -71,11 +90,22 @@ components:
         access_token:
           type: string
           format: string
+    AuthInfosResponse:
+      type: object
+      properties:
+        logged_in_as:
+          type: string
+          format: string
   securitySchemes:
     refresh_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    access_token:
       type: http
       scheme: bearer
       bearerFormat: JWT
 
 security:
   - refresh_token: []
+  - access_token: []
