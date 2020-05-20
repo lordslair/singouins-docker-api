@@ -95,10 +95,10 @@ def query_new_pj(username,pjname,pjrace):
     if query_get_pj_exists(pjname,None):
         return (409)
     else:
-        pjid  = query_get_pjauth(username)[0]
+        userid = query_get_pjauth(username)[0]
         query = db.insert(t_pjsInfos).values(name    = pjname,
                                              race    = pjrace,
-                                             account = pjid,
+                                             account = userid,
                                              level   = 1,
                                              x       = 0,
                                              y       = 0,
