@@ -199,5 +199,19 @@ def get_pj_infos_n(pjname):
     else:
         return jsonify({"msg": "Oops!"}), 422
 
+@app.route('/pj/delete/<int:pjid>', methods=['DELETE'])
+@jwt_required
+def del_pj_delete(pjid):
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+
+    code           = query_del_pj(current_user,pjid)
+    if code == 200:
+        return jsonify({"msg": "PJ successfully deleted"}), code
+    elif code == 404:
+        return jsonify({"msg": "PJ does not exists or does not belong to the token"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 if __name__ == '__main__':
     app.run()

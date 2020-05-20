@@ -123,3 +123,21 @@ def query_get_pj(pjname,pjid):
         print(ResultSet)
         if ResultSet:
             return (200,dict(ResultSet))
+
+def query_del_pj(username,pjid):
+    userid  = query_get_pjauth(username)[0]
+
+    query = db.select([t_pjsInfos.c.id]).where((t_pjsInfos.columns.account == userid) & (t_pjsInfos.columns.id == pjid))
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchone()
+
+    if ResultSet:
+        if ResultSet[0] == pjid: # The pjid requested to DELETE belongs to the token user
+            query = db.delete(t_pjsInfos).where(t_pjsInfos.c.id == pjid)
+            ResultProxy = connection.execute(query)
+            if ResultProxy.rowcount == 1:
+                return (200)
+        else:
+            return (400)
+    else:
+        return (404)
