@@ -150,6 +150,26 @@ paths:
           description: KO - User not found
         '422':
           description: KO - Oops
+  /pj/delete/{id}:
+    delete:
+      tags:
+        - '/pj: PJ Requests'
+      summary: Delete a PJ for a registered user
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK - PJ deleted
+        '404':
+          description: KO - PJ not found / not belong to token user
+        '422':
+          description: KO - Oops
 
 components:
   schemas:
