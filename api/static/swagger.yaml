@@ -129,7 +129,7 @@ paths:
         '200':
           description: OK
         '404':
-          description: KO - User not found
+          description: KO - PJ not found
         '422':
           description: KO - Oops
   /pj/infos/name/{name}:
@@ -147,7 +147,7 @@ paths:
         '200':
           description: OK
         '404':
-          description: KO - User not found
+          description: KO - PJ not found
         '422':
           description: KO - Oops
   /pj/delete/{id}:
