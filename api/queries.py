@@ -107,3 +107,15 @@ def query_new_pj(username,pjname,pjrace):
 
         if ResultProxy.inserted_primary_key[0] > 0:
             return (201)
+
+def query_get_pj(pjname,pjid):
+    if not query_get_pj_exists(None,pjid):
+        return (404,None)
+    else:
+        query = db.select([t_pjsInfos]).where(t_pjsInfos.columns.id == pjid)
+
+        ResultProxy = connection.execute(query)
+        ResultSet = ResultProxy.fetchone()
+        print(ResultSet)
+        if ResultSet:
+            return (200,dict(ResultSet))

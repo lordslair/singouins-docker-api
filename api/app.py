@@ -16,7 +16,8 @@ from queries            import (query_get_user_exists,
                                 query_get_password,
                                 query_set_pjauth,
                                 query_del_pjauth,
-                                query_new_pj)
+                                query_new_pj,
+                                query_get_pj)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -175,6 +176,19 @@ def post_pj_create():
         return jsonify({"msg": "PJ successfully created"}), code
     elif code == 409:
         return jsonify({"msg": "PJ already exists"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
+@app.route('/pj/infos/id/<int:pjid>', methods=['GET'])
+def get_pj_infos(pjid):
+    if not pjid:
+        return jsonify({"msg": "Missing id parameter"}), 400
+
+    (code,ResultDict)     = query_get_pj(None,pjid)
+    if code == 200:
+        return jsonify(ResultDict), code
+    elif code == 404:
+        return jsonify({"msg": "PJ does not exists"}), code
     else:
         return jsonify({"msg": "Oops!"}), 422
 
