@@ -192,5 +192,15 @@ def get_pj_infos(pjid):
     else:
         return jsonify({"msg": "Oops!"}), 422
 
+@app.route('/pj/infos/name/<string:pjname>', methods=['GET'])
+def get_pj_infos_n(pjname):
+    (code,ResultDict)     = query_get_pj(pjname,None)
+    if code == 200:
+        return jsonify(ResultDict), code
+    elif code == 404:
+        return jsonify({"msg": "PJ does not exists"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 if __name__ == '__main__':
     app.run()
