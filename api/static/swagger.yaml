@@ -91,6 +91,30 @@ paths:
         '422':
           description: KO - Wrong token
 
+  /pj/create:
+    post:
+      tags:
+        - '/pj: PJ Requests'
+      summary: Create a PJ for a registered user
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PjCreatePostBody'
+      security:
+        - access_token: []
+      responses:
+        '201':
+          description: OK - PJ created
+        '400':
+          description: KO - Missing information in request
+        '409':
+          description: KO - PJ already exists
+        '422':
+          description: KO - Oops
+
 components:
   schemas:
     AuthLoginPostBody:
@@ -129,6 +153,17 @@ components:
         msg:
           type: string
           format: string
+
+    PjCreatePostBody:
+      type: object
+      properties:
+        race:
+          type: string
+          format: string
+        name:
+          type: string
+          format: string
+
   securitySchemes:
     refresh_token:
       type: http
