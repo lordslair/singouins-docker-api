@@ -74,15 +74,25 @@ def query_del_pjauth(username):
 #
 t_pjsInfos  = db.Table('pjsInfos', metadata, autoload=True, autoload_with=engine)
 
-def query_get_pj_exists(username):
-    query = db.select([t_pjsInfos.columns.name]).where(t_pjsInfos.columns.name == username)
+def query_get_pj_exists(pjname,pjid):
+    if not pjname and not pjid:
+        return False
+    elif pjname and pjid:
+        query = db.select([t_pjsInfos.columns.name]).where(and_(t_pjsInfos.columns.name == pjname,t_pjsInfos.columns.id == pjid))
+    elif pjname and not pjid:
+        query = db.select([t_pjsInfos.columns.name]).where(t_pjsInfos.columns.name == pjname)
+    elif not pjname and pjid:
+        query = db.select([t_pjsInfos.columns.id]).where(t_pjsInfos.columns.id == pjid)
+    else:
+        return False
+
     ResultProxy = connection.execute(query)
     ResultSet = ResultProxy.fetchone()
     if ResultSet:
         return True
 
 def query_new_pj(username,pjname,pjrace):
-    if query_get_pj_exists(pjname):
+    if query_get_pj_exists(pjname,None):
         return (409)
     else:
         pjid  = query_get_pjauth(username)[0]
