@@ -114,6 +114,26 @@ paths:
           description: KO - PJ already exists
         '422':
           description: KO - Oops
+  /pj/infos/id/{id}:
+    get:
+      tags:
+        - '/pj: PJ Requests'
+      summary: Get PJ public informations
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: KO - Missing information in request
+        '404':
+          description: KO - User not found
+        '422':
+          description: KO - Oops
 
 components:
   schemas:
