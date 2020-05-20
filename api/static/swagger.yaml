@@ -134,6 +134,24 @@ paths:
           description: KO - User not found
         '422':
           description: KO - Oops
+  /pj/infos/name/{name}:
+    get:
+      tags:
+        - '/pj: PJ Requests'
+      summary: Get PJ public informations
+      parameters:
+        - in: path
+          name: name
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: KO - User not found
+        '422':
+          description: KO - Oops
 
 components:
   schemas:
