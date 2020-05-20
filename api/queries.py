@@ -31,6 +31,13 @@ def query_get_password(username):
     if ResultSet:
         return ResultSet[0]
 
+def query_get_pjauth(username):
+    query = db.select([t_pjsAuth.columns.id]).where(t_pjsAuth.columns.name == username)
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchone()
+    if ResultSet:
+        return ResultSet
+
 def query_set_pjauth(username,password,usermail):
     if query_get_user_exists(username) or query_get_mail_exists(usermail):
         return (409)
@@ -61,3 +68,32 @@ def query_del_pjauth(username):
         ResultProxy = connection.execute(query)
         if ResultProxy.rowcount == 1:
             return (200)
+
+#
+# Queries: /pj
+#
+t_pjsInfos  = db.Table('pjsInfos', metadata, autoload=True, autoload_with=engine)
+
+def query_get_pj_exists(username):
+    query = db.select([t_pjsInfos.columns.name]).where(t_pjsInfos.columns.name == username)
+    ResultProxy = connection.execute(query)
+    ResultSet = ResultProxy.fetchone()
+    if ResultSet:
+        return True
+
+def query_new_pj(username,pjname,pjrace):
+    if query_get_pj_exists(pjname):
+        return (409)
+    else:
+        pjid  = query_get_pjauth(username)[0]
+        query = db.insert(t_pjsInfos).values(name    = pjname,
+                                             race    = pjrace,
+                                             account = pjid,
+                                             level   = 1,
+                                             x       = 0,
+                                             y       = 0,
+                                             xp      = 0)
+        ResultProxy = connection.execute(query)
+
+        if ResultProxy.inserted_primary_key[0] > 0:
+            return (201)

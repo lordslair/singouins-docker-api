@@ -15,7 +15,8 @@ from prometheus_flask_exporter import PrometheusMetrics
 from queries            import (query_get_user_exists,
                                 query_get_password,
                                 query_set_pjauth,
-                                query_del_pjauth)
+                                query_del_pjauth,
+                                query_new_pj)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -151,6 +152,31 @@ def get_auth_infos():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
+
+#
+# Routes: /pj
+#
+
+# Info route when authenticated
+@app.route('/pj/create', methods=['POST'])
+@jwt_required
+def post_pj_create():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+
+    pjname         = request.json.get('name', None)
+    pjrace         = request.json.get('race', None)
+
+    if not pjname or not pjrace:
+        return jsonify({"msg": "Missing name/race parameter"}), 400
+
+    code           = query_new_pj(current_user,pjname,pjrace)
+    if code == 201:
+        return jsonify({"msg": "PJ successfully created"}), code
+    elif code == 409:
+        return jsonify({"msg": "PJ already exists"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
 
 if __name__ == '__main__':
     app.run()
