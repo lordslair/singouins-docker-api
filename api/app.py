@@ -181,9 +181,6 @@ def post_pj_create():
 
 @app.route('/pj/infos/id/<int:pjid>', methods=['GET'])
 def get_pj_infos(pjid):
-    if not pjid:
-        return jsonify({"msg": "Missing id parameter"}), 400
-
     (code,ResultDict)     = query_get_pj(None,pjid)
     if code == 200:
         return jsonify(ResultDict), code

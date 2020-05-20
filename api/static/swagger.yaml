@@ -128,8 +128,6 @@ paths:
       responses:
         '200':
           description: OK
-        '400':
-          description: KO - Missing information in request
         '404':
           description: KO - User not found
         '422':
