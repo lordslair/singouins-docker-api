@@ -1,16 +1,14 @@
 # -*- coding: utf8 -*-
-
 import sqlalchemy as db
-
 from datetime  import datetime
 from variables import SQL_DSN
 
 engine     = db.create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
-connection = engine.connect()
 metadata   = db.MetaData()
 t_pjsAuth  = db.Table('pjsAuth', metadata, autoload=True, autoload_with=engine)
 
 def query_get_user_exists(username):
+    connection = engine.connect()
     query = db.select([t_pjsAuth.columns.name]).where(t_pjsAuth.columns.name == username)
     ResultProxy = connection.execute(query)
     ResultSet = ResultProxy.fetchone()
@@ -18,6 +16,7 @@ def query_get_user_exists(username):
         return True
 
 def query_get_mail_exists(usermail):
+    connection = engine.connect()
     query = db.select([t_pjsAuth.columns.name]).where(t_pjsAuth.columns.mail == usermail)
     ResultProxy = connection.execute(query)
     ResultSet = ResultProxy.fetchone()
@@ -25,6 +24,7 @@ def query_get_mail_exists(usermail):
         return True
 
 def query_get_password(username):
+    connection = engine.connect()
     query = db.select([t_pjsAuth.columns.hash]).where(t_pjsAuth.columns.name == username)
     ResultProxy = connection.execute(query)
     ResultSet = ResultProxy.fetchone()
@@ -32,6 +32,7 @@ def query_get_password(username):
         return ResultSet[0]
 
 def query_get_pjauth(username):
+    connection = engine.connect()
     query = db.select([t_pjsAuth.columns.id]).where(t_pjsAuth.columns.name == username)
     ResultProxy = connection.execute(query)
     ResultSet = ResultProxy.fetchone()
@@ -49,12 +50,14 @@ def query_set_pjauth(username,password,usermail):
                                             mail    = usermail,
                                             created = datetime.now(),
                                             active  = False)
+        connection = engine.connect()
         ResultProxy = connection.execute(query)
 
         if ResultProxy.inserted_primary_key[0] > 0:
             return (201)
 
 def query_set_user_confirmed(usermail):
+    connection = engine.connect()
     query = db.update(t_pjsAuth).where(t_pjsAuth.c.mail==usermail).values(active = True)
     ResultProxy = connection.execute(query)
     if ResultProxy.rowcount == 1:
@@ -65,6 +68,7 @@ def query_del_pjauth(username):
         return (404)
     else:
         query = db.delete(t_pjsAuth).where(t_pjsAuth.c.name == username)
+        connection = engine.connect()
         ResultProxy = connection.execute(query)
         if ResultProxy.rowcount == 1:
             return (200)
@@ -85,7 +89,7 @@ def query_get_pj_exists(pjname,pjid):
         query = db.select([t_pjsInfos.columns.id]).where(t_pjsInfos.columns.id == pjid)
     else:
         return False
-
+    connection = engine.connect()
     ResultProxy = connection.execute(query)
     ResultSet = ResultProxy.fetchone()
     if ResultSet:
@@ -103,8 +107,8 @@ def query_new_pj(username,pjname,pjrace):
                                              x       = 0,
                                              y       = 0,
                                              xp      = 0)
+        connection = engine.connect()
         ResultProxy = connection.execute(query)
-
         if ResultProxy.inserted_primary_key[0] > 0:
             return (201)
 
@@ -117,7 +121,7 @@ def query_get_pj(pjname,pjid):
         elif pjname:
             query = db.select([t_pjsInfos]).where(t_pjsInfos.columns.name == pjname)
         else: return (422,None)
-
+        connection = engine.connect()
         ResultProxy = connection.execute(query)
         ResultSet = ResultProxy.fetchone()
         print(ResultSet)
