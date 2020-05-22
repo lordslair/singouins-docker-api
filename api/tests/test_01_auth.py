@@ -1,49 +1,50 @@
 # -*- coding: utf8 -*-
 
 import json
-import sys
-import os
+import requests
 
-code = os.path.dirname(os.environ['FLASK_APP'])
-sys.path.append(code)
-
-from app import app
+payload     = {'username': 'user', 'password': 'plop'}
 
 def test_singouins_auth_register():
-    route     = '/auth/register'
-    response  = app.test_client().post(route, json = {'username': 'user', 'password': 'plop', 'mail': 'mail@exemple.com'})
+    url       = 'https://api.proto.singouins.com/auth/register'
+    payload_c = {'username': 'user', 'password': 'plop', 'mail': 'user@exemple.com'}
+    response  = requests.post(url, json = payload_c)
+    print(response.text)
 
     assert response.status_code == 201
 
 def test_singouins_auth_login():
-    route     = '/auth/login'
-    response  = app.test_client().post(route, json = {'username': 'user', 'password': 'plop'})
+    url      = 'https://api.proto.singouins.com/auth/login'
+    response = requests.post(url, json = payload)
+    print(response.text)
 
     assert response.status_code == 200
-    assert json.loads(response.data)
+    assert json.loads(response.text)
 
 def test_singouins_auth_infos():
-    route     = '/auth/login'
-    response  = app.test_client().post(route, json = {'username': 'user', 'password': 'plop'})
-    login     = json.loads(response.data)
+    url      = 'https://api.proto.singouins.com/auth/login'
+    response = requests.post(url, json = payload)
+    token    = json.loads(response.text)['access_token']
+    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
 
-    route     = '/auth/infos'
-    jwt       = json.loads('{"Authorization": "Bearer '+ login['access_token'] + '"}')
-    response  = app.test_client().get(route, headers = jwt)
-    infos     = json.loads(response.data)
+    url      = 'https://api.proto.singouins.com/auth/infos'
+    response = requests.get(url, headers=headers)
+    infos    = json.loads(response.text)
+    print(response.text)
 
     assert response.status_code == 200
     assert infos['logged_in_as'] == 'user'
 
 def test_singouins_auth_refresh():
-    route     = '/auth/login'
-    response  = app.test_client().post(route, json = {'username': 'user', 'password': 'plop'})
-    login     = json.loads(response.data)
+    url      = 'https://api.proto.singouins.com/auth/login'
+    response = requests.post(url, json = payload)
+    token    = json.loads(response.text)['refresh_token']
+    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
 
-    route     = '/auth/refresh'
-    jwt       = json.loads('{"Authorization": "Bearer '+ login['refresh_token'] + '"}')
-    response  = app.test_client().post(route, headers = jwt)
-    refresh   = json.loads(response.data)
+    url       = 'https://api.proto.singouins.com/auth/refresh'
+    response = requests.post(url, headers=headers)
+    refreshed = json.loads(response.text)
+    print(response.text)
 
     assert response.status_code == 200
-    assert refresh['access_token']
+    assert refreshed['access_token']

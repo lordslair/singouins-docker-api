@@ -8,8 +8,6 @@ import time
 code = os.path.dirname(os.environ['FLASK_APP'])
 sys.path.append(code)
 
-from app import app
-
 from utils.variables import (REDIS_PORT,
                              REDIS_HOST,
                              REDIS_DB_NAME)
