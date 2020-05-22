@@ -113,7 +113,7 @@ def post_auth_register():
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/auth/confirm/<token>')
+@app.route('/auth/confirm/<string:token>', methods=['GET'])
 def confirm_email(token):
     from utils.token import confirm_token
     from queries     import query_set_user_confirmed
@@ -129,7 +129,7 @@ def confirm_email(token):
         return jsonify({"msg": "Confirmation link invalid or has expired"}), 498
 
 # Auth route to delete the user
-@app.route('/auth/delete/<username>', methods=['DELETE'])
+@app.route('/auth/delete/<string:username>', methods=['DELETE'])
 @jwt_required
 def delete_auth_leave(username):
     current_user = get_jwt_identity()
