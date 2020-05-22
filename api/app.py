@@ -199,7 +199,7 @@ def get_pj_infos_n(pjname):
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pj/delete/<int:pjid>', methods=['DELETE'])
+@app.route('/pj/delete/id/<int:pjid>', methods=['DELETE'])
 @jwt_required
 def del_pj_delete(pjid):
     # Access the identity of the current user with get_jwt_identity
