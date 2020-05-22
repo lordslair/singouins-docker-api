@@ -6,6 +6,44 @@ info:
   contact: {}
 paths:
 
+  /auth/register:
+    post:
+      tags:
+        - '/auth: Authentificaton Requests'
+      summary: Register a new user
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterPostBody'
+      responses:
+        '201':
+          description: OK - User registered | Registration mail sent
+        '206':
+          description: OK - User registered | Registration mail not sent
+        '400':
+          description: KO - Missing information in request
+        '401':
+          description: KO - Bad information in request
+  /auth/confirm/{token}:
+    post:
+      tags:
+        - '/auth: Authentificaton Requests'
+      summary: Conirm a new user
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterPostBody'
+      responses:
+        '201':
+          description: OK - User confirmed
+        '498':
+          description: KO - Token expired
   /auth/login:
     post:
       tags:
@@ -20,16 +58,11 @@ paths:
               $ref: '#/components/schemas/AuthLoginPostBody'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthLoginResponse'
+          description: OK - User logged in
         '400':
           description: KO - Missing information in request
         '401':
           description: KO - Bad information in request
-
   /auth/refresh:
     post:
       tags:
@@ -44,7 +77,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthRefreshResponse'
-
   /auth/infos:
     get:
       tags:
@@ -63,7 +95,6 @@ paths:
           description: KO - Expired/Missing token
         '422':
           description: KO - Wrong token
-
   /auth/delete/{username}:
     delete:
       tags:
@@ -79,11 +110,7 @@ paths:
         - access_token: []
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthDeleteResponse'
+          description: OK - User deleted
         '400':
           description: KO - Missing information in request
         '404':
@@ -173,6 +200,18 @@ paths:
 
 components:
   schemas:
+    AuthRegisterPostBody:
+      type: object
+      properties:
+        username:
+          type: string
+          format: string
+        password:
+          type: string
+          format: password
+        mail:
+          type: string
+          format: string
     AuthLoginPostBody:
       type: object
       properties:
@@ -181,7 +220,7 @@ components:
           format: string
         password:
           type: string
-          format: string
+          format: password
     AuthLoginResponse:
       type: object
       properties:
@@ -201,12 +240,6 @@ components:
       type: object
       properties:
         logged_in_as:
-          type: string
-          format: string
-    AuthDeleteResponse:
-      type: object
-      properties:
-        msg:
           type: string
           format: string
 
