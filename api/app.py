@@ -126,7 +126,7 @@ def confirm_email(token):
         else:
             return jsonify({"msg": "Oops!"}), 422
     else:
-        return jsonify({"msg": "Confirmation link invalid or has expired"}), 200
+        return jsonify({"msg": "Confirmation link invalid or has expired"}), 498
 
 # Auth route to delete the user
 @app.route('/auth/delete/<username>', methods=['DELETE'])
