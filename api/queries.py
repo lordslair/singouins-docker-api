@@ -1,73 +1,107 @@
 # -*- coding: utf8 -*-
 
-import sqlalchemy as db
+from sqlalchemy     import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from utils     import tables
 
 from datetime  import datetime
 from variables import SQL_DSN
 
 engine     = db.create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
-connection = engine.connect()
-metadata   = db.MetaData()
-t_pjsAuth  = db.Table('pjsAuth', metadata, autoload=True, autoload_with=engine)
 
-def query_get_user_exists(username):
-    query = db.select([t_pjsAuth.columns.name]).where(t_pjsAuth.columns.name == username)
-    ResultProxy = connection.execute(query)
-    ResultSet = ResultProxy.fetchone()
-    if ResultSet:
-        return True
+def query_get_username_exists(username):
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-def query_get_mail_exists(usermail):
-    query = db.select([t_pjsAuth.columns.name]).where(t_pjsAuth.columns.mail == usermail)
-    ResultProxy = connection.execute(query)
-    ResultSet = ResultProxy.fetchone()
-    if ResultSet:
-        return True
+    with engine.connect() as conn:
+        result = session.query(tables.User).filter(tables.User.name == username).one_or_none()
+        session.close()
 
-def query_get_password(username):
-    query = db.select([t_pjsAuth.columns.hash]).where(t_pjsAuth.columns.name == username)
-    ResultProxy = connection.execute(query)
-    ResultSet = ResultProxy.fetchone()
-    if ResultSet:
-        return ResultSet[0]
+    if result: return True
 
-def query_get_pjauth(username):
-    query = db.select([t_pjsAuth.columns.id]).where(t_pjsAuth.columns.name == username)
-    ResultProxy = connection.execute(query)
-    ResultSet = ResultProxy.fetchone()
-    if ResultSet:
-        return ResultSet
+def query_get_usermail_exists(usermail):
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-def query_set_pjauth(username,password,usermail):
-    if query_get_user_exists(username) or query_get_mail_exists(usermail):
+    with engine.connect() as conn:
+       result = session.query(tables.User).filter(tables.User.mail == usermail).one_or_none()
+       session.close()
+
+    if result: return True
+
+def query_get_user(username):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+       result = session.query(tables.User).filter(tables.User.name == username).one()
+       session.close()
+
+    if result: return result
+
+def query_add_user(username,password,usermail):
+    if query_get_username_exists(username) or query_get_usermail_exists(usermail):
         return (409)
     else:
         from flask_bcrypt import generate_password_hash
-        hash  = generate_password_hash(password, rounds = 10) # 10: Way better perf ratio
-        query = db.insert(t_pjsAuth).values(name    = username,
-                                            hash    = hash,
-                                            mail    = usermail,
-                                            created = datetime.now(),
-                                            active  = False)
-        ResultProxy = connection.execute(query)
 
-        if ResultProxy.inserted_primary_key[0] > 0:
-            return (201)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            user = tables.User(name = username,
+                               mail = usermail,
+                               hash = generate_password_hash(password, rounds = 10),
+                               created = datetime.now(),
+                               active = True)
+
+            session.add(user)
+
+            try:
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (422)
+            else:
+                return (201)
 
 def query_set_user_confirmed(usermail):
-    query = db.update(t_pjsAuth).where(t_pjsAuth.c.mail==usermail).values(active = True)
-    ResultProxy = connection.execute(query)
-    if ResultProxy.rowcount == 1:
-        return (201)
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-def query_del_pjauth(username):
-    if not query_get_user_exists(username):
+    with engine.connect() as conn:
+        try:
+            user = session.query(tables.User).filter(tables.User.mail == usermail).one_or_none()
+            print(user.active)
+            user.active = True
+            print(user.active)
+            session.commit()
+        except Exception as e:
+            print(e)
+            # Something went wrong during commit
+            return (422)
+        else:
+            return (201)
+
+def query_del_user(username):
+    if not query_get_username_exists(username):
         return (404)
     else:
-        query = db.delete(t_pjsAuth).where(t_pjsAuth.c.name == username)
-        ResultProxy = connection.execute(query)
-        if ResultProxy.rowcount == 1:
-            return (200)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            try:
+                user = session.query(tables.User).filter(tables.User.name == username).one_or_none()
+                print(user.name)
+                session.delete(user)
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (422)
+            else:
+                return (200)
 
 #
 # Queries: /pj
@@ -123,6 +157,20 @@ def query_get_pj(pjname,pjid):
         print(ResultSet)
         if ResultSet:
             return (200,dict(ResultSet))
+
+def query_get_pjs(username):
+    if not query_get_user_exists(username):
+        return (404,'This user does not exist')
+    else:
+        userid  = query_get_pjauth(username)[0]
+        query = db.select([t_pjsInfos]).where(t_pjsInfos.columns.account == userid)
+        ResultProxy = connection.execute(query)
+        ResultSet = ResultProxy.fetchall()
+
+        if ResultSet:
+            return (200,ResultSet)
+        else:
+            return (404,'This user has no PJ in DB')
 
 def query_del_pj(username,pjid):
     userid  = query_get_pjauth(username)[0]

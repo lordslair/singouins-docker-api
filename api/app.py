@@ -12,12 +12,8 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 
 from prometheus_flask_exporter import PrometheusMetrics
 
-from queries            import (query_get_user_exists,
-                                query_get_password,
-                                query_set_pjauth,
-                                query_del_pjauth,
-                                query_new_pj,
-                                query_get_pj)
+from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed
+                                query_get_pj,query_new_pj)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -52,14 +48,13 @@ def post_auth_login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    user_exists = query_get_user_exists(username)
-    pass_db     = query_get_password(username)
-    if pass_db:
+    if query_get_user(username):
+        pass_db    = query_get_user(username).hash
         pass_check = check_password_hash(pass_db, password)
     else:
         pass_check = None
 
-    if not user_exists or not pass_check:
+    if not query_get_user(username) or not pass_check:
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
@@ -116,7 +111,6 @@ def post_auth_register():
 @app.route('/auth/confirm/<string:token>', methods=['GET'])
 def confirm_email(token):
     from utils.token import confirm_token
-    from queries     import query_set_user_confirmed
 
     if confirm_token(token):
         mail = confirm_token(token)
@@ -138,7 +132,7 @@ def delete_auth_leave(username):
     if username != current_user:
         return jsonify({"msg": "Token/username mismatch"}), 400
 
-    code = query_del_pjauth(username)
+    code = query_del_user(username)
     if code == 200:
         return jsonify({"msg": "User successfully deleted"}), code
     if code == 404:
