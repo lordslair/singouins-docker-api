@@ -12,8 +12,8 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 
 from prometheus_flask_exporter import PrometheusMetrics
 
-from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed
-                                query_get_pj,query_new_pj)
+from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
+                                query_get_pj,   query_add_pj,   query_del_pj,   query_get_pjs)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -90,7 +90,7 @@ def post_auth_register():
     if not mail:
         return jsonify({"msg": "Missing mail parameter"}), 400
 
-    code = query_set_pjauth(username,password,mail)
+    code = query_add_user(username,password,mail)
     if code == 201:
         from utils.mail import send
         from utils.token import generate_confirmation_token
@@ -165,7 +165,7 @@ def post_pj_create():
     if not pjname or not pjrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
-    code           = query_new_pj(current_user,pjname,pjrace)
+    code           = query_add_pj(current_user,pjname,pjrace)
     if code == 201:
         return jsonify({"msg": "PJ successfully created"}), code
     elif code == 409:
@@ -188,6 +188,20 @@ def get_pj_infos_n(pjname):
     (code,ResultDict)     = query_get_pj(pjname,None)
     if code == 200:
         return jsonify(ResultDict), code
+    elif code == 404:
+        return jsonify({"msg": "PJ does not exists"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
+@app.route('/pj/infos/list', methods=['GET'])
+@jwt_required
+def get_pj_infos_list():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+
+    (code,pjs)     = query_get_pjs(current_user)
+    if code == 200:
+        return jsonify(pjs), code
     elif code == 404:
         return jsonify({"msg": "PJ does not exists"}), code
     else:

@@ -1,3 +1,4 @@
+dataclasses
 Flask
 Flask-bcrypt
 Flask-cors
