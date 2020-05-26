@@ -221,5 +221,27 @@ def del_pj_delete(pjid):
     else:
         return jsonify({"msg": "Oops!"}), 422
 
+#
+# Routes: /mp
+#
+
+@app.route('/mp/send', methods=['POST'])
+@jwt_required
+def post_mp_send():
+    current_user = get_jwt_identity()
+    src = request.json.get('src', None)
+    dst = request.json.get('dst', None)
+
+    if not pjname or not pjrace:
+        return jsonify({"msg": "Missing src/dst parameter"}), 400
+
+    code = query_add_mp(current_user,src,dst,subject,body)
+    if code == 201:
+        return jsonify({"msg": "MP successfully created"}), code
+    if code == 409:
+        return jsonify({"msg": "Token/username mismatch"}), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 if __name__ == '__main__':
     app.run()

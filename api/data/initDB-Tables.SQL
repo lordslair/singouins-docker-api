@@ -17,3 +17,13 @@ x         INT      NOT NULL,
 y         INT      NOT NULL,
 xp        INT      NOT NULL,
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS mps (
+id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+src_id    INT      NOT NULL,
+src       TEXT     NOT NULL,
+dst_id    INT      NOT NULL,
+dst       TEXT     NOT NULL,
+subject   TEXT     NOT NULL,
+body      TEXT     NOT NULL,
+date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);

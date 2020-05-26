@@ -200,3 +200,36 @@ def query_del_pj(username,pjid):
                 return (422)
             else:
                 return (200)
+
+#
+# Queries: /mp
+#
+
+def query_add_mp(username,src,dst,subject,body):
+    pjsrc = query_get_pj(None,src)
+    pjdst = query_get_pj(None,dst)
+    user  = query_get_user(username)
+
+    if pjsrc and pjdst:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            try:
+                mp = tables.MP(src_id  = pjsrc.id,
+                               src     = pjsrc.name,
+                               dst_id  = pjdst.id,
+                               dst     = pjdst.name,
+                               subject = subject,
+                               body    = body)
+                session.add(mp)
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (422)
+            else:
+                return (200)
+    elif user.id != pjsrc.account:
+        return (409)
+    else:
+        return (404)

@@ -42,3 +42,25 @@ class PJ(Base):
     y       = Column(Integer)
     xp      = Column(Integer)
     date    = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class MP(Base):
+    __tablename__ = 'mps'
+
+    id: int
+    src_id: int
+    src: str
+    dst_id: int
+    dst: int
+    subject: str
+    body: str
+    date: str
+
+    id      = Column(Integer, primary_key=True)
+    src_id  = Column(Integer)
+    src     = Column(String)
+    dst_id  = Column(Integer)
+    dst     = Column(String)
+    subject = Column(String)
+    body    = Column(String)
+    date    = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
