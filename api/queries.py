@@ -151,38 +151,35 @@ def query_add_pj(username,pjname,pjrace):
                 return (201)
 
 def query_get_pj(pjname,pjid):
-    if not query_get_pj_exists(pjname,pjid):
-        return (404,None)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        if pjid:
+            pj = session.query(tables.PJ).filter(tables.PJ.id == pjid).one_or_none()
+        elif pjname:
+            pj = session.query(tables.PJ).filter(tables.PJ.name == pjname).one_or_none()
+        else: return (422,None)
+        session.close()
+
+    if pj:
+        return (200,pj)
     else:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
-        with engine.connect() as conn:
-            if pjid:
-                pj = session.query(tables.PJ).filter(tables.PJ.id == pjid).one()
-            elif pjname:
-                pj = session.query(tables.PJ).filter(tables.PJ.name == pjname).one()
-            else: return (422,None)
-            session.close()
-
-        if pj: return (200,pj)
+        return (404,'This PJ does not exist')
 
 def query_get_pjs(username):
-    if not query_get_username_exists(username):
-        return (404,'This user does not exist')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        userid = query_get_user(username).id
+        pjs    = session.query(tables.PJ).filter(tables.PJ.account == userid).all()
+        session.close()
+
+    if pjs:
+        return (200,pjs)
     else:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
-        with engine.connect() as conn:
-            userid = query_get_user(username).id
-            pjs    = session.query(tables.PJ).filter(tables.PJ.account == userid).all()
-            session.close()
-
-        if pjs:
-            return (200,pjs)
-        else:
-            return (404,'This user has no PJ in DB')
+        return (404,'This user has no PJ in DB')
 
 def query_del_pj(username,pjid):
 

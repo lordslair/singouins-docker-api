@@ -175,9 +175,9 @@ def post_pj_create():
 
 @app.route('/pj/infos/id/<int:pjid>', methods=['GET'])
 def get_pj_infos(pjid):
-    (code,ResultDict)     = query_get_pj(None,pjid)
+    (code,pj) = query_get_pj(None,pjid)
     if code == 200:
-        return jsonify(ResultDict), code
+        return jsonify(pj), code
     elif code == 404:
         return jsonify({"msg": "PJ does not exists"}), code
     else:
@@ -185,9 +185,9 @@ def get_pj_infos(pjid):
 
 @app.route('/pj/infos/name/<string:pjname>', methods=['GET'])
 def get_pj_infos_n(pjname):
-    (code,ResultDict)     = query_get_pj(pjname,None)
+    (code,pj) = query_get_pj(pjname,None)
     if code == 200:
-        return jsonify(ResultDict), code
+        return jsonify(pj), code
     elif code == 404:
         return jsonify({"msg": "PJ does not exists"}), code
     else:
