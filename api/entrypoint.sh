@@ -10,16 +10,7 @@ apk update --no-cache \
                                     python3-dev \
                                     libffi-dev \
                                     tzdata \
-    && pip3 --no-cache-dir install -U Flask \
-                                      Flask-bcrypt \
-                                      Flask-cors \
-                                      Flask-JWT-Extended \
-                                      Flask-Swagger-UI \
-                                      pyMySQL \
-                                      redis \
-                                      SQLAlchemy \
-                                      prometheus-flask-exporter \
-                                      pytest \
+    && pip3 --no-cache-dir install -U -r requirements.txt \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps \
     && pytest /code/tests
