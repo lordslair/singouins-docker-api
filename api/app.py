@@ -240,5 +240,14 @@ def post_mp_send():
     else:
         return jsonify({"msg": "Oops!"}), 422
 
+@app.route('/mp/<int:pjid>/<int:mpid>', methods=['GET'])
+@jwt_required
+def get_mp(pjid,mpid):
+    (code,mp) = query_get_mp(get_jwt_identity(),pjid,mpid)
+    if isinstance(code, int):
+        return jsonify(mp), code
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 if __name__ == '__main__':
     app.run()

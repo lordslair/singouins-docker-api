@@ -238,3 +238,21 @@ def query_add_mp(username,src,dsts,subject,body):
         return (409)
     else:
         return (404)
+
+def query_get_mp(username,pjid,mpid):
+    (code,pj) = query_get_pj(None,pjid)
+    user      = query_get_user(username)
+
+    if pj and pj.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            mp = session.query(tables.MP).filter(tables.MP.dst_id == pj.id, tables.MP.id == mpid).one_or_none()
+            session.close()
+
+        if mp:
+            return (200, mp)
+        else:
+            return (404, {"msg": "No MP found for this PJ"})
+    else: return (409, {"msg": "Token/username mismatch"})
