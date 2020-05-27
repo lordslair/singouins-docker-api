@@ -256,3 +256,26 @@ def query_get_mp(username,pjid,mpid):
         else:
             return (404, {"msg": "No MP found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
+
+def query_get_mps(username,pjid):
+    (code,pj) = query_get_pj(None,pjid)
+    user      = query_get_user(username)
+
+    if pj and pj.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            mps = session.query(tables.MP.id,
+                                tables.MP.date,
+                                tables.MP.dst,
+                                tables.MP.dst_id,
+                                tables.MP.subject,
+                                tables.MP.src,
+                                tables.MP.src_id).filter(tables.MP.dst_id == pj.id).all()
+
+        if mps:
+            return (200, mps)
+        else:
+            return (404, {"msg": "No MP found for this PJ"})
+    else: return (409, {"msg": "Token/username mismatch"})
