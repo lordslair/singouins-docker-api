@@ -257,6 +257,26 @@ def query_get_mp(username,pjid,mpid):
             return (404, {"msg": "No MP found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
 
+def query_del_mp(username,pjid,mpid):
+    (code,pj) = query_get_pj(None,pjid)
+    user      = query_get_user(username)
+
+    if pj and pj.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            try:
+                mp = session.query(tables.MP).filter(tables.MP.dst_id == pj.id, tables.MP.id == mpid).one_or_none()
+                if not mp: return (404, {"msg": "No MP found for this PJ"})
+                session.delete(mp)
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (422, {"msg": "MP deletion failed"})
+            else:
+                return (200, {"msg": "MP successfully deleted"})
+
 def query_get_mps(username,pjid):
     (code,pj) = query_get_pj(None,pjid)
     user      = query_get_user(username)

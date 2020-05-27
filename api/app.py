@@ -14,7 +14,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
                                 query_get_pj,   query_add_pj,   query_del_pj,   query_get_pjs,
-                                query_get_mp,   query_add_mp,                   query_get_mps)
+                                query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -249,6 +249,13 @@ def get_mp(pjid,mpid):
         return jsonify(mp), code
     else:
         return jsonify({"msg": "Oops!"}), 422
+
+@app.route('/mp/<int:pjid>/<int:mpid>', methods=['DELETE'])
+@jwt_required
+def delete_mp(pjid,mpid):
+    (code,ret) = query_del_mp(get_jwt_identity(),pjid,mpid)
+    if isinstance(code, int):
+        return jsonify(ret), code
 
 @app.route('/mp/<int:pjid>/list', methods=['GET'])
 @jwt_required
