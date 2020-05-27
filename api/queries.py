@@ -230,14 +230,14 @@ def query_add_mp(username,src,dsts,subject,body):
         except Exception as e:
             # Something went wrong during commit
             session.rollback()
-            return (422)
+            return (422, {"msg": "MP creation failed"})
         else:
-            return (201)
+            return (201, {"msg": "MP successfully created"})
 
     elif user.id != pjsrc.account:
-        return (409)
+        return (409, {"msg": "Token/username mismatch"})
     else:
-        return (404)
+        return (404, {"msg": "PJ does not exist"})
 
 def query_get_mp(username,pjid,mpid):
     (code,pj) = query_get_pj(None,pjid)
@@ -276,6 +276,7 @@ def query_del_mp(username,pjid,mpid):
                 return (422, {"msg": "MP deletion failed"})
             else:
                 return (200, {"msg": "MP successfully deleted"})
+    else: return (409, {"msg": "Token/username mismatch"})
 
 def query_get_mps(username,pjid):
     (code,pj) = query_get_pj(None,pjid)

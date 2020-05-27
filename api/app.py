@@ -229,17 +229,13 @@ def del_pj_delete(pjid):
 @app.route('/mp/send', methods=['POST'])
 @jwt_required
 def post_mp_send():
-    code = query_add_mp(get_jwt_identity(),
-                        request.json.get('src', None),
-                        request.json.get('dst', None),
-                        request.json.get('subject', None),
-                        request.json.get('body', None))
-    if code == 201:
-        return jsonify({"msg": "MP successfully created"}), code
-    if code == 409:
-        return jsonify({"msg": "Token/username mismatch"}), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
+    (code,ret) = query_add_mp(get_jwt_identity(),
+                              request.json.get('src', None),
+                              request.json.get('dst', None),
+                              request.json.get('subject', None),
+                              request.json.get('body', None))
+    if isinstance(code, int):
+        return jsonify(ret), code
 
 @app.route('/mp/<int:pjid>/<int:mpid>', methods=['GET'])
 @jwt_required
@@ -247,8 +243,6 @@ def get_mp(pjid,mpid):
     (code,mp) = query_get_mp(get_jwt_identity(),pjid,mpid)
     if isinstance(code, int):
         return jsonify(mp), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
 
 @app.route('/mp/<int:pjid>/<int:mpid>', methods=['DELETE'])
 @jwt_required
@@ -263,8 +257,6 @@ def get_mps(pjid):
     (code,mps) = query_get_mps(get_jwt_identity(),pjid)
     if isinstance(code, int):
         return jsonify(mps), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
 
 if __name__ == '__main__':
     app.run()
