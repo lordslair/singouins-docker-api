@@ -198,6 +198,93 @@ paths:
         '422':
           description: KO - Oops
 
+  /mp/send:
+    post:
+      tags:
+        - '/mp: MP Requests'
+      summary: Send a MP from a PJ to a list of PJs
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MpSendPostBody'
+      security:
+        - access_token: []
+      responses:
+        '201':
+          description: OK - MP sent
+        '409':
+          description: KO - Token/username mismatch
+        '422':
+          description: KO - Oops
+  /mp/{pjid}/list:
+    get:
+      tags:
+        - '/mp: MP Requests'
+      summary: Get MP list for a PJ
+      parameters:
+        - in: path
+          name: pjid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: KO - PJ not found
+        '409':
+          description: KO - No MP found for this PJ
+  /mp/{pjid}/{mpid}:
+    get:
+      tags:
+        - '/mp: MP Requests'
+      summary: Get full MP
+      parameters:
+        - in: path
+          name: pjid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: mpid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: KO - PJ not found
+        '409':
+          description: KO - No MP found for this PJ
+    delete:
+      tags:
+        - '/mp: MP Requests'
+      summary: Delete a MP from a PJ
+      parameters:
+        - in: path
+          name: pjid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: mpid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK - MP deleted
+        '409':
+          description: KO - Token/username mismatch
+        '422':
+          description: KO - Oops
+
 components:
   schemas:
     AuthRegisterPostBody:
@@ -250,6 +337,23 @@ components:
           type: string
           format: string
         name:
+          type: string
+          format: string
+
+    MpSendPostBody:
+      type: object
+      properties:
+        src:
+          type: integer
+          format: integer
+        dst:
+          type: array
+          items:
+            type: integer
+        subject:
+          type: string
+          format: string
+        body:
           type: string
           format: string
 
