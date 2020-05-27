@@ -3,10 +3,12 @@
 from sqlalchemy     import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from utils     import tables
-
 from datetime  import datetime
+
+from utils     import tables
 from variables import SQL_DSN
+
+import textwrap
 
 engine     = create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
 
@@ -287,15 +289,11 @@ def query_get_mps(username,pjid):
         session = Session()
 
         with engine.connect() as conn:
-            mps = session.query(tables.MP.id,
-                                tables.MP.date,
-                                tables.MP.dst,
-                                tables.MP.dst_id,
-                                tables.MP.subject,
-                                tables.MP.src,
-                                tables.MP.src_id).filter(tables.MP.dst_id == pj.id).all()
+            mps = session.query(tables.MP).filter(tables.MP.dst_id == pj.id).all()
 
         if mps:
+            for mp in mps:
+                mp.body = textwrap.shorten(mp.body, width=50, placeholder="...")
             return (200, mps)
         else:
             return (404, {"msg": "No MP found for this PJ"})
