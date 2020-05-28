@@ -15,3 +15,8 @@ data:
     # To avoid :
     # [ERROR] Invalid (old?) table or database name 'lost+found'
     ignore-db-dir = lost+found
+    #
+    # To avoid :
+    # [ERROR] (2006, "MySQL server has gone away [...]")
+    # Need to have SQLAlchemy pool_recycle (3600) < MySQL wait_timeout
+    wait_timeout = 7200
