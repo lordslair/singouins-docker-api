@@ -141,6 +141,20 @@ paths:
           description: KO - PJ already exists
         '422':
           description: KO - Oops
+  /pj/infos/list:
+    get:
+      tags:
+        - '/pj: PJ Requests'
+      summary: Get PJ associated to a registered user
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: KO - PJ not found
+        '422':
+          description: KO - Oops
   /pj/infos/id/{id}:
     get:
       tags:
