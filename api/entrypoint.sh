@@ -3,7 +3,7 @@
 echo "`date +"%F %X"` Building Python dependencies and system set-up ..."
 
 apk update --no-cache \
-    && apk add --no-cache python3 \
+    && apk add --no-cache python3 py3-pip \
     && apk add --no-cache --virtual .build-deps \
                                     gcc \
                                     libc-dev \
