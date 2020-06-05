@@ -10,7 +10,7 @@ apk update --no-cache \
                                     python3-dev \
                                     libffi-dev \
                                     tzdata \
-    && pip3 --no-cache-dir install -U -r requirements.txt \
+    && pip3 --no-cache-dir install -U -r /code/requirements.txt \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps \
     && pytest /code/tests
