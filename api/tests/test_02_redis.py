@@ -1,8 +1,8 @@
 # -*- coding: utf8 -*-
 
-import sys
 import os
 import redis
+import sys
 import time
 
 code = os.path.dirname(os.environ['FLASK_APP'])
