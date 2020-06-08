@@ -106,43 +106,43 @@ def query_del_user(username):
                 return (200)
 
 #
-# Queries: /pj
+# Queries: /pc
 #
 
-def query_get_pj_exists(pjname,pjid):
+def query_get_pc_exists(pcname,pcid):
     Session = sessionmaker(bind=engine)
     session = Session()
 
     with engine.connect() as conn:
-        if not pjname and not pjid:
+        if not pcname and not pcid:
             return False
-        elif pjname and pjid:
-            result = session.query(tables.PJ).filter(tables.PJ.name == pjname, tables.PJ.id == pjid).one_or_none()
-        elif pjname and not pjid:
-            result = session.query(tables.PJ).filter(tables.PJ.name == pjname).one_or_none()
-        elif not pjname and pjid:
-            result = session.query(tables.PJ).filter(tables.PJ.id == pjid).one_or_none()
+        elif pcname and pcid:
+            result = session.query(tables.PJ).filter(tables.PJ.name == pcname, tables.PJ.id == pcid).one_or_none()
+        elif pcname and not pcid:
+            result = session.query(tables.PJ).filter(tables.PJ.name == pcname).one_or_none()
+        elif not pcname and pcid:
+            result = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
         else:
             return False
 
     if result: return True
 
-def query_add_pj(username,pjname,pjrace):
-    if query_get_pj_exists(pjname,None):
+def query_add_pc(username,pcname,pcrace):
+    if query_get_pc_exists(pcname,None):
         return (409)
     else:
         Session = sessionmaker(bind=engine)
         session = Session()
         with engine.connect() as conn:
-            pj = tables.PJ(name    = pjname,
-                           race    = pjrace,
+            pc = tables.PJ(name    = pcname,
+                           race    = pcrace,
                            account = query_get_user(username).id,
                            level   = 1,
                            x       = 0,
                            y       = 0,
                            xp      = 0)
 
-            session.add(pj)
+            session.add(pc)
 
             try:
                 session.commit()
@@ -152,40 +152,40 @@ def query_add_pj(username,pjname,pjrace):
             else:
                 return (201)
 
-def query_get_pj(pjname,pjid):
+def query_get_pc(pcname,pcid):
     Session = sessionmaker(bind=engine)
     session = Session()
 
     with engine.connect() as conn:
-        if pjid:
-            pj = session.query(tables.PJ).filter(tables.PJ.id == pjid).one_or_none()
-        elif pjname:
-            pj = session.query(tables.PJ).filter(tables.PJ.name == pjname).one_or_none()
+        if pcid:
+            pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+        elif pcname:
+            pc = session.query(tables.PJ).filter(tables.PJ.name == pcname).one_or_none()
         else: return (422,None)
         session.close()
 
-    if pj:
-        return (200,pj)
+    if pc:
+        return (200,pc)
     else:
         return (404,'This PJ does not exist')
 
-def query_get_pjs(username):
+def query_get_pcs(username):
     Session = sessionmaker(bind=engine)
     session = Session()
 
     with engine.connect() as conn:
         userid = query_get_user(username).id
-        pjs    = session.query(tables.PJ).filter(tables.PJ.account == userid).all()
+        pcs    = session.query(tables.PJ).filter(tables.PJ.account == userid).all()
         session.close()
 
-    if pjs:
-        return (200,pjs)
+    if pcs:
+        return (200,pcs)
     else:
         return (404,'This user has no PJ in DB')
 
-def query_del_pj(username,pjid):
+def query_del_pc(username,pcid):
 
-    if not query_get_pj_exists(None,pjid):
+    if not query_get_pc_exists(None,pcid):
         return (404)
     else:
         Session = sessionmaker(bind=engine)
@@ -194,8 +194,8 @@ def query_del_pj(username,pjid):
         with engine.connect() as conn:
             try:
                 userid  = query_get_user(username).id
-                pj = session.query(tables.PJ).filter(tables.PJ.account == userid, tables.PJ.id == pjid).one_or_none()
-                session.delete(pj)
+                pc = session.query(tables.PJ).filter(tables.PJ.account == userid, tables.PJ.id == pcid).one_or_none()
+                session.delete(pc)
                 session.commit()
             except Exception as e:
                 # Something went wrong during commit
@@ -208,21 +208,21 @@ def query_del_pj(username,pjid):
 #
 
 def query_add_mp(username,src,dsts,subject,body):
-    (code,pjsrc) = query_get_pj(None,src)
+    (code,pcsrc) = query_get_pc(None,src)
     user         = query_get_user(username)
 
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    if pjsrc:
+    if pcsrc:
         for dst in dsts:
-            (code,pjdst) = query_get_pj(None,dst)
-            if pjdst:
+            (code,pcdst) = query_get_pc(None,dst)
+            if pcdst:
                 with engine.connect() as conn:
-                    mp = tables.MP(src_id  = pjsrc.id,
-                                   src     = pjsrc.name,
-                                   dst_id  = pjdst.id,
-                                   dst     = pjdst.name,
+                    mp = tables.MP(src_id  = pcsrc.id,
+                                   src     = pcsrc.name,
+                                   dst_id  = pcdst.id,
+                                   dst     = pcdst.name,
                                    subject = subject,
                                    body    = body)
                     session.add(mp)
@@ -236,21 +236,21 @@ def query_add_mp(username,src,dsts,subject,body):
         else:
             return (201, {"msg": "MP successfully created"})
 
-    elif user.id != pjsrc.account:
+    elif user.id != pcsrc.account:
         return (409, {"msg": "Token/username mismatch"})
     else:
         return (404, {"msg": "PJ does not exist"})
 
-def query_get_mp(username,pjid,mpid):
-    (code,pj) = query_get_pj(None,pjid)
+def query_get_mp(username,pcid,mpid):
+    (code,pc) = query_get_pc(None,pcid)
     user      = query_get_user(username)
 
-    if pj and pj.account == user.id:
+    if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
         session = Session()
 
         with engine.connect() as conn:
-            mp = session.query(tables.MP).filter(tables.MP.dst_id == pj.id, tables.MP.id == mpid).one_or_none()
+            mp = session.query(tables.MP).filter(tables.MP.dst_id == pc.id, tables.MP.id == mpid).one_or_none()
             session.close()
 
         if mp:
@@ -259,17 +259,17 @@ def query_get_mp(username,pjid,mpid):
             return (404, {"msg": "No MP found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
 
-def query_del_mp(username,pjid,mpid):
-    (code,pj) = query_get_pj(None,pjid)
+def query_del_mp(username,pcid,mpid):
+    (code,pc) = query_get_pc(None,pcid)
     user      = query_get_user(username)
 
-    if pj and pj.account == user.id:
+    if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
         session = Session()
 
         with engine.connect() as conn:
             try:
-                mp = session.query(tables.MP).filter(tables.MP.dst_id == pj.id, tables.MP.id == mpid).one_or_none()
+                mp = session.query(tables.MP).filter(tables.MP.dst_id == pc.id, tables.MP.id == mpid).one_or_none()
                 if not mp: return (404, {"msg": "No MP found for this PJ"})
                 session.delete(mp)
                 session.commit()
@@ -280,16 +280,16 @@ def query_del_mp(username,pjid,mpid):
                 return (200, {"msg": "MP successfully deleted"})
     else: return (409, {"msg": "Token/username mismatch"})
 
-def query_get_mps(username,pjid):
-    (code,pj) = query_get_pj(None,pjid)
+def query_get_mps(username,pcid):
+    (code,pc) = query_get_pc(None,pcid)
     user      = query_get_user(username)
 
-    if pj and pj.account == user.id:
+    if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
         session = Session()
 
         with engine.connect() as conn:
-            mps = session.query(tables.MP).filter(tables.MP.dst_id == pj.id).all()
+            mps = session.query(tables.MP).filter(tables.MP.dst_id == pc.id).all()
 
         if mps:
             for mp in mps:

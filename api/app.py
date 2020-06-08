@@ -13,7 +13,7 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 from prometheus_flask_exporter import PrometheusMetrics
 
 from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
-                                query_get_pj,   query_add_pj,   query_del_pj,   query_get_pjs,
+                                query_get_pc,   query_add_pc,   query_del_pc,   query_get_pcs,
                                 query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
@@ -150,20 +150,20 @@ def get_auth_infos():
     return jsonify(logged_in_as=current_user), 200
 
 #
-# Routes: /pj
+# Routes: /pc
 #
 
 @app.route('/mypc', methods=['POST'])
 @jwt_required
 def mypc_post():
     current_user = get_jwt_identity()
-    pjname       = request.json.get('name', None)
-    pjrace       = request.json.get('race', None)
+    pcname       = request.json.get('name', None)
+    pcrace       = request.json.get('race', None)
 
-    if not pjname or not pjrace:
+    if not pcname or not pcrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
-    code           = query_add_pj(current_user,pjname,pjrace)
+    code           = query_add_pc(current_user,pcname,pcrace)
     if code == 201:
         return jsonify({"msg": "PJ successfully created"}), code
     elif code == 409:
@@ -171,23 +171,23 @@ def mypc_post():
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pc/<int:pjid>', methods=['GET'])
+@app.route('/pc/<int:pcid>', methods=['GET'])
 @jwt_required
-def pc_id_get(pjid):
-    (code,pj) = query_get_pj(None,pjid)
+def pc_id_get(pcid):
+    (code,pc) = query_get_pc(None,pcid)
     if code == 200:
-        return jsonify(pj), code
+        return jsonify(pc), code
     elif code == 404:
         return jsonify({"msg": "PJ does not exists"}), code
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pc/name/<string:pjname>', methods=['GET'])
+@app.route('/pc/name/<string:pcname>', methods=['GET'])
 @jwt_required
-def pc_name_get(pjname):
-    (code,pj) = query_get_pj(pjname,None)
+def pc_name_get(pcname):
+    (code,pc) = query_get_pc(pcname,None)
     if code == 200:
-        return jsonify(pj), code
+        return jsonify(pc), code
     elif code == 404:
         return jsonify({"msg": "PJ does not exists"}), code
     else:
@@ -197,24 +197,24 @@ def pc_name_get(pjname):
 @jwt_required
 def mypc_get():
     current_user = get_jwt_identity()
-    (code,pjs)   = query_get_pjs(current_user)
+    (code,pcs)   = query_get_pcs(current_user)
     if code == 200:
-        return jsonify(pjs), code
+        return jsonify(pcs), code
     elif code == 404:
         return jsonify({"msg": "PJ does not exists"}), code
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/mypc/<int:pjid>', methods=['GET'])
+@app.route('/mypc/<int:pcid>', methods=['GET'])
 @jwt_required
-def mypc_id_get(pjid):
+def mypc_id_get(pcid):
     return jsonify({"msg": "Not yet implemented"}), 200
 
-@app.route('/mypc/<int:pjid>', methods=['DELETE'])
+@app.route('/mypc/<int:pcid>', methods=['DELETE'])
 @jwt_required
-def mypc_delete(pjid):
+def mypc_delete(pcid):
     current_user = get_jwt_identity()
-    code         = query_del_pj(current_user,pjid)
+    code         = query_del_pc(current_user,pcid)
     if code == 200:
         return jsonify({"msg": "PJ successfully deleted"}), code
     elif code == 404:
@@ -226,9 +226,9 @@ def mypc_delete(pjid):
 # Routes: /mp
 #
 
-@app.route('/mypc/<int:pjid>/mp', methods=['POST'])
+@app.route('/mypc/<int:pcid>/mp', methods=['POST'])
 @jwt_required
-def post_mp_send(pjid):
+def post_mp_send(pcid):
     (code,ret) = query_add_mp(get_jwt_identity(),
                               request.json.get('src', None),
                               request.json.get('dst', None),
@@ -237,24 +237,24 @@ def post_mp_send(pjid):
     if isinstance(code, int):
         return jsonify(ret), code
 
-@app.route('/mypc/<int:pjid>/mp/<int:mpid>', methods=['GET'])
+@app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['GET'])
 @jwt_required
-def get_mp(pjid,mpid):
-    (code,mp) = query_get_mp(get_jwt_identity(),pjid,mpid)
+def get_mp(pcid,mpid):
+    (code,mp) = query_get_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify(mp), code
 
-@app.route('/mypc/<int:pjid>/mp/<int:mpid>', methods=['DELETE'])
+@app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['DELETE'])
 @jwt_required
-def delete_mp(pjid,mpid):
-    (code,ret) = query_del_mp(get_jwt_identity(),pjid,mpid)
+def delete_mp(pcid,mpid):
+    (code,ret) = query_del_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify(ret), code
 
-@app.route('/mypc/<int:pjid>/mp', methods=['GET'])
+@app.route('/mypc/<int:pcid>/mp', methods=['GET'])
 @jwt_required
-def get_mps(pjid):
-    (code,mps) = query_get_mps(get_jwt_identity(),pjid)
+def get_mps(pcid):
+    (code,mps) = query_get_mps(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify(mps), code
 
