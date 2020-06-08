@@ -93,13 +93,11 @@ paths:
                 $ref: '#/components/schemas/AuthInfosResponse'
         '401':
           description: KO - Expired/Missing token
-        '422':
-          description: KO - Wrong token
   /auth/delete/{username}:
     delete:
       tags:
         - '/auth: Authentificaton Requests'
-      summary: Permanently delete a PJ from DB
+      summary: Permanently delete a PC from DB
       parameters:
         - in: path
           name: username
@@ -115,14 +113,12 @@ paths:
           description: KO - Missing information in request
         '404':
           description: KO - User not found
-        '422':
-          description: KO - Wrong token
 
-  /pj/create:
+  /mypc:
     post:
       tags:
-        - '/pj: PJ Requests'
-      summary: Create a PJ for a registered user
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Create a new PC for logged in user
       requestBody:
         description: ''
         required: true
@@ -134,35 +130,32 @@ paths:
         - access_token: []
       responses:
         '201':
-          description: OK - PJ created
+          description: OK - PC created
         '400':
           description: KO - Missing information in request
         '409':
-          description: KO - PJ already exists
-        '422':
-          description: KO - Oops
-  /pj/infos/list:
+          description: KO - PC already exists
     get:
       tags:
-        - '/pj: PJ Requests'
-      summary: Get PJ associated to a registered user
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC list belonging to logged in user
       security:
         - access_token: []
       responses:
         '200':
           description: OK
         '404':
-          description: KO - PJ not found
-        '422':
-          description: KO - Oops
-  /pj/infos/id/{id}:
+          description: KO - PC not found
+  /mypc/{pcid}:
     get:
       tags:
-        - '/pj: PJ Requests'
-      summary: Get PJ public informations
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC informations
+      security:
+        - access_token: []
       parameters:
         - in: path
-          name: id
+          name: pcid
           schema:
             type: integer
           required: true
@@ -170,14 +163,46 @@ paths:
         '200':
           description: OK
         '404':
-          description: KO - PJ not found
-        '422':
-          description: KO - Oops
-  /pj/infos/name/{name}:
+          description: KO - PC not found / not belong to token user
+    delete:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Delete a PC
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK - PC deleted
+        '404':
+          description: KO - PC not found / not belong to token user
+
+  /pc/{pcid}:
     get:
       tags:
-        - '/pj: PJ Requests'
-      summary: Get PJ public informations
+        - '/pc : PC Requests (not on your own PC)'
+      summary: Get PC informations
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: KO - PC not found
+  /pc/name/{name}:
+    get:
+      tags:
+        - '/pc : PC Requests (not on your own PC)'
+      summary: Get PC informations
       parameters:
         - in: path
           name: name
@@ -188,35 +213,19 @@ paths:
         '200':
           description: OK
         '404':
-          description: KO - PJ not found
-        '422':
-          description: KO - Oops
-  /pj/delete/id/{id}:
-    delete:
-      tags:
-        - '/pj: PJ Requests'
-      summary: Delete a PJ for a registered user
-      security:
-        - access_token: []
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK - PJ deleted
-        '404':
-          description: KO - PJ not found / not belong to token user
-        '422':
-          description: KO - Oops
+          description: KO - PC not found
 
-  /mp/send:
+  /mypc/{pcid}/mp:
     post:
       tags:
         - '/mp: MP Requests'
-      summary: Send a MP from a PJ to a list of PJs
+      summary: Send a MP from a PC to a list of PCs
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
       requestBody:
         description: ''
         required: true
@@ -231,16 +240,13 @@ paths:
           description: OK - MP sent
         '409':
           description: KO - Token/username mismatch
-        '422':
-          description: KO - Oops
-  /mp/{pjid}/list:
     get:
       tags:
         - '/mp: MP Requests'
-      summary: Get MP list for a PJ
+      summary: Get MP list for a PC
       parameters:
         - in: path
-          name: pjid
+          name: pcid
           schema:
             type: integer
           required: true
@@ -248,17 +254,17 @@ paths:
         '200':
           description: OK
         '404':
-          description: KO - PJ not found
+          description: KO - PC not found
         '409':
-          description: KO - No MP found for this PJ
-  /mp/{pjid}/{mpid}:
+          description: KO - No MP found for this PC
+  /mypc/{pcid}/mp/{mpid}:
     get:
       tags:
         - '/mp: MP Requests'
       summary: Get full MP
       parameters:
         - in: path
-          name: pjid
+          name: pcid
           schema:
             type: integer
           required: true
@@ -271,16 +277,16 @@ paths:
         '200':
           description: OK
         '404':
-          description: KO - PJ not found
+          description: KO - PC not found
         '409':
-          description: KO - No MP found for this PJ
+          description: KO - No MP found for this PC
     delete:
       tags:
         - '/mp: MP Requests'
-      summary: Delete a MP from a PJ
+      summary: Delete a MP from a PC
       parameters:
         - in: path
-          name: pjid
+          name: pcid
           schema:
             type: integer
           required: true
@@ -296,8 +302,6 @@ paths:
           description: OK - MP deleted
         '409':
           description: KO - Token/username mismatch
-        '422':
-          description: KO - Oops
 
 components:
   schemas:

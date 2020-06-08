@@ -12,12 +12,12 @@ def test_singouins_pj_delete():
     token    = json.loads(response.text)['access_token']
     headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
 
-    url      = 'https://api.proto.singouins.com/pj/infos/name/{}'.format(pjname_test)
-    response = requests.get(url)
+    url      = 'https://api.proto.singouins.com/pc/name/{}'.format(pjname_test)
+    response = requests.get(url, headers=headers)
     pjid     = json.loads(response.text)['id']
-    url      = 'https://api.proto.singouins.com/pj/delete/id/{}'.format(pjid)
+
+    url      = 'https://api.proto.singouins.com/mypc/{}'.format(pjid)
     response = requests.delete(url, headers=headers)
-    print(response.text)
 
     assert response.status_code == 200
 
@@ -29,6 +29,5 @@ def test_singouins_auth_delete():
 
     url      = 'https://api.proto.singouins.com/auth/delete/user'
     response = requests.delete(url, json = {'username': 'user'}, headers=headers)
-    print(response.text)
 
     assert response.status_code == 200

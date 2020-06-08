@@ -153,15 +153,12 @@ def get_auth_infos():
 # Routes: /pj
 #
 
-# Info route when authenticated
-@app.route('/pj/create', methods=['POST'])
+@app.route('/mypc', methods=['POST'])
 @jwt_required
-def post_pj_create():
-    # Access the identity of the current user with get_jwt_identity
+def mypc_post():
     current_user = get_jwt_identity()
-
-    pjname         = request.json.get('name', None)
-    pjrace         = request.json.get('race', None)
+    pjname       = request.json.get('name', None)
+    pjrace       = request.json.get('race', None)
 
     if not pjname or not pjrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
@@ -174,8 +171,9 @@ def post_pj_create():
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pj/infos/id/<int:pjid>', methods=['GET'])
-def get_pj_infos(pjid):
+@app.route('/pc/<int:pjid>', methods=['GET'])
+@jwt_required
+def pc_id_get(pjid):
     (code,pj) = query_get_pj(None,pjid)
     if code == 200:
         return jsonify(pj), code
@@ -184,8 +182,9 @@ def get_pj_infos(pjid):
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pj/infos/name/<string:pjname>', methods=['GET'])
-def get_pj_infos_n(pjname):
+@app.route('/pc/name/<string:pjname>', methods=['GET'])
+@jwt_required
+def pc_name_get(pjname):
     (code,pj) = query_get_pj(pjname,None)
     if code == 200:
         return jsonify(pj), code
@@ -194,13 +193,11 @@ def get_pj_infos_n(pjname):
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pj/infos/list', methods=['GET'])
+@app.route('/mypc', methods=['GET'])
 @jwt_required
-def get_pj_infos_list():
-    # Access the identity of the current user with get_jwt_identity
+def mypc_get():
     current_user = get_jwt_identity()
-
-    (code,pjs)     = query_get_pjs(current_user)
+    (code,pjs)   = query_get_pjs(current_user)
     if code == 200:
         return jsonify(pjs), code
     elif code == 404:
@@ -208,13 +205,16 @@ def get_pj_infos_list():
     else:
         return jsonify({"msg": "Oops!"}), 422
 
-@app.route('/pj/delete/id/<int:pjid>', methods=['DELETE'])
+@app.route('/mypc/<int:pjid>', methods=['GET'])
 @jwt_required
-def del_pj_delete(pjid):
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
+def mypc_id_get(pjid):
+    return jsonify({"msg": "Not yet implemented"}), 200
 
-    code           = query_del_pj(current_user,pjid)
+@app.route('/mypc/<int:pjid>', methods=['DELETE'])
+@jwt_required
+def mypc_delete(pjid):
+    current_user = get_jwt_identity()
+    code         = query_del_pj(current_user,pjid)
     if code == 200:
         return jsonify({"msg": "PJ successfully deleted"}), code
     elif code == 404:
@@ -226,9 +226,9 @@ def del_pj_delete(pjid):
 # Routes: /mp
 #
 
-@app.route('/mp/send', methods=['POST'])
+@app.route('/mypc/<int:pjid>/mp', methods=['POST'])
 @jwt_required
-def post_mp_send():
+def post_mp_send(pjid):
     (code,ret) = query_add_mp(get_jwt_identity(),
                               request.json.get('src', None),
                               request.json.get('dst', None),
@@ -237,21 +237,21 @@ def post_mp_send():
     if isinstance(code, int):
         return jsonify(ret), code
 
-@app.route('/mp/<int:pjid>/<int:mpid>', methods=['GET'])
+@app.route('/mypc/<int:pjid>/mp/<int:mpid>', methods=['GET'])
 @jwt_required
 def get_mp(pjid,mpid):
     (code,mp) = query_get_mp(get_jwt_identity(),pjid,mpid)
     if isinstance(code, int):
         return jsonify(mp), code
 
-@app.route('/mp/<int:pjid>/<int:mpid>', methods=['DELETE'])
+@app.route('/mypc/<int:pjid>/mp/<int:mpid>', methods=['DELETE'])
 @jwt_required
 def delete_mp(pjid,mpid):
     (code,ret) = query_del_mp(get_jwt_identity(),pjid,mpid)
     if isinstance(code, int):
         return jsonify(ret), code
 
-@app.route('/mp/<int:pjid>/list', methods=['GET'])
+@app.route('/mypc/<int:pjid>/mp', methods=['GET'])
 @jwt_required
 def get_mps(pjid):
     (code,mps) = query_get_mps(get_jwt_identity(),pjid)

@@ -13,16 +13,19 @@ def test_singouins_pj_create():
     token    = json.loads(response.text)['access_token']
     headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
 
-    url       = 'https://api.proto.singouins.com/pj/create'
+    url       = 'https://api.proto.singouins.com/mypc'
     response  = requests.post(url, json = payload_c, headers=headers)
-    print(response.text)
 
     assert response.status_code == 201
 
 def test_singouins_pj_infos():
-    url      = 'https://api.proto.singouins.com/pj/infos/name/{}'.format(pjname_test)
-    response = requests.get(url)
-    print(response.text)
+    url      = 'https://api.proto.singouins.com/auth/login'
+    response = requests.post(url, json = payload)
+    token    = json.loads(response.text)['access_token']
+    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
+
+    url      = 'https://api.proto.singouins.com/pc/name/{}'.format(pjname_test)
+    response = requests.get(url, headers=headers)
     name     = json.loads(response.text)['name']
 
     assert name == pjname_test
