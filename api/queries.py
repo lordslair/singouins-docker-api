@@ -298,3 +298,24 @@ def query_get_mps(username,pcid):
         else:
             return (404, {"msg": "No MP found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
+
+#
+# Queries /item
+#
+
+def query_get_items(username,pcid):
+    (code,pc) = query_get_pc(None,pcid)
+    user      = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            weapons = session.query(tables.Weapons).filter(tables.Weapons.bearer == pc.id).all()
+
+        if weapons:
+            return (200, {"weapons": weapons})
+        else:
+            return (404, {"msg": "No items found for this PJ"})
+    else: return (409, {"msg": "Token/username mismatch"})

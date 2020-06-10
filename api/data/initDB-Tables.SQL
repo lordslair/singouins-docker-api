@@ -27,3 +27,35 @@ dst       TEXT     NOT NULL,
 subject   TEXT     NOT NULL,
 body      TEXT     NOT NULL,
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS weaponsMeta (
+id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+name       TEXT     NOT NULL,
+mastery    INT      NULL,      /* If a special skill  needed to use it */
+hands      INT      NULL,      /* if it is a 1-hand or 2-hands weapon */
+ranged     BOOLEAN,            /* if it is a ranged weapon or not */
+rng        INT      NULL,      /* range of the weapon */
+pas_use    INT      NOT NULL,  /* PA needed to use it */
+pas_reload INT      NULL,      /* PA needed to reload it */
+moddable   BOOLEAN,            /* if it is a moddable weapon or not */
+caliber    TEXT     NULL,      /* ('.32', '.45', '7.62', ...) */
+rounds     INT      NULL,      /* ('single', 'double', 'triple', 'burst') */
+burst_acc  INT      NULL,      /* Acuracy modifier for burst mode */
+size       TEXT     NOT NULL,  /* for inventory purposes ('1x2', '2x3', ...)*/
+dmg_base   INT      NOT NULL,  /* base damages of the weapon (without any mods) */
+dmg_sneaky INT      NOT NULL,  /* sneaky damages modifier (base %) */
+parry      INT      NOT NULL,  /* parry modifier (base %) */
+arpen      INT      NOT NULL,  /* armor penetration (base %) */
+defcan     INT      NOT NULL,  /* defense cancelation (base %) */
+rarity     INT      NOT NULL); /* ('Legendary', 'Epic', 'Rare', ...) */
+
+CREATE TABLE IF NOT EXISTS weapons (
+id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+type       INT      NOT NULL,  /* ID from weaponsMeta = ('Revolver', 'Pistol', 'Axe', ...) */
+bearer     INT      NULL,      /* ID of the PC who possesses the weapon */
+bound      BOOLEAN,            /* if the weapon is already bound to this PC */
+bound_type TEXT     NOT NULL,  /* ('BoE', 'BoP', 'BoA', 'BoU', 'BtA') */
+modded     BOOLEAN,            /* if it is modded yet */
+mods       TEXT     NULL,      /* list of linked mods */
+state      INT      NOT NULL,  /* 0-100 scale. 100 = new, 0 = unusable */
+date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);

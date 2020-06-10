@@ -14,7 +14,8 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
                                 query_get_pc,   query_add_pc,   query_del_pc,   query_get_pcs,
-                                query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps)
+                                query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps,
+                                query_get_items)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -257,6 +258,17 @@ def get_mps(pcid):
     (code,mps) = query_get_mps(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify(mps), code
+
+#
+# Routes /item
+#
+
+@app.route('/mypc/<int:pcid>/item', methods=['GET'])
+@jwt_required
+def post_mp_send(pcid):
+    (code,ret) = query_get_items(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify(ret), code
 
 if __name__ == '__main__':
     app.run()
