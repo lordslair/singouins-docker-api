@@ -86,7 +86,12 @@ class WeaponsMeta(Base):
     parry: int
     arpen: int
     defcan: int
-    rarity: int
+    min_m: int
+    min_r: int
+    min_g: int
+    min_v: int
+    min_p: int
+    min_b: int
 
     id         = Column(Integer, primary_key=True)
     name       = Column(String)
@@ -105,7 +110,12 @@ class WeaponsMeta(Base):
     parry      = Column(Integer)
     arpen      = Column(Integer)
     defcan     = Column(Integer)
-    rarity     = Column(Integer)
+    min_m      = Column(Integer)
+    min_r      = Column(Integer)
+    min_g      = Column(Integer)
+    min_v      = Column(Integer)
+    min_p      = Column(Integer)
+    min_b      = Column(Integer)
 
 @dataclass
 class Weapons(Base):
@@ -119,6 +129,7 @@ class Weapons(Base):
     modded: bool
     mods: str
     state: int
+    rarity: int
     date: str
 
     id         = Column(Integer, primary_key=True)
@@ -129,4 +140,5 @@ class Weapons(Base):
     modded     = Column(Boolean)
     mods       = Column(String)
     state      = Column(Integer)
+    rarity     = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
