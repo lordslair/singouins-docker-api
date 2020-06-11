@@ -302,6 +302,42 @@ paths:
           description: OK - MP deleted
         '409':
           description: KO - Token/username mismatch
+  /mypc/{pcid}/item:
+    get:
+      tags:
+        - '/item : Item Requests'
+      summary: Get item list for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: KO - PC not found
+
+  /meta/item/{itemtype}:
+    get:
+      tags:
+        - '/meta : Get Meta informations'
+      summary: Get item Meta informations
+      parameters:
+        - in: path
+          name: itemtype
+          schema:
+            type: string
+            enum: [weapon, potion, armor]
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
 
 components:
   schemas:
