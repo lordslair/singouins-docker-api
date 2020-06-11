@@ -319,3 +319,20 @@ def query_get_items(username,pcid):
         else:
             return (404, {"msg": "No items found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
+
+#
+# Queries /meta
+#
+
+def query_get_meta_item(itemtype):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        if    itemtype == 'weapon': meta = session.query(tables.WeaponsMeta).all()
+        else: return (200, {"msg": "Itemtype does not exist"})
+
+    if meta:
+        return (200, meta)
+    else:
+        return (200, {"msg": "No meta found for this itemtype"})

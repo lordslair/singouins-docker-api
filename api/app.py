@@ -270,5 +270,16 @@ def post_mp_send(pcid):
     if isinstance(code, int):
         return jsonify(ret), code
 
+#
+# Routes /meta
+#
+
+@app.route('/meta/item/<string:itemtype>', methods=['GET'])
+@jwt_required
+def get_meta_item(itemtype):
+    (code,ret) = query_get_meta_item(itemtype)
+    if isinstance(code, int):
+        return jsonify(ret), code
+
 if __name__ == '__main__':
     app.run()
