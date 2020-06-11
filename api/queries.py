@@ -296,7 +296,7 @@ def query_get_mps(username,pcid):
                 mp.body = textwrap.shorten(mp.body, width=50, placeholder="...")
             return (200, mps)
         else:
-            return (404, {"msg": "No MP found for this PJ"})
+            return (200, {"msg": "No MP found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
 
 #
