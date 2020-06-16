@@ -142,3 +142,63 @@ class Weapons(Base):
     state      = Column(Integer)
     rarity     = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class GearMeta(Base):
+    __tablename__ = 'gearMeta'
+
+    id: int
+    name: str
+    tier: bool
+    mastery: int
+    moddable: bool
+    size: str
+    arm_p: int
+    arm_b: int
+    min_m: int
+    min_r: int
+    min_g: int
+    min_v: int
+    min_p: int
+    min_b: int
+
+    id         = Column(Integer, primary_key=True)
+    name       = Column(String)
+    mastery    = Column(Integer)
+    tier       = Column(Integer)
+    moddable   = Column(Boolean)
+    size       = Column(String)
+    arm_p      = Column(Integer)
+    arm_b      = Column(Integer)
+    min_m      = Column(Integer)
+    min_r      = Column(Integer)
+    min_g      = Column(Integer)
+    min_v      = Column(Integer)
+    min_p      = Column(Integer)
+    min_b      = Column(Integer)
+
+@dataclass
+class Gear(Base):
+    __tablename__ = 'gear'
+
+    id: int
+    type: int
+    bearer: int
+    bound: bool
+    bound_type: str
+    modded: bool
+    mods: str
+    state: int
+    rarity: int
+    date: str
+
+    id         = Column(Integer, primary_key=True)
+    type       = Column(Integer)
+    bearer     = Column(Integer)
+    bound      = Column(Boolean)
+    bound_type = Column(String)
+    modded     = Column(Boolean)
+    mods       = Column(String)
+    state      = Column(Integer)
+    rarity     = Column(Integer)
+    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

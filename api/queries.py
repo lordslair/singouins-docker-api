@@ -313,11 +313,12 @@ def query_get_items(username,pcid):
 
         with engine.connect() as conn:
             weapons = session.query(tables.Weapons).filter(tables.Weapons.bearer == pc.id).all()
+            gear    = session.query(tables.Gear).filter(tables.Gear.bearer == pc.id).all()
 
         if weapons:
-            return (200, {"weapons": weapons})
+            return (200, {"weapons": weapons, "gear": gear})
         else:
-            return (404, {"msg": "No items found for this PJ"})
+            return (200, {"msg": "No items found for this PJ"})
     else: return (409, {"msg": "Token/username mismatch"})
 
 #
@@ -330,6 +331,7 @@ def query_get_meta_item(itemtype):
 
     with engine.connect() as conn:
         if    itemtype == 'weapon': meta = session.query(tables.WeaponsMeta).all()
+        elif  itemtype == 'gear':   meta = session.query(tables.GearMeta).all()
         else: return (200, {"msg": "Itemtype does not exist"})
 
     if meta:
