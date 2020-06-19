@@ -73,10 +73,6 @@ paths:
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthRefreshResponse'
   /auth/infos:
     get:
       tags:
@@ -87,12 +83,6 @@ paths:
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthInfosResponse'
-        '401':
-          description: KO - Expired/Missing token
   /auth/delete/{username}:
     delete:
       tags:
@@ -144,8 +134,6 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found
   /mypc/{pcid}:
     get:
       tags:
@@ -162,8 +150,6 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found / not belong to token user
     delete:
       tags:
         - '/mypc: PC Requests (on your own PC)'
@@ -179,8 +165,6 @@ paths:
       responses:
         '200':
           description: OK - PC deleted
-        '404':
-          description: KO - PC not found / not belong to token user
 
   /pc/{pcid}:
     get:
@@ -196,8 +180,6 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found
   /pc/name/{name}:
     get:
       tags:
@@ -212,8 +194,6 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found
 
   /mypc/{pcid}/mp:
     post:
@@ -253,10 +233,8 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found
         '409':
-          description: KO - No MP found for this PC
+          description: KO - Token/username mismatch
   /mypc/{pcid}/mp/{mpid}:
     get:
       tags:
@@ -276,10 +254,8 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found
         '409':
-          description: KO - No MP found for this PC
+          description: KO - Token/username mismatch
     delete:
       tags:
         - '/mp: MP Requests'
@@ -318,8 +294,6 @@ paths:
       responses:
         '200':
           description: OK
-        '404':
-          description: KO - PC not found
 
   /meta/item/{itemtype}:
     get:
@@ -362,27 +336,6 @@ components:
         password:
           type: string
           format: password
-    AuthLoginResponse:
-      type: object
-      properties:
-        access_token:
-          type: string
-          format: string
-        refresh_token:
-          type: string
-          format: string
-    AuthRefreshResponse:
-      type: object
-      properties:
-        access_token:
-          type: string
-          format: string
-    AuthInfosResponse:
-      type: object
-      properties:
-        logged_in_as:
-          type: string
-          format: string
 
     PjCreatePostBody:
       type: object

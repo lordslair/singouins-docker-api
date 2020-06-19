@@ -164,47 +164,31 @@ def mypc_post():
     if not pcname or not pcrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
-    code           = query_add_pc(current_user,pcname,pcrace)
-    if code == 201:
-        return jsonify({"msg": "PJ successfully created"}), code
-    elif code == 409:
-        return jsonify({"msg": "PJ already exists"}), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
+    (code, success, msg, payload) = query_add_pc(current_user,pcname,pcrace)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/pc/<int:pcid>', methods=['GET'])
 @jwt_required
 def pc_id_get(pcid):
-    (code,pc) = query_get_pc(None,pcid)
-    if code == 200:
-        return jsonify(pc), code
-    elif code == 404:
-        return jsonify({"msg": "PJ does not exists"}), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
+    (code, success, msg, payload) = query_get_pc(None,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/pc/name/<string:pcname>', methods=['GET'])
 @jwt_required
 def pc_name_get(pcname):
-    (code,pc) = query_get_pc(pcname,None)
-    if code == 200:
-        return jsonify(pc), code
-    elif code == 404:
-        return jsonify({"msg": "PJ does not exists"}), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
+    (code, success, msg, payload) = query_get_pc(pcname,None)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc', methods=['GET'])
 @jwt_required
 def mypc_get():
     current_user = get_jwt_identity()
-    (code,pcs)   = query_get_pcs(current_user)
-    if code == 200:
-        return jsonify(pcs), code
-    elif code == 404:
-        return jsonify({"msg": "PJ does not exists"}), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
+    (code, success, msg, payload) = query_get_pcs(current_user)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>', methods=['GET'])
 @jwt_required
@@ -215,13 +199,9 @@ def mypc_id_get(pcid):
 @jwt_required
 def mypc_delete(pcid):
     current_user = get_jwt_identity()
-    code         = query_del_pc(current_user,pcid)
-    if code == 200:
-        return jsonify({"msg": "PJ successfully deleted"}), code
-    elif code == 404:
-        return jsonify({"msg": "PJ does not exists or does not belong to the token"}), code
-    else:
-        return jsonify({"msg": "Oops!"}), 422
+    (code, success, msg, payload) = query_del_pc(current_user,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
 # Routes: /mp
@@ -230,34 +210,34 @@ def mypc_delete(pcid):
 @app.route('/mypc/<int:pcid>/mp', methods=['POST'])
 @jwt_required
 def post_mp_send(pcid):
-    (code,ret) = query_add_mp(get_jwt_identity(),
-                              request.json.get('src', None),
-                              request.json.get('dst', None),
-                              request.json.get('subject', None),
-                              request.json.get('body', None))
+    (code, success, msg, payload) = query_add_mp(get_jwt_identity(),
+                                    request.json.get('src',     None),
+                                    request.json.get('dst',     None),
+                                    request.json.get('subject', None),
+                                    request.json.get('body',    None))
     if isinstance(code, int):
-        return jsonify(ret), code
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['GET'])
 @jwt_required
 def get_mp(pcid,mpid):
-    (code,mp) = query_get_mp(get_jwt_identity(),pcid,mpid)
+    (code, success, msg, payload) = query_get_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
-        return jsonify(mp), code
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['DELETE'])
 @jwt_required
 def delete_mp(pcid,mpid):
-    (code,ret) = query_del_mp(get_jwt_identity(),pcid,mpid)
+    (code, success, msg, payload) = query_del_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
-        return jsonify(ret), code
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp', methods=['GET'])
 @jwt_required
 def get_mps(pcid):
-    (code,mps) = query_get_mps(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = query_get_mps(get_jwt_identity(),pcid)
     if isinstance(code, int):
-        return jsonify(mps), code
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
 # Routes /item
@@ -266,9 +246,9 @@ def get_mps(pcid):
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
 @jwt_required
 def post_mp_send(pcid):
-    (code,ret) = query_get_items(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = query_get_items(get_jwt_identity(),pcid)
     if isinstance(code, int):
-        return jsonify(ret), code
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
 # Routes /meta
@@ -277,9 +257,9 @@ def post_mp_send(pcid):
 @app.route('/meta/item/<string:itemtype>', methods=['GET'])
 @jwt_required
 def get_meta_item(itemtype):
-    (code,ret) = query_get_meta_item(itemtype)
+    (code, success, msg, payload) = query_get_meta_item(itemtype)
     if isinstance(code, int):
-        return jsonify(ret), code
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 if __name__ == '__main__':
     app.run()

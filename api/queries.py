@@ -129,7 +129,7 @@ def query_get_pc_exists(pcname,pcid):
 
 def query_add_pc(username,pcname,pcrace):
     if query_get_pc_exists(pcname,None):
-        return (409)
+        return (409, False, 'PC already exists', None)
     else:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -148,9 +148,9 @@ def query_add_pc(username,pcname,pcrace):
                 session.commit()
             except Exception as e:
                 # Something went wrong during commit
-                return (422)
+                return (200, False, 'PC creation failed', None)
             else:
-                return (201)
+                return (201, True, 'PC successfully created', None)
 
 def query_get_pc(pcname,pcid):
     Session = sessionmaker(bind=engine)
@@ -161,13 +161,13 @@ def query_get_pc(pcname,pcid):
             pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
         elif pcname:
             pc = session.query(tables.PJ).filter(tables.PJ.name == pcname).one_or_none()
-        else: return (422,None)
+        else: return (200, False, 'Wrong pcid/pcname', None)
         session.close()
 
     if pc:
-        return (200,pc)
+        return (200, True, 'OK', pc)
     else:
-        return (404,'This PJ does not exist')
+        return (200, False, 'PC does not exist', None)
 
 def query_get_pcs(username):
     Session = sessionmaker(bind=engine)
@@ -179,14 +179,14 @@ def query_get_pcs(username):
         session.close()
 
     if pcs:
-        return (200,pcs)
+            return (200, True, 'OK', pcs)
     else:
-        return (404,'This user has no PJ in DB')
+        return (200, False, 'No PC found for this user', None)
 
 def query_del_pc(username,pcid):
 
     if not query_get_pc_exists(None,pcid):
-        return (404)
+        return (200, False, 'PC does not exist', None)
     else:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -199,9 +199,9 @@ def query_del_pc(username,pcid):
                 session.commit()
             except Exception as e:
                 # Something went wrong during commit
-                return (422)
+                return (200, False, 'PC deletion failed', None)
             else:
-                return (200)
+                return (200, True, 'PC successfully deleted', None)
 
 #
 # Queries: /mp
@@ -232,14 +232,14 @@ def query_add_mp(username,src,dsts,subject,body):
         except Exception as e:
             # Something went wrong during commit
             session.rollback()
-            return (422, {"msg": "MP creation failed"})
+            return (200, False, 'MP creation failed', None)
         else:
-            return (201, {"msg": "MP successfully created"})
+            return (201, True, 'MP successfully created', None)
 
     elif user.id != pcsrc.account:
-        return (409, {"msg": "Token/username mismatch"})
+        return (409, False, 'Token/username mismatch', None)
     else:
-        return (404, {"msg": "PJ does not exist"})
+        return (200, False, 'PC does not exist', None)
 
 def query_get_mp(username,pcid,mpid):
     (code,pc) = query_get_pc(None,pcid)
@@ -254,10 +254,10 @@ def query_get_mp(username,pcid,mpid):
             session.close()
 
         if mp:
-            return (200, mp)
+            return (200, True, 'OK', mp)
         else:
-            return (404, {"msg": "No MP found for this PJ"})
-    else: return (409, {"msg": "Token/username mismatch"})
+            return (200, True, 'No MP found for this PC', None)
+    else: return (409, False, 'Token/username mismatch', None)
 
 def query_del_mp(username,pcid,mpid):
     (code,pc) = query_get_pc(None,pcid)
@@ -270,15 +270,15 @@ def query_del_mp(username,pcid,mpid):
         with engine.connect() as conn:
             try:
                 mp = session.query(tables.MP).filter(tables.MP.dst_id == pc.id, tables.MP.id == mpid).one_or_none()
-                if not mp: return (404, {"msg": "No MP found for this PJ"})
+                if not mp: return (200, True, 'No MP found for this PC', None)
                 session.delete(mp)
                 session.commit()
             except Exception as e:
                 # Something went wrong during commit
-                return (422, {"msg": "MP deletion failed"})
+                return (200, False, 'MP deletion failed', None)
             else:
-                return (200, {"msg": "MP successfully deleted"})
-    else: return (409, {"msg": "Token/username mismatch"})
+                return (200, True, 'MP successfully deleted', None)
+    else: return (409, False, 'Token/username mismatch', None)
 
 def query_get_mps(username,pcid):
     (code,pc) = query_get_pc(None,pcid)
@@ -294,10 +294,10 @@ def query_get_mps(username,pcid):
         if mps:
             for mp in mps:
                 mp.body = textwrap.shorten(mp.body, width=50, placeholder="...")
-            return (200, mps)
+            return (200, True, 'OK', mps)
         else:
-            return (200, {"msg": "No MP found for this PJ"})
-    else: return (409, {"msg": "Token/username mismatch"})
+            return (200, True, 'No MP found for this PC', None)
+    else: return (409, False, 'Token/username mismatch', None)
 
 #
 # Queries /item
@@ -314,12 +314,9 @@ def query_get_items(username,pcid):
         with engine.connect() as conn:
             weapons = session.query(tables.Weapons).filter(tables.Weapons.bearer == pc.id).all()
             gear    = session.query(tables.Gear).filter(tables.Gear.bearer == pc.id).all()
+            return (200, True, 'OK', {"weapons": weapons, "gear": gear})
 
-        if weapons:
-            return (200, {"weapons": weapons, "gear": gear})
-        else:
-            return (200, {"msg": "No items found for this PJ"})
-    else: return (409, {"msg": "Token/username mismatch"})
+    else: return (409, False, 'Token/username mismatch', None)
 
 #
 # Queries /meta
@@ -332,9 +329,7 @@ def query_get_meta_item(itemtype):
     with engine.connect() as conn:
         if    itemtype == 'weapon': meta = session.query(tables.WeaponsMeta).all()
         elif  itemtype == 'gear':   meta = session.query(tables.GearMeta).all()
-        else: return (200, {"msg": "Itemtype does not exist"})
+        else: return (200, False, 'Itemtype does not exist', None)
 
     if meta:
-        return (200, meta)
-    else:
-        return (200, {"msg": "No meta found for this itemtype"})
+        return (200, True, 'OK', meta)
