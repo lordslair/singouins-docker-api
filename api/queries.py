@@ -304,8 +304,8 @@ def query_get_mps(username,pcid):
 #
 
 def query_get_items(username,pcid):
-    (code,pc) = query_get_pc(None,pcid)
-    user      = query_get_user(username)
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
 
     if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
