@@ -299,6 +299,23 @@ def query_get_mps(username,pcid):
             return (200, True, 'No MP found for this PC', None)
     else: return (409, False, 'Token/username mismatch', None)
 
+def query_get_mp_addressbook(username,pcid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            addressbook = session.query(tables.PJ).with_entities(tables.PJ.id,tables.PJ.name).all()
+
+        if addressbook:
+            return (200, True, 'OK', addressbook)
+        else:
+            return (200, True, 'No Addressbook found for this PC', None)
+    else: return (409, False, 'Token/username mismatch', None)
+
 #
 # Queries /item
 #

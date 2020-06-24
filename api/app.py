@@ -14,7 +14,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
                                 query_get_pc,   query_add_pc,   query_del_pc,   query_get_pcs,
-                                query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps,
+                                query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps, query_get_mp_addressbook,
                                 query_get_items,
                                 query_get_meta_item,
                                 query_get_squad, query_add_squad, query_del_squad, query_invite_squad_member)
@@ -240,6 +240,13 @@ def get_mps(pcid):
     (code, success, msg, payload) = query_get_mps(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/mp/addressbook', methods=['GET'])
+@jwt_required
+def get_mp_addressbook(pcid):
+    (code, success, msg, payload) = query_get_mp_addressbook(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": [{"id": row[0], "name": row[1]} for row in payload]}), code
 
 #
 # Routes /item

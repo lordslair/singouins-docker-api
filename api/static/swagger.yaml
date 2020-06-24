@@ -278,6 +278,23 @@ paths:
           description: OK - MP deleted
         '409':
           description: KO - Token/username mismatch
+  /mypc/{pcid}/mp/addressbook:
+    get:
+      tags:
+        - '/mp: MP Requests'
+      summary: Get Addressbook from a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+        '409':
+          description: KO - Token/username mismatch
+
   /mypc/{pcid}/item:
     get:
       tags:
