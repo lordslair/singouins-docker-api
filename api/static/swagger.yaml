@@ -347,6 +347,33 @@ paths:
       responses:
         '200':
           description: OK
+  /mypc/{pcid}/squad/{squadid}/invite/{targetid}:
+    post:
+      tags:
+        - '/squad : Squad Requests'
+      summary: Invite a PC into a squad
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: squadid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: targetid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+
   /meta/item/{itemtype}:
     get:
       tags:

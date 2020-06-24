@@ -427,3 +427,31 @@ def query_del_squad(username,pcid):
             else:
                 return (200, True, 'Squad successfully deleted', None)
     else: return (409, False, 'Token/username mismatch', None)
+
+def query_invite_squad_member(username,leaderid,pcid):
+    (code, success, msg, pc)     = query_get_pc(None,pcid)
+    (code, success, msg, leader) = query_get_pc(None,leaderid)
+    user                         = query_get_user(username)
+
+    if leader.squad is None:
+        return (200, False, 'PC is not in a squad', None)
+    if leader.squad_rank != 'Leader':
+        return (200, False, 'PC is not the squad Leader', None)
+    if pc.squad is not None:
+        return (200, False, 'PC invited is already in a squad', None)
+
+    if pc and leader:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            try:
+                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc.squad      = leader.squad
+                pc.squad_rank = 'Pending'
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'PC Invite failed', None)
+            else:
+                return (201, True, 'PC successfully invited', None)

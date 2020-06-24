@@ -17,7 +17,7 @@ from queries            import (query_get_user, query_add_user, query_del_user, 
                                 query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps,
                                 query_get_items,
                                 query_get_meta_item,
-                                query_get_squad, query_add_squad, query_del_squad)
+                                query_get_squad, query_add_squad, query_del_squad, query_invite_squad_member)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -289,6 +289,15 @@ def squad_post_create(pcid):
 @jwt_required
 def squad_delete(pcid):
     (code, success, msg, payload) = query_del_squad(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:leaderid>/squad/<int:squadid>/invite/<int:pcid>', methods=['POST'])
+@jwt_required
+def squad_post_invite(leaderid,squadid,pcid):
+    (code, success, msg, payload) = query_invite_squad_member(get_jwt_identity(),
+                                    leaderid,
+                                    pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
