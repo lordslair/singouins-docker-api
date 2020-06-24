@@ -31,17 +31,21 @@ class PJ(Base):
     x: int
     y: int
     xp: int
+    squad: int
+    squad_rank: str
     date: str
 
-    id      = Column(Integer, primary_key=True)
-    name    = Column(String)
-    race    = Column(String)
-    account = Column(Integer)
-    level   = Column(Integer)
-    x       = Column(Integer)
-    y       = Column(Integer)
-    xp      = Column(Integer)
-    date    = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+    id         = Column(Integer, primary_key=True)
+    name       = Column(String)
+    race       = Column(String)
+    account    = Column(Integer)
+    level      = Column(Integer)
+    x          = Column(Integer)
+    y          = Column(Integer)
+    xp         = Column(Integer)
+    squad      = Column(Integer)
+    squad_rank = Column(String)
+    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
 class MP(Base):
@@ -63,6 +67,22 @@ class MP(Base):
     dst     = Column(String)
     subject = Column(String)
     body    = Column(String)
+    date    = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class Squad(Base):
+    __tablename__ = 'squads'
+
+    id: int
+    name: str
+    leader: int
+    created: str
+    date: str
+
+    id      = Column(Integer, primary_key=True)
+    name    = Column(String)
+    leader  = Column(String)
+    created = Column(DateTime)
     date    = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass

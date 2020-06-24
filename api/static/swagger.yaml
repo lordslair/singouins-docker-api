@@ -294,7 +294,59 @@ paths:
       responses:
         '200':
           description: OK
-
+  /mypc/{pcid}/squad:
+    get:
+      tags:
+        - '/squad : Squad Requests'
+      summary: Get squad list for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+    post:
+      tags:
+        - '/squad : Squad Requests'
+      summary: Create a squad for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SquadPostBody'
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags:
+        - '/squad : Squad Requests'
+      summary: Leave/Delete a squad for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
   /meta/item/{itemtype}:
     get:
       tags:
@@ -361,6 +413,13 @@ components:
           type: string
           format: string
         body:
+          type: string
+          format: string
+
+    SquadPostBody:
+      type: object
+      properties:
+        name:
           type: string
           format: string
 

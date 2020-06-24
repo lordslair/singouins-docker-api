@@ -208,8 +208,8 @@ def query_del_pc(username,pcid):
 #
 
 def query_add_mp(username,src,dsts,subject,body):
-    (code,pcsrc) = query_get_pc(None,src)
-    user         = query_get_user(username)
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
 
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -242,8 +242,8 @@ def query_add_mp(username,src,dsts,subject,body):
         return (200, False, 'PC does not exist', None)
 
 def query_get_mp(username,pcid,mpid):
-    (code,pc) = query_get_pc(None,pcid)
-    user      = query_get_user(username)
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
 
     if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
@@ -260,8 +260,8 @@ def query_get_mp(username,pcid,mpid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def query_del_mp(username,pcid,mpid):
-    (code,pc) = query_get_pc(None,pcid)
-    user      = query_get_user(username)
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
 
     if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
@@ -281,8 +281,8 @@ def query_del_mp(username,pcid,mpid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def query_get_mps(username,pcid):
-    (code,pc) = query_get_pc(None,pcid)
-    user      = query_get_user(username)
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
 
     if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
@@ -333,3 +333,97 @@ def query_get_meta_item(itemtype):
 
     if meta:
         return (200, True, 'OK', meta)
+
+#
+# Queries /squad
+#
+
+def query_get_squad(username,pcid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            squad = session.query(tables.Squad).\
+                            filter(tables.Squad.id == pc.squad).\
+                            filter(tables.PJ.id == pc.id)
+
+            if squad.filter(tables.PJ.squad_rank != 'Pending').one_or_none():
+                squad   = squad.session.query(tables.Squad).filter(tables.Squad.id == pc.squad).one_or_none()
+                members = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).filter(tables.PJ.squad_rank != 'Pending').all()
+                pending = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).filter(tables.PJ.squad_rank == 'Pending').all()
+                if members and pending and squad:
+                    return (200, True, 'OK', {"squad": squad, "members": members, "pending": pending})
+            elif squad.filter(tables.PJ.squad_rank == 'Pending').one_or_none():
+                squad   = squad.session.query(tables.Squad).filter(tables.Squad.id == pc.squad).one_or_none()
+                return (200, True, 'PC is pending in a squad', {"squad": squad})
+            else: return (200, False, 'PC is not in a squad', None)
+    else: return (409, False, 'Token/username mismatch', None)
+
+def query_add_squad(username,pcid,squadname):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            if session.query(tables.Squad).filter(tables.Squad.name == squadname).one_or_none():
+                return (409, False, 'Squad already exists', None)
+            if pc.squad is not None:
+                return (200, False, 'Squad leader already in a squad', None)
+
+            squad = tables.Squad(name    = squadname,
+                                 leader  = pc.id,
+                                 created = datetime.now())
+            session.add(squad)
+
+            try:
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'Squad creation failed', None)
+            else:
+                # Squad created, let's assign the team creator in the squad
+                try:
+                    pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                    pc.squad      = squad.id
+                    pc.squad_rank = 'Leader'
+                    session.commit()
+                except Exception as e:
+                    # Something went wrong during commit
+                    return (200, False, 'Squad leader assignation failed', None)
+                else:
+                    return (201, True, 'Squad successfully created', None)
+
+def query_del_squad(username,pcid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            try:
+                squad = session.query(tables.Squad).filter(tables.Squad.leader == pc.id).one_or_none()
+                if not squad: return (200, True, 'No Squad found for this PC', None)
+
+                count = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).count()
+                if count > 1: return (200, True, 'Squad not empty', None)
+
+                session.delete(squad)
+                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc.squad      = None
+                pc.squad_rank = None
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'Squad deletion failed', None)
+            else:
+                return (200, True, 'Squad successfully deleted', None)
+    else: return (409, False, 'Token/username mismatch', None)

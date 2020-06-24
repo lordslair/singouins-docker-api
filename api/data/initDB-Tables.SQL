@@ -8,15 +8,17 @@ active    BOOLEAN,
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS pjsInfos (
-id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
-name      TEXT     NOT NULL,
-race      TEXT     NOT NULL,
-account   INT      NOT NULL, /* pjsAuth.id */
-level     INT      NOT NULL,
-x         INT      NOT NULL,
-y         INT      NOT NULL,
-xp        INT      NOT NULL,
-date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+name       TEXT     NOT NULL,
+race       TEXT     NOT NULL,
+account    INT      NOT NULL, /* pjsAuth.id */
+level      INT      NOT NULL,
+x          INT      NOT NULL,
+y          INT      NOT NULL,
+xp         INT      NOT NULL,
+squad      INT      NULL,     /* squads.id */
+squad_rank TEXT     NULL,     /* ('prnding','member','leader') */
+date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS mps (
 id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -26,6 +28,13 @@ dst_id    INT      NOT NULL,
 dst       TEXT     NOT NULL,
 subject   TEXT     NOT NULL,
 body      TEXT     NOT NULL,
+date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS squads (
+id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+name      TEXT     NOT NULL, /* Squad name */
+leader    INT      NOT NULL, /* Squad leader */
+created   DATETIME NOT NULL, /* Squad creation date */
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS weaponsMeta (

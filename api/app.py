@@ -15,7 +15,9 @@ from prometheus_flask_exporter import PrometheusMetrics
 from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
                                 query_get_pc,   query_add_pc,   query_del_pc,   query_get_pcs,
                                 query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps,
-                                query_get_items)
+                                query_get_items,
+                                query_get_meta_item,
+                                query_get_squad, query_add_squad, query_del_squad)
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -258,6 +260,35 @@ def post_mp_send(pcid):
 @jwt_required
 def get_meta_item(itemtype):
     (code, success, msg, payload) = query_get_meta_item(itemtype)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
+# Routes /squad
+#
+
+@app.route('/mypc/<int:pcid>/squad', methods=['GET'])
+@jwt_required
+def squad_get(pcid):
+    (code, success, msg, payload) = query_get_squad(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/squad', methods=['POST'])
+@jwt_required
+def squad_post_create(pcid):
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+    (code, success, msg, payload) = query_add_squad(get_jwt_identity(),
+                                    pcid,
+                                    request.json.get('name', None))
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/squad', methods=['DELETE'])
+@jwt_required
+def squad_delete(pcid):
+    (code, success, msg, payload) = query_del_squad(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
