@@ -472,3 +472,33 @@ def query_invite_squad_member(username,leaderid,pcid):
                 return (200, False, 'PC Invite failed', None)
             else:
                 return (201, True, 'PC successfully invited', None)
+
+def query_kick_squad_member(username,leaderid,pcid):
+    (code, success, msg, pc)     = query_get_pc(None,pcid)
+    (code, success, msg, leader) = query_get_pc(None,leaderid)
+    user                         = query_get_user(username)
+
+    if pc and leader:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        if leader.squad is None:
+            return (200, False, 'PC is not in a squad', None)
+        if leader.squad_rank != 'Leader':
+            return (200, False, 'PC is not the squad Leader', None)
+        if pc.squad is None:
+            return (200, False, 'PC target is not in a squad', None)
+        if pc.id == leader.id:
+            return (200, False, 'PC target cannot be the squad Leader', None)
+
+        with engine.connect() as conn:
+            try:
+                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc.squad      = None
+                pc.squad_rank = None
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'PC Kick failed', None)
+            else:
+                return (201, True, 'PC successfully kicked', None)

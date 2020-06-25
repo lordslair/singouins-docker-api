@@ -352,7 +352,7 @@ paths:
     delete:
       tags:
         - '/squad : Squad Requests'
-      summary: Leave/Delete a squad for a PC
+      summary: Delete a squad for a PC (Leader only)
       parameters:
         - in: path
           name: pcid
@@ -368,7 +368,33 @@ paths:
     post:
       tags:
         - '/squad : Squad Requests'
-      summary: Invite a PC into a squad
+      summary: Invite a PC into a squad (Leader only)
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: squadid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: targetid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/squad/{squadid}/kick/{targetid}:
+    post:
+      tags:
+        - '/squad : Squad Requests'
+      summary: Kick a PC from a squad (Leader only)
       parameters:
         - in: path
           name: pcid

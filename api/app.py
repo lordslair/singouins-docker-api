@@ -308,5 +308,14 @@ def squad_post_invite(leaderid,squadid,pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/mypc/<int:leaderid>/squad/<int:squadid>/kick/<int:pcid>', methods=['POST'])
+@jwt_required
+def squad_post_kick(leaderid,squadid,pcid):
+    (code, success, msg, payload) = query_kick_squad_member(get_jwt_identity(),
+                                    leaderid,
+                                    pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 if __name__ == '__main__':
     app.run()
