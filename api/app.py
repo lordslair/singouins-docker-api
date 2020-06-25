@@ -274,9 +274,9 @@ def get_meta_item(itemtype):
 # Routes /squad
 #
 
-@app.route('/mypc/<int:pcid>/squad', methods=['GET'])
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['GET'])
 @jwt_required
-def squad_get(pcid):
+def squad_get(pcid,squadid):
     (code, success, msg, payload) = query_get_squad(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -292,28 +292,28 @@ def squad_post_create(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/squad', methods=['DELETE'])
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['DELETE'])
 @jwt_required
-def squad_delete(pcid):
+def squad_delete(pcid,squadid):
     (code, success, msg, payload) = query_del_squad(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:leaderid>/squad/<int:squadid>/invite/<int:pcid>', methods=['POST'])
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>', methods=['POST'])
 @jwt_required
-def squad_post_invite(leaderid,squadid,pcid):
+def squad_post_invite(pcid,squadid,targetid):
     (code, success, msg, payload) = query_invite_squad_member(get_jwt_identity(),
-                                    leaderid,
-                                    pcid)
+                                    pcid,
+                                    targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:leaderid>/squad/<int:squadid>/kick/<int:pcid>', methods=['POST'])
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>', methods=['POST'])
 @jwt_required
-def squad_post_kick(leaderid,squadid,pcid):
+def squad_post_kick(pcid,squadid,targetid):
     (code, success, msg, payload) = query_kick_squad_member(get_jwt_identity(),
-                                    leaderid,
-                                    pcid)
+                                    pcid,
+                                    targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
