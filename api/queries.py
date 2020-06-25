@@ -450,16 +450,16 @@ def query_invite_squad_member(username,leaderid,pcid):
     (code, success, msg, leader) = query_get_pc(None,leaderid)
     user                         = query_get_user(username)
 
-    if leader.squad is None:
-        return (200, False, 'PC is not in a squad', None)
-    if leader.squad_rank != 'Leader':
-        return (200, False, 'PC is not the squad Leader', None)
-    if pc.squad is not None:
-        return (200, False, 'PC invited is already in a squad', None)
-
     if pc and leader:
         Session = sessionmaker(bind=engine)
         session = Session()
+
+        if leader.squad is None:
+            return (200, False, 'PC is not in a squad', None)
+        if leader.squad_rank != 'Leader':
+            return (200, False, 'PC is not the squad Leader', None)
+        if pc.squad is not None:
+            return (200, False, 'PC invited is already in a squad', None)
 
         with engine.connect() as conn:
             try:
