@@ -317,5 +317,26 @@ def squad_post_kick(leaderid,squadid,pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>/accept', methods=['POST'])
+@jwt_required
+def squad_post_accept(pcid,squadid):
+    (code, success, msg, payload) = query_accept_squad_member(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>/leave', methods=['POST'])
+@jwt_required
+def squad_post_leave(pcid,squadid):
+    (code, success, msg, payload) = query_leave_squad_member(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/squad/<int:squadid>/decline', methods=['POST'])
+@jwt_required
+def squad_post_decline(pcid,squadid):
+    (code, success, msg, payload) = query_decline_squad_member(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 if __name__ == '__main__':
     app.run()

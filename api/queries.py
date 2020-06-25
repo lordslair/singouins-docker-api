@@ -502,3 +502,71 @@ def query_kick_squad_member(username,leaderid,pcid):
                 return (200, False, 'PC Kick failed', None)
             else:
                 return (201, True, 'PC successfully kicked', None)
+
+def query_accept_squad_member(username,pcid):
+    (code, success, msg, pc)     = query_get_pc(None,pcid)
+    user                         = query_get_user(username)
+
+    if pc:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        if pc.squad_rank != 'Pending':
+            return (200, False, 'PC is not pending in a squad', None)
+
+        with engine.connect() as conn:
+            try:
+                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc.squad_rank = 'Member'
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'PC squad invite accept failed', None)
+            else:
+                return (201, True, 'PC successfully accepted', None)
+
+def query_decline_squad_member(username,pcid):
+    (code, success, msg, pc)     = query_get_pc(None,pcid)
+    user                         = query_get_user(username)
+
+    if pc:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        if pc.squad_rank != 'Pending':
+            return (200, False, 'PC is not pending in a squad', None)
+
+        with engine.connect() as conn:
+            try:
+                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc.squad      = None
+                pc.squad_rank = None
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'PC squad invite decline failed', None)
+            else:
+                return (201, True, 'PC successfully declined squad invite', None)
+
+def query_leave_squad_member(username,pcid):
+    (code, success, msg, pc)     = query_get_pc(None,pcid)
+    user                         = query_get_user(username)
+
+    if pc:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        if pc.squad_rank == 'Leader':
+            return (200, False, 'PC cannot be the squad Leader', None)
+
+        with engine.connect() as conn:
+            try:
+                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc.squad      = None
+                pc.squad_rank = None
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'PC squad leave failed', None)
+            else:
+                return (201, True, 'PC successfully left', None)
