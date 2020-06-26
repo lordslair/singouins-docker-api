@@ -4,6 +4,7 @@ import json
 import os
 import requests
 
+SEP_URL     = os.environ['SEP_URL']
 pjname_test = 'PJTest'
 payload     = {'username': 'user', 'password': 'plop'}
 payload_c   = {'race': 'Ruzé', 'name': 'PJTest'}
@@ -14,8 +15,8 @@ def test_singouins_pj_create():
     token    = json.loads(response.text)['access_token']
     headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
 
-    url       = 'https://api.proto.singouins.com/mypc'
-    response  = requests.post(url, json = payload_c, headers=headers)
+    url      = SEP_URL + '/mypc'
+    response = requests.post(url, json = payload_c, headers=headers)
 
     assert response.status_code == 201
 
@@ -25,9 +26,9 @@ def test_singouins_pj_infos():
     token    = json.loads(response.text)['access_token']
     headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
 
-    url      = SEP_URL + '/pc/name/{}'.format(pjname_test)
+    url      = SEP_URL + '/mypc'
     response = requests.get(url, headers=headers)
-    name     = json.loads(response.text)['name']
+    pjname   = json.loads(response.text)['payload'][0]['name']
 
-    assert name == pjname_test
+    assert pjname == pjname_test
     assert response.status_code == 200
