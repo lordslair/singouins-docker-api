@@ -439,7 +439,7 @@ def query_del_squad(username,pcid,squadid):
                 if not squad: return (200, True, 'No Squad found for this PC', None)
 
                 count = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).count()
-                if count > 1: return (200, True, 'Squad not empty', None)
+                if count > 1: return (200, False, 'Squad not empty', None)
 
                 session.delete(squad)
                 pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
