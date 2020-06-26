@@ -12,12 +12,7 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 
 from prometheus_flask_exporter import PrometheusMetrics
 
-from queries            import (query_get_user, query_add_user, query_del_user, query_set_user_confirmed,
-                                query_get_pc,   query_add_pc,   query_del_pc,   query_get_pcs,
-                                query_get_mp,   query_add_mp,   query_del_mp,   query_get_mps, query_get_mp_addressbook,
-                                query_get_items,
-                                query_get_meta_item,
-                                query_get_squad, query_add_squad, query_del_squad, query_invite_squad_member)
+from queries            import *
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -41,7 +36,7 @@ jwt = JWTManager(app)
 
 # Auth route to send the JWT Token
 @app.route('/auth/login', methods=['POST'])
-def post_auth_login():
+def auth_login():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -71,7 +66,7 @@ def post_auth_login():
 # Auth route to refresh the token
 @app.route('/auth/refresh', methods=['POST'])
 @jwt_refresh_token_required
-def refresh():
+def auth_refresh():
     current_user = get_jwt_identity()
     ret = {
         'access_token': create_access_token(identity=current_user)
@@ -80,7 +75,7 @@ def refresh():
 
 # Auth route to register the user
 @app.route('/auth/register', methods=['POST'])
-def post_auth_register():
+def auth_register():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -113,7 +108,7 @@ def post_auth_register():
         return jsonify({"msg": "Oops!"}), 422
 
 @app.route('/auth/confirm/<string:token>', methods=['GET'])
-def confirm_email(token):
+def auth_confirm(token):
     from utils.token import confirm_token
 
     if confirm_token(token):
@@ -129,7 +124,7 @@ def confirm_email(token):
 # Auth route to delete the user
 @app.route('/auth/delete/<string:username>', methods=['DELETE'])
 @jwt_required
-def delete_auth_leave(username):
+def auth_delete(username):
     current_user = get_jwt_identity()
     if not username:
         return jsonify({"msg": "Missing username parameter"}), 400
@@ -147,7 +142,7 @@ def delete_auth_leave(username):
 # Info route when authenticated
 @app.route('/auth/infos', methods=['GET'])
 @jwt_required
-def get_auth_infos():
+def auth_infos():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
@@ -158,7 +153,7 @@ def get_auth_infos():
 
 @app.route('/mypc', methods=['POST'])
 @jwt_required
-def mypc_post():
+def mypc_create():
     current_user = get_jwt_identity()
     pcname       = request.json.get('name', None)
     pcrace       = request.json.get('race', None)
@@ -172,21 +167,21 @@ def mypc_post():
 
 @app.route('/pc/<int:pcid>', methods=['GET'])
 @jwt_required
-def pc_id_get(pcid):
+def pc_byid(pcid):
     (code, success, msg, payload) = query_get_pc(None,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/pc/name/<string:pcname>', methods=['GET'])
 @jwt_required
-def pc_name_get(pcname):
+def pc_byname(pcname):
     (code, success, msg, payload) = query_get_pc(pcname,None)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc', methods=['GET'])
 @jwt_required
-def mypc_get():
+def mypc_list():
     current_user = get_jwt_identity()
     (code, success, msg, payload) = query_get_pcs(current_user)
     if isinstance(code, int):
@@ -194,7 +189,7 @@ def mypc_get():
 
 @app.route('/mypc/<int:pcid>', methods=['GET'])
 @jwt_required
-def mypc_id_get(pcid):
+def mypc_details(pcid):
     return jsonify({"msg": "Not yet implemented"}), 200
 
 @app.route('/mypc/<int:pcid>', methods=['DELETE'])
@@ -211,7 +206,7 @@ def mypc_delete(pcid):
 
 @app.route('/mypc/<int:pcid>/mp', methods=['POST'])
 @jwt_required
-def post_mp_send(pcid):
+def mp_send(pcid):
     (code, success, msg, payload) = query_add_mp(get_jwt_identity(),
                                     request.json.get('src',     None),
                                     request.json.get('dst',     None),
@@ -222,28 +217,28 @@ def post_mp_send(pcid):
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['GET'])
 @jwt_required
-def get_mp(pcid,mpid):
+def mp_detail(pcid,mpid):
     (code, success, msg, payload) = query_get_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['DELETE'])
 @jwt_required
-def delete_mp(pcid,mpid):
+def mp_delete(pcid,mpid):
     (code, success, msg, payload) = query_del_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp', methods=['GET'])
 @jwt_required
-def get_mps(pcid):
+def mp_list(pcid):
     (code, success, msg, payload) = query_get_mps(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/addressbook', methods=['GET'])
 @jwt_required
-def get_mp_addressbook(pcid):
+def mp_addressbook(pcid):
     (code, success, msg, payload) = query_get_mp_addressbook(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": [{"id": row[0], "name": row[1]} for row in payload]}), code
@@ -254,7 +249,7 @@ def get_mp_addressbook(pcid):
 
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
 @jwt_required
-def post_mp_send(pcid):
+def mypc_item(pcid):
     (code, success, msg, payload) = query_get_items(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -265,7 +260,7 @@ def post_mp_send(pcid):
 
 @app.route('/meta/item/<string:itemtype>', methods=['GET'])
 @jwt_required
-def get_meta_item(itemtype):
+def meta_item(itemtype):
     (code, success, msg, payload) = query_get_meta_item(itemtype)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
