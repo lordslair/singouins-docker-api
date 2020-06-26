@@ -276,14 +276,14 @@ def get_meta_item(itemtype):
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['GET'])
 @jwt_required
-def squad_get(pcid,squadid):
-    (code, success, msg, payload) = query_get_squad(get_jwt_identity(),pcid)
+def squad_details(pcid,squadid):
+    (code, success, msg, payload) = query_get_squad(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad', methods=['POST'])
 @jwt_required
-def squad_post_create(pcid):
+def squad_create(pcid):
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
     (code, success, msg, payload) = query_add_squad(get_jwt_identity(),
@@ -295,46 +295,48 @@ def squad_post_create(pcid):
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['DELETE'])
 @jwt_required
 def squad_delete(pcid,squadid):
-    (code, success, msg, payload) = query_del_squad(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = query_del_squad(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>', methods=['POST'])
 @jwt_required
-def squad_post_invite(pcid,squadid,targetid):
+def squad_invite(pcid,squadid,targetid):
     (code, success, msg, payload) = query_invite_squad_member(get_jwt_identity(),
                                     pcid,
+                                    squadid,
                                     targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>', methods=['POST'])
 @jwt_required
-def squad_post_kick(pcid,squadid,targetid):
+def squad_kick(pcid,squadid,targetid):
     (code, success, msg, payload) = query_kick_squad_member(get_jwt_identity(),
                                     pcid,
+                                    squadid,
                                     targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/accept', methods=['POST'])
 @jwt_required
-def squad_post_accept(pcid,squadid):
-    (code, success, msg, payload) = query_accept_squad_member(get_jwt_identity(),pcid)
+def squad_accept(pcid,squadid):
+    (code, success, msg, payload) = query_accept_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/leave', methods=['POST'])
 @jwt_required
-def squad_post_leave(pcid,squadid):
-    (code, success, msg, payload) = query_leave_squad_member(get_jwt_identity(),pcid)
+def squad_leave(pcid,squadid):
+    (code, success, msg, payload) = query_leave_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/decline', methods=['POST'])
 @jwt_required
-def squad_post_decline(pcid,squadid):
-    (code, success, msg, payload) = query_decline_squad_member(get_jwt_identity(),pcid)
+def squad_decline(pcid,squadid):
+    (code, success, msg, payload) = query_decline_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

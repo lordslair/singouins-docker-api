@@ -355,10 +355,11 @@ def query_get_meta_item(itemtype):
 # Queries /squad
 #
 
-def query_get_squad(username,pcid):
+def query_get_squad(username,pcid,squadid):
     (code, success, msg, pc) = query_get_pc(None,pcid)
     user                     = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -372,8 +373,14 @@ def query_get_squad(username,pcid):
                 squad   = squad.session.query(tables.Squad).filter(tables.Squad.id == pc.squad).one_or_none()
                 members = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).filter(tables.PJ.squad_rank != 'Pending').all()
                 pending = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).filter(tables.PJ.squad_rank == 'Pending').all()
-                if members and pending and squad:
-                    return (200, True, 'OK', {"squad": squad, "members": members, "pending": pending})
+                if squad:
+                    if isinstance(members, list):
+                        if isinstance(pending, list):
+                            return (200, True, 'OK', {"squad": squad, "members": members, "pending": pending})
+                        else: return (200, False, 'SQL Error retrieving pending PC in squad', None)
+                    else: return (200, False, 'SQL Error retrieving members PC in squad', None)
+                else: return (200, False, 'SQL Error retrieving squad', None)
+
             elif squad.filter(tables.PJ.squad_rank == 'Pending').one_or_none():
                 squad   = squad.session.query(tables.Squad).filter(tables.Squad.id == pc.squad).one_or_none()
                 return (200, True, 'PC is pending in a squad', {"squad": squad})
@@ -417,10 +424,11 @@ def query_add_squad(username,pcid,squadname):
                 else:
                     return (201, True, 'Squad successfully created', None)
 
-def query_del_squad(username,pcid):
+def query_del_squad(username,pcid,squadid):
     (code, success, msg, pc) = query_get_pc(None,pcid)
     user                     = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc and pc.account == user.id:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -445,11 +453,12 @@ def query_del_squad(username,pcid):
                 return (200, True, 'Squad successfully deleted', None)
     else: return (409, False, 'Token/username mismatch', None)
 
-def query_invite_squad_member(username,leaderid,pcid):
+def query_invite_squad_member(username,leaderid,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
     (code, success, msg, leader) = query_get_pc(None,leaderid)
     user                         = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc and leader:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -473,11 +482,12 @@ def query_invite_squad_member(username,leaderid,pcid):
             else:
                 return (201, True, 'PC successfully invited', None)
 
-def query_kick_squad_member(username,leaderid,pcid):
+def query_kick_squad_member(username,leaderid,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
     (code, success, msg, leader) = query_get_pc(None,leaderid)
     user                         = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc and leader:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -503,10 +513,11 @@ def query_kick_squad_member(username,leaderid,pcid):
             else:
                 return (201, True, 'PC successfully kicked', None)
 
-def query_accept_squad_member(username,pcid):
+def query_accept_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
     user                         = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -525,10 +536,11 @@ def query_accept_squad_member(username,pcid):
             else:
                 return (201, True, 'PC successfully accepted', None)
 
-def query_decline_squad_member(username,pcid):
+def query_decline_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
     user                         = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -548,10 +560,11 @@ def query_decline_squad_member(username,pcid):
             else:
                 return (201, True, 'PC successfully declined squad invite', None)
 
-def query_leave_squad_member(username,pcid):
+def query_leave_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
     user                         = query_get_user(username)
 
+    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc:
         Session = sessionmaker(bind=engine)
         session = Session()

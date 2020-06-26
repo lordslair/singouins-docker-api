@@ -311,22 +311,8 @@ paths:
       responses:
         '200':
           description: OK
+
   /mypc/{pcid}/squad:
-    get:
-      tags:
-        - '/squad : Squad Requests'
-      summary: Get squad list for a PC
-      parameters:
-        - in: path
-          name: pcid
-          schema:
-            type: integer
-          required: true
-      security:
-        - access_token: []
-      responses:
-        '200':
-          description: OK
     post:
       tags:
         - '/squad : Squad Requests'
@@ -344,6 +330,22 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SquadPostBody'
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/squad/{squadid}:
+    get:
+      tags:
+        - '/squad : Squad Requests'
+      summary: Get squad list for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
       security:
         - access_token: []
       responses:
