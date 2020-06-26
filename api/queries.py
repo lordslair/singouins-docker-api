@@ -208,15 +208,15 @@ def query_del_pc(username,pcid):
 #
 
 def query_add_mp(username,src,dsts,subject,body):
-    (code, success, msg, pc) = query_get_pc(None,pcid)
-    user                     = query_get_user(username)
+    (code, success, msg, pcsrc) = query_get_pc(None,src)
+    user                        = query_get_user(username)
 
     Session = sessionmaker(bind=engine)
     session = Session()
 
     if pcsrc:
         for dst in dsts:
-            (code,pcdst) = query_get_pc(None,dst)
+            (code, success, msg, pcdst) = query_get_pc(None,dst)
             if pcdst:
                 with engine.connect() as conn:
                     mp = tables.MP(src_id  = pcsrc.id,
