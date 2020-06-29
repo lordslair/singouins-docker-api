@@ -150,7 +150,7 @@ def query_add_pc(username,pcname,pcrace):
                 # Something went wrong during commit
                 return (200, False, 'PC creation failed', None)
             else:
-                return (201, True, 'PC successfully created', None)
+                return (201, True, 'PC successfully created', pc)
 
 def query_get_pc(pcname,pcid):
     Session = sessionmaker(bind=engine)
@@ -239,7 +239,7 @@ def query_add_mp(username,src,dsts,subject,body):
     elif user.id != pcsrc.account:
         return (409, False, 'Token/username mismatch', None)
     else:
-        return (200, False, 'PC does not exist', None)
+        return (200, False, 'PC does not exist', mp)
 
 def query_get_mp(username,pcid,mpid):
     (code, success, msg, pc) = query_get_pc(None,pcid)
@@ -422,7 +422,7 @@ def query_add_squad(username,pcid,squadname):
                     # Something went wrong during commit
                     return (200, False, 'Squad leader assignation failed', None)
                 else:
-                    return (201, True, 'Squad successfully created', None)
+                    return (201, True, 'Squad successfully created', squad)
 
 def query_del_squad(username,pcid,squadid):
     (code, success, msg, pc) = query_get_pc(None,pcid)
