@@ -10,10 +10,10 @@ apk update --no-cache \
                                     python3-dev \
                                     libffi-dev \
                                     tzdata \
-    && pip3 --no-cache-dir install -U -r /code/requirements.txt \
+    && pip3 --no-cache-dir install -U -r https://raw.githubusercontent.com/lordslair/sep-backend/master/metrics/requirements.txt \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps
 
 echo "`date +"%F %X"` Build done ..."
 
-exec /code/metrics.py
+exec python3 /code/metrics.py
