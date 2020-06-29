@@ -1,0 +1,12 @@
+dataclasses
+Flask
+Flask-bcrypt
+Flask-cors
+Flask-JWT-Extended
+Flask-Swagger-UI
+prometheus-flask-exporter
+pyMySQL
+pyTest
+redis
+requests
+SQLAlchemy
