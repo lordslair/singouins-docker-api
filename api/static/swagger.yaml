@@ -346,6 +346,11 @@ paths:
           schema:
             type: integer
           required: true
+        - in: path
+          name: squadid
+          schema:
+            type: integer
+          required: true
       security:
         - access_token: []
       responses:
@@ -358,6 +363,11 @@ paths:
       parameters:
         - in: path
           name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: squadid
           schema:
             type: integer
           required: true
