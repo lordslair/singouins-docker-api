@@ -423,6 +423,7 @@ def query_add_squad(username,pcid,squadname):
                     return (200, False, 'Squad leader assignation failed', None)
                 else:
                     return (201, True, 'Squad successfully created', squad)
+    else: return (409, False, 'Token/username mismatch', None)
 
 def query_del_squad(username,pcid,squadid):
     (code, success, msg, pc) = query_get_pc(None,pcid)
@@ -481,6 +482,7 @@ def query_invite_squad_member(username,leaderid,pcid,squadid):
                 return (200, False, 'PC Invite failed', None)
             else:
                 return (201, True, 'PC successfully invited', None)
+    else: return (200, False, 'PC unknown in DB', None)
 
 def query_kick_squad_member(username,leaderid,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
@@ -512,6 +514,7 @@ def query_kick_squad_member(username,leaderid,pcid,squadid):
                 return (200, False, 'PC Kick failed', None)
             else:
                 return (201, True, 'PC successfully kicked', None)
+    else: return (200, False, 'PC/Leader unknown in DB', None)
 
 def query_accept_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
@@ -535,6 +538,7 @@ def query_accept_squad_member(username,pcid,squadid):
                 return (200, False, 'PC squad invite accept failed', None)
             else:
                 return (201, True, 'PC successfully accepted', None)
+    else: return (200, False, 'PC unknown in DB', None)
 
 def query_decline_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
@@ -559,6 +563,7 @@ def query_decline_squad_member(username,pcid,squadid):
                 return (200, False, 'PC squad invite decline failed', None)
             else:
                 return (201, True, 'PC successfully declined squad invite', None)
+    else: return (200, False, 'PC unknown in DB', None)
 
 def query_leave_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = query_get_pc(None,pcid)
@@ -583,3 +588,4 @@ def query_leave_squad_member(username,pcid,squadid):
                 return (200, False, 'PC squad leave failed', None)
             else:
                 return (201, True, 'PC successfully left', None)
+    else: return (200, False, 'PC unknown in DB', None)
