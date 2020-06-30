@@ -481,7 +481,7 @@ def query_invite_squad_member(username,leaderid,pcid,squadid):
                 # Something went wrong during commit
                 return (200, False, 'PC Invite failed', None)
             else:
-                return (201, True, 'PC successfully invited', None)
+                return (201, True, 'PC successfully invited', pc)
     else: return (200, False, 'PC unknown in DB', None)
 
 def query_kick_squad_member(username,leaderid,pcid,squadid):
