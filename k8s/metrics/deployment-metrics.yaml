@@ -25,28 +25,37 @@ spec:
     spec:
       restartPolicy: Always
 
-      initContainers:
-      - name: sep-backend-metrics-init
-        image: busybox
-        volumeMounts:
-        - name: code
-          mountPath: /code
+      containers:
+      - name: sep-backend-metrics
+        image: alpine
+          env:
+          - name: METRICS_MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-metrics-secret
+                key: sql-user
+          - name: METRICS_MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-metrics-secret
+                key: sql-pass
+          - name: METRICS_MYSQL_DB
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-metrics-secret
+                key: sql-db
+          - name: METRICS_MYSQL_HOST
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-metrics-secret
+                key: sql-host
         command: ["/bin/sh"]
         args: [
          "-c",
          "(
-              wget   https://github.com/lordslair/sep-backend/archive/master.zip -O /tmp/sep.zip &&
-              wget -q https://api.github.com/repos/lordslair/sep-backend/commits/master -O - 2&>1 | grep '^  .sha' | cut -d'\"' -f4 > /code/.git &&
-              unzip  /tmp/sep.zip -d /tmp/ &&
-              cp -a  /tmp/sep-backend-master/metrics/* /code/ &&
-              rm -rf /tmp/sep-backend-master &&
-              rm -rf /tmp/sep.zip
+              wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/metrics/entrypoint.sh | sh
           ) || echo 1"
         ]
-
-      containers:
-      - name: sep-backend-metrics
-        image: alpine
         resources:
           requests:
             cpu: 50m

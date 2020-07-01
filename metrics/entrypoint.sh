@@ -16,4 +16,11 @@ apk update --no-cache \
 
 echo "`date +"%F %X"` Build done ..."
 
+echo "`date +"%F %X"` Loading Python scripts ..."
+mkdir /code && cd /code
+wget https://raw.githubusercontent.com/lordslair/sep-backend/master/metrics/metrics.py
+chmod 755 /code/metrics.py
+wget https://raw.githubusercontent.com/lordslair/sep-backend/master/metrics/mod_mysql.py
+echo "`date +"%F %X"` Loading done ..."
+
 exec python3 /code/metrics.py
