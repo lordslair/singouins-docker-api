@@ -28,7 +28,7 @@ spec:
       containers:
       - name: sep-backend-metrics
         image: alpine
-          env:
+        env:
           - name: METRICS_MYSQL_USER
             valueFrom:
               secretKeyRef:

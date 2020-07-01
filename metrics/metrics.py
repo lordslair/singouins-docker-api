@@ -8,7 +8,7 @@ from mod_mysql import *
 if __name__ == '__main__':
 
    sep_count = prom.Gauge('sep_count', 'Actual count of things', ['type'])
-   prom.start_http_server(8009)
+   prom.start_http_server(8008)
 
    while True:
        sep_count.labels('user').set(get_count_table('pjsAuth'))
