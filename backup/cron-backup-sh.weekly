@@ -1,0 +1,22 @@
+#!/bin/bash
+
+WEEK=$(date +%W)
+PERIOD='weekly'
+
+for DB_NAME in `echo $DBLIST | tr "," "\n"`;do
+    NOW=$(date +'%Y-%m-%d %H:%M:%S')
+    ZIPFILE="/tmp/$WEEK-dump-$DB_NAME.SQL.zip"
+    DBFILE="/tmp/dump-$DB_NAME.SQL"
+
+    echo "$NOW [$PERIOD] Dumping : $DB_HOST/$DB_NAME > $DBFILE"
+    mysqldump --opt --lock-tables --user=$DB_USER --password=$DB_PASS --host=$DB_HOST $DB_NAME > $DBFILE
+    if [[ -e "$DBFILE" ]]
+        then
+            zip $ZIPFILE $DBFILE
+            sshpass -p "$PCA_PASS" rsync -e "ssh -o StrictHostKeyChecking=no" -a $ZIPFILE $PCA_USER@gateways.storage.gra.cloud.ovh.net:NCC-1701-A/Singouins/$PERIOD/
+            rm $ZIPFILE
+            rm $DBFILE
+        else
+            echo "$NOW [$PERIOD] WARN: Dump $DBFILE not created. Shit happened !"
+        fi
+done;

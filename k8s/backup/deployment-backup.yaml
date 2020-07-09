@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  namespace: singouins
+  name: sep-backend-backup
+  labels:
+    tier: sep-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backup
+      tier: sep-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: backup
+        tier: sep-backend
+    spec:
+      restartPolicy: Always
+
+      containers:
+      - name: sep-backend-backup
+        image: alpine:3.12
+        command: ["/bin/sh"]
+        args: [
+         "-c",
+         "(
+              wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/backup/entrypoint.sh | sh
+          ) || echo 1"
+        ]
+        env:
+          - name: DBLIST
+            value: "XX,YY"
+          - name: DB_HOST
+            value: sep-backend-mariadb-svc
+          - name: DB_PORT
+            value: '3306'
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-mariadb-secret
+                key: pass
+          - name: PCA_USER
+            value: 'pca'
+          - name: PCA_PASS
+            value: '<PCA_PASS>'
