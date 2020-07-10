@@ -34,9 +34,15 @@ spec:
         ]
         env:
           - name: DBLIST
-            value: "XX,YY"
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: dblist
           - name: DB_HOST
-            value: sep-backend-mariadb-svc
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: dbhost
           - name: DB_PORT
             value: '3306'
           - name: DB_PASS
@@ -45,6 +51,12 @@ spec:
                 name: sep-backend-mariadb-secret
                 key: pass
           - name: PCA_USER
-            value: 'pca'
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcauser
           - name: PCA_PASS
-            value: '<PCA_PASS>'
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcapass
