@@ -44,7 +44,10 @@ spec:
                 name: sep-backend-backup-secret
                 key: dbhost
           - name: DB_PORT
-            value: '3306'
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-mariadb-secret
+                key: port
           - name: DB_PASS
             valueFrom:
               secretKeyRef:
