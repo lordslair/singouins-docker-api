@@ -78,9 +78,15 @@ spec:
               name: sep-backend-api-secret
               key: sql-pass
         - name: SEP_MYSQL_DB
-          value: 'sep'
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: sql-user
         - name: SEP_MYSQL_HOST
-          value: 'sep-backend-mariadb-svc'
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: dbhost
         - name: SEP_SMTP_FROM
           valueFrom:
             secretKeyRef:
