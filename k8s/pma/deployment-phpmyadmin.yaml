@@ -24,9 +24,15 @@ spec:
           image: phpmyadmin/phpmyadmin:latest
           env:
             - name: PMA_HOST
-              value: sep-backend-mariadb-svc
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: dbhost
             - name: PMA_PORT
-              value: '3306'
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-mariadb-secret
+                key: port
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
