@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  namespace: singouins
+  name: sep-backend-discord
+  labels:
+    tier: sep-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python
+      tier: sep-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: python
+        tier: sep-backend
+    spec:
+      restartPolicy: Always
+
+      containers:
+      - name: sep-backend-discord
+        image: alpine:3.7
+        command: ["/bin/sh"]
+        args: [
+         "-c",
+         "(
+              wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/discord/entrypoint.sh | sh
+          ) || echo 1"
+        ]
+        env:
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-discord-secret
+              key: sql-pass
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-discord-secret
+              key: sql-user
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-discord-secret
+              key: sql-host
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-discord-secret
+              key: sql-db
+        - name: TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-discord-secret
+              key: token
