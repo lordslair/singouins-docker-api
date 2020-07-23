@@ -222,3 +222,19 @@ class Gear(Base):
     state      = Column(Integer)
     rarity     = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class Map(Base):
+    __tablename__ = 'maps'
+
+    id: int
+    type: str
+    size: int
+    data: bool
+    date: str
+
+    id         = Column(Integer, primary_key=True)
+    type       = Column(String)
+    size       = Column(String)
+    data       = Column(String)
+    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

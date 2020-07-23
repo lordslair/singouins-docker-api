@@ -335,5 +335,16 @@ def squad_decline(pcid,squadid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+#
+# Routes /map
+#
+
+@app.route('/map/<int:mapid>', methods=['GET'])
+@jwt_required
+def map_get(mapid):
+    (code, success, msg, payload) = query_get_map(mapid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 if __name__ == '__main__':
     app.run()

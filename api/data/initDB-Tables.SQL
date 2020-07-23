@@ -102,3 +102,10 @@ mods       TEXT     NULL,      /* list of linked mods */
 state      INT      NOT NULL,  /* 0-100 scale. 100 = new, 0 = unusable */
 rarity     INT      NOT NULL,  /* ('Legendary', 'Epic', 'Rare', ...) */
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS maps (
+id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+type       TEXT     NOT NULL,  /* Map type ('Instance', 'Worldmap', 'Encounter') */
+size       TEXT     NOT NULL,  /* Map size ('24x24', '24x32', '...') */
+data       TEXT     NOT NULL,  /* Map JSON */
+date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);

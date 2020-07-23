@@ -589,3 +589,22 @@ def query_leave_squad_member(username,pcid,squadid):
             else:
                 return (201, True, 'PC successfully left', None)
     else: return (200, False, 'PC unknown in DB', None)
+
+#
+# Queries /map
+#
+
+def query_get_map(mapid):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        if mapid:
+            map = session.query(tables.Map).filter(tables.Map.id == mapid).one_or_none()
+        else: return (200, False, 'Wrong mapid', None)
+        session.close()
+
+    if map:
+        return (200, True, 'OK', map)
+    else:
+        return (200, False, 'Map does not exist', None)
