@@ -4,12 +4,12 @@ echo "`date +"%F %X"` Building Python dependencies and system set-up ..."
 
 apk update --no-cache \
     && apk add --no-cache python3 \
-    && apk add --no-cache --virtual .build-deps \
-                                    python3-dev \
-                                    libffi-dev \
-                                    gcc \
-                                    libc-dev \
-                                    tzdata \
+    && apk add --no-cache --virtual  .build-deps \
+                                      python3-dev \
+                                      libffi-dev \
+                                      gcc \
+                                      libc-dev \
+                                      tzdata \
     && pip3 --no-cache-dir install -U discord.py \
                                       pyMySQL \
                                       SQLAlchemy \
@@ -26,4 +26,4 @@ cp -a  /code/sep-backend-master/discord/* /code/ &&
 rm -rf /code/sep-backend-master /code/sep.zip
 echo "`date +"%F %X"` Loading done ..."
 
-exec /code/gobland-it-discord
+exec python3 /code/discord-bot.py
