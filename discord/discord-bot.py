@@ -33,7 +33,7 @@ async def register(ctx,arg):
     user         = query_get_user(discordname)
     registration = discord.utils.get(client.get_all_channels(), name='registration')
 
-    print('[{}][{}][{}] !register <{}> | {}'.format(now,member,ctx.message.channel,arg,user.name))
+    print(' {} [{}][{}] !register <{}> | {}'.format(now,member,ctx.message.channel,arg,user.name))
 
     if (ctx.message.channel != discord.utils.get(client.get_all_channels(), name='registration')):
         # The command is entered in the wrong channel
