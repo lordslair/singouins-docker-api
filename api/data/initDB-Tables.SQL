@@ -3,6 +3,9 @@ id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 name      TEXT     NOT NULL,
 mail      TEXT     NOT NULL,
 hash      TEXT     NOT NULL, /* BCRYPT hashed */
+d_name    TEXT     NULL,                       /* Discord username foobar#1234 */
+d_monkeys TEXT     CHARACTER SET utf8mb4 NULL, /* Discord validation string */
+d_ack     BOOLEAN  NOT NULL DEFAULT FALSE,     /* Discord validation ack */
 created   DATETIME NOT NULL,
 active    BOOLEAN,
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
