@@ -27,13 +27,12 @@ async def ping(ctx):
 
 @client.command(pass_context=True)
 async def register(ctx,arg):
-    now          = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
     user         = query_get_user(discordname)
     registration = discord.utils.get(client.get_all_channels(), name='registration')
 
-    print(' {} [{}][{}] !register <{}> | {}'.format(now,member,ctx.message.channel,arg,user.name))
+    print('{} [{}][{}] !register <{}> | {}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"),member,ctx.message.channel,arg,user.name))
 
     if (ctx.message.channel != discord.utils.get(client.get_all_channels(), name='registration')):
         # The command is entered in the wrong channel
@@ -58,12 +57,15 @@ async def register(ctx,arg):
                 # Send registered DM to user
                 answer = msg_registered.format(ctx.message.author,user.name)
                 await ctx.message.author.send(answer)
+                print('{} [{}][{}]   registration done'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"),member,ctx.message.channel))
             else:
                 # The monkey-code is wrong
                await ctx.message.author.send(msg_wrong_monkeys)
+               print('{} [{}][{}]   registration failed (wrong monkeys)'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"),member,ctx.message.channel))
         else:
             # The discordname is not in DB
             await ctx.message.author.send(msg_unknown_discordname)
+            print('{} [{}][{}]   registration failed (unknown discordname)'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"),member,ctx.message.channel))
 
 @client.event
 async def on_member_join(member):
