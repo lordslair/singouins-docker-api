@@ -26,4 +26,4 @@ cp -a  /code/sep-backend-master/discord/* /code/ &&
 rm -rf /code/sep-backend-master /code/sep.zip
 echo "`date +"%F %X"` Loading done ..."
 
-exec python3 /code/discord-bot.py
+exec python3 -u /code/discord-bot.py
