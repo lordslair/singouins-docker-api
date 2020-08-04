@@ -10,14 +10,14 @@ apk update --no-cache \
                                     gcc \
                                     libc-dev \
                                     tzdata \
-    && pip3 --no-cache-dir install -U Flask \
-                                      Flask-Login \
-                                      Flask-WTF \
-                                      Flask-Bcrypt \
-                                      Markdown \
-                                      Pygments \
-                                      WTForms \
-                                      python-markdown-math \
+    && pip --no-cache-dir install -U Flask \
+                                     Flask-Login \
+                                     Flask-WTF \
+                                     Flask-Bcrypt \
+                                     Markdown \
+                                     Pygments \
+                                     WTForms \
+                                     python-markdown-math \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps \
     && mkdir /usr/local/flask-wiki \
