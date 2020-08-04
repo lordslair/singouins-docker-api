@@ -56,11 +56,14 @@ def query_add_user(username,password,usermail):
         session = Session()
 
         with engine.connect() as conn:
-            user = tables.User(name = username,
-                               mail = usermail,
-                               hash = generate_password_hash(password, rounds = 10),
-                               created = datetime.now(),
-                               active = True)
+            user = tables.User(name      = username,
+                               mail      = usermail,
+                               hash      = generate_password_hash(password, rounds = 10),
+                               d_name    = '',
+                               d_monkeys = '', # Todo later
+                               d_ack     = False,
+                               created   = datetime.now(),
+                               active    = True)
 
             session.add(user)
 
