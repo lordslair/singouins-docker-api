@@ -24,15 +24,15 @@ spec:
           image: phpmyadmin/phpmyadmin:latest
           env:
             - name: PMA_HOST
-            valueFrom:
-              secretKeyRef:
-                name: sep-backend-backup-secret
-                key: dbhost
+              valueFrom:
+                secretKeyRef:
+                  name: sep-backend-backup-secret
+                  key: dbhost
             - name: PMA_PORT
-            valueFrom:
-              secretKeyRef:
-                name: sep-backend-mariadb-secret
-                key: port
+              valueFrom:
+                secretKeyRef:
+                  name: sep-backend-mariadb-secret
+                  key: port
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
