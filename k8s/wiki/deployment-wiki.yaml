@@ -41,7 +41,7 @@ spec:
 
       containers:
       - name: sep-backend-wiki
-        image: alpine
+        image: alpine:3.12
         command: ["/wiki/entrypoint.sh"]
         env:
         - name: FLASK_HOST
