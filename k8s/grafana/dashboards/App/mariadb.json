@@ -22,7 +22,7 @@
   "gnetId": 7362,
   "graphTooltip": 1,
   "id": 13,
-  "iteration": 1590652654869,
+  "iteration": 1596622635309,
   "links": [
     {
       "icon": "dashboard",
@@ -4025,8 +4025,8 @@
         "allFormat": "glob",
         "allValue": null,
         "current": {
-          "text": "10.2.0.31:9104",
-          "value": "10.2.0.31:9104"
+          "text": "10.2.0.44:9104",
+          "value": "10.2.0.44:9104"
         },
         "datasource": "Prometheus",
         "definition": "",
@@ -4094,5 +4094,5 @@
   "variables": {
     "list": []
   },
-  "version": 7
+  "version": 8
 }
