@@ -27,7 +27,7 @@ spec:
 
       containers:
       - name: sep-backend-metrics
-        image: alpine
+        image: alpine:3.12
         env:
           - name: METRICS_MYSQL_USER
             valueFrom:
