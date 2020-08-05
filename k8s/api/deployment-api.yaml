@@ -83,10 +83,10 @@ spec:
               name: sep-backend-api-secret
               key: sql-user
         - name: SEP_MYSQL_HOST
-            valueFrom:
-              secretKeyRef:
-                name: sep-backend-backup-secret
-                key: dbhost
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-backup-secret
+              key: dbhost
         - name: SEP_SMTP_FROM
           valueFrom:
             secretKeyRef:
