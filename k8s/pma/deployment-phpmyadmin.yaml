@@ -21,7 +21,7 @@ spec:
 
       containers:
         - name: sep-backend-phpmyadmin
-          image: phpmyadmin/phpmyadmin:latest
+          image: phpmyadmin/phpmyadmin:5.0
           env:
             - name: PMA_HOST
               valueFrom:
