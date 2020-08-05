@@ -45,7 +45,7 @@ spec:
 
       containers:
       - name: sep-backend-api
-        image: alpine
+        image: alpine:3.12
         command: ["/code/entrypoint.sh"]
         env:
         - name: FLASK_DEBUG
