@@ -20,5 +20,5 @@ spec:
     spec:
 
       containers:
-      - name: grafana
-        image: grafana/grafana
+        - name: grafana
+          image: grafana/grafana:6.7.4
