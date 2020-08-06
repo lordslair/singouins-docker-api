@@ -27,14 +27,17 @@ spec:
 
       containers:
       - name: sep-backend-redis
-        image: redis:alpine
+        image: redis:6.0-alpine
         ports:
         - containerPort: 6379
       - name: redis-exporter
         image: oliver006/redis_exporter:v1.6.0
         resources:
-          requests:
-            cpu: 50m
+          limits:
             memory: 32Mi
+            cpu: 20m
+          requests:
+            memory: 16Mi
+            cpu: 10m
         ports:
         - containerPort: 9121
