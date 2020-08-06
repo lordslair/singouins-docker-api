@@ -21,7 +21,7 @@ spec:
 
       containers:
       - name: redis-commander
-        image: rediscommander/redis-commander
+        image: rediscommander/redis-commander:latest
         env:
         - name: REDIS_HOSTS
           value: instance1:sep-backend-redis-svc:6379
