@@ -42,6 +42,13 @@ spec:
       containers:
       - name: sep-backend-wiki
         image: alpine:3.12
+        resources:
+          limits:
+            memory: 256Mi
+            cpu: 50m
+          requests:
+            memory: 64Mi
+            cpu: 10m
         command: ["/wiki/entrypoint.sh"]
         env:
         - name: FLASK_HOST

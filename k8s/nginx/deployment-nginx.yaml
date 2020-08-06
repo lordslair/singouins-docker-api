@@ -27,6 +27,13 @@ spec:
       containers:
       - name: sep-backend-nginx
         image: nginx:stable-alpine
+        resources:
+          limits:
+            memory: 64Mi
+            cpu: 50m
+          requests:
+            memory: 32Mi
+            cpu: 10m
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -41,6 +48,13 @@ spec:
           mountPath: /etc/letsencrypt
       - name: sep-backend-nginx-certbot
         image: certbot/certbot
+        resources:
+          limits:
+            memory: 32Mi
+            cpu: 50m
+          requests:
+            memory: 16Mi
+            cpu: 10m
         command: ["/bin/sh"]
         args: ["-c", "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"]
         volumeMounts:
@@ -51,9 +65,12 @@ spec:
       - name: nginx-exporter
         image: nginx/nginx-prometheus-exporter
         resources:
-          requests:
-            cpu: 50m
+          limits:
             memory: 32Mi
+            cpu: 50m
+          requests:
+            memory: 16Mi
+            cpu: 10m
 
       restartPolicy: Always
 

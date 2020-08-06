@@ -25,6 +25,13 @@ spec:
       containers:
       - name: sep-backend-filestash
         image: machines/filestash:671f71c
+        resources:
+          limits:
+            memory: 32Mi
+            cpu: 50m
+          requests:
+            memory: 16Mi
+            cpu: 10m
         env:
           - name: FILESTASH_DOMAIN
             valueFrom:

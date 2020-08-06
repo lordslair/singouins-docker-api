@@ -22,6 +22,13 @@ spec:
       containers:
       - name: redis-commander
         image: rediscommander/redis-commander:latest
+        resources:
+          limits:
+            memory: 64Mi
+            cpu: 50m
+          requests:
+            memory: 32Mi
+            cpu: 10m
         env:
         - name: REDIS_HOSTS
           value: instance1:sep-backend-redis-svc:6379

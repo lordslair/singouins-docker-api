@@ -28,6 +28,13 @@ spec:
       containers:
       - name: sep-backend-metrics
         image: alpine:3.12
+        resources:
+          limits:
+            memory: 64Mi
+            cpu: 50m
+          requests:
+            memory: 32Mi
+            cpu: 10m
         env:
           - name: METRICS_MYSQL_USER
             valueFrom:
@@ -56,9 +63,5 @@ spec:
               wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/metrics/entrypoint.sh | sh
           ) || echo 1"
         ]
-        resources:
-          requests:
-            cpu: 50m
-            memory: 32Mi
         ports:
         - containerPort: 8008

@@ -26,6 +26,13 @@ spec:
       containers:
         - image: mariadb:10.4
           name: sep-backend-mariadb
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 200m
+            requests:
+              memory: 256Mi
+              cpu: 100m
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -41,18 +48,22 @@ spec:
               mountPath: /etc/mysql/mariadb.conf.d
         - name: mariadb-exporter
           image: prom/mysqld-exporter
+          resources:
+            limits:
+              memory: 32Mi
+              cpu: 50m
+            requests:
+              memory: 16Mi
+              cpu: 10m
           env:
             - name: DATA_SOURCE_NAME
               valueFrom:
                 secretKeyRef:
                   name: sep-backend-mariadb-secret
                   key: exporter-dsn
-          resources:
-            requests:
-              cpu: 50m
-              memory: 32Mi
           ports:
           - containerPort: 9104
+
       volumes:
         - name: db
           persistentVolumeClaim:
