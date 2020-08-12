@@ -19,3 +19,8 @@ SEP_URL        = os.environ['SEP_URL']
 
 # Latest commit used in this apps
 SEP_SHA        = open('/code/.git', 'r').read().rstrip()
+
+# Redis variables
+REDIS_HOST    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST']
+REDIS_PORT    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT']
+REDIS_DB_NAME = 0

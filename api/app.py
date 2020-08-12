@@ -13,6 +13,7 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 from prometheus_flask_exporter import PrometheusMetrics
 
 from queries            import *
+from rqueries           import *
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
 
 app = Flask(__name__)
@@ -197,6 +198,17 @@ def mypc_details(pcid):
 def mypc_delete(pcid):
     current_user = get_jwt_identity()
     (code, success, msg, payload) = query_del_pc(current_user,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
+# Routes: /pa
+#
+
+@app.route('/mypc/<int:pcid>/pa', methods=['GET'])
+@jwt_required
+def mypc_pa(pcid):
+    (code, success, msg, payload) = rget_pa(pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
