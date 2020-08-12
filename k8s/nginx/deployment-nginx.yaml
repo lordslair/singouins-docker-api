@@ -46,11 +46,13 @@ spec:
           mountPath: /var/www/certbot
         - name: certs
           mountPath: /etc/letsencrypt
+        - name: websites
+          mountPath: /var/www/websites
       - name: sep-backend-nginx-certbot
         image: certbot/certbot
         resources:
           limits:
-            memory: 32Mi
+            memory: 128Mi
             cpu: 50m
           requests:
             memory: 16Mi
@@ -93,3 +95,6 @@ spec:
       - name: www
         persistentVolumeClaim:
           claimName: sep-backend-certbot-www
+      - name: websites
+        persistentVolumeClaim:
+          claimName: sep-backend-code-websites

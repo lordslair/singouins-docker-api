@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  namespace: singouins
+  name: sep-backend-code-websites
+spec:
+  storageClassName: csi-cinder-classic
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+status: {}

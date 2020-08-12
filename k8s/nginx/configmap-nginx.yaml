@@ -203,6 +203,37 @@ data:
     }
 
     #
+    # <GAMES>
+    #
+
+    server {
+      listen      80;
+      server_name <GAMES>;
+      access_log  /var/log/nginx/access.log seplog;
+
+      location    = / { return 418; }
+      location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
+
+      location /.well-known/acme-challenge/ {
+          root /var/www/certbot;
+      }
+    }
+    server {
+      listen      443 ssl;
+      server_name <GAMES>;
+      access_log  /var/log/nginx/access.log seplogssl;
+      add_header Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
+
+      ssl_certificate     /etc/letsencrypt/live/<GAMES>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<GAMES>/privkey.pem;
+
+      location / {
+        index                index.html;
+        root                 /var/www/websites/<GAMES>;
+      }
+    }
+
+    #
     # Default server
     #
 

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  namespace: singouins
+  name: sep-backend-angular
+  labels:
+    tier: sep-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: angular
+      tier: sep-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: angular
+        tier: sep-backend
+    spec:
+      restartPolicy: Always
+
+      containers:
+      - name: sep-backend-angular
+        image: trion/ng-cli:10.0.5
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo hello; sleep 20;done"]
+        volumeMounts:
+         - name: websites
+           mountPath: /websites
+
+      volumes:
+      - name: websites
+        persistentVolumeClaim:
+          claimName: sep-backend-code-websites
