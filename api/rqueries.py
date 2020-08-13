@@ -39,3 +39,18 @@ def rget_pa(pcid):
 
     return (200, True, 'OK', {"red": {"pa": redpa, "ttnpa": redttnpa, "ttl": redttl},
                               "blue": {"pa": bluepa, "ttnpa": bluettnpa, "ttl": bluettl}})
+
+def rset_pa(pcid,redpa,bluepa):
+
+    if bluepa > 0:
+        # An action consumed a blue PA, we need to update
+        key    = str(pcid) + '-blue'
+        ttl    = r.ttl(key)
+        newttl = ttl + (bluepa * bluepaduration)
+
+        if ttl > 0:
+            # Key still exists (PA count < PA max)
+            r.expire(key,newttl)
+        else:
+            # Key does not exist anymore (PA count = PA max)
+            r.set(key,'blue',ex=newttl)
