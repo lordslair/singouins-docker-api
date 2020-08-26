@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
    while True:
        sep_count.labels('user').set(get_count_table('users'))
-       sep_count.labels('pc').set(get_count_table('creatures'))
+       sep_count.labels('creatures').set(get_count_table('creatures'))
        sep_count.labels('mp').set(get_count_table('mps'))
        sep_count.labels('squad').set(get_count_table('squads'))
        sep_count.labels('gear').set(get_count_table('gear'))
