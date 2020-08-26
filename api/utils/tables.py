@@ -24,7 +24,7 @@ class User(Base):
 
 @dataclass
 class PJ(Base):
-    __tablename__ = 'pjsInfos'
+    __tablename__ = 'creatures'
 
     id: int
     name: str

@@ -10,19 +10,6 @@ created   DATETIME NOT NULL,
 active    BOOLEAN,
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
-CREATE TABLE IF NOT EXISTS pjsInfos (
-id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
-name       TEXT     NOT NULL,
-race       TEXT     NOT NULL,
-account    INT      NOT NULL, /* users.id */
-level      INT      NOT NULL,
-x          INT      NOT NULL,
-y          INT      NOT NULL,
-xp         INT      NOT NULL,
-squad      INT      NULL,     /* squads.id */
-squad_rank TEXT     NULL,     /* ('prnding','member','leader') */
-date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
-
 CREATE TABLE IF NOT EXISTS mps (
 id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 src_id    INT      NOT NULL,
@@ -112,3 +99,55 @@ type       TEXT     NOT NULL,  /* Map type ('Instance', 'Worldmap', 'Encounter')
 size       TEXT     NOT NULL,  /* Map size ('24x24', '24x32', '...') */
 data       TEXT     NOT NULL,  /* Map JSON */
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS races (
+id          INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+name        TEXT     NOT NULL,
+loots       BOOLEAN,                                  /* If the monster loots treasures */
+rarity      ENUM('Legendary','Epic','Rare','Common'), /* rarity level */
+min_level   INT      NOT NULL,                        /* minimum level */
+max_level   INT      NOT NULL,                        /* maximum level */
+min_hp      INT      NOT NULL,                        /* minimum HP */
+max_hp      INT      NOT NULL,                        /* maximum HP */
+min_arm_p   INT      NOT NULL,                        /* minimum Physical Armor */
+max_arm_p   INT      NOT NULL,                        /* maximum Physical Armor */
+min_arm_b   INT      NOT NULL,                        /* minimum Ballistic Armor */
+max_arm_b   INT      NOT NULL,                        /* maximum Ballistic Armor */
+min_m       INT      NOT NULL,                        /* minimum M */
+max_m       INT      NOT NULL,                        /* maximum M */
+min_r       INT      NOT NULL,                        /* minimum R */
+max_r       INT      NOT NULL,                        /* maximum R */
+min_g       INT      NOT NULL,                        /* minimum G */
+max_g       INT      NOT NULL,                        /* maximum G */
+min_v       INT      NOT NULL,                        /* minimum V */
+max_v       INT      NOT NULL,                        /* maximum V */
+min_p       INT      NOT NULL,                        /* minimum P */
+max_p       INT      NOT NULL,                        /* maximum P */
+min_b       INT      NOT NULL,                        /* minimum B */
+max_b       INT      NOT NULL);                       /* maximum B */
+
+CREATE TABLE IF NOT EXISTS creatures (
+id          INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+race        INT      NOT NULL,                 /* races.id */
+name        TEXT     NOT NULL,                 /* Creature Name */
+account     INT      NULL,                     /* users.id */
+targeted    BOOLEAN,                           /* If the creature is targeted */
+targeted_by INT      NULL,                     /* creatures.id */
+x           INT      NOT NULL,                 /* Creature X pos */
+y           INT      NOT NULL,                 /* Creature Y pos */
+level       INT      NOT NULL,                 /* Creature level */
+hp_max      INT      NOT NULL,                 /* Creature HP (max) */
+hp          INT      NOT NULL,                 /* Creature HP (now) */
+arm_p       INT      NOT NULL,                 /* Creature Physical Armor */
+arm_b       INT      NOT NULL,                 /* Creature Ballistic Armor */
+m           INT      NOT NULL,                 /* Creature M carac */
+r           INT      NOT NULL,                 /* Creature R carac */
+g           INT      NOT NULL,                 /* Creature G carac */
+v           INT      NOT NULL,                 /* Creature V carac */
+p           INT      NOT NULL,                 /* Creature P carac */
+b           INT      NOT NULL,                 /* Creature B carac */
+instance    INT      NULL,                     /* instance.id */
+squad       INT      NULL,                     /* squads.id */
+squad_rank  ENUM('Leader','Member','Pending'), /* Creature rank in squad */
+xp          INT      NULL,                     /* Creature total XP */
+date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
