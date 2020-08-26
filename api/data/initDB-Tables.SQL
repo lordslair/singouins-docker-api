@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS pjsAuth (
+CREATE TABLE IF NOT EXISTS users (
 id        INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 name      TEXT     NOT NULL,
 mail      TEXT     NOT NULL,
-hash      TEXT     NOT NULL, /* BCRYPT hashed */
+hash      TEXT     NOT NULL,                   /* BCRYPT hashed */
 d_name    TEXT     NULL,                       /* Discord username foobar#1234 */
 d_monkeys TEXT     CHARACTER SET utf8mb4 NULL, /* Discord validation string */
 d_ack     BOOLEAN  NOT NULL DEFAULT FALSE,     /* Discord validation ack */
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS pjsInfos (
 id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 name       TEXT     NOT NULL,
 race       TEXT     NOT NULL,
-account    INT      NOT NULL, /* pjsAuth.id */
+account    INT      NOT NULL, /* users.id */
 level      INT      NOT NULL,
 x          INT      NOT NULL,
 y          INT      NOT NULL,

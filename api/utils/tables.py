@@ -9,7 +9,7 @@ from dataclasses                import dataclass
 Base = declarative_base()
 
 class User(Base):
-    __tablename__ = 'pjsAuth'
+    __tablename__ = 'users'
 
     id        = Column(Integer, primary_key=True)
     name      = Column(String)
