@@ -11,7 +11,7 @@ if __name__ == '__main__':
    prom.start_http_server(8008)
 
    while True:
-       sep_count.labels('user').set(get_count_table('pjsAuth'))
+       sep_count.labels('user').set(get_count_table('users'))
        sep_count.labels('pc').set(get_count_table('pjsInfos'))
        sep_count.labels('mp').set(get_count_table('mps'))
        sep_count.labels('squad').set(get_count_table('squads'))
