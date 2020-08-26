@@ -241,3 +241,19 @@ class Map(Base):
     size       = Column(String)
     data       = Column(String)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class Log(Base):
+    __tablename__ = 'creaturesLog'
+
+    id: int
+    src: int
+    dst: int
+    action: str
+    date: str
+
+    id         = Column(Integer, primary_key=True)
+    src        = Column(Integer)
+    dst        = Column(Integer)
+    action     = Column(String)
+    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

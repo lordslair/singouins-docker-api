@@ -13,6 +13,29 @@ import textwrap
 engine     = create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
 
 #
+# LOGGING
+#
+
+def clog(src,dst,action):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        log = tables.Log(src    = src,
+                         dst    = dst,
+                         action = action)
+
+        session.add(log)
+
+        try:
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return False
+        else:
+            return True
+
+#
 # Queries: /auth
 #
 
@@ -633,6 +656,8 @@ def query_move(username,pcid,x,y):
             with engine.connect() as conn:
                 try:
                     pc   = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                    oldx = pc.x
+                    oldy = pc.y
                     pc.x = x
                     pc.y = y
                     session.commit()
@@ -641,6 +666,7 @@ def query_move(username,pcid,x,y):
                     return (200, False, 'Coords update failed', None)
                 else:
                     rset_pa(pcid,0,1)
+                    clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,pc.x,pc.y))
                     return (200, True, 'PC successfully moved', rget_pa(pcid)[3])
         else:
             # Not enough PA to move

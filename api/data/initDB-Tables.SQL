@@ -151,3 +151,10 @@ squad       INT      NULL,                     /* squads.id */
 squad_rank  ENUM('Leader','Member','Pending'), /* Creature rank in squad */
 xp          INT      NULL,                     /* Creature total XP */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS creaturesLog (
+id          INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+src         INT      NOT NULL,  /* creatures.id */
+dst         INT      NULL,      /* creatures.id or NULL */
+action      TEXT     NOT NULL,  /* description of the action */
+date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
