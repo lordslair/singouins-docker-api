@@ -150,6 +150,8 @@ instance    INT      NULL,                     /* instance.id */
 squad       INT      NULL,                     /* squads.id */
 squad_rank  ENUM('Leader','Member','Pending'), /* Creature rank in squad */
 xp          INT      NULL,                     /* Creature total XP */
+avatar      TEXT     NULL,                     /* Creature Avatar */
+sprite      TEXT     NULL,                     /* Creature Sprite */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS creaturesLog (

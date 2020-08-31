@@ -36,6 +36,8 @@ class PJ(Base):
     xp: int
     squad: int
     squad_rank: str
+    avatar: str
+    sprite: str
     date: str
 
     id         = Column(Integer, primary_key=True)
@@ -48,6 +50,8 @@ class PJ(Base):
     xp         = Column(Integer)
     squad      = Column(Integer)
     squad_rank = Column(String)
+    avatar     = Column(String)
+    sprite     = Column(String)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
