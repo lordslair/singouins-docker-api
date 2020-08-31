@@ -276,6 +276,18 @@ def mypc_action_move(pcid,x,y):
     (code, success, msg, payload) = query_move(get_jwt_identity(),pcid,x,y)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
+# Routes: /events
+#
+
+@app.route('/mypc/<int:pcid>/event', methods=['GET'])
+@jwt_required
+def mypc_event(pcid):
+    (code, success, msg, payload) = query_event(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 #
 # Routes /meta
 #

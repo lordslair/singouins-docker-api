@@ -636,6 +636,23 @@ def query_get_map(mapid):
         return (200, False, 'Map does not exist', None)
 
 #
+# Queries /events
+#
+
+def query_event(username,pcid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            log   = session.query(tables.Log).filter((tables.Log.src == pcid) | (tables.Log.dst == pcid)).limit(50).all()
+            return (200, True, 'Logs successfully retrieved', log)
+    else: return (409, False, 'Token/username mismatch', None)
+
+#
 # Queries /action
 #
 
