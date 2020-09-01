@@ -213,6 +213,17 @@ def mypc_pa(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
+# Routes: /view
+#
+
+@app.route('/mypc/<int:pcid>/view', methods=['GET'])
+@jwt_required
+def mypc_view(pcid):
+    (code, success, msg, payload) = query_get_view(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
 # Routes: /mp
 #
 

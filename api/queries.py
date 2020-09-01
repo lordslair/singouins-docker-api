@@ -689,3 +689,20 @@ def query_move(username,pcid,x,y):
             # Not enough PA to move
             return (200, False, 'Not enough PA to move', None)
     else: return (409, False, 'Token/username mismatch', None)
+
+#
+# Queries /view
+#
+def query_get_view(username,pcid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            view = session.query(tables.PJ).filter(tables.PJ.instance == pc.instance).all()
+            return (200, True, 'View successfully retrieved', view)
+
+    else: return (409, False, 'Token/username mismatch', None)
