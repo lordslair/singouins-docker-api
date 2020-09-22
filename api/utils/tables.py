@@ -39,6 +39,12 @@ class PJ(Base):
     squad_rank: str
     avatar: str
     sprite: str
+    m: int
+    r: int
+    g: int
+    v: int
+    p: int
+    b: int
     date: str
 
     id         = Column(Integer, primary_key=True)
@@ -54,6 +60,12 @@ class PJ(Base):
     squad_rank = Column(String)
     avatar     = Column(String)
     sprite     = Column(String)
+    m          = Column(Integer)
+    r          = Column(Integer)
+    g          = Column(Integer)
+    v          = Column(Integer)
+    p          = Column(Integer)
+    b          = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
@@ -262,4 +274,64 @@ class Log(Base):
     src        = Column(Integer)
     dst        = Column(Integer)
     action     = Column(String)
+    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class CreaturesStats(Base):
+    __tablename__ = 'creaturesStats'
+
+    id: int
+    m_race:  int
+    m_class: int
+    m_skill: int
+    m_point: int
+    r_race:  int
+    r_class: int
+    r_skill: int
+    r_point: int
+    g_race:  int
+    g_class: int
+    g_skill: int
+    g_point: int
+    v_race:  int
+    v_class: int
+    v_skill: int
+    v_point: int
+    p_race:  int
+    p_class: int
+    p_skill: int
+    p_point: int
+    b_race:  int
+    b_class: int
+    b_skill: int
+    b_point: int
+    points:  int
+    date: str
+
+    id         = Column(Integer, primary_key=True)
+    m_race     = Column(Integer)
+    m_class    = Column(Integer)
+    m_skill    = Column(Integer)
+    m_point    = Column(Integer)
+    r_race     = Column(Integer)
+    r_class    = Column(Integer)
+    r_skill    = Column(Integer)
+    r_point    = Column(Integer)
+    g_race     = Column(Integer)
+    g_class    = Column(Integer)
+    g_skill    = Column(Integer)
+    g_point    = Column(Integer)
+    v_race     = Column(Integer)
+    v_class    = Column(Integer)
+    v_skill    = Column(Integer)
+    v_point    = Column(Integer)
+    p_race     = Column(Integer)
+    p_class    = Column(Integer)
+    p_skill    = Column(Integer)
+    p_point    = Column(Integer)
+    b_race     = Column(Integer)
+    b_class    = Column(Integer)
+    b_skill    = Column(Integer)
+    b_point    = Column(Integer)
+    points     = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

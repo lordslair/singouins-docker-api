@@ -160,3 +160,32 @@ src         INT      NOT NULL,  /* creatures.id */
 dst         INT      NULL,      /* creatures.id or NULL */
 action      TEXT     NOT NULL,  /* description of the action */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE `creaturesStats` (
+id          INT      NOT NULL PRIMARY KEY,     /* creatures.id */
+m_race      INT      NOT NULL,                 /* Creature M carac (racial bonus) */
+m_class     INT      NOT NULL,                 /* Creature M carac (class bonus) */
+m_skill     INT      NOT NULL,                 /* Creature M carac (skill bonus) */
+m_point     INT      NOT NULL,                 /* Creature M carac (points invested) */
+r_race      INT      NOT NULL,                 /* Creature R carac (racial bonus) */
+r_class     INT      NOT NULL,                 /* Creature R carac (class bonus) */
+r_skill     INT      NOT NULL,                 /* Creature R carac (skill bonus) */
+r_point     INT      NOT NULL,                 /* Creature R carac (points invested) */
+g_race      INT      NOT NULL,                 /* Creature G carac (racial bonus) */
+g_class     INT      NOT NULL,                 /* Creature G carac (class bonus) */
+g_skill     INT      NOT NULL,                 /* Creature G carac (skill bonus) */
+g_point     INT      NOT NULL,                 /* Creature G carac (points invested) */
+v_race      INT      NOT NULL,                 /* Creature V carac (racial bonus) */
+v_class     INT      NOT NULL,                 /* Creature V carac (class bonus) */
+v_skill     INT      NOT NULL,                 /* Creature V carac (skill bonus) */
+v_point     INT      NOT NULL,                 /* Creature V carac (points invested) */
+p_race      INT      NOT NULL,                 /* Creature P carac (racial bonus) */
+p_class     INT      NOT NULL,                 /* Creature P carac (class bonus) */
+p_skill     INT      NOT NULL,                 /* Creature P carac (skill bonus) */
+p_point     INT      NOT NULL,                 /* Creature P carac (points invested) */
+b_race      INT      NOT NULL,                 /* Creature B carac (racial bonus) */
+b_class     INT      NOT NULL,                 /* Creature B carac (class bonus) */
+b_skill     INT      NOT NULL,                 /* Creature B carac (skill bonus) */
+b_point     INT      NOT NULL,                 /* Creature B carac (points invested) */
+points      INT      NOT NULL,                 /* Creature points not yet invested */
+date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
