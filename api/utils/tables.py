@@ -45,6 +45,8 @@ class PJ(Base):
     v: int
     p: int
     b: int
+    arm_p: int
+    hp: int
     date: str
 
     id         = Column(Integer, primary_key=True)
@@ -66,6 +68,8 @@ class PJ(Base):
     v          = Column(Integer)
     p          = Column(Integer)
     b          = Column(Integer)
+    arm_p      = Column(Integer)
+    hp         = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass

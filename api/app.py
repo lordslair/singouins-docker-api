@@ -296,6 +296,13 @@ def mypc_action_move_path(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
+@jwt_required
+def mypc_action_attack(pcid,weaponid,targetid):
+    (code, success, msg, payload) = query_action_attack(get_jwt_identity(),pcid,weaponid,targetid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 #
 # Routes: /events
 #

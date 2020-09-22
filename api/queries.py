@@ -4,6 +4,7 @@ from sqlalchemy     import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from datetime  import datetime
+from random    import randint
 
 from utils     import tables
 from variables import SQL_DSN
@@ -724,10 +725,93 @@ def query_move_path(username,pcid,path):
                             clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,pc.x,pc.y))
                 else:
                     # Not enough PA to move
-                    return (200, False, 'Not enough PA to move', None)                                  
+                    return (200, False, 'Not enough PA to move', None)
             else:
                 return (200, False, 'Coords incorrect', path)
         return (200, True, 'PC successfully moved', rget_pa(pcid)[3])
+    else: return (409, False, 'Token/username mismatch', None)
+
+def query_action_attack(username,pcid,weaponid,targetid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        from rqueries import rget_pa,rset_pa
+
+        if weaponid == 0:
+            (code, success, msg, tg) = query_get_pc(None,targetid)
+            redpa                    = rget_pa(pcid)[3]['red']['pa']
+            dmg_wp                   = 20
+            action                   = {"failed": True, "hit": False, "critical": False, "damages": None, "killed": False}
+
+            if abs(pc.x - tg.x) <= 1 and abs(pc.y - tg.y) <= 1:
+                # Target is on a adjacent tile
+                if redpa > 1:
+                    # Enough PA to attack
+                    pc.comcap  = (pc.g + (pc.m + pc.r)/2 )/2
+
+                    if randint(1, 100) <= 97:
+                        # Successfull action
+                        action['failed'] = False
+                        if pc.comcap > tg.r:
+                            # The attack successed
+                            action['hit'] = True
+                            if randint(1, 100) <= 5:
+                                # The attack is a critical Hit
+                                dmg_crit = round(150 + pc.r / 10)
+                                clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
+                                clog(tg.id,pc.id,'Critically Hit by {}'.format(pc.name))
+                            else:
+                                # The attack is a normal Hit
+                                dmg_crit = 100
+                                clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
+                                clog(tg.id,pc.id,'Hit by {}'.format(pc.name))
+                            dmg = round(dmg_wp * dmg_crit / 100) - tg.arm_p
+                            if dmg > 0:
+                                # The attack deals damage
+                                action['damages'] = dmg
+                                hp = tg.hp - dmg
+
+                                if hp >= 0:
+                                    # The attack wounds
+                                    Session = sessionmaker(bind=engine)
+                                    session = Session()
+
+                                    with engine.connect() as conn:
+                                        try:
+                                            tg    = session.query(tables.PJ).filter(tables.PJ.id == targetid).one_or_none()
+                                            tg.hp = hp
+                                            session.commit()
+                                        except Exception as e:
+                                            # Something went wrong during commit
+                                            return (200, False, 'HP update failed', None)
+                                        else:
+                                            #rset_pa(pcid,4,0)
+                                            clog(pc.id,None,'Suffered minor injuries ({})'.format(dmg))
+                                else:
+                                    # The attack kills
+                                    action['killed'] = True
+                                    clog(pc.id,tg.id,'Killed {}'.format(tg.name))
+                                    clog(tg.id,pc.id,'Died'.format(pc.name))
+                            else:
+                                clog(pc.id,None,'Suffered no injuries')
+                                # The attack does not deal damage
+                        else:
+                            # The attack missed
+                            clog(pc.id,tg.id,'Missed {}'.format(tg.name))
+                            clog(tg.id,pc.id,'Avoided {}'.format(pc.name))
+                    else:
+                        # Failed action
+                        clog(pc.id,None,'Failed an attack')
+                else:
+                    # Not enough PA to attack
+                    return (200, False, 'Not enough PA to attack', None)
+            else:
+                # Target is too far
+                return (200, False, 'Coords incorrect', None)
+        return (200, True, 'Target successfully attacked', {"red": rget_pa(pcid)[3]['red'],
+                                                            "blue": rget_pa(pcid)[3]['blue'],
+                                                            "action": action})
     else: return (409, False, 'Token/username mismatch', None)
 
 #
