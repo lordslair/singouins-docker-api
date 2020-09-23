@@ -706,6 +706,7 @@ def query_move_path(username,pcid,path):
             if abs(pc.x - x) <= 1 and abs(pc.y - y) <= 1:
                 if bluepa > 1:
                     # Enough PA to move
+                    rset_pa(pcid,0,1) # We consume the blue PA (1) right now
                     Session = sessionmaker(bind=engine)
                     session = Session()
 
@@ -721,7 +722,6 @@ def query_move_path(username,pcid,path):
                             # Something went wrong during commit
                             return (200, False, 'Coords update failed', None)
                         else:
-                            rset_pa(pcid,0,1)
                             clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,pc.x,pc.y))
                 else:
                     # Not enough PA to move
