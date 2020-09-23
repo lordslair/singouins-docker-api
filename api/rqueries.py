@@ -54,3 +54,15 @@ def rset_pa(pcid,redpa,bluepa):
         else:
             # Key does not exist anymore (PA count = PA max)
             r.set(key,'blue',ex=newttl)
+    if redpa > 0:
+        # An action consumed a red PA, we need to update
+        key    = str(pcid) + '-red'
+        ttl    = r.ttl(key)
+        newttl = ttl + (redpa * redpaduration)
+
+        if ttl > 0:
+            # Key still exists (PA count < PA max)
+            r.expire(key,newttl)
+        else:
+            # Key does not exist anymore (PA count = PA max)
+            r.set(key,'red',ex=newttl)
