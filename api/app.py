@@ -281,13 +281,6 @@ def mypc_item(pcid):
 # Routes: /action
 #
 
-@app.route('/mypc/<int:pcid>/action/move/0/<int:x>/<int:y>', methods=['POST'])
-@jwt_required
-def mypc_action_move(pcid,x,y):
-    (code, success, msg, payload) = query_move(get_jwt_identity(),pcid,x,y)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
 @app.route('/mypc/<int:pcid>/action/move', methods=['POST'])
 @jwt_required
 def mypc_action_move_path(pcid):

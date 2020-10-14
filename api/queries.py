@@ -657,40 +657,6 @@ def query_event(username,pcid):
 # Queries /action
 #
 
-def query_move(username,pcid,x,y):
-    (code, success, msg, pc) = query_get_pc(None,pcid)
-    user                     = query_get_user(username)
-
-    if pc and pc.account == user.id:
-        from rqueries import rget_pa,rset_pa
-
-        bluepa = rget_pa(pcid)[3]['blue']['pa']
-
-        if bluepa > 1:
-            # Enough PA to move
-            Session = sessionmaker(bind=engine)
-            session = Session()
-
-            with engine.connect() as conn:
-                try:
-                    pc   = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
-                    oldx = pc.x
-                    oldy = pc.y
-                    pc.x = x
-                    pc.y = y
-                    session.commit()
-                except Exception as e:
-                    # Something went wrong during commit
-                    return (200, False, 'Coords update failed', None)
-                else:
-                    rset_pa(pcid,0,1)
-                    clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,pc.x,pc.y))
-                    return (200, True, 'PC successfully moved', rget_pa(pcid)[3])
-        else:
-            # Not enough PA to move
-            return (200, False, 'Not enough PA to move', None)
-    else: return (409, False, 'Token/username mismatch', None)
-
 def query_move_path(username,pcid,path):
     (code, success, msg, pc) = query_get_pc(None,pcid)
     user                     = query_get_user(username)
