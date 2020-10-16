@@ -356,9 +356,10 @@ def query_get_items(username,pcid):
         session = Session()
 
         with engine.connect() as conn:
-            weapons = session.query(tables.Weapons).filter(tables.Weapons.bearer == pc.id).all()
-            gear    = session.query(tables.Gear).filter(tables.Gear.bearer == pc.id).all()
-            return (200, True, 'OK', {"weapons": weapons, "gear": gear})
+            weapons   = session.query(tables.Weapons).filter(tables.Weapons.bearer == pc.id).all()
+            gear      = session.query(tables.Gear).filter(tables.Gear.bearer == pc.id).all()
+            equipment = session.query(tables.CreaturesSlots).filter(tables.CreaturesSlots.id == pc.id).all()
+            return (200, True, 'OK', {"weapons": weapons, "gear": gear, "equipment": equipment})
 
     else: return (409, False, 'Token/username mismatch', None)
 
