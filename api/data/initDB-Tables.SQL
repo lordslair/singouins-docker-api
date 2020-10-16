@@ -189,3 +189,17 @@ b_skill     INT      NOT NULL,                 /* Creature B carac (skill bonus)
 b_point     INT      NOT NULL,                 /* Creature B carac (points invested) */
 points      INT      NOT NULL,                 /* Creature points not yet invested */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS creaturesSlots (
+id          INT      NOT NULL PRIMARY KEY,     /* creatures.id */
+lefthand    INT      NULL,                     /* weapons.id */
+righthand   INT      NULL,                     /* weapons.id */
+holster     INT      NULL,                     /* weapons.id */
+head        INT      NULL,                     /* gear.id */
+shoulders   INT      NULL,                     /* gear.id */
+torso       INT      NULL,                     /* gear.id */
+hands       INT      NULL,                     /* gear.id */
+legs        INT      NULL,                     /* gear.id */
+feet        INT      NULL,                     /* gear.id */
+ammo        INT      NULL,                     /* gear.id */
+date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);

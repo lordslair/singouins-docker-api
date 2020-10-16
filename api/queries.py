@@ -780,6 +780,143 @@ def query_action_attack(username,pcid,weaponid,targetid):
                                                             "action": action})
     else: return (409, False, 'Token/username mismatch', None)
 
+def query_action_equip(username,pcid,type,slotname,itemid):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+
+        if pc.instance > 0:
+            # Meaning we are in a combat zone
+            from rqueries import rget_pa,rset_pa
+            if rget_pa(pc.id)[3]['red']['pa'] > 2:
+                # Enough PA to equip
+                rset_pa(pc.id,2,0) # We consume the red PA (2) right now
+            else:
+                # Not enough PA to equip
+                return (200, False, 'Not enough PA to equip', None)
+
+        if itemid > 0:
+            # EQUIP
+            Session = sessionmaker(bind=engine)
+            session = Session()
+
+            with engine.connect() as conn:
+                try:
+                    if type == 'weapon':
+                        item  = session.query(tables.Weapons).filter(tables.Weapons.id == itemid, tables.Weapons.bearer == pc.id).one_or_none()
+                    elif type == 'gear':
+                        item  = session.query(tables.Gear).filter(tables.Gear.id == itemid, tables.Gear.bearer == pc.id).one_or_none()
+
+                    equipment = session.query(tables.CreaturesSlots).filter(tables.CreaturesSlots.id == pc.id).one_or_none()
+
+                    if item      is None: return (200, False, 'Item not found (itemid:{})'.format(itemid), None)
+                    if equipment is None: return (200, False, 'Equipement not found (pcid:{})'.format(pc.id), None)
+
+                    # The item to equip exists, is owned by the PC, and we retrieved his equipment from DB
+                    if   slotname == 'head':      equipment.head      = item.id
+                    elif slotname == 'shoulders': equipment.shoulders = item.id
+                    elif slotname == 'torso':     equipment.torso     = item.id
+                    elif slotname == 'hands':     equipment.hands     = item.id
+                    elif slotname == 'legs':      equipment.legs      = item.id
+                    elif slotname == 'feet':      equipment.feet      = item.id
+                    elif slotname == 'ammo':      equipment.ammo      = item.id
+                    elif slotname == 'holster':
+                        itemmeta = session.query(tables.WeaponsMeta).filter(tables.WeaponsMeta.id == item.type).one_or_none()
+                        if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
+
+                        sizex,sizey = itemmeta.size.split("x")
+                        if int(sizex) * int(sizey) <= 4:
+                            # It fits inside the holster
+                            equipment.holster  = item.id
+                        else: return (200, False, 'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size), None)
+                    elif slotname == 'righthand':
+                        itemmeta = session.query(tables.WeaponsMeta).filter(tables.WeaponsMeta.id == item.type).one_or_none()
+                        if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
+
+                        sizex,sizey = itemmeta.size.split("x")
+                        if int(sizex) * int(sizey) < 6:
+                            # It fits inside the right hand
+                            equipment.righthand  = item.id
+                        else:
+                            # It fits inside the BOTH hand
+                            equipment.righthand  = item.id
+                            equipment.lefthand   = item.id
+                    elif slotname == 'lefthand':
+                        itemmeta = session.query(tables.WeaponsMeta).filter(tables.WeaponsMeta.id == item.type).one_or_none()
+                        if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
+
+                        sizex,sizey = itemmeta.size.split("x")
+                        if int(sizex) * int(sizey) <= 4:
+                            # It fits inside the left hand
+                            equipment.lefthand   = item.id
+                        else: return (200, False, 'Item does not fit in left hand (itemid:{},size:{})'.format(item.id,itemmeta.size), None)
+
+                    equipment.date = datetime.now() # We update the date in DB
+
+                    item.bound     = True           # In case the item was not bound to PC. Now it is
+                    item.date      = datetime.now() # We update the date in DB
+
+                    session.commit()
+                except Exception as e:
+                    # Something went wrong during commit
+                    return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
+                else:
+                    clog(pc.id,None,'Equipped an item ({})'.format(item.id))
+                    return (200, True, 'Equipment update successed (itemid:{})'.format(item.id), {"red": rget_pa(pcid)[3]['red'],
+                                                                                                  "blue": rget_pa(pcid)[3]['blue'],
+                                                                                                  "equipment": equipment})
+
+        elif itemid == 0:
+            # UNEQUIP
+            Session = sessionmaker(bind=engine)
+            session = Session()
+
+            with engine.connect() as conn:
+                try:
+                    equipment = session.query(tables.CreaturesSlots).filter(tables.CreaturesSlots.id == pc.id).one_or_none()
+                    if equipment is None: return (200, False, 'Equipement not found (pcid:{})'.format(pc.id), None)
+
+                    # We retrieved his equipment from DB
+                    if   slotname == 'head':      equipment.head      = None
+                    elif slotname == 'shoulders': equipment.shoulders = None
+                    elif slotname == 'torso':     equipment.torso     = None
+                    elif slotname == 'hands':     equipment.hands     = None
+                    elif slotname == 'legs':      equipment.legs      = None
+                    elif slotname == 'feet':      equipment.feet      = None
+                    elif slotname == 'ammo':      equipment.ammo      = None
+                    elif slotname == 'holster':   equipment.holster   = None
+                    elif slotname == 'righthand':
+                        if equipment.righthand ==  equipment.lefthand:
+                            # If the weapon equipped takes both hands
+                            equipment.righthand = None
+                            equipment.lefthand  = None
+                        else:
+                            equipment.righthand = None
+                    elif slotname == 'lefthand':
+                        if equipment.lefthand ==  equipment.righthand:
+                            # If the weapon equipped takes both hands
+                            equipment.righthand = None
+                            equipment.lefthand  = None
+                        else:
+                            equipment.lefthand = None
+
+                    equipment.date = datetime.now()
+
+                    session.commit()
+                except Exception as e:
+                    # Something went wrong during commit
+                    return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
+                else:
+                    clog(pc.id,None,'Un-equipped an item')
+                    return (200, True, 'Un-equipment update successed (0)', {"red": rget_pa(pcid)[3]['red'],
+                                                                             "blue": rget_pa(pcid)[3]['blue'],
+                                                                             "equipment": equipment})
+        else:
+            # Weird weaponid
+            return (200, False, 'Itemid incorrect (itemid:{})'.format(itemid), None)
+    else: return (409, False, 'Token/username mismatch', None)
+
 #
 # Queries /view
 #

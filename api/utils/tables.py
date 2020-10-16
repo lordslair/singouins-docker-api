@@ -339,3 +339,32 @@ class CreaturesStats(Base):
     b_point    = Column(Integer)
     points     = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class CreaturesSlots(Base):
+    __tablename__ = 'creaturesSlots'
+
+    id:        int
+    lefthand:  int
+    righthand: int
+    holster:   int
+    head:      int
+    shoulders: int
+    torso:     int
+    hands:     int
+    legs:      int
+    feet:      int
+    ammo:      int
+
+    id         = Column(Integer, primary_key=True)
+    lefthand   = Column(Integer)
+    righthand  = Column(Integer)
+    holster    = Column(Integer)
+    head       = Column(Integer)
+    shoulders  = Column(Integer)
+    torso      = Column(Integer)
+    hands      = Column(Integer)
+    legs       = Column(Integer)
+    feet       = Column(Integer)
+    ammo       = Column(Integer)
+    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
