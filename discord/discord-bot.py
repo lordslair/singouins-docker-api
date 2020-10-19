@@ -10,6 +10,7 @@ import sys
 
 from datetime       import datetime,timedelta
 from discord.ext    import commands
+from termcolor      import colored
 
 from queries        import *
 from variables      import token
