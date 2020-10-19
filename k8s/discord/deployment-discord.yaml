@@ -27,10 +27,10 @@ spec:
         image: lordslair/singouins:discord-alpine3.7
         resources:
           limits:
-            memory: 128Mi
+            memory: 256Mi
             cpu: 50m
           requests:
-            memory: 64Mi
+            memory: 128Mi
             cpu: 10m
         env:
         - name: DB_PASS

@@ -14,6 +14,7 @@ from discord.ext    import commands
 from queries        import *
 from variables      import token
 from utils.messages import *
+from utils.histograms import draw
 
 client = commands.Bot(command_prefix = '!')
 
@@ -75,6 +76,30 @@ async def register(ctx,arg):
             # The discordname is not in DB
             await ctx.message.author.send(msg_unknown_discordname)
             print('{} [{}][{}]   registration failed (unknown discordname)'.format(mynow(),member,ctx.message.channel))
+
+@client.command(pass_context=True)
+async def histo(ctx,arg):
+    member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
+    adminrole    = discord.utils.get(member.guild.roles, name='Admins')
+    adminchannel = discord.utils.get(client.get_all_channels(), name='admins')
+
+    if adminrole in ctx.author.roles and ctx.message.channel == adminchannel:
+        # This command is to be used only by Admin role
+        # This command is to be used only in #admins
+        print('{} [{}][{}] !histo <{}>'.format(mynow(),member,ctx.message.channel,arg))
+        if arg == 'CreaturesLevel' or arg == 'CL':
+            # We'll draw a chart with Creatures Level occurences
+            # array  = query_histo(arg)
+            answer = draw(['1','1','2','2','2','2','2','5'])
+            if answer:
+                await ctx.send(answer)
+                print('{} [{}][{}] └> Histogram sent'.format(mynow(),member,ctx.message.channel,arg))
+            else:
+                print('{} [{}][{}] └> I failed (._.) '.format(mynow(),member,ctx.message.channel,arg))
+    else:
+        await ctx.send(f'You need to have the role {adminrole.name}')
+
 
 @client.event
 async def on_member_join(member):
