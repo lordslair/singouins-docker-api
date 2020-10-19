@@ -24,7 +24,7 @@ spec:
 
       containers:
       - name: sep-backend-discord
-        image: alpine:3.7
+        image: lordslair/singouins:discord-alpine3.7
         resources:
           limits:
             memory: 128Mi
@@ -32,13 +32,6 @@ spec:
           requests:
             memory: 64Mi
             cpu: 10m
-        command: ["/bin/sh"]
-        args: [
-         "-c",
-         "(
-              wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/discord/entrypoint.sh | sh
-          ) || echo 1"
-        ]
         env:
         - name: DB_PASS
           valueFrom:
