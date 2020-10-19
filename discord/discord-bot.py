@@ -22,14 +22,20 @@ client = commands.Bot(command_prefix = '!')
 def mynow(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # Welcome message in the logs on daemon start
-print('{} [{}] {}'.format(mynow(),'BOT', 'Daemon started'))
+print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Daemon started', colored('✓', 'green')))
+# Pre-flich check for SQL connection
+if query_up(): tick = colored('✓', 'green')
+else         : tick = colored('✗', 'red')
+print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'SQL connection', tick))
 
 @client.event
 async def on_ready():
     channel = discord.utils.get(client.get_all_channels(), name='admins')
     if channel:
-        print('{} [{}][{}] {}'.format(mynow(),'BOT',channel,msg_ready))
+        tick = colored('✓', 'green')
         await channel.send(msg_ready)
+    else: tick = colored('✗', 'red')
+    print('{} [{}] {}  [{}]'.format(mynow(),'BOT', 'Discord ready', tick))
 
 @client.command()
 async def ping(ctx):

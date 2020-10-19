@@ -14,6 +14,19 @@ engine     = create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
 # Queries: /auth
 #
 
+def query_up():
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        try:
+            result = session.query(tables.User).first()
+            session.close()
+        except Exception as e:
+            print(e)
+
+    if result: return result
+
 def query_get_user(discordname):
     Session = sessionmaker(bind=engine)
     session = Session()

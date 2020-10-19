@@ -11,8 +11,9 @@ RUN apk update --no-cache \
                                       tzdata \
     && pip3 --no-cache-dir install -U discord.py \
                                       pyMySQL \
-                                      SQLAlchemy \
                                       numpy \
+                                      SQLAlchemy \
+                                      termcolor \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps
 
