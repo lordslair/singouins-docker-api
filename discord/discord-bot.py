@@ -94,15 +94,15 @@ async def histo(ctx,arg):
         # This command is to be used only by Admin role
         # This command is to be used only in #admins
         print('{} [{}][{}] !histo <{}>'.format(mynow(),member,ctx.message.channel,arg))
-        if arg == 'CreaturesLevel' or arg == 'CL':
-            # We'll draw a chart with Creatures Level occurences
-            # array  = query_histo(arg)
-            answer = draw(['1','1','2','2','2','2','2','5'])
-            if answer:
-                await ctx.send(answer)
-                print('{} [{}][{}] └> Histogram sent'.format(mynow(),member,ctx.message.channel,arg))
-            else:
-                print('{} [{}][{}] └> I failed (._.) '.format(mynow(),member,ctx.message.channel,arg))
+
+        # We'll draw a chart with Creatures Level occurences
+        array  = query_histo(arg)
+        answer = draw(array)
+        if answer:
+            await ctx.send(answer)
+            print('{} [{}][{}] └> Histogram sent'.format(mynow(),member,ctx.message.channel,arg))
+        else:
+            print('{} [{}][{}] └> I failed (._.) '.format(mynow(),member,ctx.message.channel,arg))
     else:
         await ctx.send(f'You need to have the role {adminrole.name}')
 

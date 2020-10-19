@@ -50,3 +50,14 @@ def query_validate_user(discordname):
         except Exception as e:
             # Something went wrong during commit
             return None
+
+def query_histo(arg):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        if   arg == 'CreaturesLevel' or arg == 'CL': result = session.query(tables.Creatures.level).all()
+        elif arg == 'CreaturesRace'  or arg == 'CR': result = session.query(tables.Creatures.race).all()
+        session.close()
+
+    if result: return result

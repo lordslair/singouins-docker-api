@@ -34,7 +34,7 @@ def draw(input_list):
 
     # TODO make the offset configurable
     y_offset = '       '
-    y_label  = ' prop. '
+    y_label  = ' Count '
 
     answer += "\n"
     # Build plot from top level
@@ -65,7 +65,7 @@ def draw(input_list):
 
     # Draw X axis
     answer += y_offset + '└'+ "─"*(width+2) + "\n"
-    answer += y_offset + str(shape[0]) + ' '*(width-3) + str(shape[1]) + "\n"
+    answer += y_offset + str(shape[0][0]) + ' '*(width-3) + str(shape[1][0]) + "\n"
 
     # Calculate stats on data
     answer += f'count      : {len(input_list)}\n'
