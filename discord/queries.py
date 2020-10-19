@@ -21,9 +21,9 @@ def query_up():
     with engine.connect() as conn:
         try:
             result = session.query(tables.User).first()
-            session.close()
         except Exception as e:
             print(e)
+        session.close()
 
     if result: return result
 
