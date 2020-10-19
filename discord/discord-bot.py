@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 # -*- coding: utf8 -*-
 
 import asyncio
