@@ -20,7 +20,6 @@ class User(Base):
     active    = Column(Boolean)
     date      = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
-@dataclass
 class Creatures(Base):
     __tablename__ = 'creatures'
 
