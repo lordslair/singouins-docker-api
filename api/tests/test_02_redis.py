@@ -8,9 +8,7 @@ import time
 code = os.path.dirname(os.environ['FLASK_APP'])
 sys.path.append(code)
 
-from utils.variables import (REDIS_PORT,
-                             REDIS_HOST,
-                             REDIS_DB_NAME)
+from variables import (REDIS_PORT, REDIS_HOST, REDIS_DB_NAME)
 
 r = redis.StrictRedis(host     = REDIS_HOST,
                       port     = REDIS_PORT,
