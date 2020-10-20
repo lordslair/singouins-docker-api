@@ -24,3 +24,6 @@ SEP_SHA        = open('/code/.git', 'r').read().rstrip()
 REDIS_HOST    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST']
 REDIS_PORT    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT']
 REDIS_DB_NAME = 0
+
+# PCS variables for remote storage
+PCS_URL       = os.environ['SEP_PCS_URL']

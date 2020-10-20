@@ -119,6 +119,11 @@ spec:
             secretKeyRef:
               name: sep-backend-api-secret
               key: smtp-host
+        - name: SEP_PCS_URL
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-api-secret
+              key: pcs-url
         - name: DEBUG_METRICS
           value: 'true'
         volumeMounts:

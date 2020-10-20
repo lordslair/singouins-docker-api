@@ -34,6 +34,10 @@ class PJ(Base):
     x: int
     y: int
     xp: int
+    hp: int
+    hp_max: int
+    arm_p: int
+    arm_b: int
     instance: int
     squad: int
     squad_rank: str
@@ -57,6 +61,10 @@ class PJ(Base):
     x          = Column(Integer)
     y          = Column(Integer)
     xp         = Column(Integer)
+    hp         = Column(Integer)
+    hp_max     = Column(Integer)
+    arm_b      = Column(Integer)
+    arm_p      = Column(Integer)
     instance   = Column(Integer)
     squad      = Column(Integer)
     squad_rank = Column(String)

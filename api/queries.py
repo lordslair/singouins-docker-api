@@ -7,7 +7,7 @@ from datetime  import datetime
 from random    import randint
 
 from utils     import tables
-from variables import SQL_DSN
+from variables import SQL_DSN, PCS_URL
 
 import textwrap
 
@@ -167,7 +167,18 @@ def query_add_pc(username,pcname,pcrace):
                            level   = 1,
                            x       = 0,
                            y       = 0,
-                           xp      = 0)
+                           xp      = 0,
+                           hp      = 80,
+                           hp_max  = 80,
+                           arm_p   = 50,
+                           arm_b   = 25,
+                           m       = 100,
+                           r       = 100,
+                           g       = 100,
+                           v       = 100,
+                           p       = 100,
+                           b       = 100,
+                           sprite  = PCS_URL + '/resources/sprites/creatures/' + pcrace + '.png')
 
             session.add(pc)
 
