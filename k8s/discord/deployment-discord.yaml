@@ -24,7 +24,8 @@ spec:
 
       containers:
       - name: sep-backend-discord
-        image: lordslair/singouins:discord-alpine3.7
+        image: lordslair/singouins:discord-alpine3.12
+        imagePullPolicy: Always
         resources:
           limits:
             memory: 256Mi
