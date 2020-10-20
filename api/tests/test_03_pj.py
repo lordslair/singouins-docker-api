@@ -7,7 +7,7 @@ import requests
 SEP_URL     = os.environ['SEP_URL']
 pjname_test = 'PJTest'
 payload     = {'username': 'user', 'password': 'plop'}
-payload_c   = {'race': 'Ruzé', 'name': 'PJTest'}
+payload_c   = {'race': '2', 'name': 'PJTest'}
 
 def test_singouins_pj_create():
     url      = SEP_URL + '/auth/login'
@@ -19,6 +19,7 @@ def test_singouins_pj_create():
     response = requests.post(url, json = payload_c, headers=headers)
 
     assert response.status_code == 201
+    assert json.loads(response.text)['success'] == True
 
 def test_singouins_pj_infos():
     url      = SEP_URL + '/auth/login'
@@ -32,3 +33,4 @@ def test_singouins_pj_infos():
 
     assert pjname == pjname_test
     assert response.status_code == 200
+    assert json.loads(response.text)['success'] == True
