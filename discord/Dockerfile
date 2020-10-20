@@ -1,15 +1,15 @@
-FROM alpine:3.7
+FROM alpine:3.12
 MAINTAINER @Lordslair
 
 RUN apk update --no-cache \
-    && apk add --no-cache python3 \
+    && apk add --no-cache python3 py3-pip \
     && apk add --no-cache --virtual  .build-deps \
                                       python3-dev \
                                       libffi-dev \
                                       gcc \
                                       libc-dev \
                                       tzdata \
-    && pip3 --no-cache-dir install -U discord.py \
+    && pip --no-cache-dir install -U  discord.py \
                                       pyMySQL \
                                       numpy \
                                       SQLAlchemy \
