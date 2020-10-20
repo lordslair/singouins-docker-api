@@ -68,7 +68,7 @@ spec:
         - name: FLASK_PORT
           value: '5000'
         - name: SEP_URL
-          value: 'https://api.proto.singouins.com/'
+          value: 'https://api.proto.singouins.com'
         - name: SEP_SECRET_KEY
           valueFrom:
             secretKeyRef:
