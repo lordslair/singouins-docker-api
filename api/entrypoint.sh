@@ -12,8 +12,7 @@ apk update --no-cache \
                                     tzdata \
     && pip3 --no-cache-dir install -U -r /code/requirements.txt \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
-    && apk del .build-deps \
-    && pytest /code/tests
+    && apk del .build-deps
 
 echo "`date +"%F %X"` Build done ..."
 
