@@ -21,6 +21,7 @@ def test_singouins_pj_delete():
     url      = SEP_URL + '/mypc/{}'.format(pjid)
     response = requests.delete(url, headers=headers)
 
+    assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
 
 def test_singouins_auth_delete():
@@ -32,4 +33,5 @@ def test_singouins_auth_delete():
     url      = SEP_URL + '/auth/delete/user'
     response = requests.delete(url, json = {'username': 'user'}, headers=headers)
 
+    assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
