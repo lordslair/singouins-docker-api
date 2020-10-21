@@ -168,15 +168,8 @@ def mypc_create():
 
 @app.route('/pc/<int:pcid>', methods=['GET'])
 @jwt_required
-def pc_byid(pcid):
+def pc_get(pcid):
     (code, success, msg, payload) = query_get_pc(None,pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/pc/name/<string:pcname>', methods=['GET'])
-@jwt_required
-def pc_byname(pcname):
-    (code, success, msg, payload) = query_get_pc(pcname,None)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
