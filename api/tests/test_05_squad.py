@@ -185,7 +185,7 @@ def test_singouins_squad_decline():
     assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
 
-def test_singouins_squad_decline():
+def test_singouins_squad_leave():
     url      = SEP_URL + '/auth/login'
     response = requests.post(url, json = payload)
     token    = json.loads(response.text)['access_token']
@@ -196,14 +196,14 @@ def test_singouins_squad_decline():
     pjid     = json.loads(response.text)['payload'][0]['id']
     squadid  = json.loads(response.text)['payload'][0]['squad']
 
-    # We create a PJTestSquadDecline
+    # We create a PJTestSquadLeave
     url      = SEP_URL + '/mypc'
-    response = requests.post(url, json = {'race': '3', 'name': 'PJTestSquadDecline'}, headers=headers)
+    response = requests.post(url, json = {'race': '3', 'name': 'PJTestSquadLeave'}, headers=headers)
     url      = SEP_URL + '/mypc'
     response = requests.get(url, headers=headers)
     targetid = json.loads(response.text)['payload'][1]['id']
 
-    # We invite PJTestSquadDecline
+    # We invite PJTestSquadLeave
     url      = SEP_URL + '/mypc/{}/squad/{}/invite/{}'.format(pjid,squadid,targetid)
     response = requests.post(url, headers=headers)
 
@@ -211,15 +211,15 @@ def test_singouins_squad_decline():
     assert 'PC successfully invited' in json.loads(response.text)['msg']
     assert response.status_code == 201
 
-    # PJTestSquadDecline accepts the request
-    url      = SEP_URL + '/mypc/{}/squad/{}/decline'.format(targetid,squadid)
+    # PJTestSquadLeave accepts the request
+    url      = SEP_URL + '/mypc/{}/squad/{}/leave'.format(targetid,squadid)
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully declined squad invite' in json.loads(response.text)['msg']
+    assert 'PC successfully left' in json.loads(response.text)['msg']
     assert response.status_code == 201
 
-    # We cleanup the PJTestSquadDecline
+    # We cleanup the PJTestSquadLeave
     url      = SEP_URL + '/mypc/{}'.format(targetid)
     response = requests.delete(url, headers=headers)
 
