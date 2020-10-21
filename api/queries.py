@@ -464,55 +464,70 @@ def query_add_squad(username,pcid,squadname):
                     return (201, True, 'Squad successfully created', squad)
     else: return (409, False, 'Token/username mismatch', None)
 
-def query_del_squad(username,pcid,squadid):
-    (code, success, msg, pc) = query_get_pc(None,pcid)
-    user                     = query_get_user(username)
+def query_del_squad(username,leaderid,squadid):
+    (code, success, msg, leader) = query_get_pc(None,leaderid)
+    user                         = query_get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
-    if pc and pc.account == user.id:
+    if leader:
+        if leader.squad != squadid:
+            return (200, False, 'Squad request outside of your scope ({} =/= {})'.format(leader.squad,squadid), None)
+        if leader.squad_rank != 'Leader':
+            return (200, False, 'PC is not the squad Leader', None)
+    else:
+        return (200, False, 'PC unknown in DB (pcid:{})'.format(leaderid), None)
+
+    if leader and leader.account == user.id:
         Session = sessionmaker(bind=engine)
         session = Session()
 
         with engine.connect() as conn:
             try:
-                squad = session.query(tables.Squad).filter(tables.Squad.leader == pc.id).one_or_none()
-                if not squad: return (200, True, 'No Squad found for this PC', None)
+                squad = session.query(tables.Squad).filter(tables.Squad.leader == leader.id).one_or_none()
+                if not squad: return (200, True, 'No Squad found for this PC (pcid:{})'.format(leader.id), None)
 
                 count = session.query(tables.PJ).filter(tables.PJ.squad == squad.id).count()
-                if count > 1: return (200, False, 'Squad not empty', None)
+                if count > 1: return (200, False, 'Squad not empty (squadid:{})'.format(squad.id), None)
 
                 session.delete(squad)
-                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc = session.query(tables.PJ).filter(tables.PJ.id == leader.id).one_or_none()
                 pc.squad      = None
                 pc.squad_rank = None
                 session.commit()
             except Exception as e:
                 # Something went wrong during commit
-                return (200, False, 'Squad deletion failed', None)
+                return (200, False, 'Squad deletion failed (squadid:{})'.format(squad.id), None)
             else:
-                return (200, True, 'Squad successfully deleted', None)
+                return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
     else: return (409, False, 'Token/username mismatch', None)
 
-def query_invite_squad_member(username,leaderid,pcid,squadid):
-    (code, success, msg, pc)     = query_get_pc(None,pcid)
+def query_invite_squad_member(username,leaderid,squadid,targetid):
+    (code, success, msg, target) = query_get_pc(None,targetid)
     (code, success, msg, leader) = query_get_pc(None,leaderid)
     user                         = query_get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
-    if pc and leader:
+    if leader:
+        if leader.squad is None:
+            return (200, False, 'PC is not in a squad', None)
+        if leader.squad != squadid:
+            return (200, False, 'Squad request outside of your scope ({} =/= {})'.format(leader.squad,squadid), None)
+        if leader.squad_rank != 'Leader':
+            return (200, False, 'PC is not the squad Leader', None)
+    else:
+        return (200, False, 'PC unknown in DB (pcid:{})'.format(leaderid), None)
+
+    if target:
+        if target.squad is not None:
+            return (200, False, 'PC invited is already in a squad (pcid:{},squadid:{})'.format(target.id,target.squad), None)
+    else:
+        return (200, False, 'PC unknown in DB (pcid:{})'.format(targetid), None)
+
+    if target and leader:
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        if leader.squad is None:
-            return (200, False, 'PC is not in a squad', None)
-        if leader.squad_rank != 'Leader':
-            return (200, False, 'PC is not the squad Leader', None)
-        if pc.squad is not None:
-            return (200, False, 'PC invited is already in a squad', None)
-
         with engine.connect() as conn:
             try:
-                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc = session.query(tables.PJ).filter(tables.PJ.id == target.id).one_or_none()
                 pc.squad      = leader.squad
                 pc.squad_rank = 'Pending'
                 session.commit()
@@ -521,30 +536,37 @@ def query_invite_squad_member(username,leaderid,pcid,squadid):
                 return (200, False, 'PC Invite failed', None)
             else:
                 return (201, True, 'PC successfully invited', pc)
-    else: return (200, False, 'PC unknown in DB', None)
 
-def query_kick_squad_member(username,leaderid,pcid,squadid):
-    (code, success, msg, pc)     = query_get_pc(None,pcid)
+def query_kick_squad_member(username,leaderid,squadid,targetid):
+    (code, success, msg, target) = query_get_pc(None,targetid)
     (code, success, msg, leader) = query_get_pc(None,leaderid)
     user                         = query_get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
-    if pc and leader:
+    if leader:
+        if leader.squad is None:
+            return (200, False, 'PC is not in a squad', None)
+        if leader.squad != squadid:
+            return (200, False, 'Squad request outside of your scope ({} =/= {})'.format(leader.squad,squadid), None)
+        if leader.squad_rank != 'Leader':
+            return (200, False, 'PC is not the squad Leader', None)
+        if leader.id == targetid:
+            return (200, False, 'PC target cannot be the squad Leader', None)
+    else:
+        return (200, False, 'PC unknown in DB (pcid:{})'.format(leaderid), None)
+
+    if target:
+        if target.squad is None:
+            return (200, False, 'PC have to be in a squad (pcid:{},squadid:{})'.format(target.id,target.squad), None)
+    else:
+        return (200, False, 'PC unknown in DB (pcid:{})'.format(targetid), None)
+
+    if target and leader:
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        if leader.squad is None:
-            return (200, False, 'PC is not in a squad', None)
-        if leader.squad_rank != 'Leader':
-            return (200, False, 'PC is not the squad Leader', None)
-        if pc.squad is None:
-            return (200, False, 'PC target is not in a squad', None)
-        if pc.id == leader.id:
-            return (200, False, 'PC target cannot be the squad Leader', None)
-
         with engine.connect() as conn:
             try:
-                pc = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
+                pc = session.query(tables.PJ).filter(tables.PJ.id == target.id).one_or_none()
                 pc.squad      = None
                 pc.squad_rank = None
                 session.commit()
