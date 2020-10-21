@@ -598,7 +598,7 @@ def query_accept_squad_member(username,pcid,squadid):
                 # Something went wrong during commit
                 return (200, False, 'PC squad invite accept failed', None)
             else:
-                return (201, True, 'PC successfully accepted', None)
+                return (201, True, 'PC successfully accepted squad invite', None)
     else: return (200, False, 'PC unknown in DB', None)
 
 def query_decline_squad_member(username,pcid,squadid):
