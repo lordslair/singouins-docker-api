@@ -374,6 +374,40 @@ def query_get_items(username,pcid):
 
     else: return (409, False, 'Token/username mismatch', None)
 
+def query_set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
+    (code, success, msg, pc) = query_get_pc(None,pcid)
+    user                     = query_get_user(username)
+
+    if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        with engine.connect() as conn:
+            try:
+                if itemtype == 'weapon':
+                    item  = session.query(tables.Weapons).filter(tables.Weapons.id == itemid, tables.Weapons.bearer == pc.id).one_or_none()
+                elif itemtype == 'gear':
+                    item  = session.query(tables.Gear).filter(tables.Gear.id == itemid, tables.Gear.bearer == pc.id).one_or_none()
+                else: return (200, False, 'Itemtype does not exist (pcid:{},itemtype:{})'.format(pc.id,itemid), None)
+
+                if item is None: return (200, False, 'Item not found (pcid:{},itemid:{})'.format(pc.id,itemtype), None)
+
+                item.offsetx = offsetx
+                item.offsety = offsety
+                session.commit()
+            except Exception as e:
+                # Something went wrong during commit
+                return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
+            else:
+                weapons   = session.query(tables.Weapons).filter(tables.Weapons.bearer == pc.id).all()
+                gear      = session.query(tables.Gear).filter(tables.Gear.bearer == pc.id).all()
+                equipment = session.query(tables.CreaturesSlots).filter(tables.CreaturesSlots.id == pc.id).all()
+                return (200, True, 'Equipment update successed (itemid:{})'.format(item.id), {"weapons": weapons, "gear": gear, "equipment": equipment})
+
+    else: return (409, False, 'Token/username mismatch', None)
+
+
+
 #
 # Queries /meta
 #
@@ -889,6 +923,8 @@ def query_action_equip(username,pcid,type,slotname,itemid):
                     equipment.date = datetime.now() # We update the date in DB
 
                     item.bound     = True           # In case the item was not bound to PC. Now it is
+                    item.offsetx   = None           # Now the item is not in inventory anymore
+                    item.offsety   = None           # Neet to nullify the offsets
                     item.date      = datetime.now() # We update the date in DB
 
                     session.commit()

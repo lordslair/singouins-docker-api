@@ -183,6 +183,8 @@ class Weapons(Base):
     mods: str
     state: int
     rarity: int
+    offsetx: int
+    offsety: int
     date: str
 
     id         = Column(Integer, primary_key=True)
@@ -194,6 +196,8 @@ class Weapons(Base):
     mods       = Column(String)
     state      = Column(Integer)
     rarity     = Column(Integer)
+    offsetx    = Column(Integer)
+    offsety    = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
@@ -243,6 +247,8 @@ class Gear(Base):
     mods: str
     state: int
     rarity: int
+    offsetx: int
+    offsety: int
     date: str
 
     id         = Column(Integer, primary_key=True)
@@ -254,6 +260,8 @@ class Gear(Base):
     mods       = Column(String)
     state      = Column(Integer)
     rarity     = Column(Integer)
+    offsetx    = Column(Integer)
+    offsety    = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass

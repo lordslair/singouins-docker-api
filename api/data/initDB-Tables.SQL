@@ -63,6 +63,8 @@ modded     BOOLEAN,            /* if it is modded yet */
 mods       TEXT     NULL,      /* list of linked mods */
 state      INT      NOT NULL,  /* 0-100 scale. 100 = new, 0 = unusable */
 rarity     INT      NOT NULL,  /* ('Legendary', 'Epic', 'Rare', ...) */
+offsetx    INT      NULL,      /* X pos in the inventory */
+offsety    INT      NULL,      /* Y pos in the inventory */
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS gearMeta (
@@ -91,6 +93,8 @@ modded     BOOLEAN,            /* if it is modded yet */
 mods       TEXT     NULL,      /* list of linked mods */
 state      INT      NOT NULL,  /* 0-100 scale. 100 = new, 0 = unusable */
 rarity     INT      NOT NULL,  /* ('Legendary', 'Epic', 'Rare', ...) */
+offsetx    INT      NULL,      /* X pos in the inventory */
+offsety    INT      NULL,      /* Y pos in the inventory */
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS maps (
