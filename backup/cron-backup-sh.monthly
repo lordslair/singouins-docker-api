@@ -13,7 +13,7 @@ for DB_NAME in `echo $DBLIST | tr "," "\n"`;do
     if [[ -e "$DBFILE" ]]
         then
             zip $ZIPFILE $DBFILE
-            sshpass -p "$PCA_PASS" rsync -e "ssh -o StrictHostKeyChecking=no" -a $ZIPFILE $PCA_USER@gateways.storage.gra.cloud.ovh.net:NCC-1701-A/Singouins/$PERIOD/
+            sshpass -p "$PCA_PASS" rsync -e "ssh -o StrictHostKeyChecking=no" -a $ZIPFILE "$PCA_USER"@"$PCA_HOST":"$PCA_DIR"/"$PERIOD"/
             rm $ZIPFILE
             rm $DBFILE
         else
