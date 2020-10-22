@@ -28,12 +28,9 @@ spec:
       - name: sep-backend-nginx
         image: nginx:stable-alpine
         resources:
-          limits:
-            memory: 64Mi
-            cpu: 50m
           requests:
             memory: 32Mi
-            cpu: 10m
+            cpu: 100m
         ports:
         - containerPort: 80
         - containerPort: 443
