@@ -152,6 +152,17 @@ def auth_infos():
 # Routes: /pc
 #
 
+@app.route('/pc/<int:pcid>', methods=['GET'])
+@jwt_required
+def pc_get(pcid):
+    (code, success, msg, payload) = query_get_pc(None,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
+# Routes: /mypc
+#
+
 @app.route('/mypc', methods=['POST'])
 @jwt_required
 def mypc_create():
@@ -163,13 +174,6 @@ def mypc_create():
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
     (code, success, msg, payload) = query_add_pc(current_user,pcname,pcrace)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/pc/<int:pcid>', methods=['GET'])
-@jwt_required
-def pc_get(pcid):
-    (code, success, msg, payload) = query_get_pc(None,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
