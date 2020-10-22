@@ -24,7 +24,7 @@ spec:
 
       containers:
       - name: sep-backend-filestash
-        image: machines/filestash:671f71c
+        image: machines/filestash:d8fe013
         resources:
           limits:
             memory: 32Mi
