@@ -24,7 +24,8 @@ spec:
 
       containers:
       - name: sep-backend-backup
-        image: alpine:3.12
+        image: lordslair/easydbbackup:1.0.1
+        imagePullPolicy: Always
         resources:
           limits:
             memory: 32Mi
@@ -32,13 +33,6 @@ spec:
           requests:
             memory: 16Mi
             cpu: 10m
-        command: ["/bin/sh"]
-        args: [
-         "-c",
-         "(
-              wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/backup/entrypoint.sh | sh
-          ) || echo 1"
-        ]
         env:
           - name: DBLIST
             valueFrom:
@@ -60,6 +54,11 @@ spec:
               secretKeyRef:
                 name: sep-backend-mariadb-secret
                 key: pass
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-mariadb-secret
+                key: user
           - name: PCA_USER
             valueFrom:
               secretKeyRef:
@@ -70,3 +69,13 @@ spec:
               secretKeyRef:
                 name: sep-backend-backup-secret
                 key: pcapass
+          - name: PCA_HOST
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcahost
+          - name: PCA_DIR
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcadir
