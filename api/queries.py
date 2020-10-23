@@ -924,7 +924,7 @@ def query_action_equip(username,pcid,type,slotname,itemid):
 
                     item.bound     = True           # In case the item was not bound to PC. Now it is
                     item.offsetx   = None           # Now the item is not in inventory anymore
-                    item.offsety   = None           # Neet to nullify the offsets
+                    item.offsety   = None           # Need to nullify the offsets
                     item.date      = datetime.now() # We update the date in DB
 
                     session.commit()
