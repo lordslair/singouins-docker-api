@@ -782,7 +782,7 @@ def query_action_attack(username,pcid,weaponid,targetid):
                 # Target is on a adjacent tile
                 if redpa > 1:
                     # Enough PA to attack
-                    set_pa(pcid,4,0) # We consume the red PA (4) right now
+                    rset_pa(pcid,4,0) # We consume the red PA (4) right now
                     pc.comcap  = (pc.g + (pc.m + pc.r)/2 )/2
 
                     if randint(1, 100) <= 97:
