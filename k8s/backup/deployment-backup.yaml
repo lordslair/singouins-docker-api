@@ -24,7 +24,7 @@ spec:
 
       containers:
       - name: sep-backend-backup
-        image: lordslair/easydbbackup:1.0.1
+        image: lordslair/easydbbackup:1.1.0
         imagePullPolicy: Always
         resources:
           limits:
