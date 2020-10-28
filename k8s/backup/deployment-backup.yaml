@@ -24,7 +24,7 @@ spec:
 
       containers:
       - name: sep-backend-backup
-        image: lordslair/easydbbackup:1.1.0
+        image: lordslair/easydbbackup:1.2.0
         imagePullPolicy: Always
         resources:
           limits:
@@ -59,23 +59,58 @@ spec:
               secretKeyRef:
                 name: sep-backend-mariadb-secret
                 key: user
-          - name: PCA_USER
+          - name: RCLONE_CONFIG_PCS_TYPE
             valueFrom:
               secretKeyRef:
                 name: sep-backend-backup-secret
-                key: pcauser
-          - name: PCA_PASS
+                key: pcstype
+          - name: RCLONE_CONFIG_PCS_ENV_AUTH
             valueFrom:
               secretKeyRef:
                 name: sep-backend-backup-secret
-                key: pcapass
-          - name: PCA_HOST
+                key: pcsenvauth
+          - name: RCLONE_CONFIG_PCS_AUTH_VERSION
             valueFrom:
               secretKeyRef:
                 name: sep-backend-backup-secret
-                key: pcahost
-          - name: PCA_DIR
+                key: pcsauthversion
+          - name: RCLONE_CONFIG_PCS_TENANT_DOMAIN
             valueFrom:
               secretKeyRef:
                 name: sep-backend-backup-secret
-                key: pcadir
+                key: pcstenantdomain
+          - name: RCLONE_CONFIG_PCS_DOMAIN
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcsdomain
+          - name: RCLONE_CONFIG_PCS_AUTH
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcsauth
+          - name: RCLONE_CONFIG_PCS_TENANT
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcstenant
+          - name: RCLONE_CONFIG_PCS_USER
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcsuser
+          - name: RCLONE_CONFIG_PCS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcskey
+          - name: RCLONE_CONFIG_PCS_REGION
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcsregion
+          - name: RCLONE_CONFIG_PCS_DIR
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-backup-secret
+                key: pcsdir
