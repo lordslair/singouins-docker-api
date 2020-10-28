@@ -34,7 +34,7 @@ spec:
             memory: 16Mi
             cpu: 10m
         env:
-          - name: DBLIST
+          - name: DB_LIST
             valueFrom:
               secretKeyRef:
                 name: sep-backend-backup-secret
