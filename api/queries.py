@@ -708,7 +708,7 @@ def query_get_map(mapid):
 # Queries /events
 #
 
-def query_event(username,pcid):
+def query_mypc_event(username,pcid):
     (code, success, msg, pc) = query_get_pc(None,pcid)
     user                     = query_get_user(username)
 
@@ -720,6 +720,20 @@ def query_event(username,pcid):
             log   = session.query(tables.Log).filter((tables.Log.src == pcid) | (tables.Log.dst == pcid)).limit(50).all()
             return (200, True, 'Logs successfully retrieved', log)
     else: return (409, False, 'Token/username mismatch', None)
+
+def query_pc_event(creatureid):
+    (code, success, msg, creature) = query_get_pc(None,creatureid)
+    if creature is None: return (200, True, 'Creature does not exist (creatureid:{})'.format(creatureid), None)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    with engine.connect() as conn:
+        if creature.account is None:
+            log   = session.query(tables.Log).filter(tables.Log.src == creature.id).limit(50).all()
+            return (200, True, 'Logs successfully retrieved (creatureid:{})'.format(creatureid), log)
+        else:
+            return (200, True, 'Logs request is not for a NPC (creatureid:{})'.format(creatureid), log)
 
 #
 # Queries /action

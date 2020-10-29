@@ -324,7 +324,14 @@ def mypc_action_equip(pcid,type,slotname,itemid):
 @app.route('/mypc/<int:pcid>/event', methods=['GET'])
 @jwt_required
 def mypc_event(pcid):
-    (code, success, msg, payload) = query_event(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = query_mypc_event(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/pc/<int:creatureid>/event', methods=['GET'])
+@jwt_required
+def pc_event(creatureid):
+    (code, success, msg, payload) = query_pc_event(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
