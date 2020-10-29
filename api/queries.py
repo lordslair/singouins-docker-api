@@ -999,7 +999,15 @@ def query_get_view(username,pcid):
         session = Session()
 
         with engine.connect() as conn:
-            view = session.query(tables.PJ).filter(tables.PJ.instance == pc.instance).all()
-            return (200, True, 'View successfully retrieved', view)
+            range = 4 + round(pc.p / 50)
+            maxx  = pc.x + range
+            minx  = pc.x - range
+            maxy  = pc.y + range
+            miny  = pc.y - range
+            view  = session.query(tables.PJ).filter(tables.PJ.instance == pc.instance)\
+                                            .filter(tables.PJ.x.between(minx,maxx))\
+                                            .filter(tables.PJ.y.between(miny,maxy))\
+                                            .all()
+            return (200, True, 'View successfully retrieved (range:{},x:{},y:{})'.format(range,pc.x,pc.y), view)
 
     else: return (409, False, 'Token/username mismatch', None)
