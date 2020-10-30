@@ -717,8 +717,11 @@ def query_mypc_event(username,pcid):
         session = Session()
 
         with engine.connect() as conn:
-            log   = session.query(tables.Log).filter((tables.Log.src == pcid) | (tables.Log.dst == pcid)).limit(50).all()
-            return (200, True, 'Logs successfully retrieved', log)
+            log   = session.query(tables.Log).filter((tables.Log.src == pc.id) | (tables.Log.dst == pc.id))\
+                                             .order_by(tables.Log.date.desc())\
+                                             .limit(50)\
+                                             .all()
+            return (200, True, 'Logs successfully retrieved (pcid:{})'.format(pc.id), log)
     else: return (409, False, 'Token/username mismatch', None)
 
 def query_pc_event(creatureid):
@@ -730,10 +733,13 @@ def query_pc_event(creatureid):
 
     with engine.connect() as conn:
         if creature.account is None:
-            log   = session.query(tables.Log).filter(tables.Log.src == creature.id).limit(50).all()
-            return (200, True, 'Logs successfully retrieved (creatureid:{})'.format(creatureid), log)
+            log   = session.query(tables.Log).filter(tables.Log.src == creature.id)\
+                                             .order_by(tables.Log.date.desc())\
+                                             .limit(50)\
+                                             .all()
+            return (200, True, 'Logs successfully retrieved (creatureid:{})'.format(creature.id), log)
         else:
-            return (200, True, 'Logs request is not for a NPC (creatureid:{})'.format(creatureid), log)
+            return (200, True, 'Logs request is not for a NPC (creatureid:{})'.format(creature.id), log)
 
 #
 # Queries /action
