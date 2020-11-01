@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  namespace: singouins
+  name: sep-backend-wikijs-svc
+  labels:
+    tier: sep-backend
+spec:
+  selector:
+    app: wikijs
+    tier: sep-backend
+  ports:
+  - protocol: TCP
+    port: 3000
