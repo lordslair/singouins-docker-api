@@ -26,8 +26,8 @@ spec:
         image: requarks/wiki:2.5
         resources:
           limits:
-            memory: 128Mi
-            cpu: 100m
+            memory: 256Mi
+            cpu: 250m
           requests:
             memory: 64Mi
             cpu: 10m
