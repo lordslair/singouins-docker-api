@@ -24,9 +24,33 @@ spec:
 
       containers:
       - name: sep-backend-angular
-        image: trion/ng-cli:10.0.5
-        command: ["/bin/sh"]
-        args: ["-c", "while true; do echo hello; sleep 20;done"]
+        image: lordslair/ng-cli:12
+        env:
+          - name: GIT_REPO
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-angular-secret
+                key: gitrepo
+          - name: GIT_USER
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-angular-secret
+                key: gituser
+          - name: GIT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-angular-secret
+                key: gittoken
+          - name: QUIET
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-angular-secret
+                key: quiet
+          - name: OUTPUT_PATH
+            valueFrom:
+              secretKeyRef:
+                name: sep-backend-angular-secret
+                key: outputpath
         volumeMounts:
          - name: websites
            mountPath: /websites
