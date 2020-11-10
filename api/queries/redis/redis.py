@@ -25,7 +25,7 @@ bluemaxttl     = bluepaduration * bluepamax
 # Queries: PA
 #
 
-def rget_pa(pcid):
+def get_pa(pcid):
 
     redkey    = str(pcid) + '-red'
     redttl    = r.ttl(redkey)
@@ -40,7 +40,7 @@ def rget_pa(pcid):
     return (200, True, 'OK', {"red": {"pa": redpa, "ttnpa": redttnpa, "ttl": redttl},
                               "blue": {"pa": bluepa, "ttnpa": bluettnpa, "ttl": bluettl}})
 
-def rset_pa(pcid,redpa,bluepa):
+def set_pa(pcid,redpa,bluepa):
 
     if bluepa > 0:
         # An action consumed a blue PA, we need to update
