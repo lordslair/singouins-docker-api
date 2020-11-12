@@ -17,7 +17,7 @@ spec:
 
           containers:
           - name: sep-backend-angular
-            image: lordslair/ng-cli:12
+            image: singouins/ng-cli:12
             env:
               - name: GIT_REPO
                 valueFrom:
