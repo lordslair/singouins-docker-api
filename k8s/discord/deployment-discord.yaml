@@ -24,14 +24,14 @@ spec:
 
       containers:
       - name: sep-backend-discord
-        image: lordslair/singouins:discord-alpine3.12
+        image: singouins/discord:latest
         imagePullPolicy: Always
         resources:
           limits:
-            memory: 256Mi
+            memory: 128Mi
             cpu: 50m
           requests:
-            memory: 128Mi
+            memory: 64Mi
             cpu: 10m
         env:
         - name: DB_PASS
