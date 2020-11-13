@@ -31,10 +31,10 @@ spec:
         imagePullPolicy: Always
         resources:
           limits:
-            memory: 64Mi
-            cpu: 50m
-          requests:
             memory: 32Mi
+            cpu: 20m
+          requests:
+            memory: 16Mi
             cpu: 10m
         env:
           - name: METRICS_MYSQL_USER
