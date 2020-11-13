@@ -27,7 +27,8 @@ spec:
 
       containers:
       - name: sep-backend-metrics
-        image: alpine:3.12
+        image: singouins/metrics:latest
+        imagePullPolicy: Always
         resources:
           limits:
             memory: 64Mi
@@ -56,12 +57,5 @@ spec:
               secretKeyRef:
                 name: sep-backend-metrics-secret
                 key: sql-host
-        command: ["/bin/sh"]
-        args: [
-         "-c",
-         "(
-              wget -O - https://raw.githubusercontent.com/lordslair/sep-backend/master/metrics/entrypoint.sh | sh
-          ) || echo 1"
-        ]
         ports:
         - containerPort: 8008
