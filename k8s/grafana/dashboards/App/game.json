@@ -84,7 +84,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^sep_count{app=\"metrics\", instance=\"10.2.0.166:8008\", job=\"kubernetes-pods\", kubernetes_namespace=\"singouins\", kubernetes_pod_name=\"sep-backend-metrics-848c49fcf5-mxx7r\", pod_template_hash=\"848c49fcf5\", tier=\"sep-backend\", type=\"user\"}$/",
+          "fields": "",
           "values": false
         },
         "textMode": "auto"
@@ -92,7 +92,7 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sep_count{type=\"user\"}",
+          "expr": "sum(sep_count{type=\"user\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -157,7 +157,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^sep_count{app=\"metrics\", instance=\"10.2.0.166:8008\", job=\"kubernetes-pods\", kubernetes_namespace=\"singouins\", kubernetes_pod_name=\"sep-backend-metrics-848c49fcf5-mxx7r\", pod_template_hash=\"848c49fcf5\", tier=\"sep-backend\", type=\"creatures\"}$/",
+          "fields": "",
           "values": false
         },
         "textMode": "auto"
@@ -165,7 +165,7 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sep_count{type=\"creatures\"}",
+          "expr": "sum(sep_count{type=\"creatures\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -229,7 +229,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^sep_count{app=\"metrics\", instance=\"10.2.0.166:8008\", job=\"kubernetes-pods\", kubernetes_namespace=\"singouins\", kubernetes_pod_name=\"sep-backend-metrics-848c49fcf5-mxx7r\", pod_template_hash=\"848c49fcf5\", tier=\"sep-backend\", type=\"mp\"}$/",
+          "fields": "",
           "values": false
         },
         "textMode": "auto"
@@ -237,7 +237,7 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sep_count{type=\"mp\"}",
+          "expr": "sum(sep_count{type=\"mp\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -301,7 +301,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^sep_count{app=\"metrics\", instance=\"10.2.0.166:8008\", job=\"kubernetes-pods\", kubernetes_namespace=\"singouins\", kubernetes_pod_name=\"sep-backend-metrics-848c49fcf5-mxx7r\", pod_template_hash=\"848c49fcf5\", tier=\"sep-backend\", type=\"squad\"}$/",
+          "fields": "",
           "values": false
         },
         "textMode": "auto"
@@ -309,7 +309,7 @@
       "pluginVersion": "7.1.1",
       "targets": [
         {
-          "expr": "sep_count{type=\"squad\"}",
+          "expr": "sum(sep_count{type=\"squad\",app=\"metrics\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -424,5 +424,5 @@
   "timezone": "",
   "title": "App | Game Dashboard",
   "uid": "Rk5rDNMGk",
-  "version": 3
+  "version": 8
 }
