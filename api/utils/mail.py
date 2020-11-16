@@ -14,7 +14,7 @@ def send(adress, subject, body):
     message['To']      = adress
     message['Subject'] = subject
 
-    message_content = MIMEText(body,"plain")
+    message_content = MIMEText(body,"html")
     message.attach(message_content)
 
     try:

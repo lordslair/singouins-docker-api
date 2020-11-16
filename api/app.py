@@ -98,8 +98,8 @@ def auth_register():
         subject = '[🐒&🐖] Bienvenue {} !'.format(username)
         token   = generate_confirmation_token(mail)
         url     = SEP_URL + '/auth/confirm/' + token
-        body    = 'Bienvenue parmi nous. Voici le lien de validation: ' + url
-        if send(mail,subject,body):
+        body    = open("data/registered.html", "r")
+        if send(mail,subject,body.read()):
             return jsonify({"msg": "User successfully added | mail OK"}), code
         else:
             return jsonify({"msg": "User successfully added | mail KO"}), 206
