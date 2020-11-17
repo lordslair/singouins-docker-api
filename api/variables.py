@@ -27,3 +27,6 @@ REDIS_DB_NAME = 0
 
 # PCS variables for remote storage
 PCS_URL       = os.environ['SEP_PCS_URL']
+
+# Discord permanent invite link
+DISCORD_URL   = os.environ['SEP_DISCORD_URL']

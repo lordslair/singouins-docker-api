@@ -14,7 +14,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from queries.sql        import mysql
 from queries.redis      import redis
-from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA
+from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA, DISCORD_URL
 
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
@@ -98,8 +98,13 @@ def auth_register():
         subject = '[🐒&🐖] Bienvenue {} !'.format(username)
         token   = generate_confirmation_token(mail)
         url     = SEP_URL + '/auth/confirm/' + token
-        body    = open("data/registered.html", "r")
-        if send(mail,subject,body.read()):
+        body    = open("data/registered.html", "r").read()
+        body    = body.format()
+        if send(mail,
+                subject,
+                body.format(urlconfirm = url,
+                            urllogo    = '[INSERT LOGO HERE]',
+                            urldiscord = DISCORD_URL)):
             return jsonify({"msg": "User successfully added | mail OK"}), code
         else:
             return jsonify({"msg": "User successfully added | mail KO"}), 206
