@@ -822,6 +822,7 @@ def move_path(username,pcid,path):
 def action_attack(username,pcid,weaponid,targetid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    (code, success, msg, tg) = get_pc(None,targetid)
 
     if pc and pc.account == user.id:
         if weaponid == 0:
@@ -873,7 +874,7 @@ def action_attack(username,pcid,weaponid,targetid):
                                             # Something went wrong during commit
                                             return (200, False, 'HP update failed', None)
                                         else:
-                                            clog(tg.id,None,'Suffered minor injuries ({})'.format(dmg))
+                                            clog(tg.id,None,'Suffered minor injuries')
                                 else:
                                     # The attack kills
                                     action['killed'] = True
