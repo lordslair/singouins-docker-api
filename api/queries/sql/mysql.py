@@ -847,12 +847,12 @@ def action_attack(username,pcid,weaponid,targetid):
                                 # The attack is a critical Hit
                                 dmg_crit = round(150 + pc.r / 10)
                                 clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
-                                clog(tg.id,pc.id,'Critically Hit by {}'.format(pc.name))
+                                clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
                             else:
                                 # The attack is a normal Hit
                                 dmg_crit = 100
                                 clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
-                                clog(tg.id,pc.id,'Hit by {}'.format(pc.name))
+                                clog(tg.id,None,'Hit by {}'.format(pc.name))
                             dmg = round(dmg_wp * dmg_crit / 100) - tg.arm_p
                             if dmg > 0:
                                 # The attack deals damage
@@ -873,19 +873,19 @@ def action_attack(username,pcid,weaponid,targetid):
                                             # Something went wrong during commit
                                             return (200, False, 'HP update failed', None)
                                         else:
-                                            clog(pc.id,None,'Suffered minor injuries ({})'.format(dmg))
+                                            clog(tg.id,None,'Suffered minor injuries ({})'.format(dmg))
                                 else:
                                     # The attack kills
                                     action['killed'] = True
                                     clog(pc.id,tg.id,'Killed {}'.format(tg.name))
-                                    clog(tg.id,pc.id,'Died'.format(pc.name))
+                                    clog(tg.id,None,'Died'.format(pc.name))
                             else:
-                                clog(pc.id,None,'Suffered no injuries')
+                                clog(tg.id,None,'Suffered no injuries')
                                 # The attack does not deal damage
                         else:
                             # The attack missed
                             clog(pc.id,tg.id,'Missed {}'.format(tg.name))
-                            clog(tg.id,pc.id,'Avoided {}'.format(pc.name))
+                            clog(tg.id,None,'Avoided {}'.format(pc.name))
                     else:
                         # Failed action
                         clog(pc.id,None,'Failed an attack')
