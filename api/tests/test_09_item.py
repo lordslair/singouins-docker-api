@@ -23,3 +23,9 @@ def test_singouins_item():
 
     assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
+
+    url       = SEP_URL + '/pc/{}/item'.format(pjid)
+    response  = requests.get(url, headers=headers)
+
+    assert json.loads(response.text)['success'] == True
+    assert response.status_code == 200
