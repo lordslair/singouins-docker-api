@@ -904,6 +904,29 @@ def action_attack(username,pcid,weaponid,targetid):
                                     action['killed'] = True
                                     clog(pc.id,tg.id,'Killed {}'.format(tg.name))
                                     clog(tg.id,None,'Died'.format(pc.name))
+
+                                    # Experience points are generated
+                                    Session = sessionmaker(bind=engine)
+                                    session = Session()
+
+                                    with engine.connect() as conn:
+                                        try:
+                                            if pc.squad is None:
+                                                # We add PX only to the killer
+                                                pc.xp  += tg.level       # We add PX: tg.level
+                                                pc.date = datetime.now() # We update the date in DB
+                                            else:
+                                                # We add PX to the killer squad
+                                                squadlist = session.query(PJ).filter(PJ.squad == pc.squad).filter(PJ.squad_rank != 'Pending').all()
+                                                for pcsquad in squadlist:
+                                                    pcsquad.xp  += round(tg.level/len(squadlist)) # We add PX: round(tg.level/len(squad))
+                                                    pcsquad.date = datetime.now()                 # We update the date in DB
+                                            session.commit()
+                                        except Exception as e:
+                                            # Something went wrong during commit
+                                            return (200, False, 'XP update failed', None)
+                                        else:
+                                            clog(pc.id,None,'Gained Experience')
                             else:
                                 clog(tg.id,None,'Suffered no injuries')
                                 # The attack does not deal damage
