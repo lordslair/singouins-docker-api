@@ -824,6 +824,14 @@ def action_attack(username,pcid,weaponid,targetid):
     user                     = get_user(username)
     (code, success, msg, tg) = get_pc(None,targetid)
 
+    if tg.targeted_by is not None:
+        # Target already taggued by a pc
+        (code, success, msg, tag) = get_pc(None,tg.targeted_by)
+        if tag.id != pc.id and tag.squad != pc.squad:
+            # Target not taggued by the pc itself
+            # Target not taggued by a pc squad member
+            return (200, False, 'Target does not belong to the PC/Squad', None)
+
     if pc and pc.account == user.id:
         if weaponid == 0:
             (code, success, msg, tg) = get_pc(None,targetid)
@@ -844,6 +852,22 @@ def action_attack(username,pcid,weaponid,targetid):
                         if pc.comcap > tg.r:
                             # The attack successed
                             action['hit'] = True
+
+                            # The target is now acquired to the attacker
+                            Session = sessionmaker(bind=engine)
+                            session = Session()
+
+                            with engine.connect() as conn:
+                                try:
+                                    tg             = session.query(PJ).filter(PJ.id == targetid).one_or_none()
+                                    tg.targeted_by = pc.id
+                                    session.commit()
+                                except Exception as e:
+                                    # Something went wrong during commit
+                                    return (200, False, 'Targeted_by update failed', None)
+                                else:
+                                    clog(tg.id,None,'Targeted by {}'.format(pc.name))
+
                             if randint(1, 100) <= 5:
                                 # The attack is a critical Hit
                                 dmg_crit = round(150 + pc.r / 10)

@@ -30,6 +30,7 @@ class PJ(Base):
     name: str
     race: str
     account: int
+    targeted_by: int
     level: int
     x: int
     y: int
@@ -57,6 +58,7 @@ class PJ(Base):
     name       = Column(String)
     race       = Column(String)
     account    = Column(Integer)
+    targeted_by= Column(Integer)
     level      = Column(Integer)
     x          = Column(Integer)
     y          = Column(Integer)
