@@ -83,13 +83,13 @@ def add_user(username,password,usermail):
 
         with engine.connect() as conn:
             user = User(name      = username,
-                               mail      = usermail,
-                               hash      = generate_password_hash(password, rounds = 10),
-                               d_name    = '',
-                               d_monkeys = '', # Todo later
-                               d_ack     = False,
-                               created   = datetime.now(),
-                               active    = True)
+                        mail      = usermail,
+                        hash      = generate_password_hash(password, rounds = 10),
+                        d_name    = '',
+                        d_monkeys = '', # Todo later
+                        d_ack     = False,
+                        created   = datetime.now(),
+                        active    = True)
 
             session.add(user)
 
@@ -164,23 +164,23 @@ def add_pc(username,pcname,pcrace):
         session = Session()
         with engine.connect() as conn:
             pc = PJ(name    = pcname,
-                           race    = pcrace,
-                           account = get_user(username).id,
-                           level   = 1,
-                           x       = 0,
-                           y       = 0,
-                           xp      = 0,
-                           hp      = 80,
-                           hp_max  = 80,
-                           arm_p   = 50,
-                           arm_b   = 25,
-                           m       = 100,
-                           r       = 100,
-                           g       = 100,
-                           v       = 100,
-                           p       = 100,
-                           b       = 100,
-                           sprite  = PCS_URL + '/resources/sprites/creatures/' + pcrace + '.png')
+                    race    = pcrace,
+                    account = get_user(username).id,
+                    level   = 1,
+                    x       = 0,
+                    y       = 0,
+                    xp      = 0,
+                    hp      = 80,
+                    hp_max  = 80,
+                    arm_p   = 50,
+                    arm_b   = 25,
+                    m       = 100,
+                    r       = 100,
+                    g       = 100,
+                    v       = 100,
+                    p       = 100,
+                    b       = 100,
+                    sprite  = PCS_URL + '/resources/sprites/creatures/' + pcrace + '.png')
 
             session.add(pc)
 
@@ -260,11 +260,11 @@ def add_mp(username,src,dsts,subject,body):
             if pcdst:
                 with engine.connect() as conn:
                     mp = MP(src_id  = pcsrc.id,
-                                   src     = pcsrc.name,
-                                   dst_id  = pcdst.id,
-                                   dst     = pcdst.name,
-                                   subject = subject,
-                                   body    = body)
+                            src     = pcsrc.name,
+                            dst_id  = pcdst.id,
+                            dst     = pcdst.name,
+                            subject = subject,
+                            body    = body)
                     session.add(mp)
 
         try:
@@ -477,8 +477,8 @@ def add_squad(username,pcid,squadname):
                 return (200, False, 'Squad leader already in a squad', None)
 
             squad = Squad(name    = squadname,
-                                 leader  = pc.id,
-                                 created = datetime.now())
+                          leader  = pc.id,
+                          created = datetime.now())
             session.add(squad)
 
             try:
