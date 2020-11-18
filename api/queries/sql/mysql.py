@@ -360,21 +360,55 @@ def get_mp_addressbook(username,pcid):
 # Queries /item
 #
 
-def get_items(username,pcid):
+def get_items(username,pcid,public):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
 
-    if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-        with engine.connect() as conn:
-            weapons   = session.query(Weapons).filter(Weapons.bearer == pc.id).all()
-            gear      = session.query(Gear).filter(Gear.bearer == pc.id).all()
+    if public is True:
+        # Here it's for a public /pc call
             equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
-            return (200, True, 'OK', {"weapons": weapons, "gear": gear, "equipment": equipment})
 
-    else: return (409, False, 'Token/username mismatch', None)
+            feet      = session.query(Gear).filter(Gear.id == equipment[0].feet).one_or_none()
+            hands     = session.query(Gear).filter(Gear.id == equipment[0].hands).one_or_none()
+            head      = session.query(Gear).filter(Gear.id == equipment[0].head).one_or_none()
+            holster   = session.query(Gear).filter(Gear.id == equipment[0].holster).one_or_none()
+            lefthand  = session.query(Weapons).filter(Weapons.id == equipment[0].lefthand).one_or_none()
+            righthand = session.query(Weapons).filter(Weapons.id == equipment[0].righthand).one_or_none()
+            shoulders = session.query(Gear).filter(Gear.id == equipment[0].shoulders).one_or_none()
+            torso     = session.query(Gear).filter(Gear.id == equipment[0].torso).one_or_none()
+
+            feetmeta      = feet.type      if feet      is not None else None
+            handsmeta     = hands.type     if hands     is not None else None
+            headmeta      = head.type      if head      is not None else None
+            holstermeta   = holster.type   if holster   is not None else None
+            lefthandmeta  = lefthand.type  if lefthand  is not None else None
+            righthandmeta = righthand.type if righthand is not None else None
+            shouldersmeta = shoulders.type if shoulders is not None else None
+            torsormeta    = torso.type     if torso     is not None else None
+
+            metas = {"feet": feetmeta,
+                     "hands": handsmeta,
+                     "head": headmeta,
+                     "holster": holstermeta,
+                     "lefthand": lefthandmeta,
+                     "righthand": righthandmeta,
+                     "shoulders": shouldersmeta,
+                     "torso": torsormeta}
+
+            return (200, True, 'OK', {"equipment": metas})
+    else:
+        # Here it's for a private /mypc call
+        if pc and pc.account == user.id:
+            with engine.connect() as conn:
+                weapons   = session.query(Weapons).filter(Weapons.bearer == pc.id).all()
+                gear      = session.query(Gear).filter(Gear.bearer == pc.id).all()
+                equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
+                return (200, True, 'OK', {"weapons": weapons, "gear": gear, "equipment": equipment})
+
+        else: return (409, False, 'Token/username mismatch', None)
 
 def set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
     (code, success, msg, pc) = get_pc(None,pcid)

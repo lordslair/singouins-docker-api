@@ -272,10 +272,17 @@ def mp_addressbook(pcid):
 # Routes /item
 #
 
+@app.route('/pc/<int:pcid>/item', methods=['GET'])
+@jwt_required
+def mypc_item(pcid):
+    (code, success, msg, payload) = mysql.get_items(get_jwt_identity(),pcid,True)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
 @jwt_required
 def mypc_item(pcid):
-    (code, success, msg, payload) = mysql.get_items(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = mysql.get_items(get_jwt_identity(),pcid,False)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
