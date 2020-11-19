@@ -462,7 +462,7 @@ def get_meta_item(itemtype):
 
     with engine.connect() as conn:
         if    itemtype == 'weapon': meta = session.query(MetaWeapons).all()
-        elif  itemtype == 'gear':   meta = session.query(MetaArmors).all()
+        elif  itemtype == 'armor':  meta = session.query(MetaArmors).all()
         else: return (200, False, 'Itemtype does not exist', None)
 
     if meta:
