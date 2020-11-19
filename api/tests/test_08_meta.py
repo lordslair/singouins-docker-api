@@ -5,7 +5,7 @@ import os
 import requests
 
 SEP_URL     = os.environ['SEP_URL']
-metalist    = ['gear','weapon']
+metalist    = ['armor','weapon']
 payload     = {'username': 'user', 'password': 'plop'}
 
 def test_singouins_meta():
