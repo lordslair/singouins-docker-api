@@ -776,14 +776,11 @@ def pc_event(creatureid):
     session = Session()
 
     with engine.connect() as conn:
-        if creature.account is None:
-            log   = session.query(Log).filter(Log.src == creature.id)\
-                                             .order_by(Log.date.desc())\
-                                             .limit(50)\
-                                             .all()
-            return (200, True, 'Logs successfully retrieved (creatureid:{})'.format(creature.id), log)
-        else:
-            return (200, True, 'Logs request is not for a NPC (creatureid:{})'.format(creature.id), log)
+        log   = session.query(Log).filter(Log.src == creature.id)\
+                                  .order_by(Log.date.desc())\
+                                  .limit(50)\
+                                  .all()
+        return (200, True, 'Logs successfully retrieved (creatureid:{})'.format(creature.id), log)
 
 #
 # Queries /action
