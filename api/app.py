@@ -99,7 +99,6 @@ def auth_register():
         token   = generate_confirmation_token(mail)
         url     = SEP_URL + '/auth/confirm/' + token
         body    = open("/code/data/registered.html", "r").read()
-        body    = body.format()
         if send(mail,
                 subject,
                 body.format(urllogo    = '[INSERT LOGO HERE]',
