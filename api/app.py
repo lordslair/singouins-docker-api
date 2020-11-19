@@ -274,7 +274,7 @@ def mp_addressbook(pcid):
 
 @app.route('/pc/<int:pcid>/item', methods=['GET'])
 @jwt_required
-def mypc_item(pcid):
+def pc_item(pcid):
     (code, success, msg, payload) = mysql.get_items(get_jwt_identity(),pcid,True)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -286,17 +286,17 @@ def mypc_item(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/item/<string:type>/<int:itemid>/inventory/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
+@app.route('/mypc/<int:pcid>/item/<int:itemid>/inventory/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
 @jwt_required
-def mypc_item_offset(pcid,type,itemid,offsetx,offsety):
-    (code, success, msg, payload) = mysql.set_item_offset(get_jwt_identity(),pcid,type,itemid,offsetx,offsety)
+def mypc_item_set_offset(pcid,itemid,offsetx,offsety):
+    (code, success, msg, payload) = mysql.set_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/item/<string:type>/<int:itemid>/inventory/offset', methods=['DELETE'])
+@app.route('/mypc/<int:pcid>/item/<int:itemid>/inventory/offset', methods=['DELETE'])
 @jwt_required
-def mypc_item_del_offset(pcid,type,itemid):
-    (code, success, msg, payload) = mysql.set_item_offset(get_jwt_identity(),pcid,type,itemid,None,None)
+def mypc_item_del_offset(pcid,itemid):
+    (code, success, msg, payload) = mysql.set_item_offset(get_jwt_identity(),pcid,itemid,None,None)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

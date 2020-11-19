@@ -412,14 +412,15 @@ def get_items(username,pcid,public):
         # Here it's for a private /mypc call
         if pc and pc.account == user.id:
             with engine.connect() as conn:
-                weapons   = session.query(Items).filter(Items.bearer == pc.id).all()
-                gear      = session.query(Items).filter(Items.bearer == pc.id).all()
+                weapons   = session.query(Items).\
+                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
+                armors    = session.query(Items).\
+                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
                 equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
-                return (200, True, 'OK', {"weapons": weapons, "gear": gear, "equipment": equipment})
-
+                return (200, True, 'OK', {"weapons": weapons, "armors": armors, "equipment": equipment})
         else: return (409, False, 'Token/username mismatch', None)
 
-def set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
+def set_item_offset(username,pcid,itemid,offsetx,offsety):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
 
@@ -429,13 +430,8 @@ def set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
 
         with engine.connect() as conn:
             try:
-                if itemtype == 'weapon':
-                    item  = session.query(Items).filter(Items.id == itemid, Weapons.bearer == pc.id).one_or_none()
-                elif itemtype == 'gear':
-                    item  = session.query(Items).filter(Items.id == itemid, Gear.bearer == pc.id).one_or_none()
-                else: return (200, False, 'Itemtype does not exist (pcid:{},itemtype:{})'.format(pc.id,itemid), None)
-
-                if item is None: return (200, False, 'Item not found (pcid:{},itemid:{})'.format(pc.id,itemtype), None)
+                item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
+                if item is None: return (200, False, 'Item not found (pcid:{},itemid:{})'.format(pc.id,itemid), None)
 
                 item.offsetx = offsetx
                 item.offsety = offsety
@@ -444,10 +440,13 @@ def set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
                 # Something went wrong during commit
                 return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
             else:
-                weapons   = session.query(Items).filter(Items.bearer == pc.id).all()
-                gear      = session.query(Items).filter(Items.bearer == pc.id).all()
+                weapons   = session.query(Items).\
+                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
+                armors    = session.query(Items).\
+                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
                 equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
-                return (200, True, 'Equipment update successed (itemid:{})'.format(item.id), {"weapons": weapons, "gear": gear, "equipment": equipment})
+                return (200, True, 'Equipment update successed (itemid:{})'.format(item.id),
+                        {"weapons": weapons, "armors": armors, "equipment": equipment})
 
     else: return (409, False, 'Token/username mismatch', None)
 
