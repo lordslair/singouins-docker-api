@@ -922,7 +922,9 @@ def action_attack(username,pcid,weaponid,targetid):
                                                 pc.date = datetime.now() # We update the date in DB
                                             else:
                                                 # We add PX to the killer squad
-                                                squadlist = session.query(PJ).filter(PJ.squad == pc.squad).filter(PJ.squad_rank != 'Pending').all()
+                                                squadlist = session.query(PJ)\
+                                                                   .filter(PJ.squad == pc.squad)\
+                                                                   .filter(PJ.squad_rank != 'Pending').all()
                                                 for pcsquad in squadlist:
                                                     pcsquad.xp  += round(tg.level/len(squadlist)) # We add PX: round(tg.level/len(squad))
                                                     pcsquad.date = datetime.now()                 # We update the date in DB
@@ -995,16 +997,28 @@ def action_equip(username,pcid,type,slotname,itemid):
                     elif slotname == 'ammo':      equipment.ammo      = item.id
                     elif slotname == 'holster':
                         itemmeta = session.query(MetaWeapons).filter(MetaWeapons.id == item.type).one_or_none()
-                        if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
+                        if itemmeta is None:
+                            return (200,
+                                    False,
+                                    'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type),
+                                    None)
 
                         sizex,sizey = itemmeta.size.split("x")
                         if int(sizex) * int(sizey) <= 4:
                             # It fits inside the holster
                             equipment.holster  = item.id
-                        else: return (200, False, 'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size), None)
+                        else:
+                            return (200,
+                                    False,
+                                    'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size),
+                                    None)
                     elif slotname == 'righthand':
                         itemmeta = session.query(MetaWeapons).filter(MetaWeapons.id == item.type).one_or_none()
-                        if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
+                        if itemmeta is None:
+                            return (200,
+                                    False,
+                                    'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type),
+                                    None)
 
                         sizex,sizey = itemmeta.size.split("x")
                         if int(sizex) * int(sizey) < 6:
@@ -1016,13 +1030,21 @@ def action_equip(username,pcid,type,slotname,itemid):
                             equipment.lefthand   = item.id
                     elif slotname == 'lefthand':
                         itemmeta = session.query(MetaWeapons).filter(MetaWeapons.id == item.type).one_or_none()
-                        if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
+                        if itemmeta is None:
+                            return (200,
+                                    False,
+                                    'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type),
+                                    None)
 
                         sizex,sizey = itemmeta.size.split("x")
                         if int(sizex) * int(sizey) <= 4:
                             # It fits inside the left hand
                             equipment.lefthand   = item.id
-                        else: return (200, False, 'Item does not fit in left hand (itemid:{},size:{})'.format(item.id,itemmeta.size), None)
+                        else:
+                            return (200,
+                                    False,
+                                    'Item does not fit in left hand (itemid:{},size:{})'.format(item.id,itemmeta.size),
+                                    None)
 
                     equipment.date = datetime.now() # We update the date in DB
 
@@ -1037,9 +1059,10 @@ def action_equip(username,pcid,type,slotname,itemid):
                     return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
                 else:
                     clog(pc.id,None,'Equipped an item ({})'.format(item.id))
-                    return (200, True, 'Equipment update successed (itemid:{})'.format(item.id), {"red": get_pa(pcid)[3]['red'],
-                                                                                                  "blue": get_pa(pcid)[3]['blue'],
-                                                                                                  "equipment": equipment})
+                    return (200,
+                            True,
+                            'Equipment update successed (itemid:{})'.format(item.id),
+                            {"red": get_pa(pcid)[3]['red'], "blue": get_pa(pcid)[3]['blue'], "equipment": equipment})
 
         elif itemid == 0:
             # UNEQUIP
@@ -1083,9 +1106,10 @@ def action_equip(username,pcid,type,slotname,itemid):
                     return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
                 else:
                     clog(pc.id,None,'Un-equipped an item')
-                    return (200, True, 'Un-equipment update successed (0)', {"red": get_pa(pcid)[3]['red'],
-                                                                             "blue": get_pa(pcid)[3]['blue'],
-                                                                             "equipment": equipment})
+                    return (200,
+                            True,
+                            'Un-equipment update successed (itemid:{})'.format(item.id),
+                            {"red": get_pa(pcid)[3]['red'], "blue": get_pa(pcid)[3]['blue'], "equipment": equipment})
         else:
             # Weird weaponid
             return (200, False, 'Itemid incorrect (itemid:{})'.format(itemid), None)
@@ -1112,6 +1136,8 @@ def get_view(username,pcid):
                                             .filter(PJ.x.between(minx,maxx))\
                                             .filter(PJ.y.between(miny,maxy))\
                                             .all()
-            return (200, True, 'View successfully retrieved (range:{},x:{},y:{})'.format(range,pc.x,pc.y), view)
-
+            return (200,
+                    True,
+                    'View successfully retrieved (range:{},x:{},y:{})'.format(range,pc.x,pc.y),
+                    view)
     else: return (409, False, 'Token/username mismatch', None)
