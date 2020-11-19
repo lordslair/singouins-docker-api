@@ -371,40 +371,49 @@ def get_items(username,pcid,public):
         # Here it's for a public /pc call
             equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
 
-            feet      = session.query(Gear).filter(Gear.id == equipment[0].feet).one_or_none()
-            hands     = session.query(Gear).filter(Gear.id == equipment[0].hands).one_or_none()
-            head      = session.query(Gear).filter(Gear.id == equipment[0].head).one_or_none()
-            holster   = session.query(Gear).filter(Gear.id == equipment[0].holster).one_or_none()
-            lefthand  = session.query(Weapons).filter(Weapons.id == equipment[0].lefthand).one_or_none()
-            righthand = session.query(Weapons).filter(Weapons.id == equipment[0].righthand).one_or_none()
-            shoulders = session.query(Gear).filter(Gear.id == equipment[0].shoulders).one_or_none()
-            torso     = session.query(Gear).filter(Gear.id == equipment[0].torso).one_or_none()
+            feet      = session.query(Items).filter(Items.id == equipment[0].feet).one_or_none()
+            hands     = session.query(Items).filter(Items.id == equipment[0].hands).one_or_none()
+            head      = session.query(Items).filter(Items.id == equipment[0].head).one_or_none()
+            holster   = session.query(Items).filter(Items.id == equipment[0].holster).one_or_none()
+            lefthand  = session.query(Items).filter(Items.id == equipment[0].lefthand).one_or_none()
+            righthand = session.query(Items).filter(Items.id == equipment[0].righthand).one_or_none()
+            shoulders = session.query(Items).filter(Items.id == equipment[0].shoulders).one_or_none()
+            torso     = session.query(Items).filter(Items.id == equipment[0].torso).one_or_none()
 
-            feetmeta      = feet.type      if feet      is not None else None
-            handsmeta     = hands.type     if hands     is not None else None
-            headmeta      = head.type      if head      is not None else None
-            holstermeta   = holster.type   if holster   is not None else None
-            lefthandmeta  = lefthand.type  if lefthand  is not None else None
-            righthandmeta = righthand.type if righthand is not None else None
-            shouldersmeta = shoulders.type if shoulders is not None else None
-            torsormeta    = torso.type     if torso     is not None else None
+            feetmetaid      = feet.metaid      if feet      is not None else None
+            handsmetaid     = hands.metaid     if hands     is not None else None
+            headmetaid      = head.metaid      if head      is not None else None
+            holstermetaid   = holster.metaid   if holster   is not None else None
+            lefthandmetaid  = lefthand.metaid  if lefthand  is not None else None
+            righthandmetaid = righthand.metaid if righthand is not None else None
+            shouldersmetaid = shoulders.metaid if shoulders is not None else None
+            torsormetaid    = torso.metaid     if torso     is not None else None
 
-            metas = {"feet": feetmeta,
-                     "hands": handsmeta,
-                     "head": headmeta,
-                     "holster": holstermeta,
-                     "lefthand": lefthandmeta,
-                     "righthand": righthandmeta,
-                     "shoulders": shouldersmeta,
-                     "torso": torsormeta}
+            feetmetatype      = feet.metatype      if feet      is not None else None
+            handsmetatype     = hands.metatype     if hands     is not None else None
+            headmetatype      = head.metatype      if head      is not None else None
+            holstermetatype   = holster.metatype   if holster   is not None else None
+            lefthandmetatype  = lefthand.metatype  if lefthand  is not None else None
+            righthandmetatype = righthand.metatype if righthand is not None else None
+            shouldersmetatype = shoulders.metatype if shoulders is not None else None
+            torsormetatype    = torso.metatype     if torso     is not None else None
+
+            metas = {"feet": {"metaid": feetmetaid,"metatype": feetmetatype},
+                     "hands": {"metaid": handsmetaid,"metatype": handsmetatype},
+                     "head": {"metaid": headmetaid,"metatype": headmetatype},
+                     "holster": {"metaid": holstermetaid,"metatype": holstermetatype},
+                     "lefthand": {"metaid": lefthandmetaid,"metatype": lefthandmetatype},
+                     "righthand": {"metaid": righthandmetaid,"metatype": righthandmetatype},
+                     "shoulders": {"metaid": shouldersmetaid,"metatype": shouldersmetatype},
+                     "torso": {"metaid": feetmetaid,"metatype": torsormetatype}}
 
             return (200, True, 'OK', {"equipment": metas})
     else:
         # Here it's for a private /mypc call
         if pc and pc.account == user.id:
             with engine.connect() as conn:
-                weapons   = session.query(Weapons).filter(Weapons.bearer == pc.id).all()
-                gear      = session.query(Gear).filter(Gear.bearer == pc.id).all()
+                weapons   = session.query(Items).filter(Items.bearer == pc.id).all()
+                gear      = session.query(Items).filter(Items.bearer == pc.id).all()
                 equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
                 return (200, True, 'OK', {"weapons": weapons, "gear": gear, "equipment": equipment})
 
@@ -421,9 +430,9 @@ def set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
         with engine.connect() as conn:
             try:
                 if itemtype == 'weapon':
-                    item  = session.query(Weapons).filter(Weapons.id == itemid, Weapons.bearer == pc.id).one_or_none()
+                    item  = session.query(Items).filter(Items.id == itemid, Weapons.bearer == pc.id).one_or_none()
                 elif itemtype == 'gear':
-                    item  = session.query(Gear).filter(Gear.id == itemid, Gear.bearer == pc.id).one_or_none()
+                    item  = session.query(Items).filter(Items.id == itemid, Gear.bearer == pc.id).one_or_none()
                 else: return (200, False, 'Itemtype does not exist (pcid:{},itemtype:{})'.format(pc.id,itemid), None)
 
                 if item is None: return (200, False, 'Item not found (pcid:{},itemid:{})'.format(pc.id,itemtype), None)
@@ -435,8 +444,8 @@ def set_item_offset(username,pcid,itemtype,itemid,offsetx,offsety):
                 # Something went wrong during commit
                 return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
             else:
-                weapons   = session.query(Weapons).filter(Weapons.bearer == pc.id).all()
-                gear      = session.query(Gear).filter(Gear.bearer == pc.id).all()
+                weapons   = session.query(Items).filter(Items.bearer == pc.id).all()
+                gear      = session.query(Items).filter(Items.bearer == pc.id).all()
                 equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
                 return (200, True, 'Equipment update successed (itemid:{})'.format(item.id), {"weapons": weapons, "gear": gear, "equipment": equipment})
 
@@ -453,8 +462,8 @@ def get_meta_item(itemtype):
     session = Session()
 
     with engine.connect() as conn:
-        if    itemtype == 'weapon': meta = session.query(WeaponsMeta).all()
-        elif  itemtype == 'gear':   meta = session.query(GearMeta).all()
+        if    itemtype == 'weapon': meta = session.query(MetaWeapons).all()
+        elif  itemtype == 'gear':   meta = session.query(MetaArmors).all()
         else: return (200, False, 'Itemtype does not exist', None)
 
     if meta:
@@ -971,9 +980,9 @@ def action_equip(username,pcid,type,slotname,itemid):
             with engine.connect() as conn:
                 try:
                     if type == 'weapon':
-                        item  = session.query(Weapons).filter(Weapons.id == itemid, Weapons.bearer == pc.id).one_or_none()
+                        item  = session.query(Items).filter(Items.id == itemid, Weapons.bearer == pc.id).one_or_none()
                     elif type == 'gear':
-                        item  = session.query(Gear).filter(Gear.id == itemid, Gear.bearer == pc.id).one_or_none()
+                        item  = session.query(Items).filter(Items.id == itemid, Gear.bearer == pc.id).one_or_none()
 
                     equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
 
@@ -989,7 +998,7 @@ def action_equip(username,pcid,type,slotname,itemid):
                     elif slotname == 'feet':      equipment.feet      = item.id
                     elif slotname == 'ammo':      equipment.ammo      = item.id
                     elif slotname == 'holster':
-                        itemmeta = session.query(WeaponsMeta).filter(WeaponsMeta.id == item.type).one_or_none()
+                        itemmeta = session.query(MetaWeapons).filter(MetaWeapons.id == item.type).one_or_none()
                         if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
 
                         sizex,sizey = itemmeta.size.split("x")
@@ -998,7 +1007,7 @@ def action_equip(username,pcid,type,slotname,itemid):
                             equipment.holster  = item.id
                         else: return (200, False, 'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size), None)
                     elif slotname == 'righthand':
-                        itemmeta = session.query(WeaponsMeta).filter(WeaponsMeta.id == item.type).one_or_none()
+                        itemmeta = session.query(MetaWeapons).filter(MetaWeapons.id == item.type).one_or_none()
                         if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
 
                         sizex,sizey = itemmeta.size.split("x")
@@ -1010,7 +1019,7 @@ def action_equip(username,pcid,type,slotname,itemid):
                             equipment.righthand  = item.id
                             equipment.lefthand   = item.id
                     elif slotname == 'lefthand':
-                        itemmeta = session.query(WeaponsMeta).filter(WeaponsMeta.id == item.type).one_or_none()
+                        itemmeta = session.query(MetaWeapons).filter(MetaWeapons.id == item.type).one_or_none()
                         if itemmeta is None: return (200, False, 'ItemMeta not found (itemid:{},itemmeta:{})'.format(item.id,item.type), None)
 
                         sizex,sizey = itemmeta.size.split("x")

@@ -27,7 +27,7 @@ leader    INT      NOT NULL, /* Squad leader */
 created   DATETIME NOT NULL, /* Squad creation date */
 date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
-CREATE TABLE IF NOT EXISTS weaponsMeta (
+CREATE TABLE IF NOT EXISTS metaWeapons (
 id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 name       TEXT     NOT NULL,
 mastery    INT      NULL,      /* If a special skill  needed to use it */
@@ -53,21 +53,7 @@ min_v      INT      NOT NULL,  /* minimal V carac to use the item */
 min_p      INT      NOT NULL,  /* minimal P carac to use the item */
 min_b      INT      NOT NULL); /* minimal B carac to use the item */
 
-CREATE TABLE IF NOT EXISTS weapons (
-id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
-type       INT      NOT NULL,  /* ID from weaponsMeta = ('Revolver', 'Pistol', 'Axe', ...) */
-bearer     INT      NULL,      /* ID of the PC who possesses the weapon */
-bound      BOOLEAN,            /* if the weapon is already bound to this PC */
-bound_type TEXT     NOT NULL,  /* ('BoE', 'BoP', 'BoA', 'BoU', 'BtA') */
-modded     BOOLEAN,            /* if it is modded yet */
-mods       TEXT     NULL,      /* list of linked mods */
-state      INT      NOT NULL,  /* 0-100 scale. 100 = new, 0 = unusable */
-rarity     INT      NOT NULL,  /* ('Legendary', 'Epic', 'Rare', ...) */
-offsetx    INT      NULL,      /* X pos in the inventory */
-offsety    INT      NULL,      /* Y pos in the inventory */
-date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
-
-CREATE TABLE IF NOT EXISTS gearMeta (
+CREATE TABLE IF NOT EXISTS metaArmors (
 id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 name       TEXT     NOT NULL,
 tier       INT      NOT NULL,  /* Gear tiering (none, light, medium, heavy) */
@@ -82,20 +68,6 @@ min_g      INT      NOT NULL,  /* minimal G carac to use the item */
 min_v      INT      NOT NULL,  /* minimal V carac to use the item */
 min_p      INT      NOT NULL,  /* minimal P carac to use the item */
 min_b      INT      NOT NULL); /* minimal B carac to use the item */
-
-CREATE TABLE IF NOT EXISTS gear (
-id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
-type       INT      NOT NULL,  /* ID from gearMeta */
-bearer     INT      NULL,      /* ID of the PC who possesses the weapon */
-bound      BOOLEAN,            /* if the weapon is already bound to this PC */
-bound_type TEXT     NOT NULL,  /* ('BoE', 'BoP', 'BoA', 'BoU', 'BtA') */
-modded     BOOLEAN,            /* if it is modded yet */
-mods       TEXT     NULL,      /* list of linked mods */
-state      INT      NOT NULL,  /* 0-100 scale. 100 = new, 0 = unusable */
-rarity     INT      NOT NULL,  /* ('Legendary', 'Epic', 'Rare', ...) */
-offsetx    INT      NULL,      /* X pos in the inventory */
-offsety    INT      NULL,      /* Y pos in the inventory */
-date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS maps (
 id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -207,3 +179,18 @@ legs        INT      NULL,                     /* gear.id */
 feet        INT      NULL,                     /* gear.id */
 ammo        INT      NULL,                     /* gear.id */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS items (
+id         INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
+metatype   ENUM('armor','weapon'),                   /* meta type */
+metaid     INT      NOT NULL,                        /* ID from Meta`metatype table */
+bearer     INT      NULL,                            /* ID of the PC who possesses the item */
+bound      BOOLEAN,                                  /* if the item is already bound to this PC */
+bound_type ENUM('BoE','BoP','BoA','BoU','BtA'),      /* bound type */
+modded     BOOLEAN,                                  /* if it is modded yet */
+mods       TEXT     NULL,                            /* list of linked mods */
+state      INT      NOT NULL,                        /* 0-100 scale. 100 = new, 0 = unusable */
+rarity     ENUM('Legendary','Epic','Rare','Common'), /* rarity level */
+offsetx    INT      NULL,                            /* X pos in the inventory */
+offsety    INT      NULL,                            /* Y pos in the inventory */
+date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);

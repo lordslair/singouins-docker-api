@@ -121,8 +121,8 @@ class Squad(Base):
     date    = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
-class WeaponsMeta(Base):
-    __tablename__ = 'weaponsMeta'
+class MetaWeapons(Base):
+    __tablename__ = 'metaWeapons'
 
     id: int
     name: str
@@ -173,38 +173,8 @@ class WeaponsMeta(Base):
     min_b      = Column(Integer)
 
 @dataclass
-class Weapons(Base):
-    __tablename__ = 'weapons'
-
-    id: int
-    type: int
-    bearer: int
-    bound: bool
-    bound_type: str
-    modded: bool
-    mods: str
-    state: int
-    rarity: int
-    offsetx: int
-    offsety: int
-    date: str
-
-    id         = Column(Integer, primary_key=True)
-    type       = Column(Integer)
-    bearer     = Column(Integer)
-    bound      = Column(Boolean)
-    bound_type = Column(String)
-    modded     = Column(Boolean)
-    mods       = Column(String)
-    state      = Column(Integer)
-    rarity     = Column(Integer)
-    offsetx    = Column(Integer)
-    offsety    = Column(Integer)
-    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
-
-@dataclass
-class GearMeta(Base):
-    __tablename__ = 'gearMeta'
+class MetaArmors(Base):
+    __tablename__ = 'metaArmors'
 
     id: int
     name: str
@@ -237,11 +207,12 @@ class GearMeta(Base):
     min_b      = Column(Integer)
 
 @dataclass
-class Gear(Base):
-    __tablename__ = 'gear'
+class Items(Base):
+    __tablename__ = 'items'
 
     id: int
-    type: int
+    metatype: str
+    metaid: int
     bearer: int
     bound: bool
     bound_type: str
@@ -254,7 +225,8 @@ class Gear(Base):
     date: str
 
     id         = Column(Integer, primary_key=True)
-    type       = Column(Integer)
+    metatype   = Column(String)
+    metaid     = Column(Integer)
     bearer     = Column(Integer)
     bound      = Column(Boolean)
     bound_type = Column(String)
