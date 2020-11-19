@@ -412,12 +412,12 @@ def get_items(username,pcid,public):
         # Here it's for a private /mypc call
         if pc and pc.account == user.id:
             with engine.connect() as conn:
-                weapons   = session.query(Items).\
+                weapon   = session.query(Items).\
                                     filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
-                armors    = session.query(Items).\
+                armor    = session.query(Items).\
                                     filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
                 equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
-                return (200, True, 'OK', {"weapons": weapons, "armors": armors, "equipment": equipment})
+                return (200, True, 'OK', {"weapon": weapon, "armor": armor, "equipment": equipment})
         else: return (409, False, 'Token/username mismatch', None)
 
 def set_item_offset(username,pcid,itemid,offsetx,offsety):
@@ -440,13 +440,13 @@ def set_item_offset(username,pcid,itemid,offsetx,offsety):
                 # Something went wrong during commit
                 return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
             else:
-                weapons   = session.query(Items).\
-                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
-                armors    = session.query(Items).\
-                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
+                weapon   = session.query(Items).\
+                                   filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
+                armor    = session.query(Items).\
+                                   filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
                 equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
                 return (200, True, 'Equipment update successed (itemid:{})'.format(item.id),
-                        {"weapons": weapons, "armors": armors, "equipment": equipment})
+                        {"weapon": weapon, "armor": armor, "equipment": equipment})
 
     else: return (409, False, 'Token/username mismatch', None)
 
