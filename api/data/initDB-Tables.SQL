@@ -137,7 +137,7 @@ dst         INT      NULL,      /* creatures.id or NULL */
 action      TEXT     NOT NULL,  /* description of the action */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
 
-CREATE TABLE `creaturesStats` (
+CREATE TABLE IF NOT EXISTS creaturesStats (
 id          INT      NOT NULL PRIMARY KEY,     /* creatures.id */
 m_race      INT      NOT NULL,                 /* Creature M carac (racial bonus) */
 m_class     INT      NOT NULL,                 /* Creature M carac (class bonus) */
