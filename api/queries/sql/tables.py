@@ -29,6 +29,7 @@ class PJ(Base):
     id: int
     name: str
     race: str
+    rarity: str
     account: int
     targeted_by: int
     level: int
@@ -57,6 +58,7 @@ class PJ(Base):
     id         = Column(Integer, primary_key=True)
     name       = Column(String)
     race       = Column(String)
+    rarity     = Column(String)
     account    = Column(Integer)
     targeted_by= Column(Integer)
     level      = Column(Integer)
