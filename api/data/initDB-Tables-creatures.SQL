@@ -75,4 +75,5 @@ hands       INT      NULL,                     /* gear.id */
 legs        INT      NULL,                     /* gear.id */
 feet        INT      NULL,                     /* gear.id */
 ammo        INT      NULL,                     /* gear.id */
+wallet      INT      NOT NULL DEFAULT '0',     /* Amount of currency */
 date        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);

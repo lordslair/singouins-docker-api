@@ -345,6 +345,7 @@ class CreaturesSlots(Base):
     legs:      int
     feet:      int
     ammo:      int
+    wallet:    int
 
     id         = Column(Integer, primary_key=True)
     lefthand   = Column(Integer)
@@ -357,4 +358,5 @@ class CreaturesSlots(Base):
     legs       = Column(Integer)
     feet       = Column(Integer)
     ammo       = Column(Integer)
+    wallet     = Column(Integer)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
