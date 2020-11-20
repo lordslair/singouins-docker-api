@@ -9,6 +9,7 @@ from random         import randint
 from variables      import SQL_DSN, PCS_URL
 
 from .tables        import *
+from ..utils.loot   import *
 from ..redis.redis  import get_pa,set_pa
 
 import textwrap
@@ -959,6 +960,64 @@ def action_attack(username,pcid,weaponid,targetid):
                                             return (200, False, 'XP update failed', None)
                                         else:
                                             clog(pc.id,None,'Gained Experience')
+
+                                    # Loots are generated
+                                    loot         = {"item": {}}
+                                    loot['rand'] = randint(1, 100)
+
+                                    if loot['rand'] < 25:
+                                        # Loots are currency
+                                        loot['currency']           = tg.level * loot['rand']
+                                    elif loot['rand'] < 50:
+                                        # Loots are currency + consommables/compos
+                                        loot['currency']           = tg.level * loot['rand']
+                                        # TODO: faire les compos
+                                    elif loot['rand'] < 75:
+                                        # Loots are currency + item
+                                        loot['currency']           = tg.level * loot['rand']
+                                        loot['item']['bound_type'] = get_loot_bound_type()
+                                        loot['item']['rarity']     = get_loot_rarity(tg.rarity)
+                                    else:
+                                        # Loots are currency + consommables/compos + item
+                                        loot['currency']           = tg.level * loot['rand']
+                                        # TODO: faire les compos
+                                        loot['item']['bound_type'] = get_loot_bound_type()
+                                        loot['item']['rarity']     = get_loot_rarity(tg.rarity)
+                                        loot['item']['metatype']   = get_loot_meta_type()
+
+                                        if loot['item']['metatype'] == 'weapon':
+                                            loot['item']['metaid'] = rand(1,len(session.query(MetaWeapons).all()))
+                                        elif loot['item']['metatype'] == 'armor':
+                                            loot['item']['metaid'] = rand(1,len(session.query(MetaArmors).all()))
+
+                                    print(loot['item']['metatype'])
+
+                                    with engine.connect() as conn:
+                                        try:
+                                            if pc.squad is None:
+                                                # We add loot only to the killer
+                                                equipment         = session.query(CreaturesSlots)\
+                                                                           .filter(CreaturesSlots.id == pc.id)\
+                                                                           .one_or_none()
+                                                equipment.wallet += loot['currency'] # We add currency
+                                                equipment.date    = datetime.now()   # We update the date in DB
+                                            else:
+                                                # We add loot to the killer squad
+                                                squadlist = session.query(PJ)\
+                                                                   .filter(PJ.squad == pc.squad)\
+                                                                   .filter(PJ.squad_rank != 'Pending').all()
+                                                for pcsquad in squadlist:
+                                                    equipment         = session.query(CreaturesSlots)\
+                                                                               .filter(CreaturesSlots.id == pcsquad.id)\
+                                                                               .one_or_none()
+                                                    equipment.wallet += round(loot['currency']/len(squadlist)) # We add currency
+                                                    equipment.date    = datetime.now()                         # We update the date in DB
+                                            session.commit()
+                                        except Exception as e:
+                                            # Something went wrong during commit
+                                            return (200, False, 'Loot update failed', None)
+                                        else:
+                                            clog(pc.id,None,'Gained Loot')
                             else:
                                 clog(tg.id,None,'Suffered no injuries')
                                 # The attack does not deal damage
