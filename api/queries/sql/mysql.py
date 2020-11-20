@@ -583,6 +583,9 @@ def invite_squad_member(username,leaderid,squadid,targetid):
     (code, success, msg, leader) = get_pc(None,leaderid)
     user                         = get_user(username)
 
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     if leader:
         if leader.squad is None:
             return (200, False, 'PC is not in a squad', None)
@@ -590,35 +593,53 @@ def invite_squad_member(username,leaderid,squadid,targetid):
             return (200, False, 'Squad request outside of your scope ({} =/= {})'.format(leader.squad,squadid), None)
         if leader.squad_rank != 'Leader':
             return (200, False, 'PC is not the squad Leader', None)
+
+        members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
+        maxmembers = 10
+        if len(members) == maxmembers:
+            return (200,
+                    False,
+                    'Squad is already full (slots:{}/{})'.format(len(members),maxmembers),
+                    None)
     else:
         return (200, False, 'PC unknown in DB (pcid:{})'.format(leaderid), None)
 
     if target:
         if target.squad is not None:
-            return (200, False, 'PC invited is already in a squad (pcid:{},squadid:{})'.format(target.id,target.squad), None)
+            return (200,
+                    False,
+                    'PC invited is already in a squad (pcid:{},squadid:{})'.format(target.id,target.squad),
+                    None)
     else:
         return (200, False, 'PC unknown in DB (pcid:{})'.format(targetid), None)
 
     if target and leader:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         with engine.connect() as conn:
             try:
                 pc = session.query(PJ).filter(PJ.id == target.id).one_or_none()
                 pc.squad      = leader.squad
                 pc.squad_rank = 'Pending'
                 session.commit()
+                members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
             except Exception as e:
                 # Something went wrong during commit
-                return (200, False, 'PC Invite failed', None)
+                return (200,
+                        False,
+                        'PC Invite failed (slots:{}/{})'.format(len(members),maxmembers),
+                        None)
             else:
-                return (201, True, 'PC successfully invited', pc)
+                return (201,
+                        True,
+                        'PC successfully invited (slots:{}/{})'.format(len(members),maxmembers),
+                        pc)
 
 def kick_squad_member(username,leaderid,squadid,targetid):
     (code, success, msg, target) = get_pc(None,targetid)
     (code, success, msg, leader) = get_pc(None,leaderid)
     user                         = get_user(username)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
     if leader:
         if leader.squad is None:
@@ -634,25 +655,29 @@ def kick_squad_member(username,leaderid,squadid,targetid):
 
     if target:
         if target.squad is None:
-            return (200, False, 'PC have to be in a squad (pcid:{},squadid:{})'.format(target.id,target.squad), None)
+            return (200,
+                    False,
+                    'PC have to be in a squad (pcid:{},squadid:{})'.format(target.id,target.squad),
+                    None)
     else:
         return (200, False, 'PC unknown in DB (pcid:{})'.format(targetid), None)
 
     if target and leader:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         with engine.connect() as conn:
             try:
                 pc = session.query(PJ).filter(PJ.id == target.id).one_or_none()
                 pc.squad      = None
                 pc.squad_rank = None
                 session.commit()
+                members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
             except Exception as e:
                 # Something went wrong during commit
                 return (200, False, 'PC Kick failed', None)
             else:
-                return (201, True, 'PC successfully kicked', None)
+                return (201,
+                        True,
+                        'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
+                        None)
     else: return (200, False, 'PC/Leader unknown in DB', None)
 
 def accept_squad_member(username,pcid,squadid):
