@@ -81,6 +81,7 @@ id          INT      NOT NULL PRIMARY KEY AUTO_INCREMENT,
 race        INT      NOT NULL,                 /* creaturesStats.id */
 name        TEXT     NOT NULL,                 /* Creature Name */
 account     INT      NULL,                     /* users.id */
+rarity      ENUM('Small','Normal','Big','Unique','Boss','God') NOT NULL DEFAULT 'Normal',
 targeted    BOOLEAN,                           /* If the creature is targeted */
 targeted_by INT      NULL,                     /* creatures.id */
 x           INT      NOT NULL,                 /* Creature X pos */
@@ -164,7 +165,7 @@ bound_type ENUM('BoE','BoP','BoA','BoU','BtA'),      /* bound type */
 modded     BOOLEAN,                                  /* if it is modded yet */
 mods       TEXT     NULL,                            /* list of linked mods */
 state      INT      NOT NULL,                        /* 0-100 scale. 100 = new, 0 = unusable */
-rarity     ENUM('Legendary','Epic','Rare','Common'), /* rarity level */
+rarity     ENUM('Legendary','Epic','Rare','Common','Uncommon','Broken'),
 offsetx    INT      NULL,                            /* X pos in the inventory */
 offsety    INT      NULL,                            /* Y pos in the inventory */
 date       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
