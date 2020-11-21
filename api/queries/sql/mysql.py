@@ -167,6 +167,7 @@ def add_pc(username,pcname,pcrace):
             pc = PJ(name    = pcname,
                     race    = pcrace,
                     account = get_user(username).id,
+                    rarity  = 'Normal',
                     level   = 1,
                     x       = 0,
                     y       = 0,
