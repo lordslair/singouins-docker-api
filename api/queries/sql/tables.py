@@ -360,5 +360,5 @@ class CreaturesSlots(Base):
     legs       = Column(Integer)
     feet       = Column(Integer)
     ammo       = Column(Integer)
-    wallet     = Column(Integer)
+    wallet     = Column(Integer, default=0)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
