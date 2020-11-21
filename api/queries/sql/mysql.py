@@ -366,6 +366,8 @@ def get_items(username,pcid,public):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
 
+    if pc.account is None: return (200, False, 'NPCs do not have items (pcid:{})'.format(pc.id), None)
+
     Session = sessionmaker(bind=engine)
     session = Session()
 
