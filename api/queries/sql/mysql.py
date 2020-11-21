@@ -641,6 +641,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
     (code, success, msg, target) = get_pc(None,targetid)
     (code, success, msg, leader) = get_pc(None,leaderid)
     user                         = get_user(username)
+    maxmembers = 10
 
     Session = sessionmaker(bind=engine)
     session = Session()
