@@ -192,7 +192,18 @@ def add_pc(username,pcname,pcrace):
                 # Something went wrong during commit
                 return (200, False, 'PC creation failed', None)
             else:
-                return (201, True, 'PC successfully created', pc)
+                with engine.connect() as conn:
+                    (code, success, msg, pc) = get_pc(pcname,None)
+                    equipment = CreaturesSlots(id     = pc.id)
+                    session.add(equipment)
+
+                    try:
+                        session.commit()
+                    except Exception as e:
+                        # Something went wrong during commit
+                        return (200, False, 'PC Slots creation failed', None)
+                    else:
+                        return (201, True, 'PC successfully created', pc)
 
 def get_pc(pcname,pcid):
     Session = sessionmaker(bind=engine)
@@ -238,6 +249,8 @@ def del_pc(username,pcid):
                 userid  = get_user(username).id
                 pc = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
                 session.delete(pc)
+                equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+                session.delete(equipment)
                 session.commit()
             except Exception as e:
                 # Something went wrong during commit
