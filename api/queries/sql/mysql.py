@@ -1238,7 +1238,7 @@ def get_view(username,pcid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
+        try:
             range = 4 + round(pc.p / 50)
             maxx  = pc.x + range
             minx  = pc.x - range
@@ -1248,8 +1248,18 @@ def get_view(username,pcid):
                                             .filter(PJ.x.between(minx,maxx))\
                                             .filter(PJ.y.between(miny,maxy))\
                                             .all()
+        except Exception as e:
+            # Something went wrong during query
+            return (200,
+                    False,
+                    'View query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
+                    None)
+        else:
             return (200,
                     True,
                     'View successfully retrieved (range:{},x:{},y:{})'.format(range,pc.x,pc.y),
                     view)
+        finally:
+            session.close()
+
     else: return (409, False, 'Token/username mismatch', None)
