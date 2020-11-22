@@ -812,12 +812,23 @@ def mypc_event(username,pcid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
-            log   = session.query(Log).filter((Log.src == pc.id) | (Log.dst == pc.id))\
-                                             .order_by(Log.date.desc())\
-                                             .limit(50)\
-                                             .all()
-            return (200, True, 'Logs successfully retrieved (pcid:{})'.format(pc.id), log)
+        try:
+            log   = session.query(Log)\
+                           .filter((Log.src == pc.id) | (Log.dst == pc.id))\
+                           .order_by(Log.date.desc())\
+                           .limit(50)\
+                           .all()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    'Event query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
+                    None)
+        else:
+            return (200, True, 'Events successfully retrieved (pcid:{})'.format(pc.id), log)
+        finally:
+            session.close()
+
     else: return (409, False, 'Token/username mismatch', None)
 
 def pc_event(creatureid):
