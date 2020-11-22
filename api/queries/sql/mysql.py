@@ -24,20 +24,18 @@ def clog(src,dst,action):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
-        log = Log(src    = src,
-                  dst    = dst,
-                  action = action)
+    log = Log(src = src, dst = dst, action = action)
+    session.add(log)
 
-        session.add(log)
-
-        try:
-            session.commit()
-        except Exception as e:
-            # Something went wrong during commit
-            return False
-        else:
-            return True
+    try:
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return False
+    else:
+        return True
+    finally:
+        session.close()
 
 #
 # Queries: /auth
