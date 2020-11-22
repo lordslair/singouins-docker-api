@@ -827,12 +827,22 @@ def pc_event(creatureid):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
-        log   = session.query(Log).filter(Log.src == creature.id)\
-                                  .order_by(Log.date.desc())\
-                                  .limit(50)\
-                                  .all()
-        return (200, True, 'Logs successfully retrieved (creatureid:{})'.format(creature.id), log)
+    try:
+        log   = session.query(Log)\
+                       .filter(Log.src == creature.id)\
+                       .order_by(Log.date.desc())\
+                       .limit(50)\
+                       .all()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                'Event query failed (creatureid:{}) [{}]'.format(creature.id,e),
+                None)
+    else:
+        return (200, True, 'Events successfully retrieved (creatureid:{})'.format(creature.id), log)
+    finally:
+        session.close()
 
 #
 # Queries /action
