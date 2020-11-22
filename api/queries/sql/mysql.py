@@ -787,16 +787,20 @@ def get_map(mapid):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
-        if mapid:
+    if mapid:
+        try:
             map = session.query(Map).filter(Map.id == mapid).one_or_none()
-        else: return (200, False, 'Wrong mapid', None)
-        session.close()
-
-    if map:
-        return (200, True, 'OK', map)
-    else:
-        return (200, False, 'Map does not exist', None)
+        except Exception as e:
+            # Something went wrong during commit
+            return (200, False, 'Map query failed', None)
+        else:
+            if map:
+                return (200, True, 'Map query successed', map)
+            else:
+                return (200, False, 'Map does not exist (mapid:{})'.format(mapid), None)
+        finally:
+            session.close()
+    else: return (200, False, 'Incorrect mapid (mapid:{})'.format(mapid), None)
 
 #
 # Queries /events
