@@ -473,17 +473,24 @@ def set_item_offset(username,pcid,itemid,offsetx,offsety):
 # Queries /meta
 #
 
-def get_meta_item(itemtype):
+def get_meta_item(metatype):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
-        if    itemtype == 'weapon': meta = session.query(MetaWeapons).all()
-        elif  itemtype == 'armor':  meta = session.query(MetaArmors).all()
-        else: return (200, False, 'Itemtype does not exist', None)
-
-    if meta:
-        return (200, True, 'OK', meta)
+    try:
+        if    metatype == 'weapon': meta = session.query(MetaWeapons).all()
+        elif  metatype == 'armor':  meta = session.query(MetaArmors).all()
+        else:  meta = None
+    except Exception as e:
+        # Something went wrong during commit
+        return (200, False, 'Meta query failed (metatype:{}) [{}]'.format(metatype,e), None)
+    else:
+        if meta:
+            return (200, True, 'OK', meta)
+        else:
+            return (200, False, 'Meta does not exist (metatype:{})'.format(metatype), None)
+    finally:
+        session.close()
 
 #
 # Queries /squad
