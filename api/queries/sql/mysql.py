@@ -345,28 +345,38 @@ def add_mp(username,src,dsts,subject,body):
         for dst in dsts:
             (code, success, msg, pcdst) = get_pc(None,dst)
             if pcdst:
-                with engine.connect() as conn:
-                    mp = MP(src_id  = pcsrc.id,
-                            src     = pcsrc.name,
-                            dst_id  = pcdst.id,
-                            dst     = pcdst.name,
-                            subject = subject,
-                            body    = body)
-                    session.add(mp)
+                mp = MP(src_id  = pcsrc.id,
+                        src     = pcsrc.name,
+                        dst_id  = pcdst.id,
+                        dst     = pcdst.name,
+                        subject = subject,
+                        body    = body)
+                session.add(mp)
 
         try:
             session.commit()
         except Exception as e:
             # Something went wrong during commit
             session.rollback()
-            return (200, False, 'MP creation failed', None)
+            return (200,
+                    False,
+                    '[SQL] MP creation failed (srcid:{},dstid:{})'.format(pcsrc.id,pcdst.id),
+                    None)
         else:
-            return (201, True, 'MP successfully created', None)
+            return (201,
+                    True,
+                    'MP successfully created (srcid:{},dstid:{})'.format(pcsrc.id,pcdst.id),
+                    None)
+        finally:
+            session.close()
 
     elif user.id != pcsrc.account:
         return (409, False, 'Token/username mismatch', None)
     else:
-        return (200, False, 'PC does not exist', mp)
+        return (200,
+                False,
+                'PC does not exist (srcid:{},dstid:{})'.format(pcsrc.id,pcdst.id),
+                None)
 
 def get_mp(username,pcid,mpid):
     (code, success, msg, pc) = get_pc(None,pcid)
@@ -376,14 +386,24 @@ def get_mp(username,pcid,mpid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
+        try:
             mp = session.query(MP).filter(MP.dst_id == pc.id, MP.id == mpid).one_or_none()
-            session.close()
-
-        if mp:
-            return (200, True, 'OK', mp)
+        except Exception as e:
+            # Something went wrong during query
+            return (200,
+                    False,
+                    '[SQL] MP query failed (pcid:{},mpid:{})'.format(pc.id,mpid),
+                    None)
         else:
-            return (200, True, 'No MP found for this PC', None)
+            if mp:
+                return (200,
+                        True,
+                        'MP successfully found (pcid:{},mpid:{})'.format(pc.id,mpid),
+                        mp)
+            else:
+                return (200, True, 'MP not found (pcid:{},mpid:{})'.format(pc.id,mpid), None)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def del_mp(username,pcid,mpid):
@@ -394,17 +414,18 @@ def del_mp(username,pcid,mpid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
-            try:
-                mp = session.query(MP).filter(MP.dst_id == pc.id, MP.id == mpid).one_or_none()
-                if not mp: return (200, True, 'No MP found for this PC', None)
-                session.delete(mp)
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'MP deletion failed', None)
-            else:
-                return (200, True, 'MP successfully deleted', None)
+        try:
+            mp = session.query(MP).filter(MP.dst_id == pc.id, MP.id == mpid).one_or_none()
+            if not mp: return (200, True, 'No MP found for this PC', None)
+            session.delete(mp)
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200, False, '[SQL] MP deletion failed', None)
+        else:
+            return (200, True, 'MP successfully deleted', None)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def get_mps(username,pcid):
@@ -415,15 +436,19 @@ def get_mps(username,pcid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
+        try:
             mps = session.query(MP).filter(MP.dst_id == pc.id).all()
-
-        if mps:
-            for mp in mps:
-                mp.body = textwrap.shorten(mp.body, width=50, placeholder="...")
-            return (200, True, 'OK', mps)
+        except Exception as e:
+            # Something went wrong during commit
+            return (200, False, '[SQL] MPs query failed (pcid:{})'.format(pc.id), None)
         else:
-            return (200, True, 'No MP found for this PC', None)
+            if mps:
+                for mp in mps: mp.body = textwrap.shorten(mp.body, width=50, placeholder="...")
+                return (200, True, 'MPs successfully found (pcid:{})'.format(pc.id), mps)
+            else:
+                return (200, True, 'No MP found (pcid:{})'.format(pc.id), None)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def get_mp_addressbook(username,pcid):
@@ -434,13 +459,18 @@ def get_mp_addressbook(username,pcid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
+        try:
             addressbook = session.query(PJ).with_entities(PJ.id,PJ.name).all()
-
-        if addressbook:
-            return (200, True, 'OK', addressbook)
+        except Exception as e:
+            # Something went wrong during commit
+            return (200, False, '[SQL] Addressbook query failed (pcid:{})'.format(pc.id), None)
         else:
-            return (200, True, 'No Addressbook found for this PC', None)
+            if addressbook:
+                return (200, True, 'Addressbook successfully found (pcid:{})'.format(pc.id), addressbook)
+            else:
+                return (200, True, 'No Addressbook found (pcid:{})'.format(pc.id), None)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 #
