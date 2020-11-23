@@ -476,7 +476,7 @@ def get_items(username,pcid,public):
             lefthandmetaid  = lefthand.metaid  if lefthand  is not None else None
             righthandmetaid = righthand.metaid if righthand is not None else None
             shouldersmetaid = shoulders.metaid if shoulders is not None else None
-            torsormetaid    = torso.metaid     if torso     is not None else None
+            torsometaid     = torso.metaid     if torso     is not None else None
 
             feetmetatype      = feet.metatype      if feet      is not None else None
             handsmetatype     = hands.metatype     if hands     is not None else None
@@ -485,7 +485,7 @@ def get_items(username,pcid,public):
             lefthandmetatype  = lefthand.metatype  if lefthand  is not None else None
             righthandmetatype = righthand.metatype if righthand is not None else None
             shouldersmetatype = shoulders.metatype if shoulders is not None else None
-            torsormetatype    = torso.metatype     if torso     is not None else None
+            torsometatype     = torso.metatype     if torso     is not None else None
 
             metas = {"feet": {"metaid": feetmetaid,"metatype": feetmetatype},
                      "hands": {"metaid": handsmetaid,"metatype": handsmetatype},
@@ -494,7 +494,7 @@ def get_items(username,pcid,public):
                      "lefthand": {"metaid": lefthandmetaid,"metatype": lefthandmetatype},
                      "righthand": {"metaid": righthandmetaid,"metatype": righthandmetatype},
                      "shoulders": {"metaid": shouldersmetaid,"metatype": shouldersmetatype},
-                     "torso": {"metaid": feetmetaid,"metatype": torsormetatype}}
+                     "torso": {"metaid": torsometaid,"metatype": torsometatype}}
 
             return (200, True, 'OK', {"equipment": metas})
     else:
