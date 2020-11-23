@@ -166,7 +166,7 @@ def get_pc_exists(pcname,pcid):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
+    try:
         if not pcname and not pcid:
             return False
         elif pcname and pcid:
@@ -177,109 +177,158 @@ def get_pc_exists(pcname,pcid):
             result = session.query(PJ).filter(PJ.id == pcid).one_or_none()
         else:
             return False
-
-    if result: return True
+    except Exception as e:
+        # Something went wrong during query
+        return False
+    else:
+        if result: return True
+    finally:
+        session.close()
 
 def add_pc(username,pcname,pcrace):
     if get_pc_exists(pcname,None):
-        return (409, False, 'PC already exists', None)
+        return (409,
+                False,
+                'PC already exists (username:{},pcname:{})'.format(username,pcname),
+                None)
     else:
         Session = sessionmaker(bind=engine)
         session = Session()
-        with engine.connect() as conn:
-            pc = PJ(name    = pcname,
-                    race    = pcrace,
-                    account = get_user(username).id,
-                    rarity  = 'Normal',
-                    level   = 1,
-                    x       = 0,
-                    y       = 0,
-                    xp      = 0,
-                    hp      = 80,
-                    hp_max  = 80,
-                    arm_p   = 50,
-                    arm_b   = 25,
-                    m       = 100,
-                    r       = 100,
-                    g       = 100,
-                    v       = 100,
-                    p       = 100,
-                    b       = 100,
-                    sprite  = PCS_URL + '/resources/sprites/creatures/' + pcrace + '.png')
 
-            session.add(pc)
+        pc = PJ(name    = pcname,
+                race    = pcrace,
+                account = get_user(username).id,
+                rarity  = 'Normal',
+                level   = 1,
+                x       = 0,
+                y       = 0,
+                xp      = 0,
+                hp      = 80,
+                hp_max  = 80,
+                arm_p   = 50,
+                arm_b   = 25,
+                m       = 100,
+                r       = 100,
+                g       = 100,
+                v       = 100,
+                p       = 100,
+                b       = 100,
+                sprite  = PCS_URL + '/resources/sprites/creatures/' + pcrace + '.png')
 
-            try:
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'PC creation failed', None)
-            else:
-                with engine.connect() as conn:
-                    (code, success, msg, pc) = get_pc(pcname,None)
-                    equipment = CreaturesSlots(id     = pc.id)
-                    session.add(equipment)
+        session.add(pc)
 
-                    try:
-                        session.commit()
-                    except Exception as e:
-                        # Something went wrong during commit
-                        return (200, False, 'PC Slots creation failed', None)
-                    else:
-                        return (201, True, 'PC successfully created', pc)
+        try:
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] PC creation failed (username:{},pcname:{})'.format(username,pcname),
+                    None)
+        else:
+                (code, success, msg, pc) = get_pc(pcname,None)
+                equipment = CreaturesSlots(id     = pc.id)
+                session.add(equipment)
+
+                try:
+                    session.commit()
+                except Exception as e:
+                    # Something went wrong during commit
+                    return (200, False, '[SQL] PC Slots creation failed', None)
+                else:
+                    return (201, True, 'PC successfully created', pc)
+        finally:
+            session.close()
 
 def get_pc(pcname,pcid):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
+    try:
         if pcid:
             pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
         elif pcname:
             pc = session.query(PJ).filter(PJ.name == pcname).one_or_none()
-        else: return (200, False, 'Wrong pcid/pcname', None)
-        session.close()
-
-    if pc:
-        return (200, True, 'OK', pc)
+        else:
+            return (200,
+                    False,
+                    'Wrong pcid/pcname (pcid:{},pcname:{})'.format(pcid,pcname),
+                    None)
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                '[SQL] PC query failed (pcid:{},pcname:{})'.format(pcid,pcname),
+                None)
     else:
-        return (200, False, 'PC does not exist', None)
+        if pc:
+            return (200,
+                    True,
+                    'PC successfully found (pcid:{},pcname:{})'.format(pcid,pcname),
+                    pc)
+        else:
+            return (200,
+                    False,
+                    'PC does not exist (pcid:{},pcname:{})'.format(pcid,pcname),
+                    None)
+    finally:
+        session.close()
 
 def get_pcs(username):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    with engine.connect() as conn:
+    try:
         userid = get_user(username).id
         pcs    = session.query(PJ).filter(PJ.account == userid).all()
-        session.close()
-
-    if pcs:
-            return (200, True, 'OK', pcs)
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                '[SQL] PCs query failed (username:{})'.format(username),
+                None)
     else:
-        return (200, False, 'No PC found for this user', None)
+        if pcs:
+            return (200,
+                    True,
+                    'PCs successfully found (username:{})'.format(username),
+                    pcs)
+        else:
+            return (200,
+                    False,
+                    'No PC found for this user (username:{})'.format(username),
+                    None)
+    finally:
+        session.close()
 
 def del_pc(username,pcid):
 
     if not get_pc_exists(None,pcid):
-        return (200, False, 'PC does not exist', None)
-    else:
-        Session = sessionmaker(bind=engine)
-        session = Session()
+        return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
 
-        with engine.connect() as conn:
-            try:
-                userid  = get_user(username).id
-                pc = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
-                session.delete(pc)
-                equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
-                session.delete(equipment)
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'PC deletion failed', None)
-            else:
-                return (200, True, 'PC successfully deleted', None)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        userid  = get_user(username).id
+        pc = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
+        session.delete(pc)
+        equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+        session.delete(equipment)
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                '[SQL] PC deletion failed (username:{},pcid:{})'.format(username,pcid),
+                None)
+    else:
+        return (200,
+                True,
+                'PC successfully deleted (username:{},pcid:{})'.format(username,pcid),
+                None)
+    finally:
+        session.close()
 
 #
 # Queries: /mp
