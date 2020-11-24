@@ -656,32 +656,58 @@ def get_squad(username,pcid,squadid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc and pc.account == user.id:
+        # PC is not the Squad member
+        if pc.squad != squadid:
+            return (200,
+                    False,
+                    'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
+        try:
             squad = session.query(Squad).\
                             filter(Squad.id == pc.squad).\
                             filter(PJ.id == pc.id)
 
-            if squad.filter(PJ.squad_rank != 'Pending').one_or_none():
+            pc_is_member  = squad.filter(PJ.squad_rank != 'Pending').one_or_none()
+            pc_is_pending = squad.filter(PJ.squad_rank == 'Pending').one_or_none()
+
+            if pc_is_member:
                 squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
                 members = session.query(PJ).filter(PJ.squad == squad.id).filter(PJ.squad_rank != 'Pending').all()
                 pending = session.query(PJ).filter(PJ.squad == squad.id).filter(PJ.squad_rank == 'Pending').all()
+            elif pc_is_pending:
+                squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
+
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] Squad query failed (pcid:{},squadid:{})'.format(pcid,squadid),
+                    None)
+        else:
+            if pc_is_member:
                 if squad:
                     if isinstance(members, list):
                         if isinstance(pending, list):
-                            return (200, True, 'OK', {"squad": squad, "members": members, "pending": pending})
-                        else: return (200, False, 'SQL Error retrieving pending PC in squad', None)
-                    else: return (200, False, 'SQL Error retrieving members PC in squad', None)
-                else: return (200, False, 'SQL Error retrieving squad', None)
-
-            elif squad.filter(PJ.squad_rank == 'Pending').one_or_none():
-                squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
-                return (200, True, 'PC is pending in a squad', {"squad": squad})
-            else: return (200, False, 'PC is not in a squad', None)
+                            return (200,
+                                    True,
+                                    'Squad query successed (pcid:{},squadid:{})'.format(pcid,squadid),
+                                    {"squad": squad, "members": members, "pending": pending})
+            elif pc_is_pending:
+                return (200,
+                        True,
+                        'PC is pending in a squad (pcid:{},squadid:{})'.format(pcid,squadid),
+                        {"squad": squad})
+            else: return (200,
+                          False,
+                          'PC is not in a squad (pcid:{},squadid:{})'.format(pcid,squadid),
+                          None)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def add_squad(username,pcid,squadname):
@@ -692,34 +718,46 @@ def add_squad(username,pcid,squadname):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
-            if session.query(Squad).filter(Squad.name == squadname).one_or_none():
-                return (409, False, 'Squad already exists', None)
-            if pc.squad is not None:
-                return (200, False, 'Squad leader already in a squad', None)
+        if session.query(Squad).filter(Squad.name == squadname).one_or_none():
+            return (409, False, 'Squad already exists', None)
+        if pc.squad is not None:
+            return (200,
+                    False,
+                    'Squad leader already in a squad (pcid:{},squadid:{})'.format(pc.id,squad.id),
+                    None)
 
-            squad = Squad(name    = squadname,
-                          leader  = pc.id,
-                          created = datetime.now())
-            session.add(squad)
+        squad = Squad(name    = squadname,
+                      leader  = pc.id,
+                      created = datetime.now())
+        session.add(squad)
 
-            try:
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'Squad creation failed', None)
-            else:
-                # Squad created, let's assign the team creator in the squad
-                try:
-                    pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-                    pc.squad      = squad.id
-                    pc.squad_rank = 'Leader'
-                    session.commit()
-                except Exception as e:
-                    # Something went wrong during commit
-                    return (200, False, 'Squad leader assignation failed', None)
-                else:
-                    return (201, True, 'Squad successfully created', squad)
+        try:
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200, False, '[SQL] Squad creation failed (pcid:{})'.format(pcid), None)
+
+        # Squad created, let's assign the team creator in the squad
+        pc            = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+        squad         = session.query(Squad).filter(Squad.leader == pc.id).one_or_none()
+        pc.squad      = squad.id
+        pc.squad_rank = 'Leader'
+
+        try:
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] Squad leader assignation failed (pcid:{},squadid:{})'.format(pc.id,squad.id),
+                    None)
+        else:
+            return (201,
+                    True,
+                    'Squad successfully created (pcid:{},squadid:{})'.format(pc.id,squad.id),
+                    squad)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def del_squad(username,leaderid,squadid):
@@ -738,24 +776,25 @@ def del_squad(username,leaderid,squadid):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
-            try:
-                squad = session.query(Squad).filter(Squad.leader == leader.id).one_or_none()
-                if not squad: return (200, True, 'No Squad found for this PC (pcid:{})'.format(leader.id), None)
+        try:
+            squad = session.query(Squad).filter(Squad.leader == leader.id).one_or_none()
+            if not squad: return (200, True, 'No Squad found for this PC (pcid:{})'.format(leader.id), None)
 
-                count = session.query(PJ).filter(PJ.squad == squad.id).count()
-                if count > 1: return (200, False, 'Squad not empty (squadid:{})'.format(squad.id), None)
+            count = session.query(PJ).filter(PJ.squad == squad.id).count()
+            if count > 1: return (200, False, 'Squad not empty (squadid:{})'.format(squad.id), None)
 
-                session.delete(squad)
-                pc = session.query(PJ).filter(PJ.id == leader.id).one_or_none()
-                pc.squad      = None
-                pc.squad_rank = None
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'Squad deletion failed (squadid:{})'.format(squad.id), None)
-            else:
-                return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
+            session.delete(squad)
+            pc = session.query(PJ).filter(PJ.id == leader.id).one_or_none()
+            pc.squad      = None
+            pc.squad_rank = None
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200, False, '[SQL] Squad deletion failed (squadid:{})'.format(squad.id), None)
+        else:
+            return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def invite_squad_member(username,leaderid,squadid,targetid):
@@ -794,24 +833,30 @@ def invite_squad_member(username,leaderid,squadid,targetid):
         return (200, False, 'PC unknown in DB (pcid:{})'.format(targetid), None)
 
     if target and leader:
-        with engine.connect() as conn:
-            try:
-                pc = session.query(PJ).filter(PJ.id == target.id).one_or_none()
-                pc.squad      = leader.squad
-                pc.squad_rank = 'Pending'
-                session.commit()
-                members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200,
-                        False,
-                        'PC Invite failed (slots:{}/{})'.format(len(members),maxmembers),
-                        None)
-            else:
-                return (201,
-                        True,
-                        'PC successfully invited (slots:{}/{})'.format(len(members),maxmembers),
-                        pc)
+        try:
+            pc = session.query(PJ).filter(PJ.id == target.id).one_or_none()
+            pc.squad      = leader.squad
+            pc.squad_rank = 'Pending'
+            session.commit()
+            members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] PC Invite failed (slots:{}/{})'.format(len(members),maxmembers),
+                    None)
+        else:
+            return (201,
+                    True,
+                    'PC successfully invited (slots:{}/{})'.format(len(members),maxmembers),
+                    pc)
+        finally:
+            session.close()
+    else:
+        return (200,
+                False,
+                'PC/Leader unknown in DB (leaderid:{},targetid:{})'.format(leaderid,targetid),
+                None)
 
 def kick_squad_member(username,leaderid,squadid,targetid):
     (code, success, msg, target) = get_pc(None,targetid)
@@ -826,7 +871,10 @@ def kick_squad_member(username,leaderid,squadid,targetid):
         if leader.squad is None:
             return (200, False, 'PC is not in a squad', None)
         if leader.squad != squadid:
-            return (200, False, 'Squad request outside of your scope ({} =/= {})'.format(leader.squad,squadid), None)
+            return (200,
+                    False,
+                    'Squad request outside of your scope ({} =/= {})'.format(leader.squad,squadid),
+                    None)
         if leader.squad_rank != 'Leader':
             return (200, False, 'PC is not the squad Leader', None)
         if leader.id == targetid:
@@ -844,96 +892,143 @@ def kick_squad_member(username,leaderid,squadid,targetid):
         return (200, False, 'PC unknown in DB (pcid:{})'.format(targetid), None)
 
     if target and leader:
-        with engine.connect() as conn:
-            try:
-                pc = session.query(PJ).filter(PJ.id == target.id).one_or_none()
-                pc.squad      = None
-                pc.squad_rank = None
-                session.commit()
-                members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'PC Kick failed', None)
-            else:
-                return (201,
-                        True,
-                        'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
-                        None)
-    else: return (200, False, 'PC/Leader unknown in DB', None)
+        try:
+            pc = session.query(PJ).filter(PJ.id == target.id).one_or_none()
+            pc.squad      = None
+            pc.squad_rank = None
+            session.commit()
+            members    = session.query(PJ).filter(PJ.squad == leader.squad).all()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] PC Kick failed (pcid:{},squadid:{})'.format(target.id,target.squad),
+                    None)
+        else:
+            return (201,
+                    True,
+                    'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
+                    None)
+        finally:
+            session.close()
+    else:
+        return (200,
+                False,
+                'PC/Leader unknown in DB (leaderid:{},targetid:{})'.format(leaderid,targetid),
+                None)
 
 def accept_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = get_pc(None,pcid)
     user                         = get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc:
+        # PC is not the Squad member
+        if pc.squad != squadid:
+            return (200,
+                    False,
+                    'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+
         Session = sessionmaker(bind=engine)
         session = Session()
 
         if pc.squad_rank != 'Pending':
             return (200, False, 'PC is not pending in a squad', None)
 
-        with engine.connect() as conn:
-            try:
-                pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-                pc.squad_rank = 'Member'
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'PC squad invite accept failed', None)
-            else:
-                return (201, True, 'PC successfully accepted squad invite', None)
-    else: return (200, False, 'PC unknown in DB', None)
+        try:
+            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc.squad_rank = 'Member'
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] PC squad invite accept failed (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+        else:
+            return (201,
+                    True,
+                    'PC successfully accepted squad invite (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+        finally:
+            session.close()
+    else: return (200, False, 'PC unknown in DB (pcid:{})'.format(pcid), None)
 
 def decline_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = get_pc(None,pcid)
     user                         = get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc:
+        # PC is not the Squad member
+        if pc.squad != squadid:
+            return (200,
+                    False,
+                    'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+
         Session = sessionmaker(bind=engine)
         session = Session()
 
         if pc.squad_rank != 'Pending':
             return (200, False, 'PC is not pending in a squad', None)
 
-        with engine.connect() as conn:
-            try:
-                pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-                pc.squad      = None
-                pc.squad_rank = None
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'PC squad invite decline failed', None)
-            else:
-                return (201, True, 'PC successfully declined squad invite', None)
-    else: return (200, False, 'PC unknown in DB', None)
+        try:
+            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc.squad      = None
+            pc.squad_rank = None
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] PC squad invite decline failed (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+        else:
+            return (201, True, 'PC successfully declined squad invite (pcid:{},squadid:{})'.format(pc.id,squadid), None)
+        finally:
+            session.close()
+    else: return (200, False, 'PC unknown in DB (pcid:{})'.format(pcid), None)
 
 def leave_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = get_pc(None,pcid)
     user                         = get_user(username)
 
-    if pc.squad != squadid: return (200, False, 'Squad request outside of your scope', None)
     if pc:
+        # PC is not the Squad member
+        if pc.squad != squadid:
+            return (200,
+                    False,
+                    'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+
         Session = sessionmaker(bind=engine)
         session = Session()
 
         if pc.squad_rank == 'Leader':
-            return (200, False, 'PC cannot be the squad Leader', None)
+            return (200,
+                    False,
+                    'PC cannot be the squad Leader (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
 
-        with engine.connect() as conn:
-            try:
-                pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-                pc.squad      = None
-                pc.squad_rank = None
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'PC squad leave failed', None)
-            else:
-                return (201, True, 'PC successfully left', None)
-    else: return (200, False, 'PC unknown in DB', None)
+        try:
+            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc.squad      = None
+            pc.squad_rank = None
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] PC squad leave failed (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+        else:
+            return (201,
+                    True,
+                    'PC successfully left (pcid:{},squadid:{})'.format(pc.id,squadid),
+                    None)
+        finally:
+            session.close()
+    else: return (200, False, 'PC unknown in DB (pcid:{})'.format(pcid), None)
 
 #
 # Queries /map
