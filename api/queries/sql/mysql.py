@@ -488,6 +488,10 @@ def get_items(username,pcid,public):
 
     if public is True:
         # Here it's for a public /pc call
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        try:
             equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
 
             feet      = session.query(Items).filter(Items.id == equipment[0].feet).one_or_none()
@@ -498,15 +502,31 @@ def get_items(username,pcid,public):
             righthand = session.query(Items).filter(Items.id == equipment[0].righthand).one_or_none()
             shoulders = session.query(Items).filter(Items.id == equipment[0].shoulders).one_or_none()
             torso     = session.query(Items).filter(Items.id == equipment[0].torso).one_or_none()
-
+            legs      = session.query(Items).filter(Items.id == equipment[0].legs).one_or_none()
+        except Exception as e:
+            # Something went wrong during query
+            return (200,
+                    False,
+                    '[SQL] Equipment query failed (pcid:{})'.format(pc.id),
+                    None)
+        else:
             feetmetaid      = feet.metaid      if feet      is not None else None
             handsmetaid     = hands.metaid     if hands     is not None else None
             headmetaid      = head.metaid      if head      is not None else None
             holstermetaid   = holster.metaid   if holster   is not None else None
-            lefthandmetaid  = lefthand.metaid  if lefthand  is not None else None
-            righthandmetaid = righthand.metaid if righthand is not None else None
             shouldersmetaid = shoulders.metaid if shoulders is not None else None
             torsometaid     = torso.metaid     if torso     is not None else None
+            legsmetaid      = legs.metaid      if legs      is not None else None
+
+            if righthand is not None and lefthand is not None:
+                if righthand.id == lefthand.id:
+                    # PC has ONE two-handed weapon equipped. I send only meta inside RH
+                    righthandmetaid = righthand.metaid if righthand is not None else None
+                    lefthandmetaid  = None
+            else:
+                # PC has TWO two-handed weapon equipped.
+                righthandmetaid = righthand.metaid if righthand is not None else None
+                lefthandmetaid  = lefthand.metaid  if lefthand  is not None else None
 
             feetmetatype      = feet.metatype      if feet      is not None else None
             handsmetatype     = hands.metatype     if hands     is not None else None
@@ -516,27 +536,53 @@ def get_items(username,pcid,public):
             righthandmetatype = righthand.metatype if righthand is not None else None
             shouldersmetatype = shoulders.metatype if shoulders is not None else None
             torsometatype     = torso.metatype     if torso     is not None else None
+            legsmetatype      = legs.metatype      if legs      is not None else None
 
             metas = {"feet": {"metaid": feetmetaid,"metatype": feetmetatype},
-                     "hands": {"metaid": handsmetaid,"metatype": handsmetatype},
-                     "head": {"metaid": headmetaid,"metatype": headmetatype},
-                     "holster": {"metaid": holstermetaid,"metatype": holstermetatype},
-                     "lefthand": {"metaid": lefthandmetaid,"metatype": lefthandmetatype},
-                     "righthand": {"metaid": righthandmetaid,"metatype": righthandmetatype},
-                     "shoulders": {"metaid": shouldersmetaid,"metatype": shouldersmetatype},
-                     "torso": {"metaid": torsometaid,"metatype": torsometatype}}
-
-            return (200, True, 'OK', {"equipment": metas})
+                    "hands": {"metaid": handsmetaid,"metatype": handsmetatype},
+                    "head": {"metaid": headmetaid,"metatype": headmetatype},
+                    "holster": {"metaid": holstermetaid,"metatype": holstermetatype},
+                    "lefthand": {"metaid": lefthandmetaid,"metatype": lefthandmetatype},
+                    "righthand": {"metaid": righthandmetaid,"metatype": righthandmetatype},
+                    "shoulders": {"metaid": shouldersmetaid,"metatype": shouldersmetatype},
+                    "torso": {"metaid": torsometaid,"metatype": torsometatype},
+                    "legs": {"metaid": legsmetaid,"metatype": legsmetatype}}
+            return (200,
+                    True,
+                    'Equipment query successed (pcid:{})'.format(pc.id),
+                    {"equipment": metas})
+        finally:
+            session.close()
     else:
         # Here it's for a private /mypc call
         if pc and pc.account == user.id:
-            with engine.connect() as conn:
-                weapon   = session.query(Items).\
-                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
-                armor    = session.query(Items).\
-                                    filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
-                equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
-                return (200, True, 'OK', {"weapon": weapon, "armor": armor, "equipment": equipment})
+            Session = sessionmaker(bind=engine)
+            session = Session()
+            try:
+                weapon    = session.query(Items)\
+                                   .filter(Items.bearer == pc.id)\
+                                   .filter(Items.metatype == 'weapon')\
+                                   .all()
+                armor     = session.query(Items)\
+                                   .filter(Items.bearer == pc.id)\
+                                   .filter(Items.metatype == 'armor')\
+                                   .all()
+                equipment = session.query(CreaturesSlots)\
+                                   .filter(CreaturesSlots.id == pc.id)\
+                                   .all()
+            except Exception as e:
+                # Something went wrong during query
+                return (200,
+                        False,
+                        '[SQL] Equipment query failed (pcid:{})'.format(pc.id),
+                        None)
+            else:
+                return (200,
+                        True,
+                        'Equipment query successed (pcid:{})'.format(pc.id),
+                        {"weapon": weapon, "armor": armor, "equipment": equipment})
+            finally:
+                session.close()
         else: return (409, False, 'Token/username mismatch', None)
 
 def set_item_offset(username,pcid,itemid,offsetx,offsety):
@@ -547,29 +593,37 @@ def set_item_offset(username,pcid,itemid,offsetx,offsety):
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        with engine.connect() as conn:
-            try:
-                item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
-                if item is None: return (200, False, 'Item not found (pcid:{},itemid:{})'.format(pc.id,itemid), None)
+        item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
+        if item is None:
+            return (200,
+                    False,
+                    'Item not found (pcid:{},itemid:{})'.format(pc.id,itemid),
+                    None)
 
-                item.offsetx = offsetx
-                item.offsety = offsety
-                session.commit()
-            except Exception as e:
-                # Something went wrong during commit
-                return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
-            else:
-                weapon   = session.query(Items).\
-                                   filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
-                armor    = session.query(Items).\
-                                   filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
-                equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
-                return (200, True, 'Equipment update successed (itemid:{})'.format(item.id),
-                        {"weapon": weapon, "armor": armor, "equipment": equipment})
+        item.offsetx = offsetx
+        item.offsety = offsety
 
+        try:
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] Item update failed (pcid:{},itemid:{})'.format(pc.id,item.id),
+                    None)
+        else:
+            weapon   = session.query(Items).\
+                               filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
+            armor    = session.query(Items).\
+                               filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
+            equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
+            return (200,
+                    True,
+                    'Item update successed (itemid:{})'.format(item.id),
+                    {"weapon": weapon, "armor": armor, "equipment": equipment})
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
-
-
 
 #
 # Queries /meta
