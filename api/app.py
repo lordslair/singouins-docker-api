@@ -310,7 +310,7 @@ def mypc_action_move_path(pcid):
         return jsonify({"msg": "Missing JSON in request"}), 400
 
     path = request.json.get('path', None)
-    (code, success, msg, payload) = mysql.move_path(get_jwt_identity(),pcid,path)
+    (code, success, msg, payload) = mysql.action_move(get_jwt_identity(),pcid,path)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

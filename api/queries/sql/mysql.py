@@ -1115,13 +1115,16 @@ def pc_event(creatureid):
 # Queries /action
 #
 
-def move_path(username,pcid,path):
+def action_move(username,pcid,path):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    (oldx,oldy)              = pc.x,pc.y
 
     if pc and pc.account == user.id:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
         for coords in path:
-            (code, success, msg, pc) = get_pc(None,pcid)
             bluepa                   = get_pa(pcid)[3]['blue']['pa']
             x,y                      = map(int, coords.strip('()').split(','))
 
@@ -1129,28 +1132,23 @@ def move_path(username,pcid,path):
                 if bluepa > 1:
                     # Enough PA to move
                     set_pa(pcid,0,1) # We consume the blue PA (1) right now
-                    Session = sessionmaker(bind=engine)
-                    session = Session()
+                    pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                    pc.x = x
+                    pc.y = y
 
-                    with engine.connect() as conn:
-                        try:
-                            pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-                            oldx = pc.x
-                            oldy = pc.y
-                            pc.x = x
-                            pc.y = y
-                            session.commit()
-                        except Exception as e:
-                            # Something went wrong during commit
-                            return (200, False, 'Coords update failed', None)
-                        else:
-                            clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,pc.x,pc.y))
-                else:
-                    # Not enough PA to move
-                    return (200, False, 'Not enough PA to move', None)
-            else:
-                return (200, False, 'Coords incorrect', path)
-        return (200, True, 'PC successfully moved', get_pa(pcid)[3])
+        try:
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (200,
+                    False,
+                    '[SQL] Coords update failed (pcid:{},path:{})'.format(pcid,path),
+                    None)
+        else:
+            clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
+            return (200, True, 'PC successfully moved', get_pa(pcid)[3])
+        finally:
+            session.close()
     else: return (409, False, 'Token/username mismatch', None)
 
 def action_attack(username,pcid,weaponid,targetid):
