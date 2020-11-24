@@ -639,7 +639,10 @@ def get_meta_item(metatype):
         else:  meta = None
     except Exception as e:
         # Something went wrong during commit
-        return (200, False, 'Meta query failed (metatype:{}) [{}]'.format(metatype,e), None)
+        return (200,
+                False,
+                '[SQL] Meta query failed (metatype:{})'.format(metatype),
+                None)
     else:
         if meta:
             return (200, True, 'OK', meta)
@@ -1043,10 +1046,10 @@ def get_map(mapid):
             map = session.query(Map).filter(Map.id == mapid).one_or_none()
         except Exception as e:
             # Something went wrong during commit
-            return (200, False, 'Map query failed', None)
+            return (200, False, '[SQL] Map query failed (mapid:{})'.format(mapid), None)
         else:
             if map:
-                return (200, True, 'Map query successed', map)
+                return (200, True, 'Map query successed (mapid:{})'.format(mapid), map)
             else:
                 return (200, False, 'Map does not exist (mapid:{})'.format(mapid), None)
         finally:
@@ -1075,7 +1078,7 @@ def mypc_event(username,pcid):
             # Something went wrong during commit
             return (200,
                     False,
-                    'Event query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
+                    '[SQL] Event query failed (username:{},pcid:{})'.format(username,pcid),
                     None)
         else:
             return (200, True, 'Events successfully retrieved (pcid:{})'.format(pc.id), log)
@@ -1101,7 +1104,7 @@ def pc_event(creatureid):
         # Something went wrong during commit
         return (200,
                 False,
-                'Event query failed (creatureid:{}) [{}]'.format(creature.id,e),
+                '[SQL] Event query failed (creatureid:{})'.format(creature.id),
                 None)
     else:
         return (200, True, 'Events successfully retrieved (creatureid:{})'.format(creature.id), log)
@@ -1440,7 +1443,7 @@ def action_equip(username,pcid,type,slotname,itemid):
                     session.commit()
                 except Exception as e:
                     # Something went wrong during commit
-                    return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
+                    return (200, False, '[SQL] Equipment update failed (itemid:{})'.format(item.id), None)
                 else:
                     clog(pc.id,None,'Equipped an item ({})'.format(item.id))
                     return (200,
@@ -1487,7 +1490,7 @@ def action_equip(username,pcid,type,slotname,itemid):
                     session.commit()
                 except Exception as e:
                     # Something went wrong during commit
-                    return (200, False, 'Equipment update failed (itemid:{}) [{}]'.format(item.id,e), None)
+                    return (200, False, '[SQL] Equipment update failed (itemid:{})'.format(item.id), None)
                 else:
                     clog(pc.id,None,'Un-equipped an item')
                     return (200,
@@ -1524,7 +1527,7 @@ def get_view(username,pcid):
             # Something went wrong during query
             return (200,
                     False,
-                    'View query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
+                    '[SQL] View query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
                     None)
         else:
             return (200,
