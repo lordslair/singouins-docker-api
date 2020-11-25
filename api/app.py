@@ -12,7 +12,7 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 
 from prometheus_flask_exporter import PrometheusMetrics
 
-from queries.sql        import mysql
+from mysql.methods      import *
 from queries.redis      import redis
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA, DISCORD_URL
 
@@ -48,13 +48,13 @@ def auth_login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    if mysql.get_user(username):
-        pass_db    = mysql.get_user(username).hash
+    if get_user(username):
+        pass_db    = get_user(username).hash
         pass_check = check_password_hash(pass_db, password)
     else:
         pass_check = None
 
-    if not mysql.get_user(username) or not pass_check:
+    if not get_user(username) or not pass_check:
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
@@ -90,7 +90,7 @@ def auth_register():
     if not mail:
         return jsonify({"msg": "Missing mail parameter"}), 400
 
-    code = mysql.add_user(username,password,mail)
+    code = add_user(username,password,mail)
     if code == 201:
         from utils.mail import send
         from utils.token import generate_confirmation_token
@@ -118,7 +118,7 @@ def auth_confirm(token):
 
     if confirm_token(token):
         mail = confirm_token(token)
-        code = mysql.set_user_confirmed(mail)
+        code = set_user_confirmed(mail)
         if code == 201:
             return jsonify({"msg": "User successfully confirmed"}), code
         else:
@@ -136,7 +136,7 @@ def auth_delete(username):
     if username != current_user:
         return jsonify({"msg": "Token/username mismatch"}), 400
 
-    code = mysql.del_user(username)
+    code = del_user(username)
     if code == 200:
         return jsonify({"msg": "User successfully deleted"}), code
     if code == 404:
@@ -159,7 +159,7 @@ def auth_infos():
 @app.route('/pc/<int:pcid>', methods=['GET'])
 @jwt_required
 def pc_get(pcid):
-    (code, success, msg, payload) = mysql.get_pc(None,pcid)
+    (code, success, msg, payload) = get_pc(None,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -177,7 +177,7 @@ def mypc_create():
     if not pcname or not pcrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
-    (code, success, msg, payload) = mysql.add_pc(current_user,pcname,pcrace)
+    (code, success, msg, payload) = add_pc(current_user,pcname,pcrace)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -185,7 +185,7 @@ def mypc_create():
 @jwt_required
 def mypc_list():
     current_user = get_jwt_identity()
-    (code, success, msg, payload) = mysql.get_pcs(current_user)
+    (code, success, msg, payload) = get_pcs(current_user)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -198,7 +198,7 @@ def mypc_details(pcid):
 @jwt_required
 def mypc_delete(pcid):
     current_user = get_jwt_identity()
-    (code, success, msg, payload) = mysql.del_pc(current_user,pcid)
+    (code, success, msg, payload) = del_pc(current_user,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -220,7 +220,7 @@ def mypc_pa(pcid):
 @app.route('/mypc/<int:pcid>/view', methods=['GET'])
 @jwt_required
 def mypc_view(pcid):
-    (code, success, msg, payload) = mysql.get_view(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = get_view(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -231,7 +231,7 @@ def mypc_view(pcid):
 @app.route('/mypc/<int:pcid>/mp', methods=['POST'])
 @jwt_required
 def mp_send(pcid):
-    (code, success, msg, payload) = mysql.add_mp(get_jwt_identity(),
+    (code, success, msg, payload) = add_mp(get_jwt_identity(),
                                     request.json.get('src',     None),
                                     request.json.get('dst',     None),
                                     request.json.get('subject', None),
@@ -242,28 +242,28 @@ def mp_send(pcid):
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['GET'])
 @jwt_required
 def mp_detail(pcid,mpid):
-    (code, success, msg, payload) = mysql.get_mp(get_jwt_identity(),pcid,mpid)
+    (code, success, msg, payload) = get_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['DELETE'])
 @jwt_required
 def mp_delete(pcid,mpid):
-    (code, success, msg, payload) = mysql.del_mp(get_jwt_identity(),pcid,mpid)
+    (code, success, msg, payload) = del_mp(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp', methods=['GET'])
 @jwt_required
 def mp_list(pcid):
-    (code, success, msg, payload) = mysql.get_mps(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = get_mps(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/addressbook', methods=['GET'])
 @jwt_required
 def mp_addressbook(pcid):
-    (code, success, msg, payload) = mysql.get_mp_addressbook(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = get_mp_addressbook(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": [{"id": row[0], "name": row[1]} for row in payload]}), code
 
@@ -274,28 +274,28 @@ def mp_addressbook(pcid):
 @app.route('/pc/<int:pcid>/item', methods=['GET'])
 @jwt_required
 def pc_item(pcid):
-    (code, success, msg, payload) = mysql.get_items(get_jwt_identity(),pcid,True)
+    (code, success, msg, payload) = get_items(get_jwt_identity(),pcid,True)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
 @jwt_required
 def mypc_item(pcid):
-    (code, success, msg, payload) = mysql.get_items(get_jwt_identity(),pcid,False)
+    (code, success, msg, payload) = get_items(get_jwt_identity(),pcid,False)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/item/<int:itemid>/inventory/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
 @jwt_required
 def mypc_item_set_offset(pcid,itemid,offsetx,offsety):
-    (code, success, msg, payload) = mysql.set_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
+    (code, success, msg, payload) = set_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/item/<int:itemid>/inventory/offset', methods=['DELETE'])
 @jwt_required
 def mypc_item_del_offset(pcid,itemid):
-    (code, success, msg, payload) = mysql.set_item_offset(get_jwt_identity(),pcid,itemid,None,None)
+    (code, success, msg, payload) = set_item_offset(get_jwt_identity(),pcid,itemid,None,None)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -310,21 +310,21 @@ def mypc_action_move_path(pcid):
         return jsonify({"msg": "Missing JSON in request"}), 400
 
     path = request.json.get('path', None)
-    (code, success, msg, payload) = mysql.action_move(get_jwt_identity(),pcid,path)
+    (code, success, msg, payload) = action_move(get_jwt_identity(),pcid,path)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
 @jwt_required
 def mypc_action_attack(pcid,weaponid,targetid):
-    (code, success, msg, payload) = mysql.action_attack(get_jwt_identity(),pcid,weaponid,targetid)
+    (code, success, msg, payload) = action_attack(get_jwt_identity(),pcid,weaponid,targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/action/equip/<string:type>/<string:slotname>/<int:itemid>', methods=['POST'])
 @jwt_required
 def mypc_action_equip(pcid,type,slotname,itemid):
-    (code, success, msg, payload) = mysql.action_equip(get_jwt_identity(),pcid,type,slotname,itemid)
+    (code, success, msg, payload) = action_equip(get_jwt_identity(),pcid,type,slotname,itemid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -335,14 +335,14 @@ def mypc_action_equip(pcid,type,slotname,itemid):
 @app.route('/mypc/<int:pcid>/event', methods=['GET'])
 @jwt_required
 def mypc_event(pcid):
-    (code, success, msg, payload) = mysql.mypc_event(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = get_mypc_event(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/pc/<int:creatureid>/event', methods=['GET'])
 @jwt_required
 def pc_event(creatureid):
-    (code, success, msg, payload) = mysql.pc_event(creatureid)
+    (code, success, msg, payload) = get_pc_event(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -353,7 +353,7 @@ def pc_event(creatureid):
 @app.route('/meta/item/<string:itemtype>', methods=['GET'])
 @jwt_required
 def meta_item(itemtype):
-    (code, success, msg, payload) = mysql.get_meta_item(itemtype)
+    (code, success, msg, payload) = get_meta_item(itemtype)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -364,7 +364,7 @@ def meta_item(itemtype):
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['GET'])
 @jwt_required
 def squad_details(pcid,squadid):
-    (code, success, msg, payload) = mysql.get_squad(get_jwt_identity(),pcid,squadid)
+    (code, success, msg, payload) = get_squad(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -373,7 +373,7 @@ def squad_details(pcid,squadid):
 def squad_create(pcid):
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-    (code, success, msg, payload) = mysql.add_squad(get_jwt_identity(),
+    (code, success, msg, payload) = add_squad(get_jwt_identity(),
                                     pcid,
                                     request.json.get('name', None))
     if isinstance(code, int):
@@ -382,14 +382,14 @@ def squad_create(pcid):
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['DELETE'])
 @jwt_required
 def squad_delete(pcid,squadid):
-    (code, success, msg, payload) = mysql.del_squad(get_jwt_identity(),pcid,squadid)
+    (code, success, msg, payload) = del_squad(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>', methods=['POST'])
 @jwt_required
 def squad_invite(pcid,squadid,targetid):
-    (code, success, msg, payload) = mysql.invite_squad_member(get_jwt_identity(),
+    (code, success, msg, payload) = invite_squad_member(get_jwt_identity(),
                                     pcid,
                                     squadid,
                                     targetid)
@@ -399,7 +399,7 @@ def squad_invite(pcid,squadid,targetid):
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>', methods=['POST'])
 @jwt_required
 def squad_kick(pcid,squadid,targetid):
-    (code, success, msg, payload) = mysql.kick_squad_member(get_jwt_identity(),
+    (code, success, msg, payload) = kick_squad_member(get_jwt_identity(),
                                     pcid,
                                     squadid,
                                     targetid)
@@ -409,21 +409,21 @@ def squad_kick(pcid,squadid,targetid):
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/accept', methods=['POST'])
 @jwt_required
 def squad_accept(pcid,squadid):
-    (code, success, msg, payload) = mysql.accept_squad_member(get_jwt_identity(),pcid,squadid)
+    (code, success, msg, payload) = accept_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/leave', methods=['POST'])
 @jwt_required
 def squad_leave(pcid,squadid):
-    (code, success, msg, payload) = mysql.leave_squad_member(get_jwt_identity(),pcid,squadid)
+    (code, success, msg, payload) = leave_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/decline', methods=['POST'])
 @jwt_required
 def squad_decline(pcid,squadid):
-    (code, success, msg, payload) = mysql.decline_squad_member(get_jwt_identity(),pcid,squadid)
+    (code, success, msg, payload) = decline_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -434,7 +434,7 @@ def squad_decline(pcid,squadid):
 @app.route('/map/<int:mapid>', methods=['GET'])
 @jwt_required
 def map_get(mapid):
-    (code, success, msg, payload) = mysql.get_map(mapid)
+    (code, success, msg, payload) = get_map(mapid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

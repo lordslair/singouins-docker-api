@@ -1,27 +1,20 @@
 # -*- coding: utf8 -*-
 
-from sqlalchemy     import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from datetime       import datetime
 from random         import randint
 
-from variables      import SQL_DSN, PCS_URL
-
-from .tables        import *
-from ..utils.loot   import *
-from ..redis.redis  import get_pa,set_pa
-
 import textwrap
 
-engine     = create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
+from ..session          import Session
+from ..models           import *
+from ..utils.loot       import *
+from ..utils.redis      import *
 
 #
 # LOGGING
 #
 
 def clog(src,dst,action):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     log = Log(src = src, dst = dst, action = action)
@@ -42,7 +35,6 @@ def clog(src,dst,action):
 #
 
 def get_username_exists(username):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -58,7 +50,6 @@ def get_username_exists(username):
         session.close()
 
 def get_usermail_exists(usermail):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -74,7 +65,6 @@ def get_usermail_exists(usermail):
         session.close()
 
 def get_user(username):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -90,13 +80,12 @@ def get_user(username):
         session.close()
 
 def add_user(username,password,usermail):
+    session = Session()
+
     if get_username_exists(username) or get_usermail_exists(usermail):
         return (409)
     else:
         from flask_bcrypt import generate_password_hash
-
-        Session = sessionmaker(bind=engine)
-        session = Session()
 
         user = User(name      = username,
                     mail      = usermail,
@@ -120,7 +109,6 @@ def add_user(username,password,usermail):
             session.close()
 
 def set_user_confirmed(usermail):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -138,12 +126,11 @@ def set_user_confirmed(usermail):
         session.close()
 
 def del_user(username):
+    session = Session()
+
     if not get_username_exists(username):
         return (404)
     else:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             user = session.query(User)\
                           .filter(User.name == username)\
@@ -161,9 +148,9 @@ def del_user(username):
 #
 # Queries: /pc
 #
+from variables      import PCS_URL
 
 def get_pc_exists(pcname,pcid):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -186,15 +173,14 @@ def get_pc_exists(pcname,pcid):
         session.close()
 
 def add_pc(username,pcname,pcrace):
+    session = Session()
+
     if get_pc_exists(pcname,None):
         return (409,
                 False,
                 'PC already exists (username:{},pcname:{})'.format(username,pcname),
                 None)
     else:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         pc = PJ(name    = pcname,
                 race    = pcrace,
                 account = get_user(username).id,
@@ -241,7 +227,6 @@ def add_pc(username,pcname,pcrace):
             session.close()
 
 def get_pc(pcname,pcid):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -275,7 +260,6 @@ def get_pc(pcname,pcid):
         session.close()
 
 def get_pcs(username):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -302,12 +286,10 @@ def get_pcs(username):
         session.close()
 
 def del_pc(username,pcid):
+    session = Session()
 
     if not get_pc_exists(None,pcid):
         return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
 
     try:
         userid  = get_user(username).id
@@ -337,9 +319,7 @@ def del_pc(username,pcid):
 def add_mp(username,src,dsts,subject,body):
     (code, success, msg, pcsrc) = get_pc(None,src)
     user                        = get_user(username)
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    session                     = Session()
 
     if pcsrc:
         for dst in dsts:
@@ -381,11 +361,9 @@ def add_mp(username,src,dsts,subject,body):
 def get_mp(username,pcid,mpid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             mp = session.query(MP).filter(MP.dst_id == pc.id, MP.id == mpid).one_or_none()
         except Exception as e:
@@ -409,11 +387,9 @@ def get_mp(username,pcid,mpid):
 def del_mp(username,pcid,mpid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             mp = session.query(MP).filter(MP.dst_id == pc.id, MP.id == mpid).one_or_none()
             if not mp: return (200, True, 'No MP found for this PC', None)
@@ -431,11 +407,9 @@ def del_mp(username,pcid,mpid):
 def get_mps(username,pcid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             mps = session.query(MP).filter(MP.dst_id == pc.id).all()
         except Exception as e:
@@ -454,11 +428,9 @@ def get_mps(username,pcid):
 def get_mp_addressbook(username,pcid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             addressbook = session.query(PJ).with_entities(PJ.id,PJ.name).all()
         except Exception as e:
@@ -480,17 +452,12 @@ def get_mp_addressbook(username,pcid):
 def get_items(username,pcid,public):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc.account is None: return (200, False, 'NPCs do not have items (pcid:{})'.format(pc.id), None)
 
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
     if public is True:
         # Here it's for a public /pc call
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
 
@@ -556,8 +523,6 @@ def get_items(username,pcid,public):
     else:
         # Here it's for a private /mypc call
         if pc and pc.account == user.id:
-            Session = sessionmaker(bind=engine)
-            session = Session()
             try:
                 weapon    = session.query(Items)\
                                    .filter(Items.bearer == pc.id)\
@@ -588,11 +553,9 @@ def get_items(username,pcid,public):
 def set_item_offset(username,pcid,itemid,offsetx,offsety):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
         if item is None:
             return (200,
@@ -630,7 +593,6 @@ def set_item_offset(username,pcid,itemid,offsetx,offsety):
 #
 
 def get_meta_item(metatype):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     try:
@@ -658,6 +620,7 @@ def get_meta_item(metatype):
 def get_squad(username,pcid,squadid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
         # PC is not the Squad member
@@ -666,9 +629,6 @@ def get_squad(username,pcid,squadid):
                     False,
                     'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
-
-        Session = sessionmaker(bind=engine)
-        session = Session()
 
         try:
             squad = session.query(Squad).\
@@ -716,11 +676,9 @@ def get_squad(username,pcid,squadid):
 def add_squad(username,pcid,squadname):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         if session.query(Squad).filter(Squad.name == squadname).one_or_none():
             return (409, False, 'Squad already exists', None)
         if pc.squad is not None:
@@ -766,6 +724,7 @@ def add_squad(username,pcid,squadname):
 def del_squad(username,leaderid,squadid):
     (code, success, msg, leader) = get_pc(None,leaderid)
     user                         = get_user(username)
+    session                      = Session()
 
     if leader:
         if leader.squad != squadid:
@@ -776,9 +735,6 @@ def del_squad(username,leaderid,squadid):
         return (200, False, 'PC unknown in DB (pcid:{})'.format(leaderid), None)
 
     if leader and leader.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             squad = session.query(Squad).filter(Squad.leader == leader.id).one_or_none()
             if not squad: return (200, True, 'No Squad found for this PC (pcid:{})'.format(leader.id), None)
@@ -804,9 +760,7 @@ def invite_squad_member(username,leaderid,squadid,targetid):
     (code, success, msg, target) = get_pc(None,targetid)
     (code, success, msg, leader) = get_pc(None,leaderid)
     user                         = get_user(username)
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    session                      = Session()
 
     if leader:
         if leader.squad is None:
@@ -865,10 +819,8 @@ def kick_squad_member(username,leaderid,squadid,targetid):
     (code, success, msg, target) = get_pc(None,targetid)
     (code, success, msg, leader) = get_pc(None,leaderid)
     user                         = get_user(username)
-    maxmembers = 10
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    maxmembers                   = 10
+    session                      = Session()
 
     if leader:
         if leader.squad is None:
@@ -923,6 +875,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
 def accept_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = get_pc(None,pcid)
     user                         = get_user(username)
+    session                      = Session()
 
     if pc:
         # PC is not the Squad member
@@ -931,9 +884,6 @@ def accept_squad_member(username,pcid,squadid):
                     False,
                     'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
-
-        Session = sessionmaker(bind=engine)
-        session = Session()
 
         if pc.squad_rank != 'Pending':
             return (200, False, 'PC is not pending in a squad', None)
@@ -960,6 +910,7 @@ def accept_squad_member(username,pcid,squadid):
 def decline_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = get_pc(None,pcid)
     user                         = get_user(username)
+    session                      = Session()
 
     if pc:
         # PC is not the Squad member
@@ -968,9 +919,6 @@ def decline_squad_member(username,pcid,squadid):
                     False,
                     'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
-
-        Session = sessionmaker(bind=engine)
-        session = Session()
 
         if pc.squad_rank != 'Pending':
             return (200, False, 'PC is not pending in a squad', None)
@@ -995,6 +943,7 @@ def decline_squad_member(username,pcid,squadid):
 def leave_squad_member(username,pcid,squadid):
     (code, success, msg, pc)     = get_pc(None,pcid)
     user                         = get_user(username)
+    session                      = Session()
 
     if pc:
         # PC is not the Squad member
@@ -1003,9 +952,6 @@ def leave_squad_member(username,pcid,squadid):
                     False,
                     'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
-
-        Session = sessionmaker(bind=engine)
-        session = Session()
 
         if pc.squad_rank == 'Leader':
             return (200,
@@ -1038,7 +984,6 @@ def leave_squad_member(username,pcid,squadid):
 #
 
 def get_map(mapid):
-    Session = sessionmaker(bind=engine)
     session = Session()
 
     if mapid:
@@ -1060,14 +1005,12 @@ def get_map(mapid):
 # Queries /events
 #
 
-def mypc_event(username,pcid):
+def get_mypc_event(username,pcid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             log   = session.query(Log)\
                            .filter((Log.src == pc.id) | (Log.dst == pc.id))\
@@ -1087,12 +1030,11 @@ def mypc_event(username,pcid):
 
     else: return (409, False, 'Token/username mismatch', None)
 
-def pc_event(creatureid):
+def get_pc_event(creatureid):
     (code, success, msg, creature) = get_pc(None,creatureid)
-    if creature is None: return (200, True, 'Creature does not exist (creatureid:{})'.format(creatureid), None)
+    session                        = Session()
 
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    if creature is None: return (200, True, 'Creature does not exist (creatureid:{})'.format(creatureid), None)
 
     try:
         log   = session.query(Log)\
@@ -1119,10 +1061,9 @@ def action_move(username,pcid,path):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
     (oldx,oldy)              = pc.x,pc.y
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
 
         for coords in path:
             bluepa                   = get_pa(pcid)[3]['blue']['pa']
@@ -1186,30 +1127,32 @@ def action_attack(username,pcid,weaponid,targetid):
                             action['hit'] = True
 
                             # The target is now acquired to the attacker
-                            Session = sessionmaker(bind=engine)
                             session = Session()
-
-                            with engine.connect() as conn:
-                                try:
-                                    tg             = session.query(PJ).filter(PJ.id == targetid).one_or_none()
-                                    tg.targeted_by = pc.id
-                                    session.commit()
-                                except Exception as e:
-                                    # Something went wrong during commit
-                                    return (200, False, 'Targeted_by update failed', None)
-                                else:
-                                    clog(tg.id,None,'Targeted by {}'.format(pc.name))
-
-                            if randint(1, 100) <= 5:
-                                # The attack is a critical Hit
-                                dmg_crit = round(150 + pc.r / 10)
-                                clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
-                                clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
+                            try:
+                                tg.targeted_by = pc.id
+                                session.commit()
+                            except Exception as e:
+                                # Something went wrong during commit
+                                return (200,
+                                        False,
+                                        '[SQL] Targeted_by update failed (pcid:{},tgid:{},{})'.format(pc.id,tg.id,e),
+                                        None)
                             else:
-                                # The attack is a normal Hit
-                                dmg_crit = 100
-                                clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
-                                clog(tg.id,None,'Hit by {}'.format(pc.name))
+                                tg = get_pc(None,targetid)[3]
+                                clog(tg.id,None,'Targeted by {}'.format(pc.name))
+                                if randint(1, 100) <= 5:
+                                    # The attack is a critical Hit
+                                    dmg_crit = round(150 + pc.r / 10)
+                                    clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
+                                    clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
+                                else:
+                                    # The attack is a normal Hit
+                                    dmg_crit = 100
+                                    clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
+                                    clog(tg.id,None,'Hit by {}'.format(pc.name))
+                            finally:
+                                session.close()
+
                             dmg = round(dmg_wp * dmg_crit / 100) - tg.arm_p
                             if dmg > 0:
                                 # The attack deals damage
@@ -1218,19 +1161,18 @@ def action_attack(username,pcid,weaponid,targetid):
 
                                 if hp >= 0:
                                     # The attack wounds
-                                    Session = sessionmaker(bind=engine)
                                     session = Session()
-
-                                    with engine.connect() as conn:
-                                        try:
-                                            tg    = session.query(PJ).filter(PJ.id == targetid).one_or_none()
-                                            tg.hp = hp
-                                            session.commit()
-                                        except Exception as e:
-                                            # Something went wrong during commit
-                                            return (200, False, 'HP update failed', None)
-                                        else:
-                                            clog(tg.id,None,'Suffered minor injuries')
+                                    try:
+                                        tg    = session.query(PJ).filter(PJ.id == targetid).one_or_none()
+                                        tg.hp = hp
+                                        session.commit()
+                                    except Exception as e:
+                                        # Something went wrong during commit
+                                        return (200, False, 'HP update failed', None)
+                                    else:
+                                        clog(tg.id,None,'Suffered minor injuries')
+                                    finally:
+                                        session.close()
                                 else:
                                     # The attack kills
                                     action['killed'] = True
@@ -1238,87 +1180,59 @@ def action_attack(username,pcid,weaponid,targetid):
                                     clog(tg.id,None,'Died'.format(pc.name))
 
                                     # Experience points are generated
-                                    Session = sessionmaker(bind=engine)
                                     session = Session()
-
-                                    with engine.connect() as conn:
-                                        try:
-                                            if pc.squad is None:
-                                                # We add PX only to the killer
-                                                pc.xp  += tg.level       # We add PX: tg.level
-                                                pc.date = datetime.now() # We update the date in DB
-                                            else:
-                                                # We add PX to the killer squad
-                                                squadlist = session.query(PJ)\
-                                                                   .filter(PJ.squad == pc.squad)\
-                                                                   .filter(PJ.squad_rank != 'Pending').all()
-                                                for pcsquad in squadlist:
-                                                    pcsquad.xp  += round(tg.level/len(squadlist)) # We add PX: round(tg.level/len(squad))
-                                                    pcsquad.date = datetime.now()                 # We update the date in DB
-                                            session.commit()
-                                        except Exception as e:
-                                            # Something went wrong during commit
-                                            return (200, False, 'XP update failed', None)
+                                    try:
+                                        if pc.squad is None:
+                                            # We add PX only to the killer
+                                            pc.xp  += tg.level       # We add PX: tg.level
+                                            pc.date = datetime.now() # We update the date in DB
                                         else:
-                                            clog(pc.id,None,'Gained Experience')
+                                            # We add PX to the killer squad
+                                            squadlist = session.query(PJ)\
+                                                               .filter(PJ.squad == pc.squad)\
+                                                               .filter(PJ.squad_rank != 'Pending').all()
+                                            for pcsquad in squadlist:
+                                                pcsquad.xp  += round(tg.level/len(squadlist)) # We add PX: round(tg.level/len(squad))
+                                                pcsquad.date = datetime.now()                 # We update the date in DB
+                                        session.commit()
+                                    except Exception as e:
+                                        # Something went wrong during commit
+                                        return (200, False, 'XP update failed', None)
+                                    else:
+                                        clog(pc.id,None,'Gained Experience')
+                                    finally:
+                                        session.close()
 
                                     # Loots are generated
-                                    loot         = {"item": {}}
-                                    loot['rand'] = randint(1, 100)
-
-                                    if loot['rand'] < 25:
-                                        # Loots are currency
-                                        loot['currency']           = tg.level * loot['rand']
-                                    elif loot['rand'] < 50:
-                                        # Loots are currency + consommables/compos
-                                        loot['currency']           = tg.level * loot['rand']
-                                        # TODO: faire les compos
-                                    elif loot['rand'] < 75:
-                                        # Loots are currency + item
-                                        loot['currency']           = tg.level * loot['rand']
-                                        loot['item']['bound_type'] = get_loot_bound_type()
-                                        loot['item']['rarity']     = get_loot_rarity(tg.rarity)
-                                    else:
-                                        # Loots are currency + consommables/compos + item
-                                        loot['currency']           = tg.level * loot['rand']
-                                        # TODO: faire les compos
-                                        loot['item']['bound_type'] = get_loot_bound_type()
-                                        loot['item']['rarity']     = get_loot_rarity(tg.rarity)
-                                        loot['item']['metatype']   = get_loot_meta_type()
-
-                                        if loot['item']['metatype'] == 'weapon':
-                                            loot['item']['metaid'] = rand(1,len(session.query(MetaWeapons).all()))
-                                        elif loot['item']['metatype'] == 'armor':
-                                            loot['item']['metaid'] = rand(1,len(session.query(MetaArmors).all()))
-
-                                    print(loot['item']['metatype'])
-
-                                    with engine.connect() as conn:
-                                        try:
-                                            if pc.squad is None:
-                                                # We add loot only to the killer
-                                                equipment         = session.query(CreaturesSlots)\
-                                                                           .filter(CreaturesSlots.id == pc.id)\
-                                                                           .one_or_none()
-                                                equipment.wallet += loot['currency'] # We add currency
-                                                equipment.date    = datetime.now()   # We update the date in DB
-                                            else:
-                                                # We add loot to the killer squad
-                                                squadlist = session.query(PJ)\
-                                                                   .filter(PJ.squad == pc.squad)\
-                                                                   .filter(PJ.squad_rank != 'Pending').all()
-                                                for pcsquad in squadlist:
-                                                    equipment         = session.query(CreaturesSlots)\
-                                                                               .filter(CreaturesSlots.id == pcsquad.id)\
-                                                                               .one_or_none()
-                                                    equipment.wallet += round(loot['currency']/len(squadlist)) # We add currency
-                                                    equipment.date    = datetime.now()                         # We update the date in DB
-                                            session.commit()
-                                        except Exception as e:
-                                            # Something went wrong during commit
-                                            return (200, False, 'Loot update failed', None)
+                                    loots   = get_loots(tg)
+                                    session = Session()
+                                    try:
+                                        if pc.squad is None:
+                                            # We add loot only to the killer
+                                            equipment         = session.query(CreaturesSlots)\
+                                                                       .filter(CreaturesSlots.id == pc.id)\
+                                                                       .one_or_none()
+                                            equipment.wallet += loots[0]['currency'] # We add currency
+                                            equipment.date    = datetime.now()   # We update the date in DB
                                         else:
-                                            clog(pc.id,None,'Gained Loot')
+                                            # We add loot to the killer squad
+                                            squadlist = session.query(PJ)\
+                                                               .filter(PJ.squad == pc.squad)\
+                                                               .filter(PJ.squad_rank != 'Pending').all()
+                                            for pcsquad in squadlist:
+                                                equipment         = session.query(CreaturesSlots)\
+                                                                           .filter(CreaturesSlots.id == pcsquad.id)\
+                                                                           .one_or_none()
+                                                equipment.wallet += round(loots[0]['currency']/len(squadlist)) # We add currency
+                                                equipment.date    = datetime.now()                         # We update the date in DB
+                                        session.commit()
+                                    except Exception as e:
+                                        # Something went wrong during commit
+                                        return (200, False, 'Loot update failed', None)
+                                    else:
+                                        clog(pc.id,None,'Gained Loot')
+                                    finally:
+                                        session.close()
                             else:
                                 clog(tg.id,None,'Suffered no injuries')
                                 # The attack does not deal damage
@@ -1331,23 +1245,29 @@ def action_attack(username,pcid,weaponid,targetid):
                         clog(pc.id,None,'Failed an attack')
                 else:
                     # Not enough PA to attack
-                    return (200, False, 'Not enough PA to attack', None)
+                    return (200,
+                            False,
+                            'Not enough PA to attack',
+                            {"red": get_pa(pcid)[3]['red'],
+                             "blue": get_pa(pcid)[3]['blue'],
+                             "action": None})
             else:
                 # Target is too far
                 return (200, False, 'Coords incorrect', None)
-        return (200, True, 'Target successfully attacked', {"red": get_pa(pcid)[3]['red'],
-                                                            "blue": get_pa(pcid)[3]['blue'],
-                                                            "action": action})
+        return (200,
+                True,
+                'Target successfully attacked',
+                {"red": get_pa(pcid)[3]['red'],
+                 "blue": get_pa(pcid)[3]['blue'],
+                 "action": action})
     else: return (409, False, 'Token/username mismatch', None)
 
 def action_equip(username,pcid,type,slotname,itemid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         if pc.instance > 0:
             # Meaning we are in a combat zone
             if get_pa(pc.id)[3]['red']['pa'] > 2:
@@ -1491,11 +1411,9 @@ def action_equip(username,pcid,type,slotname,itemid):
 def get_view(username,pcid):
     (code, success, msg, pc) = get_pc(None,pcid)
     user                     = get_user(username)
+    session                  = Session()
 
     if pc and pc.account == user.id:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
         try:
             range = 4 + round(pc.p / 50)
             maxx  = pc.x + range
