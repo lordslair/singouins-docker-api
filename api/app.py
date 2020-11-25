@@ -13,7 +13,7 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 from prometheus_flask_exporter import PrometheusMetrics
 
 from mysql.methods      import *
-from queries.redis      import redis
+from mysql.utils        import redis
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA, DISCORD_URL
 
 app = Flask(__name__)
