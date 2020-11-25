@@ -1203,11 +1203,12 @@ def action_attack(username,pcid,weaponid,targetid):
                                     finally:
                                         session.close()
 
-                                    # Loots are generated
-                                    loots   = get_loots(tg)
+                                    # Loots are given to PCs
                                     session = Session()
                                     try:
                                         if pc.squad is None:
+                                            # Loots are generated
+                                            loots   = get_loots(tg)
                                             # We add loot only to the killer
                                             equipment         = session.query(CreaturesSlots)\
                                                                        .filter(CreaturesSlots.id == pc.id)\
@@ -1220,15 +1221,33 @@ def action_attack(username,pcid,weaponid,targetid):
                                                                .filter(PJ.squad == pc.squad)\
                                                                .filter(PJ.squad_rank != 'Pending').all()
                                             for pcsquad in squadlist:
+                                                # Loots are generated
+                                                loots   = get_loots(tg)
                                                 equipment         = session.query(CreaturesSlots)\
                                                                            .filter(CreaturesSlots.id == pcsquad.id)\
                                                                            .one_or_none()
                                                 equipment.wallet += round(loots[0]['currency']/len(squadlist)) # We add currency
-                                                equipment.date    = datetime.now()                         # We update the date in DB
+                                                equipment.date    = datetime.now()                             # We update the date in DB
+
+                                                if loots[0]['item'] is not None:
+                                                    # Items are added
+                                                    item = Items(metatype   = loots[0]['item']['metatype'],
+                                                                metaid     = loots[0]['item']['metaid'],
+                                                                bearer     = pcsquad.id,
+                                                                bound      = loots[0]['item']['bound'],
+                                                                bound_type = loots[0]['item']['bound_type'],
+                                                                modded     = False,
+                                                                mods       = None,
+                                                                state      = randint(0,100),
+                                                                rarity     = loots[0]['item']['rarity'],
+                                                                offsetx    = None,
+                                                                offsety    = None,
+                                                                date       = datetime.now())
+                                                    session.add(item)
                                         session.commit()
                                     except Exception as e:
                                         # Something went wrong during commit
-                                        return (200, False, 'Loot update failed', None)
+                                        return (200, False, '[SQL] Loot update failed', None)
                                     else:
                                         clog(pc.id,None,'Gained Loot')
                                     finally:

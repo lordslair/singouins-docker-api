@@ -72,29 +72,47 @@ def get_loots(tg):
     loots            = [{"item": {}}]
     loots[0]['rand'] = randint(1, 100)
 
-    if loots[0]['rand'] < 25:
+    if 1 <= loots[0]['rand'] <= 25:
         # Loots are currency
         loots[0]['currency']           = tg.level * loots[0]['rand']
-    elif loots[0]['rand'] < 50:
+        loots[0]['item']               = None
+    elif 25 < loots[0]['rand'] <= 50:
         # Loots are currency + consommables/compos
         loots[0]['currency']           = tg.level * loots[0]['rand']
+        loots[0]['item']               = None
         # TODO: faire les compos
-    elif loots[0]['rand'] < 75:
+    elif 50 < loots[0]['rand'] <= 75:
         # Loots are currency + item
         loots[0]['currency']           = tg.level * loots[0]['rand']
-        loots[0]['item']['bound_type'] = get_loot_bound_type()
-        loots[0]['item']['rarity']     = get_loot_rarity(tg.rarity)
+        loots[0]['item']['bound_type'] = get_loot_bound_type()[0]
+        loots[0]['item']['rarity']     = get_loot_rarity(tg.rarity)[0]
+        loots[0]['item']['metatype']   = get_loot_metatype()[0]
+
+        if loots[0]['item']['bound_type'] == 'BoE':
+            loots[0]['item']['bound'] = False
+        elif loots[0]['item']['bound_type'] == 'BoP':
+            loots[0]['item']['bound'] = True
+
+        if loots[0]['item']['metatype'] == 'weapon':
+            loots[0]['item']['metaid'] = randint(1,58)
+        elif loots[0]['item']['metatype'] == 'armor':
+            loots[0]['item']['metaid'] = randint(1,114)
     else:
         # Loots are currency + consommables/compos + item
         loots[0]['currency']           = tg.level * loots[0]['rand']
         # TODO: faire les compos
-        loots[0]['item']['bound_type'] = get_loot_bound_type()
-        loots[0]['item']['rarity']     = get_loot_rarity(tg.rarity)
-        loots[0]['item']['metatype']   = get_loot_metatype()
+        loots[0]['item']['bound_type'] = get_loot_bound_type()[0]
+        loots[0]['item']['rarity']     = get_loot_rarity(tg.rarity)[0]
+        loots[0]['item']['metatype']   = get_loot_metatype()[0]
+
+        if loots[0]['item']['bound_type'] == 'BoE':
+            loots[0]['item']['bound'] = False
+        elif loots[0]['item']['bound_type'] == 'BoP':
+            loots[0]['item']['bound'] = True
 
         if loots[0]['item']['metatype'] == 'weapon':
-            loots[0]['item']['metaid'] = rand(1,58)
+            loots[0]['item']['metaid'] = randint(1,58)
         elif loots[0]['item']['metatype'] == 'armor':
-            loots[0]['item']['metaid'] = rand(1,114)
+            loots[0]['item']['metaid'] = randint(1,114)
 
     return loots
