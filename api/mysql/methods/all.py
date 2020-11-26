@@ -10,25 +10,8 @@ from ..models           import *
 from ..utils.loot       import *
 from ..utils.redis      import *
 
-#
-# LOGGING
-#
-
-def clog(src,dst,action):
-    session = Session()
-
-    log = Log(src = src, dst = dst, action = action)
-    session.add(log)
-
-    try:
-        session.commit()
-    except Exception as e:
-        # Something went wrong during commit
-        return False
-    else:
-        return True
-    finally:
-        session.close()
+from .fn_creature       import *
+from .fn_globals        import clog
 
 #
 # Queries: /auth
@@ -1127,131 +1110,37 @@ def action_attack(username,pcid,weaponid,targetid):
                             action['hit'] = True
 
                             # The target is now acquired to the attacker
-                            session = Session()
-                            try:
-                                tg.targeted_by = pc.id
-                                session.commit()
-                            except Exception as e:
-                                # Something went wrong during commit
-                                return (200,
-                                        False,
-                                        '[SQL] Targeted_by update failed (pcid:{},tgid:{},{})'.format(pc.id,tg.id,e),
-                                        None)
+                            fn_creature_tag(pc,tg)
+
+                            if randint(1, 100) <= 5:
+                                # The attack is a critical Hit
+                                dmg_crit = round(150 + pc.r / 10)
+                                clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
+                                clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
                             else:
-                                tg = get_pc(None,targetid)[3]
-                                clog(tg.id,None,'Targeted by {}'.format(pc.name))
-                                if randint(1, 100) <= 5:
-                                    # The attack is a critical Hit
-                                    dmg_crit = round(150 + pc.r / 10)
-                                    clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
-                                    clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
-                                else:
-                                    # The attack is a normal Hit
-                                    dmg_crit = 100
-                                    clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
-                                    clog(tg.id,None,'Hit by {}'.format(pc.name))
-                            finally:
-                                session.close()
+                                # The attack is a normal Hit
+                                dmg_crit = 100
+                                clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
+                                clog(tg.id,None,'Hit by {}'.format(pc.name))
 
                             dmg = round(dmg_wp * dmg_crit / 100) - tg.arm_p
                             if dmg > 0:
                                 # The attack deals damage
                                 action['damages'] = dmg
-                                hp = tg.hp - dmg
 
-                                if hp >= 0:
+                                if tg.hp - dmg >= 0:
                                     # The attack wounds
-                                    session = Session()
-                                    try:
-                                        tg    = session.query(PJ).filter(PJ.id == targetid).one_or_none()
-                                        tg.hp = hp
-                                        session.commit()
-                                    except Exception as e:
-                                        # Something went wrong during commit
-                                        return (200, False, 'HP update failed', None)
-                                    else:
-                                        clog(tg.id,None,'Suffered minor injuries')
-                                    finally:
-                                        session.close()
+                                    fn_creature_wound(pc,tg,dmg)
                                 else:
                                     # The attack kills
                                     action['killed'] = True
-                                    clog(pc.id,tg.id,'Killed {}'.format(tg.name))
-                                    clog(tg.id,None,'Died'.format(pc.name))
+                                    fn_creature_kill(pc,tg)
 
                                     # Experience points are generated
-                                    session = Session()
-                                    try:
-                                        if pc.squad is None:
-                                            # We add PX only to the killer
-                                            pc.xp  += tg.level       # We add PX: tg.level
-                                            pc.date = datetime.now() # We update the date in DB
-                                        else:
-                                            # We add PX to the killer squad
-                                            squadlist = session.query(PJ)\
-                                                               .filter(PJ.squad == pc.squad)\
-                                                               .filter(PJ.squad_rank != 'Pending').all()
-                                            for pcsquad in squadlist:
-                                                pcsquad.xp  += round(tg.level/len(squadlist)) # We add PX: round(tg.level/len(squad))
-                                                pcsquad.date = datetime.now()                 # We update the date in DB
-                                        session.commit()
-                                    except Exception as e:
-                                        # Something went wrong during commit
-                                        return (200, False, 'XP update failed', None)
-                                    else:
-                                        clog(pc.id,None,'Gained Experience')
-                                    finally:
-                                        session.close()
+                                    fn_creature_gain_xp(pc,tg)
 
                                     # Loots are given to PCs
-                                    session = Session()
-                                    try:
-                                        if pc.squad is None:
-                                            # Loots are generated
-                                            loots   = get_loots(tg)
-                                            # We add loot only to the killer
-                                            equipment         = session.query(CreaturesSlots)\
-                                                                       .filter(CreaturesSlots.id == pc.id)\
-                                                                       .one_or_none()
-                                            equipment.wallet += loots[0]['currency'] # We add currency
-                                            equipment.date    = datetime.now()   # We update the date in DB
-                                        else:
-                                            # We add loot to the killer squad
-                                            squadlist = session.query(PJ)\
-                                                               .filter(PJ.squad == pc.squad)\
-                                                               .filter(PJ.squad_rank != 'Pending').all()
-                                            for pcsquad in squadlist:
-                                                # Loots are generated
-                                                loots   = get_loots(tg)
-                                                equipment         = session.query(CreaturesSlots)\
-                                                                           .filter(CreaturesSlots.id == pcsquad.id)\
-                                                                           .one_or_none()
-                                                equipment.wallet += round(loots[0]['currency']/len(squadlist)) # We add currency
-                                                equipment.date    = datetime.now()                             # We update the date in DB
-
-                                                if loots[0]['item'] is not None:
-                                                    # Items are added
-                                                    item = Items(metatype   = loots[0]['item']['metatype'],
-                                                                metaid     = loots[0]['item']['metaid'],
-                                                                bearer     = pcsquad.id,
-                                                                bound      = loots[0]['item']['bound'],
-                                                                bound_type = loots[0]['item']['bound_type'],
-                                                                modded     = False,
-                                                                mods       = None,
-                                                                state      = randint(0,100),
-                                                                rarity     = loots[0]['item']['rarity'],
-                                                                offsetx    = None,
-                                                                offsety    = None,
-                                                                date       = datetime.now())
-                                                    session.add(item)
-                                        session.commit()
-                                    except Exception as e:
-                                        # Something went wrong during commit
-                                        return (200, False, '[SQL] Loot update failed', None)
-                                    else:
-                                        clog(pc.id,None,'Gained Loot')
-                                    finally:
-                                        session.close()
+                                    fn_creature_gain_loot(pc,tg)
                             else:
                                 clog(tg.id,None,'Suffered no injuries')
                                 # The attack does not deal damage
