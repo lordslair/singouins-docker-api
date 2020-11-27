@@ -1,6 +1,9 @@
 # -*- coding: utf8 -*-
 
 from sqlalchemy                 import Column, Integer, String, DateTime, Boolean
+from sqlalchemy                 import func
+
+from dataclasses                import dataclass
 
 from ..base                     import Base
 
