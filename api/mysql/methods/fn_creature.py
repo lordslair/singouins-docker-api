@@ -74,11 +74,11 @@ def fn_creature_gain_loot(pc,tg):
             # Loots are generated
             loots   = get_loots(tg)
             # We add loot only to the killer
-            equipment         = session.query(CreaturesSlots)\
-                                       .filter(CreaturesSlots.id == pc.id)\
-                                       .one_or_none()
-            equipment.wallet += loots[0]['currency'] # We add currency
-            equipment.date    = datetime.now()   # We update the date in DB
+            wallet           = session.query(Wallet)\
+                                      .filter(Wallet.id == pc.id)\
+                                      .one_or_none()
+            wallet.currency += loots[0]['currency'] # We add currency
+            wallet.date      = datetime.now()       # We update the date in DB
         else:
             # We add loot to the killer squad
             squadlist = session.query(PJ)\
@@ -86,12 +86,12 @@ def fn_creature_gain_loot(pc,tg):
                                .filter(PJ.squad_rank != 'Pending').all()
             for pcsquad in squadlist:
                 # Loots are generated
-                loots   = get_loots(tg)
-                equipment         = session.query(CreaturesSlots)\
-                                           .filter(CreaturesSlots.id == pcsquad.id)\
-                                           .one_or_none()
-                equipment.wallet += round(loots[0]['currency']/len(squadlist)) # We add currency
-                equipment.date    = datetime.now()                             # We update the date in DB
+                loots            = get_loots(tg)
+                wallet           = session.query(Wallet)\
+                                          .filter(Wallet.id == pcsquad.id)\
+                                          .one_or_none()
+                wallet.currency += round(loots[0]['currency']/len(squadlist)) # We add currency
+                wallet.date      = datetime.now()                             # We update the date in DB
 
                 if loots[0]['item'] is not None:
                     # Items are added

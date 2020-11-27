@@ -196,14 +196,17 @@ def add_pc(username,pcname,pcrace):
                     None)
         else:
                 (code, success, msg, pc) = get_pc(pcname,None)
-                equipment = CreaturesSlots(id     = pc.id)
+                equipment = CreaturesSlots(id = pc.id)
+                wallet    = Wallet(id = pc.id)
+
                 session.add(equipment)
+                session.add(wallet)
 
                 try:
                     session.commit()
                 except Exception as e:
                     # Something went wrong during commit
-                    return (200, False, '[SQL] PC Slots creation failed', None)
+                    return (200, False, '[SQL] PC Slots/Wallet creation failed', None)
                 else:
                     return (201, True, 'PC successfully created', pc)
         finally:
@@ -275,11 +278,16 @@ def del_pc(username,pcid):
         return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
 
     try:
-        userid  = get_user(username).id
-        pc = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
-        session.delete(pc)
+        userid    = get_user(username).id
+
+        pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
         equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+        wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
+
+        session.delete(pc)
         session.delete(equipment)
+        session.delete(wallet)
+
         session.commit()
     except Exception as e:
         # Something went wrong during commit
