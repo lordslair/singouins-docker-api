@@ -3,3 +3,4 @@
 from .All               import *
 
 from .items             import *
+from .creatures         import *
