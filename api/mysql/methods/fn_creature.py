@@ -1,6 +1,10 @@
 # -*- coding: utf8 -*-
 
+from datetime           import datetime
+
 from ..session          import Session
+from ..models           import *
+from ..utils.loot       import *
 from .fn_globals        import clog
 
 def fn_creature_tag(pc,tg):
