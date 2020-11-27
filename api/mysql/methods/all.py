@@ -167,11 +167,6 @@ def add_pc(username,pcname,pcrace):
         pc = PJ(name    = pcname,
                 race    = pcrace,
                 account = get_user(username).id,
-                rarity  = 'Normal',
-                level   = 1,
-                x       = 0,
-                y       = 0,
-                xp      = 0,
                 hp      = 80,
                 hp_max  = 80,
                 arm_p   = 50,
@@ -181,8 +176,7 @@ def add_pc(username,pcname,pcrace):
                 g       = 100,
                 v       = 100,
                 p       = 100,
-                b       = 100,
-                sprite  = PCS_URL + '/resources/sprites/creatures/' + pcrace + '.png')
+                b       = 100)
 
         session.add(pc)
 
