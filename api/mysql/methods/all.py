@@ -1143,10 +1143,14 @@ def action_attack(username,pcid,weaponid,targetid):
                                     fn_creature_kill(pc,tg)
 
                                     # Experience points are generated
-                                    fn_creature_gain_xp(pc,tg)
+                                    (ret,msg) = fn_creature_gain_xp(pc,tg)
+                                    if ret is not True:
+                                        return (200, False, msg, None)
 
                                     # Loots are given to PCs
-                                    fn_creature_gain_loot(pc,tg)
+                                    (ret,msg) = fn_creature_gain_loot(pc,tg)
+                                    if ret is not True:
+                                        return (200, False, msg, None)
                             else:
                                 clog(tg.id,None,'Suffered no injuries')
                                 # The attack does not deal damage

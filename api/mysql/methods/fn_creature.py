@@ -59,12 +59,11 @@ def fn_creature_gain_xp(pc,tg):
         session.commit()
     except Exception as e:
         # Something went wrong during commit
-        return (200,
-                False,
-                '[SQL] XP update failed (pcid:{},tgid:{})'.format(pc.id,tg.id),
-                None)
+        return (False,
+                '[SQL] XP update failed (pcid:{},tgid:{})'.format(pc.id,tg.id))
     else:
         clog(pc.id,None,'Gained Experience')
+        return (True, None)
     finally:
         session.close()
 
@@ -112,8 +111,10 @@ def fn_creature_gain_loot(pc,tg):
         session.commit()
     except Exception as e:
         # Something went wrong during commit
-        return (200, False, '[SQL] Loot update failed', None)
+        return (False,
+                '[SQL] Loot update failed (pcid:{})'.format(pc.id))
     else:
         clog(pc.id,None,'Gained Loot')
+        return (True, None)
     finally:
         session.close()
