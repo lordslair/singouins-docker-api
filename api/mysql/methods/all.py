@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+CreatureSlots# -*- coding: utf8 -*-
 
 from datetime       import datetime
 from random         import randint
@@ -190,7 +190,7 @@ def add_pc(username,pcname,pcrace):
                     None)
         else:
                 (code, success, msg, pc) = get_pc(pcname,None)
-                equipment = CreaturesSlots(id = pc.id)
+                equipment = CreatureSlots(id = pc.id)
                 wallet    = Wallet(id = pc.id)
 
                 session.add(equipment)
@@ -275,7 +275,7 @@ def del_pc(username,pcid):
         userid    = get_user(username).id
 
         pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
-        equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
         wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
 
         session.delete(pc)
@@ -444,17 +444,17 @@ def get_items(username,pcid,public):
     if public is True:
         # Here it's for a public /pc call
         try:
-            equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
+            equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).all()
 
-            feet      = session.query(Items).filter(Items.id == equipment[0].feet).one_or_none()
-            hands     = session.query(Items).filter(Items.id == equipment[0].hands).one_or_none()
-            head      = session.query(Items).filter(Items.id == equipment[0].head).one_or_none()
-            holster   = session.query(Items).filter(Items.id == equipment[0].holster).one_or_none()
-            lefthand  = session.query(Items).filter(Items.id == equipment[0].lefthand).one_or_none()
-            righthand = session.query(Items).filter(Items.id == equipment[0].righthand).one_or_none()
-            shoulders = session.query(Items).filter(Items.id == equipment[0].shoulders).one_or_none()
-            torso     = session.query(Items).filter(Items.id == equipment[0].torso).one_or_none()
-            legs      = session.query(Items).filter(Items.id == equipment[0].legs).one_or_none()
+            feet      = session.query(Item).filter(Item.id == equipment[0].feet).one_or_none()
+            hands     = session.query(Item).filter(Item.id == equipment[0].hands).one_or_none()
+            head      = session.query(Item).filter(Item.id == equipment[0].head).one_or_none()
+            holster   = session.query(Item).filter(Item.id == equipment[0].holster).one_or_none()
+            lefthand  = session.query(Item).filter(Item.id == equipment[0].lefthand).one_or_none()
+            righthand = session.query(Item).filter(Item.id == equipment[0].righthand).one_or_none()
+            shoulders = session.query(Item).filter(Item.id == equipment[0].shoulders).one_or_none()
+            torso     = session.query(Item).filter(Item.id == equipment[0].torso).one_or_none()
+            legs      = session.query(Item).filter(Item.id == equipment[0].legs).one_or_none()
         except Exception as e:
             # Something went wrong during query
             return (200,
@@ -509,19 +509,19 @@ def get_items(username,pcid,public):
         # Here it's for a private /mypc call
         if pc and pc.account == user.id:
             try:
-                weapon    = session.query(Items)\
-                                   .filter(Items.bearer == pc.id)\
-                                   .filter(Items.metatype == 'weapon')\
+                weapon    = session.query(Item)\
+                                   .filter(Item.bearer == pc.id)\
+                                   .filter(Item.metatype == 'weapon')\
                                    .all()
-                armor     = session.query(Items)\
-                                   .filter(Items.bearer == pc.id)\
-                                   .filter(Items.metatype == 'armor')\
+                armor     = session.query(Item)\
+                                   .filter(Item.bearer == pc.id)\
+                                   .filter(Item.metatype == 'armor')\
                                    .all()
-                equipment = session.query(CreaturesSlots)\
-                                   .filter(CreaturesSlots.id == pc.id)\
+                equipment = session.query(CreatureSlots)\
+                                   .filter(CreatureSlots.id == pc.id)\
                                    .all()
-                cosmetic  = session.query(Cosmetics)\
-                                   .filter(Cosmetics.bearer == pc.id)\
+                cosmetic  = session.query(Cosmetic)\
+                                   .filter(Cosmetic.bearer == pc.id)\
                                    .all()
             except Exception as e:
                 # Something went wrong during query
@@ -547,7 +547,7 @@ def set_item_offset(username,pcid,itemid,offsetx,offsety):
     session                  = Session()
 
     if pc and pc.account == user.id:
-        item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
+        item  = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
         if item is None:
             return (200,
                     False,
@@ -566,11 +566,11 @@ def set_item_offset(username,pcid,itemid,offsetx,offsety):
                     '[SQL] Item update failed (pcid:{},itemid:{})'.format(pc.id,item.id),
                     None)
         else:
-            weapon   = session.query(Items).\
-                               filter(Items.bearer == pc.id).filter(Items.metatype == 'weapon').all()
-            armor    = session.query(Items).\
-                               filter(Items.bearer == pc.id).filter(Items.metatype == 'armor').all()
-            equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).all()
+            weapon   = session.query(Item).\
+                               filter(Item.bearer == pc.id).filter(Item.metatype == 'weapon').all()
+            armor    = session.query(Item).\
+                               filter(Item.bearer == pc.id).filter(Item.metatype == 'armor').all()
+            equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).all()
             return (200,
                     True,
                     'Item update successed (itemid:{})'.format(item.id),
@@ -587,8 +587,8 @@ def get_meta_item(metatype):
     session = Session()
 
     try:
-        if    metatype == 'weapon': meta = session.query(MetaWeapons).all()
-        elif  metatype == 'armor':  meta = session.query(MetaArmors).all()
+        if    metatype == 'weapon': meta = session.query(MetaWeapon).all()
+        elif  metatype == 'armor':  meta = session.query(MetaArmor).all()
         else:  meta = None
     except Exception as e:
         # Something went wrong during commit
@@ -1200,11 +1200,11 @@ def action_equip(username,pcid,type,slotname,itemid):
         if itemid > 0:
             # EQUIP
             if   type == 'weapon':
-                 item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
+                 item  = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
             elif type == 'armor':
-                 item  = session.query(Items).filter(Items.id == itemid, Items.bearer == pc.id).one_or_none()
+                 item  = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
 
-            equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+            equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
 
             if item      is None: return (200, False, 'Item not found (itemid:{})'.format(itemid), None)
             if equipment is None: return (200, False, 'Equipement not found (pcid:{})'.format(pc.id), None)
@@ -1276,7 +1276,7 @@ def action_equip(username,pcid,type,slotname,itemid):
 
         elif itemid == 0:
             # UNEQUIP
-            equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+            equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
             if equipment is None: return (200, False, 'Equipement not found (pcid:{})'.format(pc.id), None)
 
             # We retrieved his equipment from DB
@@ -1314,7 +1314,7 @@ def action_equip(username,pcid,type,slotname,itemid):
             # Something went wrong during commit
             return (200, False, '[SQL] Equipment update failed (itemid:{})'.format(itemid), None)
         else:
-            equipment = session.query(CreaturesSlots).filter(CreaturesSlots.id == pc.id).one_or_none()
+            equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
             clog(pc.id,None,'Equipment changed')
             return (200,
                     True,

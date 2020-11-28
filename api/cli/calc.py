@@ -24,7 +24,7 @@ def calc(pcid):
     with engine.connect() as conn:
         try:
             pc    = session.query(tables.PJ).filter(tables.PJ.id == pcid).one_or_none()
-            stats = session.query(tables.CreaturesStats).filter(tables.CreaturesStats.id == pcid).one_or_none()
+            stats = session.query(tables.CreatureStats).filter(tables.CreatureStats.id == pcid).one_or_none()
             if pc and stats:
                 pc.m = 100 + stats.m_race + round(pc.level * 0.3) + round(stats.m_skill / 2) + min(stats.m_point,80)
                 pc.r = 100 + stats.r_race + round(pc.level * 0.3) + round(stats.r_skill / 2) + min(stats.r_point,80)
