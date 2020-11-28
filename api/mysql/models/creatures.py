@@ -85,7 +85,7 @@ class Wallet(Base):
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
-class CreaturesSlots(Base):
+class CreatureSlots(Base):
     __tablename__ = 'creaturesSlots'
 
     id:        int
@@ -125,65 +125,81 @@ class Log(Base):
     id         = Column(Integer, primary_key=True)
     src        = Column(Integer, nullable=False)
     dst        = Column(Integer, nullable=True)
-    action     = Column(Text,  nullable=False)
+    action     = Column(Text   , nullable=False)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
-class CreaturesStats(Base):
+class CreatureStats(Base):
     __tablename__ = 'creaturesStats'
 
-    id: int
-    m_race:  int
-    m_class: int
-    m_skill: int
-    m_point: int
-    r_race:  int
-    r_class: int
-    r_skill: int
-    r_point: int
-    g_race:  int
-    g_class: int
-    g_skill: int
-    g_point: int
-    v_race:  int
-    v_class: int
-    v_skill: int
-    v_point: int
-    p_race:  int
-    p_class: int
-    p_skill: int
-    p_point: int
-    b_race:  int
-    b_class: int
-    b_skill: int
-    b_point: int
-    points:  int
-    date: str
+    id:        int
+    m_race:    int
+    m_class:   int
+    m_skill:   int
+    m_point:   int
+    r_race:    int
+    r_class:   int
+    r_skill:   int
+    r_point:   int
+    g_race:    int
+    g_class:   int
+    g_skill:   int
+    g_point:   int
+    v_race:    int
+    v_class:   int
+    v_skill:   int
+    v_point:   int
+    p_race:    int
+    p_class:   int
+    p_skill:   int
+    p_point:   int
+    b_race:    int
+    b_class:   int
+    b_skill:   int
+    b_point:   int
+    points:    int
+    date:      str
 
     id         = Column(Integer, primary_key=True)
-    m_race     = Column(Integer)
-    m_class    = Column(Integer)
-    m_skill    = Column(Integer)
-    m_point    = Column(Integer)
-    r_race     = Column(Integer)
-    r_class    = Column(Integer)
-    r_skill    = Column(Integer)
-    r_point    = Column(Integer)
-    g_race     = Column(Integer)
-    g_class    = Column(Integer)
-    g_skill    = Column(Integer)
-    g_point    = Column(Integer)
-    v_race     = Column(Integer)
-    v_class    = Column(Integer)
-    v_skill    = Column(Integer)
-    v_point    = Column(Integer)
-    p_race     = Column(Integer)
-    p_class    = Column(Integer)
-    p_skill    = Column(Integer)
-    p_point    = Column(Integer)
-    b_race     = Column(Integer)
-    b_class    = Column(Integer)
-    b_skill    = Column(Integer)
-    b_point    = Column(Integer)
-    points     = Column(Integer)
+    m_race     = Column(Integer, nullable=False)
+    m_class    = Column(Integer, nullable=False)
+    m_skill    = Column(Integer, nullable=False)
+    m_point    = Column(Integer, nullable=False)
+    r_race     = Column(Integer, nullable=False)
+    r_class    = Column(Integer, nullable=False)
+    r_skill    = Column(Integer, nullable=False)
+    r_point    = Column(Integer, nullable=False)
+    g_race     = Column(Integer, nullable=False)
+    g_class    = Column(Integer, nullable=False)
+    g_skill    = Column(Integer, nullable=False)
+    g_point    = Column(Integer, nullable=False)
+    v_race     = Column(Integer, nullable=False)
+    v_class    = Column(Integer, nullable=False)
+    v_skill    = Column(Integer, nullable=False)
+    v_point    = Column(Integer, nullable=False)
+    p_race     = Column(Integer, nullable=False)
+    p_class    = Column(Integer, nullable=False)
+    p_skill    = Column(Integer, nullable=False)
+    p_point    = Column(Integer, nullable=False)
+    b_race     = Column(Integer, nullable=False)
+    b_class    = Column(Integer, nullable=False)
+    b_skill    = Column(Integer, nullable=False)
+    b_point    = Column(Integer, nullable=False)
+    points     = Column(Integer, nullable=False)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class Squad(Base):
+    __tablename__ = 'squads'
+
+    id:      int
+    name:    str
+    leader:  int
+    created: str
+    date:    str
+
+    id       = Column(Integer , primary_key=True)
+    name     = Column(String  , nullable=False)
+    leader   = Column(String  , nullable=False)
+    created  = Column(DateTime, nullable=False)
+    date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
