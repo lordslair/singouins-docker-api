@@ -273,15 +273,15 @@ def mp_addressbook(pcid):
 
 @app.route('/pc/<int:pcid>/item', methods=['GET'])
 @jwt_required
-def pc_item(pcid):
-    (code, success, msg, payload) = get_items(get_jwt_identity(),pcid,True)
+def api_pc_item_get(pcid):
+    (code, success, msg, payload) = pc_items_get(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
 @jwt_required
-def mypc_item(pcid):
-    (code, success, msg, payload) = get_items(get_jwt_identity(),pcid,False)
+def api_mypc_item_get(pcid):
+    (code, success, msg, payload) = mypc_items_get(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
