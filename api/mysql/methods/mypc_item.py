@@ -46,6 +46,8 @@ def mypc_item_dismantle(username,pcid,itemid):
             wallet.epic      += shards[4]
             wallet.legendary += shards[5]
 
+            session.delete(item)
+
             session.commit()
         except Exception as e:
             # Something went wrong during query
@@ -57,7 +59,14 @@ def mypc_item_dismantle(username,pcid,itemid):
             return (200,
                     True,
                     'Item dismantle successed (pcid:{},itemid:{})'.format(pc.id,item.id),
-                    None)
+                    {"shards": {
+                        "Broken":    shards[0],
+                        "Common":    shards[1],
+                        "Uncommon":  shards[2],
+                        "Rare":      shards[3],
+                        "Epic":      shards[4],
+                        "Legendary": shards[5]}
+                    })
         finally:
             session.close()
 
