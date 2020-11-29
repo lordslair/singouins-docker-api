@@ -1,4 +1,4 @@
-CreatureSlots# -*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 
 from datetime       import datetime
 from random         import randint
