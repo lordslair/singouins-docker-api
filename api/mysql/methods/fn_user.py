@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import *
+from ..models.users     import User
 
 def fn_user_get(username):
     session = Session()

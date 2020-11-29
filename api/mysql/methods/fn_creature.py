@@ -3,10 +3,10 @@
 from datetime           import datetime
 
 from ..session          import Session
-from ..models           import *
+from ..models           import PJ,Wallet
 from ..utils.loot       import *
 
-from .fn_globals        import clog
+from .fn_global         import clog
 
 def fn_creature_get(pcname,pcid):
     session = Session()

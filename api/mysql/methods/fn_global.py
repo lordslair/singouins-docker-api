@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import Log
+from ..models.creatures import Log
 
 #
 # LOGGING
