@@ -523,6 +523,9 @@ def get_items(username,pcid,public):
                 cosmetic  = session.query(Cosmetic)\
                                    .filter(Cosmetic.bearer == pc.id)\
                                    .all()
+                wallet    = session.query(Wallet)\
+                                   .filter(Wallet.id == pc.id)\
+                                   .all()
             except Exception as e:
                 # Something went wrong during query
                 return (200,
@@ -536,7 +539,8 @@ def get_items(username,pcid,public):
                         {"weapon": weapon,
                          "armor": armor,
                          "equipment": equipment,
-                         "cosmetic": cosmetic})
+                         "cosmetic": cosmetic,
+                         "wallet": wallet})
             finally:
                 session.close()
         else: return (409, False, 'Token/username mismatch', None)

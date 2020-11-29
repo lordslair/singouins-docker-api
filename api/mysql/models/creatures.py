@@ -61,6 +61,7 @@ class PJ(Base):
     b            = Column(Integer, nullable=False, default=0)
     date         = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
+@dataclass
 class Wallet(Base):
     __tablename__ = 'creaturesWallet'
 
