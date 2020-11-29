@@ -47,7 +47,7 @@ def get_usermail_exists(usermail):
     finally:
         session.close()
 
-def get_user(username):
+def fn_user_get(username):
     session = Session()
 
     try:
@@ -166,7 +166,7 @@ def add_pc(username,pcname,pcrace):
     else:
         pc = PJ(name    = pcname,
                 race    = pcrace,
-                account = get_user(username).id,
+                account = fn_user_get(username).id,
                 hp      = 80,
                 hp_max  = 80,
                 arm_p   = 50,
@@ -189,7 +189,7 @@ def add_pc(username,pcname,pcrace):
                     '[SQL] PC creation failed (username:{},pcname:{})'.format(username,pcname),
                     None)
         else:
-                (code, success, msg, pc) = get_pc(pcname,None)
+                (code, success, msg, pc) = fn_creature_get(pcname,None)
                 equipment = CreatureSlots(id = pc.id)
                 wallet    = Wallet(id = pc.id)
 
@@ -206,7 +206,7 @@ def add_pc(username,pcname,pcrace):
         finally:
             session.close()
 
-def get_pc(pcname,pcid):
+def fn_creature_get(pcname,pcid):
     session = Session()
 
     try:
@@ -243,7 +243,7 @@ def get_pcs(username):
     session = Session()
 
     try:
-        userid = get_user(username).id
+        userid = fn_user_get(username).id
         pcs    = session.query(PJ).filter(PJ.account == userid).all()
     except Exception as e:
         # Something went wrong during query
@@ -272,7 +272,7 @@ def del_pc(username,pcid):
         return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
 
     try:
-        userid    = get_user(username).id
+        userid    = fn_user_get(username).id
 
         pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
@@ -302,13 +302,13 @@ def del_pc(username,pcid):
 #
 
 def add_mp(username,src,dsts,subject,body):
-    (code, success, msg, pcsrc) = get_pc(None,src)
-    user                        = get_user(username)
+    (code, success, msg, pcsrc) = fn_creature_get(None,src)
+    user                        = fn_user_get(username)
     session                     = Session()
 
     if pcsrc:
         for dst in dsts:
-            (code, success, msg, pcdst) = get_pc(None,dst)
+            (code, success, msg, pcdst) = fn_creature_get(None,dst)
             if pcdst:
                 mp = MP(src_id  = pcsrc.id,
                         src     = pcsrc.name,
@@ -344,8 +344,8 @@ def add_mp(username,src,dsts,subject,body):
                 None)
 
 def get_mp(username,pcid,mpid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -370,8 +370,8 @@ def get_mp(username,pcid,mpid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def del_mp(username,pcid,mpid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -390,8 +390,8 @@ def del_mp(username,pcid,mpid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def get_mps(username,pcid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -411,8 +411,8 @@ def get_mps(username,pcid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def get_mp_addressbook(username,pcid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -435,8 +435,8 @@ def get_mp_addressbook(username,pcid):
 #
 
 def set_item_offset(username,pcid,itemid,offsetx,offsety):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -502,8 +502,8 @@ def get_meta_item(metatype):
 #
 
 def get_squad(username,pcid,squadid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -558,8 +558,8 @@ def get_squad(username,pcid,squadid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def add_squad(username,pcid,squadname):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -606,8 +606,8 @@ def add_squad(username,pcid,squadname):
     else: return (409, False, 'Token/username mismatch', None)
 
 def del_squad(username,leaderid,squadid):
-    (code, success, msg, leader) = get_pc(None,leaderid)
-    user                         = get_user(username)
+    (code, success, msg, leader) = fn_creature_get(None,leaderid)
+    user                         = fn_user_get(username)
     session                      = Session()
 
     if leader:
@@ -641,9 +641,9 @@ def del_squad(username,leaderid,squadid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def invite_squad_member(username,leaderid,squadid,targetid):
-    (code, success, msg, target) = get_pc(None,targetid)
-    (code, success, msg, leader) = get_pc(None,leaderid)
-    user                         = get_user(username)
+    (code, success, msg, target) = fn_creature_get(None,targetid)
+    (code, success, msg, leader) = fn_creature_get(None,leaderid)
+    user                         = fn_user_get(username)
     session                      = Session()
 
     if leader:
@@ -700,9 +700,9 @@ def invite_squad_member(username,leaderid,squadid,targetid):
                 None)
 
 def kick_squad_member(username,leaderid,squadid,targetid):
-    (code, success, msg, target) = get_pc(None,targetid)
-    (code, success, msg, leader) = get_pc(None,leaderid)
-    user                         = get_user(username)
+    (code, success, msg, target) = fn_creature_get(None,targetid)
+    (code, success, msg, leader) = fn_creature_get(None,leaderid)
+    user                         = fn_user_get(username)
     maxmembers                   = 10
     session                      = Session()
 
@@ -757,8 +757,8 @@ def kick_squad_member(username,leaderid,squadid,targetid):
                 None)
 
 def accept_squad_member(username,pcid,squadid):
-    (code, success, msg, pc)     = get_pc(None,pcid)
-    user                         = get_user(username)
+    (code, success, msg, pc)     = fn_creature_get(None,pcid)
+    user                         = fn_user_get(username)
     session                      = Session()
 
     if pc:
@@ -792,8 +792,8 @@ def accept_squad_member(username,pcid,squadid):
     else: return (200, False, 'PC unknown in DB (pcid:{})'.format(pcid), None)
 
 def decline_squad_member(username,pcid,squadid):
-    (code, success, msg, pc)     = get_pc(None,pcid)
-    user                         = get_user(username)
+    (code, success, msg, pc)     = fn_creature_get(None,pcid)
+    user                         = fn_user_get(username)
     session                      = Session()
 
     if pc:
@@ -825,8 +825,8 @@ def decline_squad_member(username,pcid,squadid):
     else: return (200, False, 'PC unknown in DB (pcid:{})'.format(pcid), None)
 
 def leave_squad_member(username,pcid,squadid):
-    (code, success, msg, pc)     = get_pc(None,pcid)
-    user                         = get_user(username)
+    (code, success, msg, pc)     = fn_creature_get(None,pcid)
+    user                         = fn_user_get(username)
     session                      = Session()
 
     if pc:
@@ -890,8 +890,8 @@ def get_map(mapid):
 #
 
 def get_mypc_event(username,pcid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -915,7 +915,7 @@ def get_mypc_event(username,pcid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def get_pc_event(creatureid):
-    (code, success, msg, creature) = get_pc(None,creatureid)
+    (code, success, msg, creature) = fn_creature_get(None,creatureid)
     session                        = Session()
 
     if creature is None: return (200, True, 'Creature does not exist (creatureid:{})'.format(creatureid), None)
@@ -942,8 +942,8 @@ def get_pc_event(creatureid):
 #
 
 def action_move(username,pcid,path):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     (oldx,oldy)              = pc.x,pc.y
     session                  = Session()
 
@@ -977,13 +977,13 @@ def action_move(username,pcid,path):
     else: return (409, False, 'Token/username mismatch', None)
 
 def action_attack(username,pcid,weaponid,targetid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
-    (code, success, msg, tg) = get_pc(None,targetid)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
+    (code, success, msg, tg) = fn_creature_get(None,targetid)
 
     if tg.targeted_by is not None:
         # Target already taggued by a pc
-        (code, success, msg, tag) = get_pc(None,tg.targeted_by)
+        (code, success, msg, tag) = fn_creature_get(None,tg.targeted_by)
         if tag.id != pc.id and tag.squad != pc.squad:
             # Target not taggued by the pc itself
             # Target not taggued by a pc squad member
@@ -991,7 +991,7 @@ def action_attack(username,pcid,weaponid,targetid):
 
     if pc and pc.account == user.id:
         if weaponid == 0:
-            (code, success, msg, tg) = get_pc(None,targetid)
+            (code, success, msg, tg) = fn_creature_get(None,targetid)
             redpa                    = get_pa(pcid)[3]['red']['pa']
             dmg_wp                   = 20
             action                   = {"failed": True, "hit": False, "critical": False, "damages": None, "killed": False}
@@ -1076,8 +1076,8 @@ def action_attack(username,pcid,weaponid,targetid):
     else: return (409, False, 'Token/username mismatch', None)
 
 def action_equip(username,pcid,type,slotname,itemid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
@@ -1222,8 +1222,8 @@ def action_equip(username,pcid,type,slotname,itemid):
 # Queries /view
 #
 def get_view(username,pcid):
-    (code, success, msg, pc) = get_pc(None,pcid)
-    user                     = get_user(username)
+    (code, success, msg, pc) = fn_creature_get(None,pcid)
+    user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:

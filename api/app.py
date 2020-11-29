@@ -48,13 +48,13 @@ def auth_login():
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
 
-    if get_user(username):
-        pass_db    = get_user(username).hash
+    if fn_user_get(username):
+        pass_db    = fn_user_get(username).hash
         pass_check = check_password_hash(pass_db, password)
     else:
         pass_check = None
 
-    if not get_user(username) or not pass_check:
+    if not fn_user_get(username) or not pass_check:
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Identity can be any data that is json serializable
@@ -158,8 +158,8 @@ def auth_infos():
 
 @app.route('/pc/<int:pcid>', methods=['GET'])
 @jwt_required
-def pc_get(pcid):
-    (code, success, msg, payload) = get_pc(None,pcid)
+def api_pc_get(pcid):
+    (code, success, msg, payload) = fn_creature_get(None,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
