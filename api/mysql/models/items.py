@@ -101,11 +101,11 @@ class MetaArmor(Base):
     min_b: int
 
     id         = Column(Integer, primary_key=True)
-    name       = Column(String)
+    name       = Column(Text)
     mastery    = Column(Integer)
     tier       = Column(Integer)
     moddable   = Column(Boolean)
-    size       = Column(String)
+    size       = Column(Text)
     arm_p      = Column(Integer)
     arm_b      = Column(Integer)
     min_m      = Column(Integer)
