@@ -87,20 +87,21 @@ class MetaWeapon(Base):
 class MetaArmor(Base):
     __tablename__ = 'metaArmors'
 
-    id: int
-    name: str
-    tier: bool
-    mastery: int
-    moddable: bool
-    size: str
-    arm_p: int
-    arm_b: int
-    min_m: int
-    min_r: int
-    min_g: int
-    min_v: int
-    min_p: int
-    min_b: int
+    id:        int
+    name:      str
+    tier:      bool
+    mastery:   int
+    moddable:  bool
+    size:      str
+    slot:      str
+    arm_p:     int
+    arm_b:     int
+    min_m:     int
+    min_r:     int
+    min_g:     int
+    min_v:     int
+    min_p:     int
+    min_b:     int
 
     id         = Column(Integer, primary_key=True)
     name       = Column(Text)
@@ -108,6 +109,7 @@ class MetaArmor(Base):
     tier       = Column(Integer)
     moddable   = Column(Boolean)
     size       = Column(Text)
+    slot       = (Enum('Head','Torso','Shoulders','Hands','Legs','Feet'))
     arm_p      = Column(Integer)
     arm_b      = Column(Integer)
     min_m      = Column(Integer)
