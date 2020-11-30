@@ -321,6 +321,13 @@ def mypc_action_move_path(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/mypc/<int:pcid>/action/item/<int:itemid>/give/<int:targetid>', methods=['POST'])
+@jwt_required
+def api_mypc_action_item_give(pcid,itemid,targetid):
+    (code, success, msg, payload) = mypc_action_item_give(get_jwt_identity(),pcid,itemid,targetid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 @app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
 @jwt_required
 def mypc_action_attack(pcid,weaponid,targetid):
