@@ -33,53 +33,55 @@ class Cosmetic(Base):
 class MetaWeapon(Base):
     __tablename__ = 'metaWeapons'
 
-    id: int
-    name: str
-    mastery: int
-    onehanded: bool
-    ranged: bool
-    rng: int
-    pas_use: int
+    id:         int
+    name:       str
+    mastery:    int
+    onehanded:  bool
+    ranged:     bool
+    range:      int
+    pas_use:    int
     pas_reload: int
-    moddable: bool
-    caliber: str
-    rounds: int
-    size: str
-    dmg_base: int
+    moddable:   bool
+    caliber:    str
+    rounds:     int
+    max_ammo:   int
+    size:       str
+    dmg_base:   int
     dmg_sneaky: int
-    parry: int
-    arpen: int
-    defcan: int
-    min_m: int
-    min_r: int
-    min_g: int
-    min_v: int
-    min_p: int
-    min_b: int
+    parry:      int
+    arpen:      int
+    defcan:     int
+    min_m:      int
+    min_r:      int
+    min_g:      int
+    min_v:      int
+    min_p:      int
+    min_b:      int
 
-    id         = Column(Integer, primary_key=True)
-    name       = Column(Text)
-    mastery    = Column(Integer)
-    onehanded  = Column(Boolean)
-    ranged     = Column(Boolean)
-    rng        = Column(Integer)
-    pas_use    = Column(Integer)
-    pas_reload = Column(Integer)
-    moddable   = Column(Boolean)
-    caliber    = Column(Text)
-    rounds     = Column(Integer)
-    size       = Column(Text)
-    dmg_base   = Column(Integer)
-    dmg_sneaky = Column(Integer)
-    parry      = Column(Integer)
-    arpen      = Column(Integer)
-    defcan     = Column(Integer)
-    min_m      = Column(Integer)
-    min_r      = Column(Integer)
-    min_g      = Column(Integer)
-    min_v      = Column(Integer)
-    min_p      = Column(Integer)
-    min_b      = Column(Integer)
+    id          = Column(Integer, primary_key=True)
+    name        = Column(Text)
+    mastery     = Column(Integer)
+    onehanded   = Column(Boolean)
+    ranged      = Column(Boolean)
+    range       = Column(Integer)
+    pas_use     = Column(Integer)
+    pas_reload  = Column(Integer)
+    moddable    = Column(Boolean)
+    caliber     = Column(Text)
+    rounds      = Column(Integer)
+    max_ammo    = Column(Integer, nullable=True)
+    size        = Column(Text)
+    dmg_base    = Column(Integer)
+    dmg_sneaky  = Column(Integer)
+    parry       = Column(Integer)
+    arpen       = Column(Integer)
+    defcan      = Column(Integer)
+    min_m       = Column(Integer)
+    min_r       = Column(Integer)
+    min_g       = Column(Integer)
+    min_v       = Column(Integer)
+    min_p       = Column(Integer)
+    min_b       = Column(Integer)
 
 @dataclass
 class MetaArmor(Base):
@@ -128,21 +130,23 @@ class Item(Base):
     modded:     bool
     mods:       str
     state:      int
+    ammo:       int
     rarity:     str
     offsetx:    int
     offsety:    int
     date:       str
 
-    id          = Column(Integer , primary_key=True)
+    id          = Column(Integer, primary_key=True)
     metatype    = Column(Enum('armor','weapon'))
-    metaid      = Column(Integer , nullable=False)
-    bearer      = Column(Integer , nullable=False)
+    metaid      = Column(Integer, nullable=False)
+    bearer      = Column(Integer, nullable=False)
     bound       = Column(Boolean, nullable=False)
     bound_type  = Column(Enum('BoE','BoP','BoA','BoU','BtA'))
-    modded      = Column(Boolean , nullable=False, default=False)
-    mods        = Column(Text    , nullable=True)
+    modded      = Column(Boolean, nullable=False, default=False)
+    mods        = Column(Text   , nullable=True)
     state       = Column(Integer, nullable=True)
+    ammo        = Column(Integer, nullable=True)
     rarity      = Column(Enum('Legendary','Epic','Rare','Common','Uncommon','Broken'))
-    offsetx     = Column(Integer , nullable=True)
-    offsety     = Column(Integer , nullable=True)
+    offsetx     = Column(Integer, nullable=True)
+    offsety     = Column(Integer, nullable=True)
     date        = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
