@@ -135,3 +135,40 @@ def mypc_action_item_dismantle(username,pcid,itemid):
                 })
     finally:
         session.close()
+
+
+def mypc_action_move(username,pcid,path):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+
+    (oldx,oldy) = pc.x,pc.y
+
+    if pc and pc.account != user.id:
+        return (409, False, 'Token/username mismatch', None)
+
+    for coords in path:
+        bluepa                   = get_pa(pcid)[3]['blue']['pa']
+        x,y                      = map(int, coords.strip('()').split(','))
+
+        if abs(pc.x - x) <= 1 and abs(pc.y - y) <= 1:
+            if bluepa > 1:
+                # Enough PA to move
+                set_pa(pcid,0,1) # We consume the blue PA (1) right now
+                pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                pc.x = x
+                pc.y = y
+
+    try:
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                '[SQL] Coords update failed (pcid:{},path:{})'.format(pcid,path),
+                None)
+    else:
+        clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
+        return (200, True, 'PC successfully moved', get_pa(pcid)[3])
+    finally:
+        session.close()

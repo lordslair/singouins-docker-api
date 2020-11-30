@@ -305,12 +305,12 @@ def mypc_item_del_offset(pcid,itemid):
 
 @app.route('/mypc/<int:pcid>/action/move', methods=['POST'])
 @jwt_required
-def mypc_action_move_path(pcid):
+def api_mypc_action_move(pcid):
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
     path = request.json.get('path', None)
-    (code, success, msg, payload) = action_move(get_jwt_identity(),pcid,path)
+    (code, success, msg, payload) = mypc_action_move(get_jwt_identity(),pcid,path)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
