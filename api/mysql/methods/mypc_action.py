@@ -74,9 +74,16 @@ def mypc_action_item_dismantle(username,pcid,itemid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()
+    bluepa                   = get_pa(pcid)[3]['blue']['pa']
 
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
+
+    if bluepa < 1:
+        return (200,
+                False,
+                'Not enough PA (pcid:{},bluepa:{})'.format(pcid,bluepa),
+                None)
 
     item = session.query(Item)\
                   .filter(Item.id == itemid)\
@@ -122,6 +129,7 @@ def mypc_action_item_dismantle(username,pcid,itemid):
                 '[SQL] Wallet update failed (pcid:{})'.format(pc.id),
                 None)
     else:
+        set_pa(pcid,0,1) # We consume the blue PA (1)
         return (200,
                 True,
                 'Item dismantle successed (pcid:{},itemid:{})'.format(pc.id,item.id),
