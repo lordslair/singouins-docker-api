@@ -180,3 +180,139 @@ def mypc_action_move(username,pcid,path):
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
     finally:
         session.close()
+
+def mypc_action_equip(username,pcid,type,slotname,itemid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+    redpa       = get_pa(pcid)[3]['red']['pa']
+    equipment   = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+
+    if pc and pc.account != user.id:
+        return (409, False, 'Token/username mismatch', None)
+
+    if equipment is None:
+        return (200,
+                False,
+                'Equipment not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                None)
+
+    if itemid > 0:
+        # EQUIP
+
+        if   type == 'weapon':
+             item     = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
+             itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+        elif type == 'armor':
+             item     = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
+             itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
+
+        if item is None:
+            return (200,
+                    False,
+                    'Item not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                    None)
+        if itemmeta is None:
+            return (200,
+                    False,
+                    'ItemMeta not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                    None)
+
+        sizex,sizey = itemmeta.size.split("x")
+        costpa      = round(int(sizex) * int(sizey) / 2)
+        if redpa < costpa:
+            return (200,
+                    False,
+                    'Not enough PA (pcid:{},redpa:{},cost:{})'.format(pcid,redpa,costpa),
+                    None)
+
+        # The item to equip exists, is owned by the PC, and we retrieved his equipment from DB
+        if   slotname == 'head':      equipment.head      = item.id
+        elif slotname == 'shoulders': equipment.shoulders = item.id
+        elif slotname == 'torso':     equipment.torso     = item.id
+        elif slotname == 'hands':     equipment.hands     = item.id
+        elif slotname == 'legs':      equipment.legs      = item.id
+        elif slotname == 'feet':      equipment.feet      = item.id
+        elif slotname == 'holster':
+            if int(sizex) * int(sizey) <= 4:
+                # It fits inside the holster
+                equipment.holster  = item.id
+            else:
+                return (200,
+                        False,
+                        'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size),
+                        None)
+        elif slotname == 'righthand':
+            if int(sizex) * int(sizey) <= 6:
+                # It fits inside the right hand
+                equipment.righthand  = item.id
+            else:
+                # It fits inside the BOTH hand
+                equipment.righthand  = item.id
+                equipment.lefthand   = item.id
+        elif slotname == 'lefthand':
+            if int(sizex) * int(sizey) <= 4:
+                # It fits inside the left hand
+                equipment.lefthand   = item.id
+            else:
+                return (200,
+                        False,
+                        'Item does not fit in left hand (itemid:{},size:{})'.format(item.id,itemmeta.size),
+                        None)
+
+        equipment.date = datetime.now() # We update the date in DB
+        item.bound     = True           # In case the item was not bound to PC. Now it is
+        item.offsetx   = None           # Now the item is not in inventory anymore
+        item.offsety   = None           # Now the item is not in inventory anymore
+        item.date      = datetime.now() # We update the date in DB
+
+    elif itemid == 0:
+        # UNEQUIP
+
+        costpa      = 0
+
+        if   slotname == 'head':      equipment.head      = None
+        elif slotname == 'shoulders': equipment.shoulders = None
+        elif slotname == 'torso':     equipment.torso     = None
+        elif slotname == 'hands':     equipment.hands     = None
+        elif slotname == 'legs':      equipment.legs      = None
+        elif slotname == 'feet':      equipment.feet      = None
+        elif slotname == 'holster':   equipment.holster   = None
+        elif slotname == 'righthand':
+            if equipment.righthand ==  equipment.lefthand:
+                # If the weapon equipped takes both hands
+                equipment.righthand = None
+                equipment.lefthand  = None
+            else:
+                equipment.righthand = None
+        elif slotname == 'lefthand':
+            if equipment.lefthand ==  equipment.righthand:
+                # If the weapon equipped takes both hands
+                equipment.righthand = None
+                equipment.lefthand  = None
+            else:
+                equipment.lefthand = None
+
+        equipment.date = datetime.now()
+    else:
+        # Weird weaponid
+            return (200,
+                    False,
+                    'Itemid incorrect (pcid:{},itemid:{})'.format(pcid),
+                    None)
+
+    try:
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200, False, '[SQL] Equipment update failed (pcid:{},itemid:{})'.format(pcid,itemid), None)
+    else:
+        set_pa(pcid,costpa,0) # We consume the red PA (costpa) right now
+        clog(pc.id,None,'Equipment changed')
+        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+        return (200,
+                True,
+                'Equipment successfully updated (pcid:{},itemid:{})'.format(pcid,itemid),
+                {"red": get_pa(pcid)[3]['red'], "blue": get_pa(pcid)[3]['blue'], "equipment": equipment})
+    finally:
+        session.close()
