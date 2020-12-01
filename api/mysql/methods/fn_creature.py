@@ -3,7 +3,7 @@
 from datetime           import datetime
 
 from ..session          import Session
-from ..models           import PJ,Wallet
+from ..models           import PJ,Wallet,Item
 from ..utils.loot       import *
 
 from .fn_global         import clog

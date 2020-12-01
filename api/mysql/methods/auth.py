@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+from datetime           import datetime
 from flask_bcrypt       import generate_password_hash
 
 from ..session          import Session

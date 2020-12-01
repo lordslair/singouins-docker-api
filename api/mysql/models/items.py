@@ -38,7 +38,7 @@ class MetaWeapon(Base):
     mastery:    int
     onehanded:  bool
     ranged:     bool
-    range:      int
+    rng:        int
     pas_use:    int
     pas_reload: int
     moddable:   bool
@@ -63,7 +63,7 @@ class MetaWeapon(Base):
     mastery     = Column(Integer)
     onehanded   = Column(Boolean)
     ranged      = Column(Boolean)
-    range       = Column(Integer)
+    rng         = Column(Integer) # Not 'range' cause it's s reserved SQL word
     pas_use     = Column(Integer)
     pas_reload  = Column(Integer)
     moddable    = Column(Boolean)
