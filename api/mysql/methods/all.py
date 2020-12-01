@@ -12,6 +12,7 @@ from ..utils.redis      import *
 
 from .fn_creature       import *
 from .fn_user           import *
+from .fn_highscore      import *
 from .fn_global         import clog
 
 #
@@ -78,9 +79,11 @@ def add_pc(username,pcname,pcrace):
                 (code, success, msg, pc) = fn_creature_get(pcname,None)
                 equipment = CreatureSlots(id = pc.id)
                 wallet    = Wallet(id = pc.id)
+                highscore = HighScore(id = pc.id)
 
                 session.add(equipment)
                 session.add(wallet)
+                session.add(highscore)
 
                 try:
                     session.commit()
@@ -163,10 +166,12 @@ def del_pc(username,pcid):
         pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
         wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
+        highscore = session.query(HighScore).filter(HighScore.id == pc.id).one_or_none()
 
         session.delete(pc)
         session.delete(equipment)
         session.delete(wallet)
+        session.delete(highscore)
 
         session.commit()
     except Exception as e:
@@ -887,6 +892,11 @@ def action_attack(username,pcid,weaponid,targetid):
                                     # The attack kills
                                     action['killed'] = True
                                     fn_creature_kill(pc,tg)
+
+                                    # HighScores points are generated
+                                    (ret,msg) = fn_highscore_kill_set(pc)
+                                    if ret is not True:
+                                        return (200, False, msg, None)
 
                                     # Experience points are generated
                                     (ret,msg) = fn_creature_gain_xp(pc,tg)
