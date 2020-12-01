@@ -123,7 +123,7 @@ def mypc_action_item_dismantle(username,pcid,itemid):
 
         session.commit()
     except Exception as e:
-        # Something went wrong during query
+        # Something went wrong during commit
         return (200,
                 False,
                 '[SQL] Wallet update failed (pcid:{})'.format(pc.id),

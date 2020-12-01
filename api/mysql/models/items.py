@@ -109,7 +109,7 @@ class MetaArmor(Base):
     tier       = Column(Integer)
     moddable   = Column(Boolean)
     size       = Column(Text)
-    slot       = (Enum('Head','Torso','Shoulders','Hands','Legs','Feet'))
+    slot       = Column(Enum('Head','Torso','Shoulders','Hands','Legs','Feet'))
     arm_p      = Column(Integer)
     arm_b      = Column(Integer)
     min_m      = Column(Integer)
