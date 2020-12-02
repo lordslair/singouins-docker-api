@@ -14,7 +14,7 @@ if __name__ == '__main__':
        sep_count.labels('user').set(get_count_table('users'))
        sep_count.labels('creatures').set(get_count_table('creatures'))
        sep_count.labels('mp').set(get_count_table('mps'))
-       sep_count.labels('squad').set(get_count_table('squads'))
+       sep_count.labels('squad').set(get_count_table('creaturesSquads'))
        sep_count.labels('item').set(get_count_table('items'))
 
        time.sleep(30)
