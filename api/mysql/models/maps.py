@@ -19,8 +19,8 @@ class Map(Base):
     date:      str
 
     id         = Column(Integer, primary_key=True)
-    type       = Column(Text   , nullable=False)
-    mode       = Column(Enum('Normal','Challenge'), default='Normal')
-    size       = Column(Text   , nullable=False)
-    data       = Column(Text   , nullable=False)
+    type       = Column(Enum('Instance','Worldmap'), nullable=False, server_default='Instance')
+    mode       = Column(Enum('Normal','Challenge') , nullable=False, server_default='Normal')
+    size       = Column(Text, nullable=False)
+    data       = Column(Text, nullable=False)
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

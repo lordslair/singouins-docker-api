@@ -463,8 +463,7 @@ def add_squad(username,pcid,squadname):
                     None)
 
         squad = Squad(name    = squadname,
-                      leader  = pc.id,
-                      created = datetime.now())
+                      leader  = pc.id)
         session.add(squad)
 
         try:

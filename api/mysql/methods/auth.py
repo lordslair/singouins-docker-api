@@ -50,10 +50,7 @@ def add_user(username,password,usermail):
                     mail      = usermail,
                     hash      = generate_password_hash(password, rounds = 10),
                     d_name    = '',
-                    d_monkeys = '', # Todo later
-                    d_ack     = False,
-                    created   = datetime.now(),
-                    active    = False)
+                    d_monkeys = '')
 
         session.add(user)
 

@@ -144,7 +144,7 @@ class Item(Base):
     bearer      = Column(Integer, nullable=False)
     bound       = Column(Boolean, nullable=False)
     bound_type  = Column(Enum('BoE','BoP','BoA','BoU','BtA'))
-    modded      = Column(Boolean, nullable=False, default=False)
+    modded      = Column(Boolean, nullable=False, server_default='0')
     mods        = Column(Text   , nullable=True)
     state       = Column(Integer, nullable=True)
     ammo        = Column(Integer, nullable=True)

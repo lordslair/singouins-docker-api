@@ -42,23 +42,23 @@ class PJ(Base):
     rarity       = Column(Enum('Small','Normal','Big','Unique','Boss','God'), default='Normal')
     account      = Column(Integer, nullable=True)
     targeted_by  = Column(Integer, nullable=True)
-    level        = Column(Integer, nullable=False, default=1)
-    x            = Column(Integer, nullable=False, default=0)
-    y            = Column(Integer, nullable=False, default=0)
-    xp           = Column(Integer, nullable=False, default=0)
+    level        = Column(Integer, nullable=False, server_default='1')
+    x            = Column(Integer, nullable=False, server_default='0')
+    y            = Column(Integer, nullable=False, server_default='0')
+    xp           = Column(Integer, nullable=False, server_default='0')
     hp           = Column(Integer, nullable=False)
     hp_max       = Column(Integer, nullable=False)
-    arm_b        = Column(Integer, nullable=False, default=0)
-    arm_p        = Column(Integer, nullable=False, default=0)
+    arm_b        = Column(Integer, nullable=False, server_default='0')
+    arm_p        = Column(Integer, nullable=False, server_default='0')
     instance     = Column(Integer, nullable=True)
     squad        = Column(Integer, nullable=True)
     squad_rank   = Column(Enum('Leader','Member','Pending'), nullable=True)
-    m            = Column(Integer, nullable=False, default=0)
-    r            = Column(Integer, nullable=False, default=0)
-    g            = Column(Integer, nullable=False, default=0)
-    v            = Column(Integer, nullable=False, default=0)
-    p            = Column(Integer, nullable=False, default=0)
-    b            = Column(Integer, nullable=False, default=0)
+    m            = Column(Integer, nullable=False, server_default='0')
+    r            = Column(Integer, nullable=False, server_default='0')
+    g            = Column(Integer, nullable=False, server_default='0')
+    v            = Column(Integer, nullable=False, server_default='0')
+    p            = Column(Integer, nullable=False, server_default='0')
+    b            = Column(Integer, nullable=False, server_default='0')
     date         = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
@@ -76,13 +76,13 @@ class Wallet(Base):
     date:      str
 
     id         = Column(Integer, primary_key=True)
-    currency   = Column(Integer, default=0)
-    legendary  = Column(Integer, default=0)
-    epic       = Column(Integer, default=0)
-    rare       = Column(Integer, default=0)
-    uncommon   = Column(Integer, default=0)
-    common     = Column(Integer, default=0)
-    broken     = Column(Integer, default=0)
+    currency   = Column(Integer, nullable=False, server_default='0')
+    legendary  = Column(Integer, nullable=False, server_default='0')
+    epic       = Column(Integer, nullable=False, server_default='0')
+    rare       = Column(Integer, nullable=False, server_default='0')
+    uncommon   = Column(Integer, nullable=False, server_default='0')
+    common     = Column(Integer, nullable=False, server_default='0')
+    broken     = Column(Integer, nullable=False, server_default='0')
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
@@ -200,12 +200,12 @@ class CreatureStats(Base):
     b_class    = Column(Integer, nullable=False)
     b_skill    = Column(Integer, nullable=False)
     b_point    = Column(Integer, nullable=False)
-    points     = Column(Integer, nullable=False)
+    points     = Column(Integer, nullable=False, server_default='0')
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
 class Squad(Base):
-    __tablename__ = 'squads'
+    __tablename__ = 'creaturesSquads'
 
     id:      int
     name:    str
@@ -213,8 +213,8 @@ class Squad(Base):
     created: str
     date:    str
 
-    id       = Column(Integer , primary_key=True)
-    name     = Column(Text    , nullable=False)
-    leader   = Column(Text    , nullable=False)
-    created  = Column(DateTime, nullable=False)
+    id       = Column(Integer, primary_key=True)
+    name     = Column(Text   , nullable=False)
+    leader   = Column(Integer, nullable=False)
+    created  = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
