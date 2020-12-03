@@ -42,92 +42,6 @@ def get_pc_exists(pcname,pcid):
     finally:
         session.close()
 
-def add_pc(username,pcname,pcrace):
-    session = Session()
-
-    if get_pc_exists(pcname,None):
-        return (409,
-                False,
-                'PC already exists (username:{},pcname:{})'.format(username,pcname),
-                None)
-    else:
-        pc = PJ(name    = pcname,
-                race    = pcrace,
-                account = fn_user_get(username).id,
-                hp      = 80,
-                hp_max  = 80,
-                arm_p   = 50,
-                arm_b   = 25,
-                m       = 100,
-                r       = 100,
-                g       = 100,
-                v       = 100,
-                p       = 100,
-                b       = 100)
-
-        session.add(pc)
-
-        try:
-            session.commit()
-        except Exception as e:
-            # Something went wrong during commit
-            return (200,
-                    False,
-                    '[SQL] PC creation failed (username:{},pcname:{})'.format(username,pcname),
-                    None)
-        else:
-                (code, success, msg, pc) = fn_creature_get(pcname,None)
-                equipment = CreatureSlots(id = pc.id)
-                wallet    = Wallet(id = pc.id)
-                highscore = HighScore(id = pc.id)
-
-                session.add(equipment)
-                session.add(wallet)
-                session.add(highscore)
-
-                try:
-                    session.commit()
-                except Exception as e:
-                    # Something went wrong during commit
-                    return (200, False, '[SQL] PC Slots/Wallet creation failed', None)
-                else:
-                    return (201, True, 'PC successfully created', pc)
-        finally:
-            session.close()
-
-def fn_creature_get(pcname,pcid):
-    session = Session()
-
-    try:
-        if pcid:
-            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-        elif pcname:
-            pc = session.query(PJ).filter(PJ.name == pcname).one_or_none()
-        else:
-            return (200,
-                    False,
-                    'Wrong pcid/pcname (pcid:{},pcname:{})'.format(pcid,pcname),
-                    None)
-    except Exception as e:
-        # Something went wrong during query
-        return (200,
-                False,
-                '[SQL] PC query failed (pcid:{},pcname:{})'.format(pcid,pcname),
-                None)
-    else:
-        if pc:
-            return (200,
-                    True,
-                    'PC successfully found (pcid:{},pcname:{})'.format(pcid,pcname),
-                    pc)
-        else:
-            return (200,
-                    False,
-                    'PC does not exist (pcid:{},pcname:{})'.format(pcid,pcname),
-                    None)
-    finally:
-        session.close()
-
 def get_pcs(username):
     session = Session()
 
@@ -167,11 +81,13 @@ def del_pc(username,pcid):
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
         wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
         highscore = session.query(HighScore).filter(HighScore.id == pc.id).one_or_none()
+        stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()
 
         session.delete(pc)
         session.delete(equipment)
         session.delete(wallet)
         session.delete(highscore)
+        session.delete(stats)
 
         session.commit()
     except Exception as e:

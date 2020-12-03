@@ -169,15 +169,17 @@ def api_pc_get(pcid):
 
 @app.route('/mypc', methods=['POST'])
 @jwt_required
-def mypc_create():
+def api_mypc_create():
     current_user = get_jwt_identity()
     pcname       = request.json.get('name', None)
     pcrace       = request.json.get('race', None)
+    pcclass      = request.json.get('class', None)
+    equipment    = request.json.get('equipment', None)
 
     if not pcname or not pcrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
-    (code, success, msg, payload) = add_pc(current_user,pcname,pcrace)
+    (code, success, msg, payload) = mypc_create(current_user,pcname,pcrace,pcclass,equipment)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
