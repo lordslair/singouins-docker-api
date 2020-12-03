@@ -218,3 +218,43 @@ class Squad(Base):
     leader   = Column(Integer, nullable=False)
     created  = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class MetaRace(Base):
+    __tablename__ = 'metaRaces'
+
+    id:        int
+    name:      str
+    lootable:  bool
+    min_level: int
+    max_level: int
+    min_m:     int
+    max_m:     int
+    min_r:     int
+    max_r:     int
+    min_g:     int
+    max_g:     int
+    min_v:     int
+    max_v:     int
+    min_p:     int
+    max_p:     int
+    min_b:     int
+    max_b:     int
+
+    id         = Column(Integer, primary_key=True)
+    name       = Column(Text   , nullable=False)
+    lootable   = Column(Boolean, nullable=False, server_default='1')
+    min_level  = Column(Integer, nullable=False)
+    max_level  = Column(Integer, nullable=False)
+    min_m      = Column(Integer, nullable=False)
+    max_m      = Column(Integer, nullable=False)
+    min_r      = Column(Integer, nullable=False)
+    max_r      = Column(Integer, nullable=False)
+    min_g      = Column(Integer, nullable=False)
+    max_g      = Column(Integer, nullable=False)
+    min_v      = Column(Integer, nullable=False)
+    max_v      = Column(Integer, nullable=False)
+    min_p      = Column(Integer, nullable=False)
+    max_p      = Column(Integer, nullable=False)
+    min_b      = Column(Integer, nullable=False)
+    max_b      = Column(Integer, nullable=False)
