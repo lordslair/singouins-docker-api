@@ -89,6 +89,9 @@ def del_pc(username,pcid):
         session.delete(highscore)
         session.delete(stats)
 
+        items = session.query(Item).filter(Item.bearer == pc.id).all()
+        session.delete(items)
+
         session.commit()
     except Exception as e:
         # Something went wrong during commit
