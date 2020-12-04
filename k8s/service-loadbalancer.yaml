@@ -6,6 +6,8 @@ metadata:
   name: sep-backend-lb
   labels:
     tier: sep-backend
+  annotations:
+    service.beta.kubernetes.io/ovh-loadbalancer-proxy-protocol: "v1"
 spec:
   type: LoadBalancer
   selector:

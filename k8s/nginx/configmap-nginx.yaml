@@ -13,16 +13,17 @@ data:
     # http {}
     #
 
-    log_format seplog '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent $ssl_protocol "$http_Authorization"';
+    log_format maxlog         '$proxy_protocol_addr - $remote_user [$time_local] '
+                              '"$request" $status $body_bytes_sent '
+                              '"$http_referer" "$http_user_agent" [LONG]';
 
+    ssl_session_cache         shared:SSL:10m;
+    ssl_session_timeout       1440m;
+    ssl_session_tickets       off;
 
-    ssl_session_cache   shared:SSL:10m;
-    ssl_session_timeout 1440m;
-    ssl_session_tickets off;
-
-    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_protocols             TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
-    ssl_ciphers         ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_ciphers               ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
 
     #
     # <nginx-exporter>
@@ -39,39 +40,63 @@ data:
     }
 
     #
+    # Default server
+    #
+
+    server {
+      listen        80  default_server;
+      listen        443 default_server;
+      access_log    off;
+      error_log     off;
+      log_not_found off;
+      deny          all;
+
+      ssl_certificate     /etc/letsencrypt/live/<URL_DEFAULT>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_DEFAULT>/privkey.pem;
+
+    }
+
+    #
     # <WIKI>
     #
 
     server {
       listen      80;
-      server_name <WIKI>;
+      server_name <URL_WIKI>;
+      access_log  /var/log/nginx/access.log maxlog;
+      location    = / { return 418; }
+      location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
 
       location /.well-known/acme-challenge/ {
           root /var/www/certbot;
       }
     }
     server {
-      listen      443 ssl;
-      server_name <WIKI>;
+      listen      443 ssl proxy_protocol;
+      server_name <URL_WIKI>;
+      access_log  /var/log/nginx/access.log maxlog;
       add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
 
-      ssl_certificate     /etc/letsencrypt/live/<WIKI>/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/<WIKI>/privkey.pem;
+      ssl_certificate     /etc/letsencrypt/live/<URL_WIKI>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_WIKI>/privkey.pem;
 
       location / {
-        auth_basic "WIKI Basic Auth";
-        auth_basic_user_file /etc/nginx/htpasswd/htpasswd;
-        proxy_pass http://sep-backend-wikijs-svc:3000;
+        auth_basic              "WIKI Basic Auth";
+        auth_basic_user_file    /etc/nginx/htpasswd/htpasswd;
+        proxy_pass              http://<SVC_WIKI>:3000;
         proxy_http_version      1.1;
       }
       location ^~ /graphql {
-        auth_basic off;
-        proxy_pass http://sep-backend-wikijs-svc:3000;
+        auth_basic              off;
+        proxy_pass              http://<SVC_WIKI>:3000;
         proxy_http_version      1.1;
         proxy_buffers           16 16k;
         proxy_buffer_size       16k;
         client_body_buffer_size 2M;
         client_max_body_size    2M;
+        proxy_set_header        Host            $host;
+        proxy_set_header        X-Real-IP       $proxy_protocol_addr;
+        proxy_set_header        X-Forwarded-For $proxy_protocol_addr;
       }
     }
 
@@ -81,7 +106,10 @@ data:
 
     server {
       listen      80;
-      server_name <SQL>;
+      server_name <URL_SQL>;
+      access_log  /var/log/nginx/access.log maxlog;
+      location    = / { return 418; }
+      location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
 
       location /.well-known/acme-challenge/ {
           root /var/www/certbot;
@@ -89,20 +117,23 @@ data:
     }
     server {
       listen      443 ssl;
-      server_name <SQL>;
-      access_log  /var/log/nginx/access.log seplog;
+      server_name <URL_SQL>;
+      access_log  /var/log/nginx/access.log maxlog;
       add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
 
-      ssl_certificate     /etc/letsencrypt/live/<SQL>/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/<SQL>/privkey.pem;
+      ssl_certificate     /etc/letsencrypt/live/<URL_SQL>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_SQL>/privkey.pem;
 
       location / {
-        proxy_set_header    Host $host;
-        proxy_set_header    X-Real-IP $remote_addr;
-        proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header    X-Forwarded-Proto $scheme;
-        proxy_pass          http://sep-backend-phpmyadmin-svc/;
-        proxy_read_timeout  90;
+        proxy_pass              http://<SVC_SQL>/;
+        proxy_read_timeout      90;
+        proxy_http_version      1.1;
+        proxy_buffers           16 16k;
+        proxy_buffer_size       16k;
+        proxy_set_header        Host              $host;
+        proxy_set_header        X-Real-IP         $proxy_protocol_addr;
+        proxy_set_header        X-Forwarded-For   $proxy_protocol_addr;
+        proxy_set_header        X-Forwarded-Proto $scheme;
       }
     }
 
@@ -112,7 +143,10 @@ data:
 
     server {
       listen      80;
-      server_name <API>;
+      server_name <URL_API>;
+      access_log  /var/log/nginx/access.log maxlog;
+      location    = / { return 418; }
+      location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
 
       location /.well-known/acme-challenge/ {
           root /var/www/certbot;
@@ -120,26 +154,32 @@ data:
     }
     server {
       listen      443 ssl;
-      server_name <API>;
-      access_log  /var/log/nginx/access.log seplog;
-      add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
+      server_name <URL_API>;
+      access_log  /var/log/nginx/access.log maxlog;
+      #add_header Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
 
-      ssl_certificate     /etc/letsencrypt/live/<API>/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/<API>/privkey.pem;
+      ssl_certificate     /etc/letsencrypt/live/<URL_API>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_API>/privkey.pem;
 
       location / {
-        proxy_pass          http://sep-backend-api-svc:5000;
-        proxy_http_version  1.1;
-        proxy_buffers       16 16k;
-        proxy_buffer_size   16k;
+        proxy_pass              http://<SVC_API>:5000;
+        proxy_http_version      1.1;
+        proxy_buffers           16 16k;
+        proxy_buffer_size       16k;
+        proxy_set_header        Host            $host;
+        proxy_set_header        X-Real-IP       $proxy_protocol_addr;
+        proxy_set_header        X-Forwarded-For $proxy_protocol_addr;
       }
       location /swagger {
-        auth_basic           "Basic Auth";
-        auth_basic_user_file /etc/nginx/htpasswd/htpasswd;
-        proxy_pass           http://sep-backend-api-svc:5000;
-        proxy_http_version   1.1;
-        proxy_buffers        16 16k;
-        proxy_buffer_size    16k;
+        auth_basic              "SWAGGER Basic Auth";
+        auth_basic_user_file    /etc/nginx/htpasswd/htpasswd;
+        proxy_pass              http://<SVC_API>:5000;
+        proxy_http_version      1.1;
+        proxy_buffers           16 16k;
+        proxy_buffer_size       16k;
+        proxy_set_header        Host            $host;
+        proxy_set_header        X-Real-IP       $proxy_protocol_addr;
+        proxy_set_header        X-Forwarded-For $proxy_protocol_addr;
       }
     }
 
@@ -149,8 +189,8 @@ data:
 
     server {
       listen      80;
-      server_name <REDCO>;
-      access_log  /var/log/nginx/access.log seplog;
+      server_name <URL_REDCO>;
+      access_log  /var/log/nginx/access.log maxlog;
       location    = / { return 418; }
       location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
 
@@ -160,31 +200,61 @@ data:
     }
     server {
       listen      443 ssl;
-      server_name <REDCO>;
-      access_log  /var/log/nginx/access.log seplogssl;
+      server_name <URL_REDCO>;
+      access_log  /var/log/nginx/access.log maxlog;
       add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
 
-      ssl_certificate     /etc/letsencrypt/live/<REDCO>/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/<REDCO>/privkey.pem;
+      ssl_certificate     /etc/letsencrypt/live/<URL_REDCO>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_REDCO>/privkey.pem;
 
       location / {
-        auth_basic          "Basic Auth";
-        auth_basic_user_file /etc/nginx/htpasswd/htpasswd;
-        proxy_pass          http://sep-backend-redis-commander-svc:8081;
-        proxy_http_version  1.1;
-        proxy_buffers       16 16k;
-        proxy_buffer_size   16k;
+        auth_basic              "REDCO Basic Auth";
+        auth_basic_user_file    /etc/nginx/htpasswd/htpasswd;
+        proxy_pass              http://<SVC_REDCO>:8081;
+        proxy_http_version      1.1;
+        proxy_buffers           16 16k;
+        proxy_buffer_size       16k;
       }
     }
 
     #
-    # <GRAPH>
+    # <GRAFANA>
     #
 
     server {
       listen      80;
-      server_name <GRAPH>;
-      access_log  /var/log/nginx/access.log seplog;
+      server_name <URL_GRAPH>;
+      access_log  /var/log/nginx/access.log maxlog;
+
+      location /.well-known/acme-challenge/ {
+          root /var/www/certbot;
+      }
+    }
+    server {
+      listen      443 ssl;
+      server_name <URL_GRAPH>;
+      access_log  /var/log/nginx/access.log maxlog;
+      add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
+
+      ssl_certificate     /etc/letsencrypt/live/<URL_GRAPH>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_GRAPH>/privkey.pem;
+
+      location / {
+        proxy_pass              http://<SVC_GRAFANA>:3000;
+        proxy_http_version      1.1;
+        proxy_buffers           16 16k;
+        proxy_buffer_size       16k;
+      }
+    }
+
+    #
+    # <FILESTASH>
+    #
+
+    server {
+      listen      80;
+      server_name <URL_FILESTASH>;
+      access_log  /var/log/nginx/access.log maxlog;
       location    = / { return 418; }
       location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
 
@@ -194,20 +264,20 @@ data:
     }
     server {
       listen      443 ssl;
-      server_name <GRAPH>;
-      access_log  /var/log/nginx/access.log seplogssl;
+      server_name <URL_FILESTASH>;
+      access_log  /var/log/nginx/access.log maxlog;
       add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
 
-      ssl_certificate     /etc/letsencrypt/live/<GRAPH>/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/<GRAPH>/privkey.pem;
+      ssl_certificate     /etc/letsencrypt/live/<URL_FILESTASH>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_FILESTASH>/privkey.pem;
 
       location / {
-        auth_basic          "Basic Auth";
-        auth_basic_user_file /etc/nginx/htpasswd/htpasswd;
-        proxy_pass          http://sep-backend-redis-grafana-svc:3000;
-        proxy_http_version  1.1;
-        proxy_buffers       16 16k;
-        proxy_buffer_size   16k;
+        auth_basic              "FILESTASH Basic Auth";
+        auth_basic_user_file    /etc/nginx/htpasswd/htpasswd;
+        proxy_pass              http://<SVC_FILESTASH>:8334;
+        proxy_http_version      1.1;
+        proxy_buffers           16 16k;
+        proxy_buffer_size       16k;
       }
     }
 
@@ -217,8 +287,8 @@ data:
 
     server {
       listen      80;
-      server_name <GAMES>;
-      access_log  /var/log/nginx/access.log seplog;
+      server_name <URL_GAMES>;
+      access_log  /var/log/nginx/access.log maxlog;
 
       location    = / { return 418; }
       location    ~ \.(asp|cgi|htm|html|js|php)$ { access_log off; error_log off; deny all; }
@@ -229,27 +299,15 @@ data:
     }
     server {
       listen      443 ssl;
-      server_name <GAMES>;
-      access_log  /var/log/nginx/access.log seplogssl;
-      add_header Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
+      server_name <URL_GAMES>;
+      access_log  /var/log/nginx/access.log maxlog;
+      add_header  Strict-Transport-Security 'max-age=63072000; includeSubDomains; preload;' always;
 
-      ssl_certificate     /etc/letsencrypt/live/<GAMES>/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/<GAMES>/privkey.pem;
+      ssl_certificate     /etc/letsencrypt/live/<URL_GAMES>/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/<URL_GAMES>/privkey.pem;
 
       location / {
         index                index.html;
-        root                 /var/www/websites/<GAMES>;
+        root                 /var/www/websites/<URL_GAMES>;
       }
-    }
-
-    #
-    # Default server
-    #
-
-    server {
-      listen        80 default_server;
-      access_log    off;
-      error_log     off;
-      log_not_found off;
-      deny          all;
     }
