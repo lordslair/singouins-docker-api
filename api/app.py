@@ -12,6 +12,8 @@ from flask_swagger_ui   import get_swaggerui_blueprint
 
 from prometheus_flask_exporter import PrometheusMetrics
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from mysql.methods      import *
 from mysql.utils        import redis
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA, DISCORD_URL
@@ -30,6 +32,9 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     config = { 'app_name': "S&P Internal API" }
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix='/swagger')
+
+# Setup the ProxyFix to have the Real-IP in the logs
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
