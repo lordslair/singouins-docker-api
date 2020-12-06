@@ -8,7 +8,7 @@ from dataclasses                import dataclass
 from ..base                     import Base
 
 @dataclass
-class PJ(Base):
+class Creature(Base):
     __tablename__ = 'creatures'
 
     id:          int

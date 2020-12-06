@@ -35,7 +35,7 @@ async def on_ready():
     channel = discord.utils.get(client.get_all_channels(), name='admins')
     if channel:
         tick = colored('✓', 'green')
-        await channel.send(msg_ready)
+        #await channel.send(msg_ready)
     else: tick = colored('✗', 'red')
     print('{} [{}] {}  [{}]'.format(mynow(),'BOT', 'Discord ready', tick))
 
