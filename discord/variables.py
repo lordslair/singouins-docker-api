@@ -6,10 +6,10 @@ import os
 token   = os.environ['TOKEN']
 
 # MySQL variables
-DB_USER = os.environ['DB_USER']
-DB_PASS = os.environ['DB_PASS']
-DB_NAME = os.environ['DB_NAME']
-DB_HOST = os.environ['DB_HOST']
+MYSQL_USER     = os.environ['SEP_MYSQL_USER']
+MYSQL_PASSWORD = os.environ['SEP_MYSQL_PASSWORD']
+MYSQL_DB       = os.environ['SEP_MYSQL_DB']
+MYSQL_HOST     = os.environ['SEP_MYSQL_HOST']
 
 # SQLAlchemy variables
-SQL_DSN = DB_USER + ':' + DB_PASS + '@' + DB_HOST + ':3306/' + DB_NAME
+SQL_DSN        = MYSQL_USER + ':' + MYSQL_PASSWORD + '@' + MYSQL_HOST + ':3306/' + MYSQL_DB

@@ -1,18 +1,9 @@
 # -*- coding: utf8 -*-
 
-from sqlalchemy     import create_engine
-from sqlalchemy.orm import sessionmaker
+from datetime           import datetime
 
-from datetime  import datetime
-
-from utils     import tables
-from variables import SQL_DSN
-
-engine     = create_engine('mysql+pymysql://' + SQL_DSN, pool_recycle=3600)
-
-#
-# Queries: /auth
-#
+from ..session          import Session
+from ..models           import *
 
 def query_up():
     Session = sessionmaker(bind=engine)

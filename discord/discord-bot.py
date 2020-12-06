@@ -8,14 +8,15 @@ import os
 import re
 import sys
 
-from datetime       import datetime,timedelta
-from discord.ext    import commands
-from termcolor      import colored
+from datetime           import datetime,timedelta
+from discord.ext        import commands
+from termcolor          import colored
 
-from queries        import *
-from variables      import token
-from utils.messages import *
-from utils.histograms import draw
+from mysql.methods      import *
+from mysql.utils        import redis
+from variables          import token
+from utils.messages     import *
+from utils.histograms   import draw
 
 client = commands.Bot(command_prefix = '!')
 
