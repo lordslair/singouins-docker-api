@@ -292,17 +292,60 @@ def api_mypc_item_get(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/item/<int:itemid>/inventory/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
+#
+# Routes /inventory/item
+#
+
+@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
 @jwt_required
-def mypc_item_set_offset(pcid,itemid,offsetx,offsety):
-    (code, success, msg, payload) = set_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
+def api_mypc_inventory_item_set_offset(pcid,itemid,offsetx,offsety):
+    (code, success, msg, payload) = mypc_inventory_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/item/<int:itemid>/inventory/offset', methods=['DELETE'])
+@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset', methods=['DELETE'])
 @jwt_required
-def mypc_item_del_offset(pcid,itemid):
-    (code, success, msg, payload) = set_item_offset(get_jwt_identity(),pcid,itemid,None,None)
+def api_mypc_inventory_item_del_offset(pcid,itemid):
+    (code, success, msg, payload) = mypc_inventory_item_offset(get_jwt_identity(),pcid,itemid,None,None)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>', methods=['POST'])
+@jwt_required
+def api_mypc_inventory_item_equip(pcid,type,slotname,itemid):
+    (code, success, msg, payload) = mypc_inventory_item_equip(get_jwt_identity(),pcid,type,slotname,itemid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>', methods=['POST'])
+@jwt_required
+def api_mypc_inventory_item_unequip(pcid,type,slotname,itemid):
+    (code, success, msg, payload) = mypc_inventory_item_unequip(get_jwt_identity(),pcid,type,slotname,itemid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle', methods=['POST'])
+@jwt_required
+def api_mypc_inventory_item_dismantle(pcid,itemid):
+    (code, success, msg, payload) = mypc_inventory_item_dismantle(get_jwt_identity(),pcid,itemid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
+# Routes: /trade
+#
+
+@app.route('/mypc/<int:pcid>/trade/item/<int:itemid>/give/<int:targetid>', methods=['POST'])
+@jwt_required
+def api_mypc_trade_item_give(pcid,itemid,targetid):
+    (code, success, msg, payload) = mypc_trade_item_give(get_jwt_identity(),pcid,itemid,targetid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/trade/wallet/<string:currtype>/give/<int:targetid>/<int:amount>', methods=['POST'])
+@jwt_required
+def api_mypc_trade_wallet_give(pcid,currtype,targetid,amount):
+    (code, success, msg, payload) = mypc_trade_wallet_give(get_jwt_identity(),pcid,currtype,targetid,amount)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -321,31 +364,10 @@ def api_mypc_action_move(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/action/item/<int:itemid>/give/<int:targetid>', methods=['POST'])
-@jwt_required
-def api_mypc_action_item_give(pcid,itemid,targetid):
-    (code, success, msg, payload) = mypc_action_item_give(get_jwt_identity(),pcid,itemid,targetid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/action/item/<int:itemid>/dismantle', methods=['POST'])
-@jwt_required
-def api_mypc_action_item_dismantle(pcid,itemid):
-    (code, success, msg, payload) = mypc_action_item_dismantle(get_jwt_identity(),pcid,itemid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
 @app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
 @jwt_required
-def mypc_action_attack(pcid,weaponid,targetid):
-    (code, success, msg, payload) = action_attack(get_jwt_identity(),pcid,weaponid,targetid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/action/equip/<string:type>/<string:slotname>/<int:itemid>', methods=['POST'])
-@jwt_required
-def api_mypc_action_equip(pcid,type,slotname,itemid):
-    (code, success, msg, payload) = mypc_action_equip(get_jwt_identity(),pcid,type,slotname,itemid)
+def api_mypc_action_attack(pcid,weaponid,targetid):
+    (code, success, msg, payload) = mypc_action_attack(get_jwt_identity(),pcid,weaponid,targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
