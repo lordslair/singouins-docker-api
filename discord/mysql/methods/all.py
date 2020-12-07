@@ -5,6 +5,8 @@ from datetime           import datetime
 from ..session          import Session
 from ..models           import *
 
+from .fn_creature       import *
+
 def query_up():
     session = Session()
 
@@ -42,6 +44,14 @@ def query_histo(arg):
 
     if   arg == 'CreaturesLevel' or arg == 'CL': result = session.query(Creature.level).all()
     elif arg == 'CreaturesRace'  or arg == 'CR': result = session.query(Creature.race).all()
+    session.close()
+
+    if result: return result
+
+def query_get_creature(pcid):
+    session = Session()
+
+    result = session.query(User).filter(User.d_name == discordname).one_or_none()
     session.close()
 
     if result: return result

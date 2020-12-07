@@ -122,6 +122,52 @@ async def histo(ctx,arg):
     else:
         await ctx.send(f'You need to have the role {adminrole.name}')
 
+@client.command(pass_context=True)
+async def admin(ctx,*args):
+    member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
+    adminrole    = discord.utils.get(member.guild.roles, name='Admins')
+
+    if adminrole not in ctx.author.roles:
+        # This command is to be used only by Admin role
+        print('{} [{}][{}] !admin <{}> [{}]'.format(mynow(),ctx.message.channel,member,args,'Unauthorized user'))
+
+    # Channel and User are OK
+    print('{} [{}][{}] !admin <{}>'.format(mynow(),ctx.message.channel,member,args))
+
+    if len(args) < 4:
+        print('{} [{}][{}] !admin help'.format(mynow(),ctx.message.channel,member))
+        await ctx.send('`!admin redis {reset|get} {all} {pcid}`')
+
+    module = args[0]
+    action = args[1]
+    select = args[2]
+    pcid   = int(args[3])
+
+    pc = fn_creature_get(None,pcid)[3]
+    if pc is None:
+        await ctx.send(f'`Unknown creature pcid:{pcid}`')
+
+    if module == 'help':
+        await ctx.send('`!admin redis {reset|get} {all|blue|red} {pcid}`')
+
+    if module == 'redis':
+        if action == 'reset':
+            if select == 'all':
+                redis.reset_pa(pc,True,True)
+                await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
+            elif select == 'red':
+                redis.reset_pa(pc,False,True)
+                await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
+            elif select == 'blue':
+                redis.reset_pa(pc,True,False)
+                await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
+        elif action == 'get':
+            if select == 'all':
+                pa = redis.get_pa(pc)
+                await ctx.send(pa)
+        elif action == 'help':
+            await ctx.send('`!admin redis {reset|get} {all|blue|red} {pcid}`')
 
 @client.event
 async def on_member_join(member):

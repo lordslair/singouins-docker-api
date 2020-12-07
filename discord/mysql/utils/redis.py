@@ -25,44 +25,28 @@ bluemaxttl     = bluepaduration * bluepamax
 # Queries: PA
 #
 
-def get_pa(pcid):
+def get_pa(pc):
 
-    redkey    = str(pcid) + '-red'
+    redkey    = str(pc.id) + '-red'
     redttl    = r.ttl(redkey)
     redpa     = int(round(((redmaxttl - abs(redttl))  / redpaduration)))
     redttnpa  = r.ttl(redkey) % redpaduration
+    redbar    = redpa*'🟥' + (redpamax-redpa)*'⬜'
 
-    bluekey   = str(pcid) + '-blue'
+    bluekey   = str(pc.id) + '-blue'
     bluettl   = r.ttl(bluekey)
     bluepa    = int(round(((bluemaxttl - abs(bluettl))  / bluepaduration)))
     bluettnpa = r.ttl(bluekey) % bluepaduration
+    bluebar   = bluepa*'🟦' + (bluepamax-bluepa)*'⬜'
 
-    return (200, True, 'OK', {"red": {"pa": redpa, "ttnpa": redttnpa, "ttl": redttl},
-                              "blue": {"pa": bluepa, "ttnpa": bluettnpa, "ttl": bluettl}})
+    rettext   = f'Creature : [{pc.id}] {pc.name}\n'
+    rettext  += f'PA blue  : {bluebar}\n'
+    rettext  += f'PA red   : {redbar}\n'
+    return (f'```{rettext}```')
 
-def set_pa(pcid,redpa,bluepa):
+def reset_pa(pc,blue,red):
 
-    if bluepa > 0:
-        # An action consumed a blue PA, we need to update
-        key    = str(pcid) + '-blue'
-        ttl    = r.ttl(key)
-        newttl = ttl + (bluepa * bluepaduration)
-
-        if ttl > 0:
-            # Key still exists (PA count < PA max)
-            r.expire(key,newttl)
-        else:
-            # Key does not exist anymore (PA count = PA max)
-            r.set(key,'blue',ex=newttl)
-    if redpa > 0:
-        # An action consumed a red PA, we need to update
-        key    = str(pcid) + '-red'
-        ttl    = r.ttl(key)
-        newttl = ttl + (redpa * redpaduration)
-
-        if ttl > 0:
-            # Key still exists (PA count < PA max)
-            r.expire(key,newttl)
-        else:
-            # Key does not exist anymore (PA count = PA max)
-            r.set(key,'red',ex=newttl)
+    if red:
+        r.set(str(pc.id) + '-red','red',ex=1)
+    if blue:
+        r.set(str(pc.id) + '-blue','blue',ex=1)
