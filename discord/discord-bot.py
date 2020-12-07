@@ -1,16 +1,26 @@
-#!/usr/bin/python3 -u
 # -*- coding: utf8 -*-
 
-import asyncio
-import discord
-import inspect
 import os
 import re
 import sys
 
 from datetime           import datetime,timedelta
-from discord.ext        import commands
 from termcolor          import colored
+
+# Shorted definition for actual now() with proper format
+def mynow(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# Log Discord imports
+print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'System   imports finished', colored('✓', 'green')))
+
+import asyncio
+import discord
+import inspect
+
+from discord.ext        import commands
+
+# Log Discord imports
+print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Discord  imports finished', colored('✓', 'green')))
 
 from mysql.methods      import *
 from mysql.utils        import redis
@@ -18,10 +28,10 @@ from variables          import token
 from utils.messages     import *
 from utils.histograms   import draw
 
-client = commands.Bot(command_prefix = '!')
+# Log Discord imports
+print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Internal imports finished', colored('✓', 'green')))
 
-# Shorted definition for actual now() with proper format
-def mynow(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+client = commands.Bot(command_prefix = '!')
 
 # Welcome message in the logs on daemon start
 print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Daemon started', colored('✓', 'green')))
@@ -41,6 +51,10 @@ async def on_ready():
 
 @client.command()
 async def ping(ctx):
+    member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
+
+    print('{} [{}][{}] !ping'.format(mynow(),ctx.message.channel,member))
     await ctx.send(f'Pong! {round (client.latency * 1000)}ms ')
 
 @client.command(pass_context=True)
