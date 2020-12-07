@@ -47,12 +47,17 @@ def pc_items_get(username,pcid):
         legsmetaid      = legs.metaid      if legs      is not None else None
 
         if righthand is not None and lefthand is not None:
+            # PC has 2 weapons equipped.
             if righthand.id == lefthand.id:
                 # PC has ONE two-handed weapon equipped. I send only meta inside RH
-                righthandmetaid = righthand.metaid if righthand is not None else None
+                righthandmetaid = righthand.metaid
                 lefthandmetaid  = None
+            else:
+                # PC has TWO different weapons equipped.
+                righthandmetaid = righthand.metaid
+                lefthandmetaid  = lefthand.metaid
         else:
-            # PC has TWO two-handed weapon equipped.
+            # PC has 1 or 0 weapons equipped.
             righthandmetaid = righthand.metaid if righthand is not None else None
             lefthandmetaid  = lefthand.metaid  if lefthand  is not None else None
 
