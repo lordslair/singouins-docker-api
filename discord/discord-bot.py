@@ -135,9 +135,15 @@ async def admin(ctx,*args):
     # Channel and User are OK
     print('{} [{}][{}] !admin <{}>'.format(mynow(),ctx.message.channel,member,args))
 
+    if args[0] == 'help':
+        msg_help  = '!admin help\n'
+        msg_help += '!admin redis {reset|get} {all|blue|red} {pcid}'
+        await ctx.send(f'```{msg_help}```')
+        return
+
     if len(args) < 4:
-        print('{} [{}][{}] !admin help'.format(mynow(),ctx.message.channel,member))
-        await ctx.send('`!admin redis {reset|get} {all} {pcid}`')
+        await ctx.send('`!admin needs more arguments`')
+        return
 
     module = args[0]
     action = args[1]
@@ -147,9 +153,7 @@ async def admin(ctx,*args):
     pc = fn_creature_get(None,pcid)[3]
     if pc is None:
         await ctx.send(f'`Unknown creature pcid:{pcid}`')
-
-    if module == 'help':
-        await ctx.send('`!admin redis {reset|get} {all|blue|red} {pcid}`')
+        return
 
     if module == 'redis':
         if action == 'reset':
