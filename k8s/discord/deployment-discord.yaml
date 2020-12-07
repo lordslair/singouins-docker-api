@@ -34,28 +34,32 @@ spec:
             memory: 64Mi
             cpu: 10m
         env:
-        - name: DB_PASS
-          valueFrom:
-            secretKeyRef:
-              name: sep-backend-discord-secret
-              key: sql-pass
-        - name: DB_USER
+        - name: SEP_MYSQL_USER
           valueFrom:
             secretKeyRef:
               name: sep-backend-discord-secret
               key: sql-user
-        - name: DB_HOST
+        - name: SEP_MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: sep-backend-discord-secret
-              key: sql-host
-        - name: DB_NAME
+              key: sql-pass
+        - name: SEP_MYSQL_DB
           valueFrom:
             secretKeyRef:
               name: sep-backend-discord-secret
               key: sql-db
+        - name: SEP_MYSQL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: sep-backend-discord-secret
+              key: sql-host
         - name: TOKEN
           valueFrom:
             secretKeyRef:
               name: sep-backend-discord-secret
               key: token
+        - name: PYTHONUNBUFFERED
+          value: 'True'
+        - name: PYTHONIOENCODING
+          value: 'UTF-8'
