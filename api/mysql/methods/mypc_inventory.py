@@ -292,6 +292,7 @@ def mypc_inventory_item_offset(username,pcid,itemid,offsetx,offsety):
 
         item.offsetx = offsetx
         item.offsety = offsety
+        item.date    = datetime.now() # We update the date in DB
 
         try:
             session.commit()
