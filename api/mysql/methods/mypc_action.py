@@ -11,6 +11,11 @@ from .fn_highscore      import *
 from .fn_user           import fn_user_get
 from .fn_global         import clog
 
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
 #
 # Queries /mypc/{pcid}/action/*
 #
@@ -54,9 +59,10 @@ def mypc_action_move(username,pcid,path):
 
 # API: /mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>
 def mypc_action_attack(username,pcid,weaponid,targetid):
-    (code, success, msg, pc) = fn_creature_get(None,pcid)
-    user                     = fn_user_get(username)
-    (code, success, msg, tg) = fn_creature_get(None,targetid)
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    tg          = fn_creature_get(None,targetid)[3]
+    session     = Session()
 
     if tg.targeted_by is not None:
         # Target already taggued by a pc
@@ -66,93 +72,142 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             # Target not taggued by a pc squad member
             return (200, False, 'Target does not belong to the PC/Squad', None)
 
-    if pc and pc.account == user.id:
-        if weaponid == 0:
-            (code, success, msg, tg) = fn_creature_get(None,targetid)
-            redpa                    = get_pa(pcid)[3]['red']['pa']
-            dmg_wp                   = 20
-            action                   = {"failed": True, "hit": False, "critical": False, "damages": None, "killed": False}
+    if pc and pc.account != user.id:
+        return (409, False, 'Token/username mismatch', None)
 
-            if abs(pc.x - tg.x) <= 1 and abs(pc.y - tg.y) <= 1:
-                # Target is on a adjacent tile
-                if redpa > 1:
-                    # Enough PA to attack
-                    set_pa(pcid,4,0) # We consume the red PA (4) right now
-                    pc.comcap  = (pc.g + (pc.m + pc.r)/2 )/2
+    tg     = fn_creature_get(None,targetid)[3]
+    redpa  = get_pa(pcid)[3]['red']['pa']
+    action = {"failed": True,
+              "hit": False,
+              "critical": False,
+              "damages": None,
+              "killed": False}
 
-                    if randint(1, 100) <= 97:
-                        # Successfull action
-                        action['failed'] = False
-                        if pc.comcap > tg.r:
-                            # The attack successed
-                            action['hit'] = True
+    if weaponid == 0:
+        item     = AttrDict()
+        itemmeta = AttrDict()
+        itemmeta.ranged   = False
+        itemmeta.pas_use  = 4
+        itemmeta.dmg_base = 20
+    else:
+        # Retrieving weapon stats
+        item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+        itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+        session.expunge(itemmeta)
 
-                            # The target is now acquired to the attacker
-                            fn_creature_tag(pc,tg)
-
-                            if randint(1, 100) <= 5:
-                                # The attack is a critical Hit
-                                dmg_crit = round(150 + pc.r / 10)
-                                clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
-                                clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
-                            else:
-                                # The attack is a normal Hit
-                                dmg_crit = 100
-                                clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
-                                clog(tg.id,None,'Hit by {}'.format(pc.name))
-
-                            dmg = round(dmg_wp * dmg_crit / 100) - tg.arm_p
-                            if dmg > 0:
-                                # The attack deals damage
-                                action['damages'] = dmg
-
-                                if tg.hp - dmg >= 0:
-                                    # The attack wounds
-                                    fn_creature_wound(pc,tg,dmg)
-                                else:
-                                    # The attack kills
-                                    action['killed'] = True
-                                    fn_creature_kill(pc,tg)
-
-                                    # HighScores points are generated
-                                    (ret,msg) = fn_highscore_kill_set(pc)
-                                    if ret is not True:
-                                        return (200, False, msg, None)
-
-                                    # Experience points are generated
-                                    (ret,msg) = fn_creature_gain_xp(pc,tg)
-                                    if ret is not True:
-                                        return (200, False, msg, None)
-
-                                    # Loots are given to PCs
-                                    (ret,msg) = fn_creature_gain_loot(pc,tg)
-                                    if ret is not True:
-                                        return (200, False, msg, None)
-                            else:
-                                clog(tg.id,None,'Suffered no injuries')
-                                # The attack does not deal damage
-                        else:
-                            # The attack missed
-                            clog(pc.id,tg.id,'Missed {}'.format(tg.name))
-                            clog(tg.id,None,'Avoided {}'.format(pc.name))
-                    else:
-                        # Failed action
-                        clog(pc.id,None,'Failed an attack')
-                else:
-                    # Not enough PA to attack
-                    return (200,
-                            False,
-                            'Not enough PA to attack',
-                            {"red": get_pa(pcid)[3]['red'],
-                             "blue": get_pa(pcid)[3]['blue'],
-                             "action": None})
-            else:
-                # Target is too far
-                return (200, False, 'Coords incorrect', None)
+    if item is None:
         return (200,
-                True,
-                'Target successfully attacked',
+                False,
+                'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+    if itemmeta is None:
+        return (200,
+                False,
+                'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+
+    if itemmeta.ranged is False:
+        # Checking distance for contact weapons
+        if abs(pc.x - tg.x) > 1 or abs(pc.y - tg.y) > 1:
+            # Target is not on a adjacent tile
+            return (200,
+                    False,
+                    'Target is not on contact',
+                    None)
+        # Combat Capacity (Contact weapons)
+        pc.capacity  = (pc.g + (pc.m + pc.r)/2 )/2
+        pc.dmg_bonus = (100 + (pc.g - 100)/3)/100
+        tg.avoid     = tg.r
+        tg.armor     = tg.arm_p
+    else:
+        # Checking distance for ranged weapons
+        if abs(pc.x - tg.x) > itemmeta.rng or abs(pc.y - tg.y) > itemmeta.rng:
+            # Target is not on a adjacent tile
+            return (200,
+                    False,
+                    'Target is out of range',
+                    None)
+        # Shooting capacity (Ranged weapons)
+        pc.capacity   = (pc.v + (pc.b + pc.r)/2 )/2
+        pc.dmg_bonus  = (100 + (pc.v - 100)/3)/100
+        tg.avoid      = tg.r
+        tg.armor      = tg.arm_b
+
+    if redpa < itemmeta.pas_use:
+        # Not enough PA to attack
+        return (200,
+                False,
+                'Not enough PA to attack',
                 {"red": get_pa(pcid)[3]['red'],
                  "blue": get_pa(pcid)[3]['blue'],
-                 "action": action})
-    else: return (409, False, 'Token/username mismatch', None)
+                 "action": None})
+    else:
+        # Enough PA to attack, we consume the red PAs
+        set_pa(pcid,itemmeta.pas_use,0)
+
+    if randint(1, 100) > 97:
+        # Failed action
+        clog(pc.id,None,'Failed an attack')
+    else:
+        # Successfull action
+        action['failed'] = False
+
+    if pc.capacity > tg.avoid:
+        # Successfull attack
+        action['hit'] = True
+        # The target is now acquired to the attacker
+        fn_creature_tag(pc,tg)
+    else:
+        # Failed attack
+        clog(pc.id,tg.id,'Missed {}'.format(tg.name))
+        clog(tg.id,None,'Avoided {}'.format(pc.name))
+
+    if randint(1, 100) <= 5:
+        # The attack is a critical Hit
+        pc.dmg_crit = round(150 + pc.r / 10)
+        clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
+        clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
+    else:
+        # The attack is a normal Hit
+        pc.dmg_crit = 100
+        clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
+        clog(tg.id,None,'Hit by {}'.format(pc.name))
+
+    dmg = round(itemmeta.dmg_base * pc.dmg_bonus * pc.dmg_crit / 100) - tg.armor
+
+    if dmg > 0:
+        # The attack deals damage
+        action['damages'] = dmg
+
+        if tg.hp - dmg >= 0:
+            # The attack wounds
+            fn_creature_wound(pc,tg,dmg)
+        else:
+            # The attack kills
+            action['killed'] = True
+            fn_creature_kill(pc,tg)
+
+            # HighScores points are generated
+            (ret,msg) = fn_highscore_kill_set(pc)
+            if ret is not True:
+                return (200, False, msg, None)
+
+            # Experience points are generated
+            (ret,msg) = fn_creature_gain_xp(pc,tg)
+            if ret is not True:
+                return (200, False, msg, None)
+
+            # Loots are given to PCs
+            (ret,msg) = fn_creature_gain_loot(pc,tg)
+            if ret is not True:
+                return (200, False, msg, None)
+    else:
+        clog(tg.id,None,'Suffered no injuries')
+        # The attack does not deal damage
+
+    return (200,
+            True,
+            'Target successfully attacked',
+            {"red": get_pa(pcid)[3]['red'],
+             "blue": get_pa(pcid)[3]['blue'],
+             "action": action})
