@@ -154,13 +154,34 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                     'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size),
                     None)
     elif slotname == 'righthand':
-        if int(sizex) * int(sizey) <= 6:
-            # It fits inside the right hand
-            equipment.righthand  = item.id
+        equipped     = session.query(Item).filter(Item.id == equipment.righthand, Item.bearer == pc.id).one_or_none()
+        if equipped:
+            # Something is already in RH
+            equippedmeta = session.query(MetaWeapon).filter(MetaWeapon.id == equipped.metaid).one_or_none()
+            # We equip a 1H weapon
+            if int(sizex) * int(sizey) <= 6:
+                if equippedmeta.onehanded is True:
+                    # A 1H weapons is in RH : we replace
+                    equipment.righthand  = item.id
+                if equippedmeta.onehanded is False:
+                    # A 2H weapons is in RH & LH : we replace RH and clean LH
+                    equipment.righthand  = item.id
+                    equipment.lefthand   = None
+            # We equip a 2H weapon
+            if int(sizex) * int(sizey) > 6:
+                # It is a 2H weapon: it fits inside the RH & LH
+                equipment.righthand  = item.id
+                equipment.lefthand   = item.id
         else:
-            # It fits inside the BOTH hand
-            equipment.righthand  = item.id
-            equipment.lefthand   = item.id
+            # Nothing in RH
+            # We equip a 1H weapon
+            if int(sizex) * int(sizey) <= 6:
+                equipment.righthand  = item.id
+            # We equip a 2H weapon
+            if int(sizex) * int(sizey) > 6:
+                # It is a 2H weapon: it fits inside the RH & LH
+                equipment.righthand  = item.id
+                equipment.lefthand   = item.id
     elif slotname == 'lefthand':
         if int(sizex) * int(sizey) <= 4:
             # It fits inside the left hand
@@ -244,13 +265,13 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
             else:
                 equipment.righthand = None
     elif slotname == 'lefthand':
-        if equipment.righthand == itemid:
+        if equipment.lefthand == itemid:
             if equipment.righthand ==  equipment.lefthand:
                 # If the weapon equipped takes both hands
                 equipment.righthand = None
                 equipment.lefthand  = None
             else:
-                equipment.righthand = None
+                equipment.lefthand = None
 
     equipment.date = datetime.now()
 
