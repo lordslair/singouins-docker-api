@@ -145,6 +145,17 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         # Enough PA to attack, we consume the red PAs
         set_pa(pcid,itemmeta.pas_use,0)
 
+    if itemmeta.ranged is True:
+        if item.ammo < 1:
+            return (200,
+                    False,
+                    'Not enough Ammo to attack',
+                    {"red": get_pa(pcid)[3]['red'],
+                     "blue": get_pa(pcid)[3]['blue'],
+                     "action": None})
+        else:
+            item.ammo -= 1
+
     if randint(1, 100) > 97:
         # Failed action
         clog(pc.id,None,'Failed an attack')
