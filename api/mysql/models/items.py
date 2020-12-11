@@ -35,6 +35,7 @@ class MetaWeapon(Base):
 
     id:         int
     name:       str
+    tier:       int
     mastery:    int
     onehanded:  bool
     ranged:     bool
@@ -60,6 +61,7 @@ class MetaWeapon(Base):
 
     id          = Column(Integer, primary_key=True)
     name        = Column(Text)
+    tier        = Column(Integer)
     mastery     = Column(Integer)
     onehanded   = Column(Boolean)
     ranged      = Column(Boolean)
@@ -89,11 +91,14 @@ class MetaArmor(Base):
 
     id:        int
     name:      str
-    tier:      bool
+    tier:      int
     mastery:   int
     moddable:  bool
     size:      str
     slot:      str
+    block:     int
+    parry:     int
+    evasion:   int
     arm_p:     int
     arm_b:     int
     min_m:     int
@@ -105,11 +110,14 @@ class MetaArmor(Base):
 
     id         = Column(Integer, primary_key=True)
     name       = Column(Text)
-    mastery    = Column(Integer)
     tier       = Column(Integer)
+    mastery    = Column(Integer)
     moddable   = Column(Boolean)
     size       = Column(Text)
-    slot       = Column(Enum('Head','Torso','Shoulders','Hands','Legs','Feet'))
+    slot       = Column(Enum('Head','Torso','Shoulders','Hands','Legs','Feet','Shield'))
+    block      = Column(Integer)
+    parry      = Column(Integer)
+    evasion    = Column(Integer)
     arm_p      = Column(Integer)
     arm_b      = Column(Integer)
     min_m      = Column(Integer)
