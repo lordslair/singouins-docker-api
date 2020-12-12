@@ -371,6 +371,13 @@ def api_mypc_action_attack(pcid,weaponid,targetid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/mypc/<int:pcid>/action/reload/<int:weaponid>', methods=['POST'])
+@jwt_required
+def api_mypc_action_reload(pcid,weaponid):
+    (code, success, msg, payload) = mypc_action_reload(get_jwt_identity(),pcid,weaponid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 #
 # Routes: /events
 #

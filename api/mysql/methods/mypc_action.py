@@ -222,3 +222,70 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             {"red": get_pa(pcid)[3]['red'],
              "blue": get_pa(pcid)[3]['blue'],
              "action": action})
+
+# API: /mypc/<int:pcid>/action/reload/<int:weaponid>
+def mypc_action_reload(username,pcid,weaponid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+    redpa       = get_pa(pcid)[3]['red']['pa']
+
+    if pc and pc.account != user.id:
+        return (409, False, 'Token/username mismatch', None)
+
+    # Retrieving weapon stats
+    item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+    itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+    session.expunge(itemmeta)
+
+    # Pre-flight checks
+    if item is None:
+        return (200,
+                False,
+                'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+    if itemmeta is None:
+        return (200,
+                False,
+                'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+    if itemmeta.pas_reload is None:
+        return (200,
+                False,
+                'Item is not reloadable (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+    if item.ammo == itemmeta.max_ammo:
+        return (200,
+                False,
+                'Item is already loaded (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+
+    if redpa < itemmeta.pas_reload:
+        # Not enough PA to reload
+        return (200,
+                False,
+                'Not enough PA to reload',
+                {"red": get_pa(pcid)[3]['red'],
+                 "blue": get_pa(pcid)[3]['blue'],
+                 "action": None})
+    else:
+        # Enough PA to reload, we consume the red PAs
+        set_pa(pc.id,itemmeta.pas_reload,0)
+
+    try:
+        item.ammo = itemmeta.max_ammo
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                '[SQL] Weapon reload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
+                None)
+    else:
+        clog(pc.id,None,'Reloaded a weapon')
+        return (200,
+                True,
+                'Weapon reload success (pcid:{},weaponid:{})'.format(pc.id,itemid),
+                get_pa(pcid)[3])
+    finally:
+        session.close()
