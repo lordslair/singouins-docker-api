@@ -304,3 +304,72 @@ def mypc_action_reload(username,pcid,weaponid):
                 get_pa(pcid)[3])
     finally:
         session.close()
+
+# API: /mypc/<int:pcid>/action/unload/<int:weaponid>
+def mypc_action_unload(username,pcid,weaponid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+
+    if pc and pc.account != user.id:
+        return (409, False, 'Token/username mismatch', None)
+
+    # Retrieving weapon stats
+    item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+    itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+    session.expunge(itemmeta)
+
+    # Pre-flight checks
+    if item is None:
+        return (200,
+                False,
+                'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+    if itemmeta is None:
+        return (200,
+                False,
+                'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+    if item.ammo == 0:
+        return (200,
+                False,
+                'Item is already empty (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                None)
+
+    if get_pa(pcid)[3]['blue']['pa'] < 2:
+        # Not enough PA to unload
+        return (200,
+                False,
+                'Not enough PA to unload',
+                {"red": get_pa(pcid)[3]['red'],
+                 "blue": get_pa(pcid)[3]['blue'],
+                 "action": None})
+    else:
+        # Enough PA to unload, we consume the red PAs
+        set_pa(pc.id,0,2)
+
+    ret = fn_wallet_ammo_set(pc,itemmeta.caliber,item.ammo)
+    if ret is None:
+        return (200,
+                True,
+                'Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
+                get_pa(pcid)[3])
+
+    try:
+        item       = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+        item.ammo  = 0
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                '[SQL] Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,weaponid),
+                None)
+    else:
+        clog(pc.id,None,'Unloaded a weapon')
+        return (200,
+                True,
+                'Weapon unload success (pcid:{},weaponid:{})'.format(pc.id,weaponid),
+                get_pa(pcid)[3])
+    finally:
+        session.close()
