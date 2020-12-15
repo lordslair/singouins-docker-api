@@ -9,6 +9,7 @@ from ..utils.redis      import *
 from .fn_creature       import *
 from .fn_highscore      import *
 from .fn_user           import fn_user_get
+from .fn_wallet         import fn_wallet_ammo_get,fn_wallet_ammo_set
 from .fn_global         import clog
 
 class AttrDict(dict):
@@ -272,8 +273,22 @@ def mypc_action_reload(username,pcid,weaponid):
         # Enough PA to reload, we consume the red PAs
         set_pa(pc.id,itemmeta.pas_reload,0)
 
+    walletammo = fn_wallet_ammo_get(pc,item,itemmeta)
+    neededammo = itemmeta.max_ammo - item.ammo
+    if walletammo < neededammo:
+        # Not enough ammo to reload
+        return (200,
+                False,
+                'Not enough ammo to reload',
+                None)
+    else:
+        # Enough ammo to reload, we remove the ammo from wallet
+        # The '* -1' is to negate the number as the fn_set() is doing an addition
+        fn_wallet_ammo_set(pc,itemmeta.caliber,neededammo * -1)
+
     try:
-        item.ammo = itemmeta.max_ammo
+        item       = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+        item.ammo += neededammo
         session.commit()
     except Exception as e:
         # Something went wrong during commit
