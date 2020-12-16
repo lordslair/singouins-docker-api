@@ -137,7 +137,8 @@ async def admin(ctx,*args):
 
     if args[0] == 'help':
         msg_help  = '!admin help\n'
-        msg_help += '!admin redis {reset|get} {all|blue|red} {pcid}'
+        msg_help += '!admin redis  {reset|get} {all|blue|red} {pcid}\n'
+        msg_help += '!admin wallet {get}       {all}          {pcid}'
         await ctx.send(f'```{msg_help}```')
         return
 
@@ -172,6 +173,14 @@ async def admin(ctx,*args):
                 await ctx.send(pa)
         elif action == 'help':
             await ctx.send('`!admin redis {reset|get} {all|blue|red} {pcid}`')
+    if module == 'wallet':
+        if action == 'get':
+            if select == 'all':
+                wallet = query_wallet_get(pc)
+                if wallet:
+                    await ctx.send(wallet)
+        elif action == 'help':
+            await ctx.send('`!admin wallet {get} {all} {pcid}`')
 
 @client.event
 async def on_member_join(member):

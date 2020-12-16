@@ -73,6 +73,14 @@ class Wallet(Base):
     uncommon:  int
     common:    int
     broken:    int
+    arrow:     int
+    bolt:      int
+    shell:     int
+    cal22:     int
+    cal223:    int
+    cal311:    int
+    cal50:     int
+    cal55:     int
     date:      str
 
     id         = Column(Integer, primary_key=True)
@@ -83,6 +91,14 @@ class Wallet(Base):
     uncommon   = Column(Integer, nullable=False, server_default='0')
     common     = Column(Integer, nullable=False, server_default='0')
     broken     = Column(Integer, nullable=False, server_default='0')
+    arrow      = Column(Integer, nullable=False, server_default='0')
+    bolt       = Column(Integer, nullable=False, server_default='0')
+    shell      = Column(Integer, nullable=False, server_default='0')
+    cal22      = Column(Integer, nullable=False, server_default='0')
+    cal223     = Column(Integer, nullable=False, server_default='0')
+    cal311     = Column(Integer, nullable=False, server_default='0')
+    cal50      = Column(Integer, nullable=False, server_default='0')
+    cal55      = Column(Integer, nullable=False, server_default='0')
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
