@@ -13,9 +13,9 @@ from .fn_global         import clog
 #
 
 def pc_items_get(username,pcid):
-    (code, success, msg, pc) = fn_creature_get(None,pcid)
-    user                     = fn_user_get(username)
-    session                  = Session()
+    pc      = fn_creature_get(None,pcid)[3]
+    user    = fn_user_get(username)
+    session = Session()
 
     if pc.account is None: return (200, False, 'NPCs do not have items (pcid:{})'.format(pc.id), None)
 
