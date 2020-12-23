@@ -136,10 +136,7 @@ async def admin(ctx,*args):
     print('{} [{}][{}] !admin <{}>'.format(mynow(),ctx.message.channel,member,args))
 
     if args[0] == 'help':
-        msg_help  = '!admin help\n'
-        msg_help += '!admin redis  {reset|get} {all|blue|red} {pcid}\n'
-        msg_help += '!admin wallet {get}       {all}          {pcid}'
-        await ctx.send(f'```{msg_help}```')
+        await ctx.send(f'```{msg_cmd_admin_help}```')
         return
 
     if len(args) < 4:

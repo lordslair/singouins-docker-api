@@ -7,3 +7,8 @@ msg_ready             = ':partying_face: Your favourite bot is here !'
 msg_registration_help = ':question: Si tu souhaites utiliser la commande !register, penses bien à le faire dans le canal #registration, et pas ici en DM, pour que cela fonctionne'
 msg_wrong_monkeys     = ':warning: Il semblerait que tu n\'aies pas entré le bon code de vérification'
 msg_wrong_discordname = ':warning: Il semblerait que ton utilisateur Discord n\'est renseigné dans aucun profil de joueur'
+
+# !admin command messages
+msg_cmd_admin_help    = '!admin help\n'
+msg_cmd_admin_help   += '!admin redis  {reset|get} {all|blue|red} {pcid}\n'
+msg_cmd_admin_help   += '!admin wallet {get}       {all}          {pcid}'
