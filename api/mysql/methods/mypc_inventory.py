@@ -14,10 +14,10 @@ from .fn_global         import clog
 
 # API: /mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle
 def mypc_inventory_item_dismantle(username,pcid,itemid):
-    (code, success, msg, pc) = fn_creature_get(None,pcid)
-    user                     = fn_user_get(username)
-    session                  = Session()
-    bluepa                   = get_pa(pcid)[3]['blue']['pa']
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+    bluepa      = get_pa(pcid)[3]['blue']['pa']
 
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
@@ -299,9 +299,9 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
 
 # API: /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>
 def mypc_inventory_item_offset(username,pcid,itemid,offsetx,offsety):
-    (code, success, msg, pc) = fn_creature_get(None,pcid)
-    user                     = fn_user_get(username)
-    session                  = Session()
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
 
     if pc and pc.account == user.id:
         item  = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
