@@ -66,3 +66,11 @@ def set_pa(pcid,redpa,bluepa):
         else:
             # Key does not exist anymore (PA count = PA max)
             r.set(key,'red',ex=newttl)
+
+def set_consolelog(pcid,consolelog):
+    # TODO
+    print(pcid,consolelog)
+
+def get_consolelog(pcid):
+    # TODO
+    print(pcid)
