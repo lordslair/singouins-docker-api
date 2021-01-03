@@ -105,15 +105,17 @@ class Wallet(Base):
 class HighScore(Base):
     __tablename__ = 'creaturesHighScore'
 
-    id:        int
-    kill:      int
-    death:     int
-    date:      str
+    id:              int
+    kill:            int
+    kill_salamander: int
+    death:           int
+    date:            str
 
-    id         = Column(Integer, primary_key=True)
-    kill       = Column(Integer, nullable=False, server_default='0')
-    death      = Column(Integer, nullable=False, server_default='0')
-    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+    id              = Column(Integer, primary_key=True)
+    kill            = Column(Integer, nullable=False, server_default='0')
+    kill_salamander = Column(Integer, nullable=False, server_default='0')
+    death           = Column(Integer, nullable=False, server_default='0')
+    date            = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
 class CreatureSlots(Base):
