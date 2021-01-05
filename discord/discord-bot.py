@@ -28,6 +28,8 @@ from variables          import token
 from utils.messages     import *
 from utils.histograms   import draw
 
+from mysql.methods.fn_creature import fn_creature_get
+
 # Log Discord imports
 print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Internal imports finished', colored('✓', 'green')))
 
@@ -49,7 +51,12 @@ async def on_ready():
     else: tick = colored('✗', 'red')
     print('{} [{}] {}  [{}]'.format(mynow(),'BOT', 'Discord ready', tick))
 
-@client.command()
+#
+# Commands
+#
+
+# !ping
+@client.command(name='ping', help='Gives you Discord bot latency')
 async def ping(ctx):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
@@ -57,47 +64,51 @@ async def ping(ctx):
     print('{} [{}][{}] !ping'.format(mynow(),ctx.message.channel,member))
     await ctx.send(f'Pong! {round (client.latency * 1000)}ms ')
 
-@client.command(pass_context=True)
-async def register(ctx,arg):
+# !register {user.name}
+@client.command(pass_context=True,name='register', help='Register a Discord user with a Singouins user')
+async def register(ctx, singouins_username: str):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
-    user         = query_get_user(discordname)
-    registration = discord.utils.get(client.get_all_channels(), name='registration')
 
-    print('{} [{}][{}] !register <{}> | {}'.format(mynow(),member,ctx.message.channel,arg,user.name))
+    print('{} [{}][{}] !register <{}>'.format(mynow(),ctx.message.channel,member,singouins_username))
 
-    if (ctx.message.channel != discord.utils.get(client.get_all_channels(), name='registration')):
-        # The command is entered in the wrong channel
-        # Delete the !register <monkey> message sent by the user
+    # Delete the !register <monkey> message sent by the user
+    try:
         await ctx.message.delete()
-        # Send help DM to user
-        await ctx.message.author.send(msg_registration_help)
-    else:
-        if user:
-            # The discordname is in DB
-            if arg == user.d_monkeys:
-                # Delete the !register <monkey> message sent by the user
-                await ctx.message.delete()
-                # Fetch the Discord role
-                role = discord.utils.get(member.guild.roles, name='Singouins')
-                # Apply role on user
-                await ctx.message.author.add_roles(role)
-                # Rename user
-                await ctx.message.author.edit(nick = user.name)
-                # Validate user association in DB
-                query_validate_user(discordname)
-                # Send registered DM to user
-                answer = msg_registered.format(ctx.message.author,user.name)
-                await ctx.message.author.send(answer)
-                print('{} [{}][{}]   registration done'.format(mynow(),member,ctx.message.channel))
-            else:
-                # The monkey-code is wrong
-               await ctx.message.author.send(msg_wrong_monkeys)
-               print('{} [{}][{}]   registration failed (wrong monkeys)'.format(mynow(),member,ctx.message.channel))
+    except:
+        pass
+
+    # Validate user association in DB
+    user = query_user_validate(singouins_username,discordname)
+    if user:
+        print('{} [{}][{}] └> Validation in DB Successful'.format(mynow(),ctx.message.channel,member))
+
+        # Fetch the Discord role
+        role = discord.utils.get(member.guild.roles, name='Singouins')
+        # Apply role on user
+        try:
+            await ctx.message.author.add_roles(role)
+        except Exception as e:
+            # Something went wrong during commit
+            print('{} [{}][{}] └> Member add-role Failed'.format(mynow(),ctx.message.channel,member))
         else:
-            # The discordname is not in DB
-            await ctx.message.author.send(msg_unknown_discordname)
-            print('{} [{}][{}]   registration failed (unknown discordname)'.format(mynow(),member,ctx.message.channel))
+            print('{} [{}][{}] └> Member add-role Successful'.format(mynow(),ctx.message.channel,member))
+
+        # Rename user
+        try:
+            await ctx.message.author.edit(nick = user.name)
+        except Exception as e:
+            # Something went wrong during rename
+            print('{} [{}][{}] └> Member renaming Failed'.format(mynow(),ctx.message.channel,member))
+        else:
+            print('{} [{}][{}] └> Member renaming Successful'.format(mynow(),ctx.message.channel,member))
+
+        # Send registered DM to user
+        answer = msg_registered.format(ctx.message.author,user.name)
+        await ctx.message.author.send(answer)
+        print('{} [{}][{}]   registration done'.format(mynow(),ctx.message.channel,member))
+    else:
+        print('{} [{}][{}] └> Validation in DB Failed'.format(mynow(),ctx.message.channel,member))
 
 @client.command(pass_context=True)
 async def histo(ctx,arg):
