@@ -190,6 +190,39 @@ async def admin(ctx,*args):
         elif action == 'help':
             await ctx.send('`!admin wallet {get} {all} {pcid}`')
 
+@client.command(pass_context=True,name='mysingouin', help='Display your Singouin profile')
+async def myperso(ctx, singouins_pcname: str):
+    member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
+
+    print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,singouins_pcname))
+
+    pc = fn_creature_get(None,pcid)[3]
+    if pc is None:
+        await ctx.send(f'`Unknown Singouin name:{singouins_pcname}`')
+        return
+
+    embed = discord.Embed(
+        title = singouins_pcname,
+        #description = 'Profil:',
+        colour = discord.Colour.blue()
+    )
+
+    emojiM = discord.utils.get(client.emojis, name='statM')
+    emojiR = discord.utils.get(client.emojis, name='statR')
+    emojiV = discord.utils.get(client.emojis, name='statV')
+    emojiG = discord.utils.get(client.emojis, name='statG')
+    emojiP = discord.utils.get(client.emojis, name='statP')
+    emojiB = discord.utils.get(client.emojis, name='statB')
+
+    msg_stats = 'Stats:'
+    msg_nbr   = 'Nbr:'
+    embed.add_field(name=f'`{msg_stats: >7}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
+                    value=f'`{msg_nbr: >7}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
+                    inline = False)
+
+    await ctx.send(embed=embed)
+
 @client.event
 async def on_member_join(member):
     answer = msg_welcome.format(member.mention,'username',member.name,member.discriminator)
