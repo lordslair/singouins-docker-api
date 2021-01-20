@@ -46,6 +46,7 @@ class MetaWeapon(Base):
     caliber:    str
     rounds:     int
     max_ammo:   int
+    burst_acc:  int
     size:       str
     dmg_base:   int
     dmg_sneaky: int
@@ -72,6 +73,7 @@ class MetaWeapon(Base):
     caliber     = Column(Text)
     rounds      = Column(Integer)
     max_ammo    = Column(Integer, nullable=True)
+    burst_acc   = Column(Integer, nullable=True)
     size        = Column(Text)
     dmg_base    = Column(Integer)
     dmg_sneaky  = Column(Integer)
