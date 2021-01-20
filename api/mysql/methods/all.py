@@ -90,7 +90,8 @@ def del_pc(username,pcid):
         session.delete(stats)
 
         items = session.query(Item).filter(Item.bearer == pc.id).all()
-        session.delete(items)
+        if items:
+            session.delete(items)
 
         session.commit()
     except Exception as e:
