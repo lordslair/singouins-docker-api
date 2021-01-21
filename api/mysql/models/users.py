@@ -16,7 +16,6 @@ class User(Base):
     mail:      str
     hash:      str
     d_name:    str
-    d_monkeys: str
     d_ack:     bool
     created:   str
     active:    bool
@@ -27,7 +26,6 @@ class User(Base):
     mail      = Column(Text   , nullable=False)
     hash      = Column(Text   , nullable=False)
     d_name    = Column(Text   , nullable=True)
-    d_monkeys = Column(Text(collation='utf8mb4_general_ci') , nullable=True)
     d_ack     = Column(Boolean, nullable=False, server_default='0')
     created   = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     active    = Column(Boolean, nullable=False, server_default='0')

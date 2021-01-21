@@ -1,12 +1,18 @@
 # -*- coding: utf8 -*-
 
 # Messages
-msg_welcome           = ':arrow_forward: {}, Salutations, et bienvenue parmi nous !\nPar la banane sacrée, j\'ai l\'impression de te reconnaître ...\nNe serais tu pas {} ?\nDans ta page de profil (ici: ), tu trouveras une liste de 4 émojis\nCeux-ci, servent à confirmer le lien avec ton compte Discord ({}#{})\nIls sont 4, et sous cette forme : 🐵🍌🐖🐒\nEnvoie les moi sur le canal #registration sous cette forme `!register 🐵🍌🐖🐒`, et je m\'occupe du reste !'
-msg_registered        = ':ok: Tu es validé !\nTon nom d\'utilisateur Discord `{}` a été renommé en `{}` sur ce serveur.\nDes rôles t\'ont également été ajoutés en tant que membre validé (@Singouin).\nN\'hésite pas à venir te présenter dans le canal #Présentations'
+msg_welcome           = ':arrow_forward: Salutations !\n'
+msg_welcome          += 'Par la banane sacrée :banana:, bienvenue parmi nous\n'
+msg_welcome          += 'Afin de lier son compte Singouins, et ton Discord utilises la commande `!register ton_adresse@mail.com`\n'
+msg_welcome          += 'En remplaçant bien dans l\'exemple l\'adresse mail que tu as utilisé pour ton inscription au jeu\n'
+msg_welcome          += 'Je m\'occupe du reste !'
+
+msg_register_ok       = ':ok: Tu es validé !\n'
+msg_register_ok      += 'Utilise simplement la commande `!grant` dans n\'importe lequel des canaux de discution des Singouins\n'
+msg_register_ok      += 'Des rôles te seront ajoutés, et tu auras accès à des fonctionnalités avancées'
+msg_register_ko       = ':warning: Echec de validation'
+
 msg_ready             = ':partying_face: Your favourite bot is here !'
-msg_registration_help = ':question: Si tu souhaites utiliser la commande !register, penses bien à le faire dans le canal #registration, et pas ici en DM, pour que cela fonctionne'
-msg_wrong_monkeys     = ':warning: Il semblerait que tu n\'aies pas entré le bon code de vérification'
-msg_wrong_discordname = ':warning: Il semblerait que ton utilisateur Discord n\'est renseigné dans aucun profil de joueur'
 
 # !admin command messages
 msg_cmd_admin_help    = '!admin help\n'

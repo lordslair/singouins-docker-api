@@ -64,50 +64,24 @@ async def ping(ctx):
     print('{} [{}][{}] !ping'.format(mynow(),ctx.message.channel,member))
     await ctx.send(f'Pong! {round (client.latency * 1000)}ms ')
 
-# !register {user.name}
+# !register {user.mail}
 @client.command(pass_context=True,name='register', help='Register a Discord user with a Singouins user')
-async def register(ctx, singouins_username: str):
+async def register(ctx, usermail: str):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
 
-    print('{} [{}][{}] !register <{}>'.format(mynow(),ctx.message.channel,member,singouins_username))
-
-    # Delete the !register <monkey> message sent by the user
-    try:
-        await ctx.message.delete()
-    except:
-        pass
+    print('{} [{}][{}] !register <usermail:{}>'.format(mynow(),ctx.message.channel,member,usermail))
 
     # Validate user association in DB
-    user = query_user_validate(singouins_username,discordname)
+    user = query_user_validate(usermail,discordname)
     if user:
-        print('{} [{}][{}] └> Validation in DB Successful'.format(mynow(),ctx.message.channel,member))
-
-        # Fetch the Discord role
-        role = discord.utils.get(member.guild.roles, name='Singouins')
-        # Apply role on user
-        try:
-            await ctx.message.author.add_roles(role)
-        except Exception as e:
-            # Something went wrong during commit
-            print('{} [{}][{}] └> Member add-role Failed'.format(mynow(),ctx.message.channel,member))
-        else:
-            print('{} [{}][{}] └> Member add-role Successful'.format(mynow(),ctx.message.channel,member))
-
-        # Rename user
-        try:
-            await ctx.message.author.edit(nick = user.name)
-        except Exception as e:
-            # Something went wrong during rename
-            print('{} [{}][{}] └> Member renaming Failed'.format(mynow(),ctx.message.channel,member))
-        else:
-            print('{} [{}][{}] └> Member renaming Successful'.format(mynow(),ctx.message.channel,member))
-
         # Send registered DM to user
-        answer = msg_registered.format(ctx.message.author,user.name)
+        answer = msg_register_ok.format(ctx.message.author)
         await ctx.message.author.send(answer)
-        print('{} [{}][{}]   registration done'.format(mynow(),ctx.message.channel,member))
+        print('{} [{}][{}] └> Validation in DB Successful'.format(mynow(),ctx.message.channel,member))
     else:
+        # Send failure DM to user
+        await ctx.message.author.send(msg_register_ko)
         print('{} [{}][{}] └> Validation in DB Failed'.format(mynow(),ctx.message.channel,member))
 
 @client.command(pass_context=True)
@@ -225,7 +199,6 @@ async def myperso(ctx, singouins_pcname: str):
 
 @client.event
 async def on_member_join(member):
-    answer = msg_welcome.format(member.mention,'username',member.name,member.discriminator)
-    await member.send(answer)
+    await member.send(msg_welcome)
 
 client.run(token)
