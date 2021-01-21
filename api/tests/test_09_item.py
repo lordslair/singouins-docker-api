@@ -6,7 +6,7 @@ import requests
 
 SEP_URL     = os.environ['SEP_URL']
 pjname_test = 'PJTest'
-payload     = {'username': 'user', 'password': 'plop'}
+payload     = {'username': 'user@exemple.com', 'password': 'plop'}
 
 def test_singouins_item():
     url      = SEP_URL + '/auth/login'

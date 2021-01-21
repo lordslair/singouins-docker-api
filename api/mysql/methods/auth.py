@@ -41,17 +41,17 @@ def get_usermail_exists(usermail):
     finally:
         session.close()
 
-def add_user(username,password,usermail):
+def add_user(mail,password):
     session = Session()
 
-    if get_username_exists(username) or get_usermail_exists(usermail):
     monkeys = choices(['🐵','🍌','🌴','🙈','🙉','🙊'], k=5)
+
+    if get_username_exists(mail):
         return (409)
     else:
-        user = User(name      = username,
-                    mail      = usermail,
+        user = User(name      = mail,
+                    mail      = mail,
                     hash      = generate_password_hash(password, rounds = 10),
-                    d_name    = '',
                     d_monkeys = monkeys[0] \
                                 + monkeys[1] \
                                 + monkeys[2] \

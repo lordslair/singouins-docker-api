@@ -6,7 +6,7 @@ import requests
 
 SEP_URL     = os.environ['SEP_URL']
 pjname_test = 'PJTest'
-payload     = {'username': 'user', 'password': 'plop'}
+payload     = {'username': 'user@exemple.com', 'password': 'plop'}
 payload_c   = {'race': '2', 'name': 'PJTest'}
 
 def test_singouins_pj_create():

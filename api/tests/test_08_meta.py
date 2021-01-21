@@ -6,7 +6,7 @@ import requests
 
 SEP_URL     = os.environ['SEP_URL']
 metalist    = ['armor','weapon']
-payload     = {'username': 'user', 'password': 'plop'}
+payload     = {'username': 'user@exemple.com', 'password': 'plop'}
 
 def test_singouins_meta():
     url      = SEP_URL + '/auth/login'

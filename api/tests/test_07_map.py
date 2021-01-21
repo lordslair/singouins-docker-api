@@ -6,7 +6,7 @@ import requests
 
 SEP_URL     = os.environ['SEP_URL']
 mapid       = 1
-payload     = {'username': 'user', 'password': 'plop'}
+payload     = {'username': 'user@exemple.com', 'password': 'plop'}
 
 def test_singouins_map():
     url      = SEP_URL + '/auth/login'

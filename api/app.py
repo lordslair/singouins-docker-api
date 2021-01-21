@@ -17,6 +17,8 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from mysql.methods      import *
 from mysql.utils        import redis
 from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA, DISCORD_URL
+from utils.mail         import send
+from utils.token        import generate_confirmation_token
 
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
@@ -85,22 +87,16 @@ def auth_register():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
-    username = request.json.get('username', None)
     password = request.json.get('password', None)
     mail     = request.json.get('mail', None)
-    if not username:
-        return jsonify({"msg": "Missing username parameter"}), 400
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
     if not mail:
         return jsonify({"msg": "Missing mail parameter"}), 400
 
-    code = add_user(username,password,mail)
+    code = add_user(mail,password)
     if code == 201:
-        from utils.mail import send
-        from utils.token import generate_confirmation_token
-
-        subject = '[🐒&🐖] Bienvenue {} !'.format(username)
+        subject = '[🐒&🐖] Bienvenue chez le Singouins !'
         token   = generate_confirmation_token(mail)
         url     = SEP_URL + '/auth/confirm/' + token
         body    = open("/code/data/registered.html", "r").read()
@@ -132,10 +128,15 @@ def auth_confirm(token):
         return jsonify({"msg": "Confirmation link invalid or has expired"}), 498
 
 # Auth route to delete the user
-@app.route('/auth/delete/<string:username>', methods=['DELETE'])
+@app.route('/auth/delete', methods=['DELETE'])
 @jwt_required
-def auth_delete(username):
+def auth_delete():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    username     = request.json.get('username', None)
     current_user = get_jwt_identity()
+
     if not username:
         return jsonify({"msg": "Missing username parameter"}), 400
     if username != current_user:

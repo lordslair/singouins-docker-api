@@ -5,11 +5,11 @@ import os
 import requests
 
 SEP_URL     = os.environ['SEP_URL']
-payload     = {'username': 'user', 'password': 'plop'}
+payload     = {'username': 'user@exemple.com', 'password': 'plop'}
 
 def test_singouins_auth_register():
     url       = SEP_URL + '/auth/register'
-    payload_c = {'username': 'user', 'password': 'plop', 'mail': 'user@exemple.com'}
+    payload_c = {'password': 'plop', 'mail': 'user@exemple.com'}
     response  = requests.post(url, json = payload_c)
 
     assert response.status_code == 201
