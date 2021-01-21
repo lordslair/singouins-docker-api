@@ -32,7 +32,7 @@ def test_singouins_auth_infos():
     infos    = json.loads(response.text)
 
     assert response.status_code == 200
-    assert infos['logged_in_as'] == 'user'
+    assert infos['logged_in_as'] == 'user@exemple.com'
 
 def test_singouins_auth_refresh():
     url      = SEP_URL + '/auth/login'
