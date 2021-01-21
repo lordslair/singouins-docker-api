@@ -2,12 +2,13 @@
 
 from datetime           import datetime
 from flask_bcrypt       import generate_password_hash
+from random             import choices
 
 from ..session          import Session
 from ..models           import *
 
 #
-# Queries /mypc/{pcid}/action/*
+# Queries /auth/*
 #
 
 def get_username_exists(username):
@@ -44,13 +45,18 @@ def add_user(username,password,usermail):
     session = Session()
 
     if get_username_exists(username) or get_usermail_exists(usermail):
+    monkeys = choices(['🐵','🍌','🌴','🙈','🙉','🙊'], k=5)
         return (409)
     else:
         user = User(name      = username,
                     mail      = usermail,
                     hash      = generate_password_hash(password, rounds = 10),
                     d_name    = '',
-                    d_monkeys = '')
+                    d_monkeys = monkeys[0] \
+                                + monkeys[1] \
+                                + monkeys[2] \
+                                + monkeys[3] \
+                                + monkeys[4])
 
         session.add(user)
 
