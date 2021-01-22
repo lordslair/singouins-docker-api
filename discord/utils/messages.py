@@ -12,6 +12,9 @@ msg_register_ok      += 'Utilise simplement la commande `!grant` dans n\'importe
 msg_register_ok      += 'Des rôles te seront ajoutés, et tu auras accès à des fonctionnalités avancées'
 msg_register_ko       = ':warning: Echec de validation'
 
+msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta commande `!grant` !\n'
+msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'
+
 msg_ready             = ':partying_face: Your favourite bot is here !'
 
 # !admin command messages

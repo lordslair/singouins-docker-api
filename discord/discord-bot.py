@@ -29,6 +29,7 @@ from utils.messages     import *
 from utils.histograms   import draw
 
 from mysql.methods.fn_creature import fn_creature_get
+from mysql.methods.fn_user     import fn_user_get_from_member
 
 # Log Discord imports
 print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Internal imports finished', colored('✓', 'green')))
@@ -64,6 +65,10 @@ async def ping(ctx):
     print('{} [{}][{}] !ping'.format(mynow(),ctx.message.channel,member))
     await ctx.send(f'Pong! {round (client.latency * 1000)}ms ')
 
+#
+# Commands for Registration/Grant
+#
+
 # !register {user.mail}
 @client.command(pass_context=True,name='register', help='Register a Discord user with a Singouins user')
 async def register(ctx, usermail: str):
@@ -83,6 +88,47 @@ async def register(ctx, usermail: str):
         # Send failure DM to user
         await ctx.message.author.send(msg_register_ko)
         print('{} [{}][{}] └> Validation in DB Failed'.format(mynow(),ctx.message.channel,member))
+
+# !grant
+@client.command(pass_context=True,name='grant', help='Grant a Discord user relative roles')
+async def register(ctx):
+    member       = ctx.message.author
+
+    print('{} [{}][{}] !grant'.format(mynow(),ctx.message.channel,member))
+
+    # Delete the !grant message sent by the user
+    try:
+        await ctx.message.delete()
+    except:
+        pass
+
+    user = fn_user_get_from_member(member)
+    if user:
+        # Fetch the Discord role
+        try:
+            role = discord.utils.get(member.guild.roles, name='Singouins')
+        except Exception as e:
+            # Something went wrong
+            print('{} [{}][{}] └> Member get-role Failed'.format(mynow(),ctx.message.channel,member))
+        else:
+            print('{} [{}][{}] └> Member get-role Successful'.format(mynow(),ctx.message.channel,member))
+
+        # Apply role on user
+        try:
+            await ctx.message.author.add_roles(role)
+        except Exception as e:
+            # Something went wrong during commit
+            print('{} [{}][{}] └> Member add-role Failed'.format(mynow(),ctx.message.channel,member))
+            # Send failure DM to user
+            await ctx.message.author.send(msg_grant_ko)
+        else:
+            # Send success DM to user
+            await ctx.message.author.send(msg_grant_ok)
+            print('{} [{}][{}] └> Member add-role Successful'.format(mynow(),ctx.message.channel,member))
+    else:
+        # Send failure DM to user
+        await ctx.message.author.send(msg_grant_ko)
+        print('{} [{}][{}] └> Query in DB Failed'.format(mynow(),ctx.message.channel,member))
 
 @client.command(pass_context=True)
 async def histo(ctx,arg):
