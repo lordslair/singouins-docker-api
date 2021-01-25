@@ -130,6 +130,10 @@ async def register(ctx):
         await ctx.message.author.send(msg_grant_ko)
         print('{} [{}][{}] └> Query in DB Failed'.format(mynow(),ctx.message.channel,member))
 
+#
+# Commands for Admins
+#
+
 @client.command(pass_context=True)
 async def histo(ctx,arg):
     member       = ctx.message.author
