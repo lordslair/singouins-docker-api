@@ -210,14 +210,48 @@ async def admin(ctx,*args):
         elif action == 'help':
             await ctx.send('`!admin wallet {get} {all} {pcid}`')
 
-@client.command(pass_context=True,name='mysingouin', help='Display your Singouin profile')
-async def myperso(ctx, singouins_pcname: str):
+#
+# Commands for Singouins
+#
+
+@client.command(pass_context=True,name='mysingouins', help='Display your Singouins')
+async def mysingouins(ctx):
     member       = ctx.message.author
-    discordname  = member.name + '#' + member.discriminator
 
-    print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,singouins_pcname))
+    print('{} [{}][{}] !mysingouins'.format(mynow(),ctx.message.channel,member))
 
-    pc = fn_creature_get(None,pcid)[3]
+    emojiM = discord.utils.get(client.emojis, name='statM')
+    emojiR = discord.utils.get(client.emojis, name='statR')
+    emojiV = discord.utils.get(client.emojis, name='statV')
+    emojiG = discord.utils.get(client.emojis, name='statG')
+    emojiP = discord.utils.get(client.emojis, name='statP')
+    emojiB = discord.utils.get(client.emojis, name='statB')
+
+    emojiRaceC = discord.utils.get(client.emojis, name='raceC')
+    emojiRaceG = discord.utils.get(client.emojis, name='raceG')
+    emojiRaceM = discord.utils.get(client.emojis, name='raceM')
+    emojiRaceO = discord.utils.get(client.emojis, name='raceO')
+    emojiRace = [emojiRaceC,
+                 emojiRaceG,
+                 emojiRaceM,
+                 emojiRaceO]
+
+    pcs = query_pcs_get(member)[3]
+    if pcs is None:
+        await ctx.send(f'`No Singouin found in DB`')
+
+    mydesc = ''
+    for pc in pcs:
+        emojiMyRace = emojiRace[pc.race]
+        mydesc += f'{emojiMyRace} [{pc.id}] {pc.name}\n'
+
+    embed = discord.Embed(
+        title = 'Mes Singouins:',
+        description = mydesc,
+        colour = discord.Colour.blue()
+    )
+
+    await ctx.send(embed=embed)
     if pc is None:
         await ctx.send(f'`Unknown Singouin name:{singouins_pcname}`')
         return
