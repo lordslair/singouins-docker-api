@@ -39,3 +39,31 @@ def query_pcs_get(member):
                     None)
     finally:
         session.close()
+
+def query_pc_get(pcid,member):
+    session  = Session()
+    user     = fn_user_get_from_member(member)
+    pc       = fn_creature_get(None,pcid)[3]
+
+    if not user:
+        return (200,
+                False,
+                '[SQL] User query failed (member:{})'.format(member),
+                None)
+
+    if not pc:
+        return (200,
+                False,
+                '[SQL] PC query failed (member:{})'.format(member),
+                None)
+
+    if pc.account != user.id:
+        return (200,
+                False,
+                'No PC found for this user (userid:{},pcid:{})'.format(user.id,pcid),
+                None)
+    else:
+        return (200,
+                True,
+                'PCs successfully found (userid:{},pcid:{})'.format(user.id,pc.id),
+                pc)

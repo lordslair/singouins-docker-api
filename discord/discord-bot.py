@@ -256,12 +256,19 @@ async def mysingouins(ctx):
     )
 
     await ctx.send(embed=embed)
+
+@client.command(pass_context=True,name='mysingouin', help='Display a Singouin profile')
+async def myperso(ctx, pcid: int):
+    member       = ctx.message.author
+
+    print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,id))
+
+    pc = query_pc_get(pcid,member)[3]
     if pc is None:
-        await ctx.send(f'`Unknown Singouin name:{singouins_pcname}`')
-        return
+        await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
 
     embed = discord.Embed(
-        title = singouins_pcname,
+        title = f'[{pc.id}] {pc.name}\n',
         #description = 'Profil:',
         colour = discord.Colour.blue()
     )
@@ -278,6 +285,14 @@ async def mysingouins(ctx):
     embed.add_field(name=f'`{msg_stats: >7}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
                     value=f'`{msg_nbr: >7}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
                     inline = False)
+
+    msg_shards = 'Shards:'
+    msg_nbr    = 'Nbr:'
+    embed.add_field(name=f'`{msg_shards: >7}`      🟠      🟣      🔵      🟢      ⚪      🟤',
+                    value=f'`{msg_nbr: >7}` `{5: >4}` `{42: >4}` `{31: >4}` `{25: >4}` `{11: >4}` `{123: >4}`',
+                    inline = False)
+
+    embed.set_footer(text='🍌: 123456')
 
     await ctx.send(embed=embed)
 
