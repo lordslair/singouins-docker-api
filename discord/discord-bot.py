@@ -261,7 +261,7 @@ async def mysingouins(ctx):
 async def myperso(ctx, pcid: int):
     member       = ctx.message.author
 
-    print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,id))
+    print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,pcid))
 
     pc = query_pc_get(pcid,member)[3]
     if pc is None:
