@@ -246,7 +246,7 @@ async def mysingouins(ctx):
 
     mydesc = ''
     for pc in pcs:
-        emojiMyRace = emojiRace[pc.race]
+        emojiMyRace = emojiRace[pc.race - 1]
         mydesc += f'{emojiMyRace} [{pc.id}] {pc.name}\n'
 
     embed = discord.Embed(
