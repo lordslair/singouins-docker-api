@@ -344,7 +344,6 @@ async def mysingouin(ctx, pcid: int = None):
                     value=f'`{msg_nbr: >7}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
                     inline = False)
 
-    emojiMoneyB = discord.utils.get(client.emojis, name='moneyB')
     emojiShardL = discord.utils.get(client.emojis, name='shardL')
     emojiShardE = discord.utils.get(client.emojis, name='shardE')
     emojiShardR = discord.utils.get(client.emojis, name='shardR')
@@ -358,6 +357,21 @@ async def mysingouin(ctx, pcid: int = None):
     embed.add_field(name=f'`{msg_shards: >7}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
                     value=f'`{msg_nbr: >7}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
                     inline = False)
+
+    emojiAmmo22  = discord.utils.get(client.emojis, name='ammo22')
+    emojiAmmo223 = discord.utils.get(client.emojis, name='ammo223')
+    emojiAmmo311 = discord.utils.get(client.emojis, name='ammo311')
+    emojiAmmo50  = discord.utils.get(client.emojis, name='ammo50')
+    emojiAmmo55  = discord.utils.get(client.emojis, name='ammo55')
+    emojiAmmoS   = discord.utils.get(client.emojis, name='ammoShell')
+
+    msg_shards = 'Ammo:'
+    msg_nbr    = 'Nbr:'
+    embed.add_field(name=f'`{msg_shards: >7}`      {emojiAmmo22}      {emojiAmmo223}      {emojiAmmo311}      {emojiAmmo50}      {emojiAmmo55}      {emojiAmmoS}',
+                    value=f'`{msg_nbr: >7}` `{wallet.cal22: >4}` `{wallet.cal223: >4}` `{wallet.cal311: >4}` `{wallet.cal50: >4}` `{wallet.cal55: >4}` `{wallet.shell: >4}`',
+                    inline = False)
+
+    emojiMoneyB = discord.utils.get(client.emojis, name='moneyB')
 
     embed.set_footer(text=f'🍌: {wallet.currency}')
 
