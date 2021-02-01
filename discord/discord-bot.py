@@ -101,11 +101,23 @@ async def register(ctx):
 
     print('{} [{}][{}] !grant'.format(mynow(),ctx.message.channel,member))
 
-    # Delete the !grant message sent by the user
+    # Check if the command is used in a channel or a DM
+    if isinstance(ctx.message.channel, discord.DMChannel):
+        # In DM
+        print('{} [{}][{}] └> Sent Helper'.format(mynow(),ctx.message.channel,member))
+        await ctx.message.author.send(msg_grant_helper)
+        return
+    else:
+        # In a Channel
+        pass
+
+    # Delete the message sent by the user
     try:
         await ctx.message.delete()
     except:
         pass
+    else:
+        print('{} [{}][{}] └> Message deleted'.format(mynow(),ctx.message.channel,member))
 
     user = fn_user_get_from_member(member)
     if user:

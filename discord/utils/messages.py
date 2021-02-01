@@ -15,6 +15,7 @@ msg_register_helper   = ':warning: Echec de la commande. Usage: `!register ton_a
 
 msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta commande `!grant` !\n'
 msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'
+msg_grant_helper      = ':warning: Utilise bien la commande `!grant` dans un Canal du serveur, pas ici en message privé\n'
 
 msg_ready             = ':partying_face: Your favourite bot is here !'
 
