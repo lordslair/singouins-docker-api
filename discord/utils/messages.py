@@ -11,6 +11,7 @@ msg_register_ok       = ':ok: Tu es validé !\n'
 msg_register_ok      += 'Utilise simplement la commande `!grant` dans n\'importe lequel des canaux de discution des Singouins\n'
 msg_register_ok      += 'Des rôles te seront ajoutés, et tu auras accès à des fonctionnalités avancées'
 msg_register_ko       = ':warning: Echec de validation'
+msg_register_helper   = ':warning: Echec de la commande. Usage: `!register ton_adresse@mail.com`'
 
 msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta commande `!grant` !\n'
 msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'

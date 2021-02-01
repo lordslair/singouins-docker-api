@@ -71,11 +71,16 @@ async def ping(ctx):
 
 # !register {user.mail}
 @client.command(pass_context=True,name='register', help='Register a Discord user with a Singouins user')
-async def register(ctx, usermail: str):
+async def register(ctx, usermail: str = None):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
 
     print('{} [{}][{}] !register <usermail:{}>'.format(mynow(),ctx.message.channel,member,usermail))
+
+    if usermail is None:
+        print('{} [{}][{}] └> Sent Helper'.format(mynow(),ctx.message.channel,member))
+        await ctx.message.author.send(msg_register_helper)
+        return
 
     # Validate user association in DB
     user = query_user_validate(usermail,discordname)

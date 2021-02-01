@@ -10,7 +10,7 @@ def query_user_validate(usermail, discordname):
 
     try:
         user = session.query(User)\
-                      .filter(User.name == usermail)\
+                      .filter(User.mail == usermail)\
                       .one_or_none()
 
         user.d_name    = discordname
