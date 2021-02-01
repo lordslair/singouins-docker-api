@@ -234,12 +234,27 @@ async def admin(ctx,*args):
 #
 # Commands for Singouins
 #
-
+# DM Only Commands
 @client.command(pass_context=True,name='mysingouins', help='Display your Singouins')
 async def mysingouins(ctx):
     member       = ctx.message.author
 
     print('{} [{}][{}] !mysingouins'.format(mynow(),ctx.message.channel,member))
+
+    # Check if the command is used in a channel or a DM
+    if isinstance(ctx.message.channel, discord.DMChannel):
+        # In DM
+        pass
+    else:
+        # In a Channel
+        # Delete the command message sent by the user
+        try:
+            await ctx.message.delete()
+        except:
+            pass
+        else:
+            print('{} [{}][{}] └> Message deleted'.format(mynow(),ctx.message.channel,member))
+        return
 
     emojiM = discord.utils.get(client.emojis, name='statM')
     emojiR = discord.utils.get(client.emojis, name='statR')
