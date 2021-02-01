@@ -290,14 +290,40 @@ async def mysingouins(ctx):
     await ctx.send(embed=embed)
 
 @client.command(pass_context=True,name='mysingouin', help='Display a Singouin profile')
-async def myperso(ctx, pcid: int):
+async def mysingouin(ctx, pcid: int = None):
     member       = ctx.message.author
 
     print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,pcid))
 
+    if pcid is None:
+        print('{} [{}][{}] └> Sent Helper'.format(mynow(),ctx.message.channel,member))
+        await ctx.message.author.send(msg_mysingouin_helper)
+        return
+
+    # Check if the command is used in a channel or a DM
+    if isinstance(ctx.message.channel, discord.DMChannel):
+        # In DM
+        pass
+    else:
+        # In a Channel
+        # Delete the command message sent by the user
+        try:
+            await ctx.message.delete()
+        except:
+            pass
+        else:
+            print('{} [{}][{}] └> Message deleted'.format(mynow(),ctx.message.channel,member))
+        return
+
     pc = query_pc_get(pcid,member)[3]
     if pc is None:
         await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
+        return
+
+    stuff = query_mypc_items_get(pcid,member)[3]
+    if stuff is None:
+        await ctx.send(f'`Singouin Stuff not found in DB (pcid:{pcid})`')
+        return
 
     embed = discord.Embed(
         title = f'[{pc.id}] {pc.name}\n',
@@ -318,13 +344,22 @@ async def myperso(ctx, pcid: int):
                     value=f'`{msg_nbr: >7}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
                     inline = False)
 
+    emojiMoneyB = discord.utils.get(client.emojis, name='moneyB')
+    emojiShardL = discord.utils.get(client.emojis, name='shardL')
+    emojiShardE = discord.utils.get(client.emojis, name='shardE')
+    emojiShardR = discord.utils.get(client.emojis, name='shardR')
+    emojiShardU = discord.utils.get(client.emojis, name='shardU')
+    emojiShardC = discord.utils.get(client.emojis, name='shardC')
+    emojiShardB = discord.utils.get(client.emojis, name='shardB')
+
+    wallet     = stuff['wallet'][0]
     msg_shards = 'Shards:'
     msg_nbr    = 'Nbr:'
-    embed.add_field(name=f'`{msg_shards: >7}`      🟠      🟣      🔵      🟢      ⚪      🟤',
-                    value=f'`{msg_nbr: >7}` `{5: >4}` `{42: >4}` `{31: >4}` `{25: >4}` `{11: >4}` `{123: >4}`',
+    embed.add_field(name=f'`{msg_shards: >7}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
+                    value=f'`{msg_nbr: >7}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
                     inline = False)
 
-    embed.set_footer(text='🍌: 123456')
+    embed.set_footer(text=f'🍌: {wallet.currency}')
 
     await ctx.send(embed=embed)
 

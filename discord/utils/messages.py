@@ -17,6 +17,8 @@ msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta comma
 msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'
 msg_grant_helper      = ':warning: Utilise bien la commande `!grant` dans un Canal du serveur, pas ici en message privé\n'
 
+msg_mysingouin_helper = ':warning: Echec de la commande. Usage: `!mysingouin ton_id_de_Singouin`, ex: `!mysingouin 118218`'
+
 msg_ready             = ':partying_face: Your favourite bot is here !'
 
 # !admin command messages
