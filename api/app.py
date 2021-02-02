@@ -227,8 +227,8 @@ def mypc_pa(pcid):
 
 @app.route('/mypc/<int:pcid>/view', methods=['GET'])
 @jwt_required
-def mypc_view(pcid):
-    (code, success, msg, payload) = get_view(get_jwt_identity(),pcid)
+def api_mypc_view(pcid):
+    (code, success, msg, payload) = mypc_view_get(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
