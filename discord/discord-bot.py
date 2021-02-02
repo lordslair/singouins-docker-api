@@ -340,8 +340,8 @@ async def mysingouin(ctx, pcid: int = None):
 
     msg_stats = 'Stats:'
     msg_nbr   = 'Nbr:'
-    embed.add_field(name=f'`{msg_stats: >7}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
-                    value=f'`{msg_nbr: >7}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
+    embed.add_field(name=f'`{msg_stats: >9}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
+                    value=f'`{msg_nbr: >9}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
                     inline = False)
 
     emojiShardL = discord.utils.get(client.emojis, name='shardL')
@@ -354,8 +354,8 @@ async def mysingouin(ctx, pcid: int = None):
     wallet     = stuff['wallet'][0]
     msg_shards = 'Shards:'
     msg_nbr    = 'Nbr:'
-    embed.add_field(name=f'`{msg_shards: >7}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
-                    value=f'`{msg_nbr: >7}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
+    embed.add_field(name=f'`{msg_shards: >9}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
+                    value=f'`{msg_nbr: >9}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
                     inline = False)
 
     emojiAmmo22  = discord.utils.get(client.emojis, name='ammo22')
@@ -367,13 +367,28 @@ async def mysingouin(ctx, pcid: int = None):
 
     msg_shards = 'Ammo:'
     msg_nbr    = 'Nbr:'
-    embed.add_field(name=f'`{msg_shards: >7}`      {emojiAmmo22}      {emojiAmmo223}      {emojiAmmo311}      {emojiAmmo50}      {emojiAmmo55}      {emojiAmmoS}',
-                    value=f'`{msg_nbr: >7}` `{wallet.cal22: >4}` `{wallet.cal223: >4}` `{wallet.cal311: >4}` `{wallet.cal50: >4}` `{wallet.cal55: >4}` `{wallet.shell: >4}`',
+    embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmo22}      {emojiAmmo223}      {emojiAmmo311}      {emojiAmmo50}      {emojiAmmo55}      {emojiAmmoS}',
+                    value=f'`{msg_nbr: >9}` `{wallet.cal22: >4}` `{wallet.cal223: >4}` `{wallet.cal311: >4}` `{wallet.cal50: >4}` `{wallet.cal55: >4}` `{wallet.shell: >4}`',
                     inline = False)
 
-    emojiMoneyB = discord.utils.get(client.emojis, name='moneyB')
+    emojiAmmoA   = discord.utils.get(client.emojis, name='ammoArrow')
+    emojiAmmoB   = discord.utils.get(client.emojis, name='ammoBolt')
+    emojiAmmoF   = discord.utils.get(client.emojis, name='ammoFuel')
+    emojiAmmoG   = discord.utils.get(client.emojis, name='ammoGrenade')
+    emojiAmmoR   = discord.utils.get(client.emojis, name='ammoRocket')
 
-    embed.set_footer(text=f'🍌: {wallet.currency}')
+    emojiMoneyB  = discord.utils.get(client.emojis, name='moneyB')
+
+    # Temporary
+    wallet.fuel     = 0
+    wallet.grenade  = 0
+    wallet.rocket   = 0
+
+    msg_shards = 'Specials:'
+    msg_nbr    = 'Nbr:'
+    embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmoA}      {emojiAmmoB}      {emojiAmmoF}      {emojiAmmoG}      {emojiAmmoR}      {emojiMoneyB}',
+                    value=f'`{msg_nbr: >9}` `{wallet.arrow: >4}` `{wallet.bolt: >4}` `{wallet.fuel: >4}` `{wallet.grenade: >4}` `{wallet.rocket: >4}` `{wallet.currency: >4}`',
+                    inline = False)
 
     await ctx.send(embed=embed)
 
