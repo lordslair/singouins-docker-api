@@ -150,6 +150,30 @@ def auth_delete():
     else:
         return jsonify({"msg": "Oops!"}), 422
 
+@app.route('/auth/forgotpassword', methods=['POST'])
+def auth_forgotpassword():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    mail            = request.json.get('mail', None)
+    (code,password) = forgot_password(mail)
+
+    if code == 200:
+        subject = '[🐒&🐖] Mot de passe oublié'
+        token   = generate_confirmation_token(mail)
+        url     = SEP_URL + '/auth/confirm/' + token
+        body    = open("/code/data/forgot_password.html", "r").read()
+        if send(mail,
+                subject,
+                body.format(urllogo    = '[INSERT LOGO HERE]',
+                            password   = password,
+                            urldiscord = DISCORD_URL)):
+            return jsonify({"msg": "Password successfully replaced | mail OK"}), code
+        else:
+            return jsonify({"msg": "Password successfully replaced | mail KO"}), 206
+    else:
+        return jsonify({"msg": "Oops!"}), 422
+
 # Info route when authenticated
 @app.route('/auth/infos', methods=['GET'])
 @jwt_required

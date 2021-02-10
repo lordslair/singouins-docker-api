@@ -2,6 +2,9 @@
 
 from datetime           import datetime
 from flask_bcrypt       import generate_password_hash
+from random             import choice
+
+import string
 
 from ..session          import Session
 from ..models           import *
@@ -96,5 +99,32 @@ def del_user(username):
             return (422)
         else:
             return (200)
+        finally:
+            session.close()
+
+# API: /auth/forgot_password
+def forgot_password(mail):
+    session        = Session()
+    length         = 12
+    letterset      = string.ascii_letters + string.digits
+    password       = ''.join((choice(letterset) for i in range(length)))
+
+    if not get_username_exists(mail):
+        return (404,None)
+    else:
+        try:
+            user = session.query(User)\
+                          .filter(User.name == mail)\
+                          .one_or_none()
+
+            user.hash      = generate_password_hash(password, rounds = 10) # We update hash
+            user.date      = datetime.now() # We update date
+
+            session.commit()
+        except Exception as e:
+            # Something went wrong during commit
+            return (422,None)
+        else:
+            return (200,password)
         finally:
             session.close()
