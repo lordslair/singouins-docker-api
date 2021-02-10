@@ -16,7 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from mysql.methods      import *
 from mysql.utils        import redis
-from variables          import SEP_SECRET_KEY, SEP_URL, SEP_SHA, DISCORD_URL
+from variables          import SEP_SECRET_KEY, API_URL, SEP_SHA, DISCORD_URL
 from utils.mail         import send
 from utils.token        import generate_confirmation_token
 
