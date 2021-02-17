@@ -62,7 +62,7 @@ async def ping(ctx):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
 
-    print('{} [{}][{}] !ping'.format(mynow(),ctx.message.channel,member))
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !ping')
     await ctx.send(f'Pong! {round (client.latency * 1000)}ms ')
 
 #
@@ -75,10 +75,10 @@ async def register(ctx, usermail: str = None):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
 
-    print('{} [{}][{}] !register <usermail:{}>'.format(mynow(),ctx.message.channel,member,usermail))
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !register <usermail:{usermail}>')
 
     if usermail is None:
-        print('{} [{}][{}] └> Sent Helper'.format(mynow(),ctx.message.channel,member))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
         await ctx.message.author.send(msg_register_helper)
         return
 
@@ -88,11 +88,11 @@ async def register(ctx, usermail: str = None):
         # Send registered DM to user
         answer = msg_register_ok.format(ctx.message.author)
         await ctx.message.author.send(answer)
-        print('{} [{}][{}] └> Validation in DB Successful'.format(mynow(),ctx.message.channel,member))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> DB validation successed')
     else:
         # Send failure DM to user
         await ctx.message.author.send(msg_register_ko)
-        print('{} [{}][{}] └> Validation in DB Failed'.format(mynow(),ctx.message.channel,member))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> DB validation failed')
 
 # !grant
 @client.command(pass_context=True,name='grant', help='Grant a Discord user relative roles')

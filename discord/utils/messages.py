@@ -7,11 +7,12 @@ msg_welcome          += 'Afin de lier son compte Singouins, et ton Discord utili
 msg_welcome          += 'En remplaçant bien dans l\'exemple l\'adresse mail que tu as utilisé pour ton inscription au jeu\n'
 msg_welcome          += 'Je m\'occupe du reste !'
 
-msg_register_ok       = ':ok: Tu es validé !\n'
-msg_register_ok      += 'Utilise simplement la commande `!grant` dans n\'importe lequel des canaux de discution des Singouins\n'
-msg_register_ok      += 'Des rôles te seront ajoutés, et tu auras accès à des fonctionnalités avancées'
-msg_register_ko       = ':warning: Echec de validation'
-msg_register_helper   = ':warning: Echec de la commande. Usage: `!register ton_adresse@mail.com`'
+msg_register_ok       = ':ok: You\'re validated !\n'
+msg_register_ok      += 'Now, you can use the `!grant` command in a Singouin channel\n'
+msg_register_ok      += 'Roles ans features will be added to your account'
+msg_register_ko       = ':warning: Registration failed'
+msg_register_helper   = ':information_source: `!register` Command helper\n'
+msg_register_helper  += '`!register ton_adresse@mail.com`: Validate your Discord/Singouins relation'
 
 msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta commande `!grant` !\n'
 msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'
