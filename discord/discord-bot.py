@@ -393,7 +393,7 @@ async def mysingouin(ctx, pcid: int = None):
     await ctx.send(embed=embed)
 
 # Channel only Commands
-@client.command(pass_context=True,name='mysquad', help='Singouin Squad actions')
+@client.command(pass_context=True,name='mysquads', help='Singouin Squad actions')
 async def mysingouin(ctx, action: str = None):
     member       = ctx.message.author
 
@@ -441,7 +441,10 @@ async def mysingouin(ctx, action: str = None):
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Received no Squads infos ({squads[3]})')
             return
 
-        for squadid in squads[3]['leader']:
+        squadlist = squads[3]['leader'] + squads[3]['member']
+        squadset  = set(squadlist)
+
+        for squadid in squadset:
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
 
             # Check channel existance
@@ -453,6 +456,7 @@ async def mysingouin(ctx, action: str = None):
                 try:
                     mysquadchannel = await guild.create_text_channel(f'Squad-{squadid}',
                                                                      category=category,
+                                                                     topic=f'Squad-{squadid} private channel',
                                                                      overwrites=overwrites)
                 except:
                     print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel creation failed (squadid:{squadid})')
@@ -492,6 +496,10 @@ async def mysingouin(ctx, action: str = None):
                 except:
                     print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role not found (squadid:{squadid})')
                 else:
+                    if squadrole in member.roles:
+                        print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad add-role already done (squadid:{squadid})')
+                        return
+
                     try:
                         await ctx.author.add_roles(squadrole)
                     except:

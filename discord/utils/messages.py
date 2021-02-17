@@ -19,10 +19,10 @@ msg_grant_helper      = ':warning: Utilise bien la commande `!grant` dans un Can
 
 msg_mysingouin_helper = ':warning: Echec de la commande. Usage: `!mysingouin ton_id_de_Singouin`, ex: `!mysingouin 118218`'
 
-msg_mysquad_helper_dm = ':warning: Use the `!mysquad` command in a Channel, not here in Direct Messages'
-msg_mysquad_helper    = ':information_source: `!mysingouin` Command helper\n'
-msg_mysquad_helper   += '`!mysingouin init` : Create your private Squads Channels, and private roles\n'
-msg_mysquad_helper   += '`!mysingouin grant` : Add your own Squad roles'
+msg_mysquad_helper_dm = ':warning: Use the `!mysquads` command in a Channel, not here in Direct Messages'
+msg_mysquad_helper    = ':information_source: `!mysquads` Command helper\n'
+msg_mysquad_helper   += '`!mysquads init` : Create your private Squads Channels, and private roles\n'
+msg_mysquad_helper   += '`!mysquads grant` : Add your own Squad roles'
 
 msg_ready             = ':partying_face: Your favourite bot is here !'
 
