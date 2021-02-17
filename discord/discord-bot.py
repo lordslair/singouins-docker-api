@@ -95,29 +95,29 @@ async def register(ctx, usermail: str = None):
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> DB validation failed')
 
 # !grant
-@client.command(pass_context=True,name='grant', help='Grant a Discord user relative roles')
+@client.command(pass_context=True,name='grant', help='Grant a Discord user basic roles')
 async def register(ctx):
     member       = ctx.message.author
 
-    print('{} [{}][{}] !grant'.format(mynow(),ctx.message.channel,member))
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !grant')
+
+    # Delete the command message sent by the user
+    try:
+        await ctx.message.delete()
+    except:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Message deletion failed')
+    else:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Message deleted')
 
     # Check if the command is used in a channel or a DM
     if isinstance(ctx.message.channel, discord.DMChannel):
         # In DM
-        print('{} [{}][{}] └> Sent Helper'.format(mynow(),ctx.message.channel,member))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
         await ctx.message.author.send(msg_grant_helper)
         return
     else:
         # In a Channel
         pass
-
-    # Delete the message sent by the user
-    try:
-        await ctx.message.delete()
-    except:
-        pass
-    else:
-        print('{} [{}][{}] └> Message deleted'.format(mynow(),ctx.message.channel,member))
 
     user = fn_user_get_from_member(member)
     if user:
@@ -126,26 +126,32 @@ async def register(ctx):
             role = discord.utils.get(member.guild.roles, name='Singouins')
         except Exception as e:
             # Something went wrong
-            print('{} [{}][{}] └> Member get-role Failed'.format(mynow(),ctx.message.channel,member))
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Member get-role Failed')
         else:
-            print('{} [{}][{}] └> Member get-role Successful'.format(mynow(),ctx.message.channel,member))
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Member get-role Successful')
+
+        # Check role existence
+        if role in member.roles:
+            # Role already exists, do nothing
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Member role already exists')
+            return
 
         # Apply role on user
         try:
             await ctx.message.author.add_roles(role)
         except Exception as e:
             # Something went wrong during commit
-            print('{} [{}][{}] └> Member add-role Failed'.format(mynow(),ctx.message.channel,member))
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Member add-role Failed')
             # Send failure DM to user
             await ctx.message.author.send(msg_grant_ko)
         else:
             # Send success DM to user
             await ctx.message.author.send(msg_grant_ok)
-            print('{} [{}][{}] └> Member add-role Successful'.format(mynow(),ctx.message.channel,member))
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Member add-role Successful')
     else:
         # Send failure DM to user
         await ctx.message.author.send(msg_grant_ko)
-        print('{} [{}][{}] └> Query in DB Failed'.format(mynow(),ctx.message.channel,member))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Query in DB Failed')
 
 #
 # Commands for Admins

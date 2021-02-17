@@ -14,9 +14,10 @@ msg_register_ko       = ':warning: Registration failed'
 msg_register_helper   = ':information_source: `!register` Command helper\n'
 msg_register_helper  += '`!register ton_adresse@mail.com`: Validate your user (Use in DM for privacy)'
 
-msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta commande `!grant` !\n'
-msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'
-msg_grant_helper      = ':warning: Utilise bien la commande `!grant` dans un Canal du serveur, pas ici en message privé\n'
+msg_grant_ok          = ':ok: You know have more roles on your Discord account\n'
+msg_grant_ko          = ':warning: Failed to load your future roles\n'
+msg_grant_helper      = ':information_source: `!grant` Command helper\n'
+msg_grant_helper      = '`!grant` : Attribute more roles (Use in channel)\n'
 
 msg_mysingouin_helper = ':warning: Echec de la commande. Usage: `!mysingouin ton_id_de_Singouin`, ex: `!mysingouin 118218`'
 
