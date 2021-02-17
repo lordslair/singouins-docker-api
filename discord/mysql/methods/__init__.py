@@ -5,4 +5,5 @@ from .all               import *
 from .mypc              import *
 from .mypc_item         import *
 from .user              import *
+from .squad             import *
 from .wallet            import *

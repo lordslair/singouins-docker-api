@@ -392,6 +392,113 @@ async def mysingouin(ctx, pcid: int = None):
 
     await ctx.send(embed=embed)
 
+# Channel only Commands
+@client.command(pass_context=True,name='mysquad', help='Singouin Squad actions')
+async def mysingouin(ctx, action: str = None):
+    member       = ctx.message.author
+
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !mysquad <{action}>')
+
+    # Delete the command message sent by the user
+    try:
+        await ctx.message.delete()
+    except:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Message deletion failed')
+    else:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Message deleted')
+
+    if action is None:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper (action:{action})')
+        await ctx.message.author.send(msg_mysquad_helper)
+        return
+
+    # Check if the command is used in a channel or a DM
+    if isinstance(ctx.message.channel, discord.DMChannel):
+        # In DM
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper (Wrong channel)')
+        await ctx.message.author.send(msg_mysquad_helper_dm)
+    else:
+        # In a Channel
+        pass
+
+    if action == 'help':
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper (action:{action})')
+        await ctx.message.author.send(msg_mysquad_helper)
+    if action == 'init':
+        guild         = ctx.guild
+        admin_role    = discord.utils.get(guild.roles, name='Team')
+        category      = discord.utils.get(guild.categories, name='Squads')
+        squads        = query_squads_get(member)
+        overwrites    = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            guild.me: discord.PermissionOverwrite(read_messages=True),
+            admin_role: discord.PermissionOverwrite(read_messages=True)
+        }
+
+        if squads[3] is not None:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Received Squads infos ({squads[3]})')
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Received no Squads infos ({squads[3]})')
+            return
+
+        for squadid in squads[3]['leader']:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
+
+            # Check channel existance
+            if discord.utils.get(category.channels, name=f'Squad-{squadid}'.lower()):
+                # Channel already exists, do nothing
+                print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel already exists (Squads/Squad-{squadid})')
+            else:
+                # Channel do not exist, create it
+                try:
+                    mysquadchannel = await guild.create_text_channel(f'Squad-{squadid}',
+                                                                     category=category,
+                                                                     overwrites=overwrites)
+                except:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel creation failed (squadid:{squadid})')
+                else:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel created (Squads/Squad-{squadid})')
+
+            # Check role existence
+            if discord.utils.get(guild.roles, name=f'Squad-{squadid}'):
+                # Role already exists, do nothing
+                print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role already exists (squadid:{squadid})')
+            else:
+                # Role do not exist, create it
+                try:
+                    role = await guild.create_role(name=f'Squad-{squadid}',
+                                                   mentionable=True,
+                                                   permissions=discord.Permissions.none())
+                except:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role creation failed (squadid:{squadid})')
+                else:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role creation successed (squadid:{squadid})')
+
+    elif action == 'grant':
+        guild      = ctx.guild
+        squads = query_squads_get(member)
+        if squads[3] is not None:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Received Squads infos ({squads[3]})')
+
+            squadlist = squads[3]['leader'] + squads[3]['member']
+            squadset  = set(squadlist)
+
+            for squadid in squadset:
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
+
+                # Add the squad role to the user
+                try:
+                    squadrole = discord.utils.get(guild.roles, name=f'Squad-{squadid}')
+                except:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role not found (squadid:{squadid})')
+                else:
+                    try:
+                        await ctx.author.add_roles(squadrole)
+                    except:
+                        print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad add-role failed (squadid:{squadid})')
+                    else:
+                        print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad add-role successed (squadid:{squadid})')
+
 @client.event
 async def on_member_join(member):
     await member.send(msg_welcome)
