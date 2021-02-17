@@ -12,7 +12,7 @@ msg_register_ok      += 'Now, you can use the `!grant` command in a Singouin cha
 msg_register_ok      += 'Roles ans features will be added to your account'
 msg_register_ko       = ':warning: Registration failed'
 msg_register_helper   = ':information_source: `!register` Command helper\n'
-msg_register_helper  += '`!register ton_adresse@mail.com`: Validate your Discord/Singouins relation'
+msg_register_helper  += '`!register ton_adresse@mail.com`: Validate your user (Use in DM for privacy)'
 
 msg_grant_ok          = ':ok: Tu as tes permissions modifiées suite à ta commande `!grant` !\n'
 msg_grant_ko          = ':warning: Echec de changement de tes permissions suite à ta commande `!grant`\n'
