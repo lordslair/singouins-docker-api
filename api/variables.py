@@ -30,3 +30,7 @@ PCS_URL       = os.environ['SEP_PCS_URL']
 
 # Discord permanent invite link
 DISCORD_URL   = os.environ['SEP_DISCORD_URL']
+
+# LDP credentials for log forwarding
+LDP_HOST      = os.environ['SEP_LDP_HOST']
+LDP_TOKEN     = os.environ['SEP_LDP_TOKEN']

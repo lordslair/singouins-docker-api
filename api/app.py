@@ -16,9 +16,17 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from mysql.methods      import *
 from mysql.utils        import redis
-from variables          import SEP_SECRET_KEY, API_URL, SEP_SHA, DISCORD_URL
+from variables          import SEP_SECRET_KEY, API_URL, SEP_SHA, DISCORD_URL,
+                               LDP_HOST, LDP_TOKEN
 from utils.mail         import send
 from utils.token        import generate_confirmation_token
+
+# Imports only for LDP forwarding. Might be temporary
+import logging
+from marshmallow            import fields
+from logging_ldp.formatters import LDPGELFFormatter
+from logging_ldp.handlers   import LDPGELFTCPSocketHandler
+from logging_ldp.schemas    import LDPSchema
 
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
@@ -519,6 +527,60 @@ def map_get(mapid):
     (code, success, msg, payload) = get_map(mapid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+
+#
+# Routes /log
+#
+
+@app.route('/log', methods=['POST'])
+def log_send():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    log_level     = request.json.get('level',           None)
+    log_msg_short = request.json.get('short_message',   None)
+
+    # Load you config there
+    config = dict(env     = request.json.get('_global_env',     None),
+                  host    = request.json.get('_global_host',    None),
+                  version = request.json.get('_global_version', None))
+
+    # Define a custom Schema
+    class MyApp(LDPSchema):
+        global_env     = fields.Constant(config['env'])
+        global_host    = fields.Constant(config['host'])
+        global_version = fields.Constant(config['version'])
+
+    handler = LDPGELFTCPSocketHandler(hostname=LDP_HOST)
+    handler.setFormatter(LDPGELFFormatter(token=LDP_TOKEN, schema=MyApp))
+
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().addHandler(handler)
+
+    try:
+        if log_level == 1:
+            logging.critical(log_msg_short)
+        elif log_level == 2:
+            logging.critical(log_msg_short)
+        elif log_level == 3:
+            logging.error(log_msg_short)
+        elif log_level == 4:
+            logging.warning(log_msg_short)
+        elif log_level == 5:
+            logging.warning(log_msg_short)
+        elif log_level == 6:
+            logging.info(log_msg_short)
+        elif log_level == 7:
+            logging.debug(log_msg_short)
+    except Exception as e:
+        # Something went wrong during query
+        return jsonify({"msg": 'KO!', "success": False, "payload": e}), 200
+    else:
+        return jsonify({"msg": 'OK!', "success": True, "payload": None}), 200
+    finally:
+        logging.getLogger().removeHandler(handler)
+
 
 if __name__ == '__main__':
     app.run()
