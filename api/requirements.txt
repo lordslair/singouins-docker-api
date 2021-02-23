@@ -4,6 +4,7 @@ Flask-bcrypt
 Flask-cors
 Flask-JWT-Extended
 Flask-Swagger-UI
+logging-ldp
 prometheus-flask-exporter
 pyMySQL
 pyTest
