@@ -73,8 +73,28 @@ def fn_creature_wound(pc,tg,dmg):
         session.close()
 
 def fn_creature_kill(pc,tg):
-    clog(pc.id,tg.id,'Killed {}'.format(tg.name))
-    clog(tg.id,None,'Died'.format(pc.name))
+    session = Session()
+    try:
+        tg      = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
+        tg.hp   = 0              # We update Health Points
+        tg.date = datetime.now() # We update date
+        #session.delete(tg)
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                '[SQL] PC Kill failed (tgid:{},tgname:{})'.format(tg.id,tg.name),
+                None)
+    else:
+        clog(pc.id,tg.id,'Killed {}'.format(tg.name))
+        clog(tg.id,None,'Died'.format(pc.name))
+        return (200,
+                True,
+                '[SQL] PC Kill successed (tgid:{},tgname:{})'.format(tg.id,tg.name),
+                None)
+    finally:
+        session.close()
 
 def fn_creature_gain_xp(pc,tg):
     session = Session()

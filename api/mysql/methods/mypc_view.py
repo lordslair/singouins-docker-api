@@ -11,7 +11,7 @@ from .fn_user           import fn_user_get
 #
 
 # API: /mypc/<int:pcid>/view
-def get_view(username,pcid):
+def mypc_view_get(username,pcid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()
