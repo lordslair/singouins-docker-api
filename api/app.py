@@ -105,7 +105,7 @@ def auth_register():
     if code == 201:
         subject = '[🐒&🐖] Bienvenue chez le Singouins !'
         token   = generate_confirmation_token(mail)
-        url     = SEP_URL + '/auth/confirm/' + token
+        url     = API_URL + '/auth/confirm/' + token
         body    = open("/code/data/registered.html", "r").read()
         if send(mail,
                 subject,
@@ -168,7 +168,7 @@ def auth_forgotpassword():
     if code == 200:
         subject = '[🐒&🐖] Mot de passe oublié'
         token   = generate_confirmation_token(mail)
-        url     = SEP_URL + '/auth/confirm/' + token
+        url     = API_URL + '/auth/confirm/' + token
         body    = open("/code/data/forgot_password.html", "r").read()
         if send(mail,
                 subject,
