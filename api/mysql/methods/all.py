@@ -42,32 +42,6 @@ def get_pc_exists(pcname,pcid):
     finally:
         session.close()
 
-def get_pcs(username):
-    session = Session()
-
-    try:
-        userid = fn_user_get(username).id
-        pcs    = session.query(PJ).filter(PJ.account == userid).all()
-    except Exception as e:
-        # Something went wrong during query
-        return (200,
-                False,
-                '[SQL] PCs query failed (username:{})'.format(username),
-                None)
-    else:
-        if pcs:
-            return (200,
-                    True,
-                    'PCs successfully found (username:{})'.format(username),
-                    pcs)
-        else:
-            return (200,
-                    False,
-                    'No PC found for this user (username:{})'.format(username),
-                    None)
-    finally:
-        session.close()
-
 def del_pc(username,pcid):
     session = Session()
 

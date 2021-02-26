@@ -13,8 +13,16 @@ from .fn_global         import clog
 # Queries /mypc/*
 #
 
+# API: POST /mypc
 def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
     session = Session()
+
+    mypc_nbr = mypc_get_all(username)[3]
+    if len(mypc_nbr) >= 3:
+        return (200,
+                False,
+                f'PC quota reached (username:{username},pccount:{len(mypc_nbr)})',
+                None)
 
     if fn_creature_get(pcname,None)[1]:
         return (409,
@@ -123,3 +131,30 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                         return (201, True, 'PC successfully created', pc)
         finally:
             session.close()
+
+# API: GET /mypc
+def mypc_get_all(username):
+    session = Session()
+
+    try:
+        userid = fn_user_get(username).id
+        pcs    = session.query(PJ).filter(PJ.account == userid).all()
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                '[SQL] PCs query failed (username:{})'.format(username),
+                None)
+    else:
+        if pcs:
+            return (200,
+                    True,
+                    'PCs successfully found (username:{})'.format(username),
+                    pcs)
+        else:
+            return (200,
+                    False,
+                    'No PC found for this user (username:{})'.format(username),
+                    None)
+    finally:
+        session.close()

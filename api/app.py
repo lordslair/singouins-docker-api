@@ -224,7 +224,7 @@ def api_mypc_create():
 @jwt_required
 def mypc_list():
     current_user = get_jwt_identity()
-    (code, success, msg, payload) = get_pcs(current_user)
+    (code, success, msg, payload) = mypc_get_all(current_user)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
