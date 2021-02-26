@@ -235,9 +235,9 @@ def mypc_details(pcid):
 
 @app.route('/mypc/<int:pcid>', methods=['DELETE'])
 @jwt_required
-def mypc_delete(pcid):
+def api_mypc_del(pcid):
     current_user = get_jwt_identity()
-    (code, success, msg, payload) = del_pc(current_user,pcid)
+    (code, success, msg, payload) = mypc_del(current_user,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

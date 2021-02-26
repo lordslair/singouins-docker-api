@@ -42,46 +42,6 @@ def get_pc_exists(pcname,pcid):
     finally:
         session.close()
 
-def del_pc(username,pcid):
-    session = Session()
-
-    if not get_pc_exists(None,pcid):
-        return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
-
-    try:
-        userid    = fn_user_get(username).id
-
-        pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
-        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
-        wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
-        highscore = session.query(HighScore).filter(HighScore.id == pc.id).one_or_none()
-        stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()
-
-        session.delete(pc)
-        session.delete(equipment)
-        session.delete(wallet)
-        session.delete(highscore)
-        session.delete(stats)
-
-        items = session.query(Item).filter(Item.bearer == pc.id).all()
-        if items:
-            session.delete(items)
-
-        session.commit()
-    except Exception as e:
-        # Something went wrong during commit
-        return (200,
-                False,
-                '[SQL] PC deletion failed (username:{},pcid:{})'.format(username,pcid),
-                None)
-    else:
-        return (200,
-                True,
-                'PC successfully deleted (username:{},pcid:{})'.format(username,pcid),
-                None)
-    finally:
-        session.close()
-
 #
 # Queries: /mp
 #

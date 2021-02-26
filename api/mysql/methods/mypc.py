@@ -158,3 +158,48 @@ def mypc_get_all(username):
                     None)
     finally:
         session.close()
+
+# API: DELETE /mypc/<int:pcid>
+def mypc_del(username,pcid):
+    session = Session()
+
+    if not get_pc_exists(None,pcid):
+        return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
+
+    try:
+        userid    = fn_user_get(username).id
+
+        pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
+        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+        wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
+        highscore = session.query(HighScore).filter(HighScore.id == pc.id).one_or_none()
+        stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()
+
+        if pc: session.delete(pc)
+        if equipment: session.delete(equipment)
+        if wallet: session.delete(wallet)
+        if highscore: session.delete(highscore)
+        if stats: session.delete(stats)
+
+        items = session.query(Item).filter(Item.bearer == pc.id).all()
+        if items:
+            for item in items:
+                # To archive the item without deleting it
+                item.bearer  = None
+                item.offsetx = None
+                item.offsety = None
+
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                '[SQL] PC deletion failed (username:{},pcid:{})'.format(username,pcid),
+                None)
+    else:
+        return (200,
+                True,
+                'PC successfully deleted (username:{},pcid:{})'.format(username,pcid),
+                None)
+    finally:
+        session.close()
