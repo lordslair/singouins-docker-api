@@ -18,11 +18,12 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
     session = Session()
 
     mypc_nbr = mypc_get_all(username)[3]
-    if len(mypc_nbr) >= 3:
-        return (200,
-                False,
-                f'PC quota reached (username:{username},pccount:{len(mypc_nbr)})',
-                None)
+    if mypc_nbr:
+        if len(mypc_nbr) >= 3:
+            return (200,
+                    False,
+                    f'PC quota reached (username:{username},pccount:{len(mypc_nbr)})',
+                    None)
 
     if fn_creature_get(pcname,None)[1]:
         return (409,
