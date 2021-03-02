@@ -164,7 +164,7 @@ def mypc_get_all(username):
 def mypc_del(username,pcid):
     session = Session()
 
-    if not get_pc_exists(None,pcid):
+    if not fn_creature_get(None,pcid)[3]:
         return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
 
     try:

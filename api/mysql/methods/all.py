@@ -16,33 +16,6 @@ from .fn_highscore      import *
 from .fn_global         import clog
 
 #
-# Queries: /pc
-#
-from variables      import PCS_URL
-
-def get_pc_exists(pcname,pcid):
-    session = Session()
-
-    try:
-        if not pcname and not pcid:
-            return False
-        elif pcname and pcid:
-            result = session.query(PJ).filter(PJ.name == pcname, PJ.id == pcid).one_or_none()
-        elif pcname and not pcid:
-            result = session.query(PJ).filter(PJ.name == pcname).one_or_none()
-        elif not pcname and pcid:
-            result = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-        else:
-            return False
-    except Exception as e:
-        # Something went wrong during query
-        return False
-    else:
-        if result: return True
-    finally:
-        session.close()
-
-#
 # Queries: /mp
 #
 
