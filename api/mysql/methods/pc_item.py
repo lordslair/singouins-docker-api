@@ -12,6 +12,7 @@ from .fn_global         import clog
 # Queries /pc/{pcid}/item/{itemid}/*
 #
 
+# API: /pc/<int:pcid>/item
 def pc_items_get(username,pcid):
     pc      = fn_creature_get(None,pcid)[3]
     user    = fn_user_get(username)
@@ -31,6 +32,11 @@ def pc_items_get(username,pcid):
         shoulders = session.query(Item).filter(Item.id == equipment[0].shoulders).one_or_none()
         torso     = session.query(Item).filter(Item.id == equipment[0].torso).one_or_none()
         legs      = session.query(Item).filter(Item.id == equipment[0].legs).one_or_none()
+
+        # We publicly anounce the cosmetics owned by a PC
+        cosmetic  = session.query(Cosmetic)\
+                           .filter(Cosmetic.bearer == pc.id)\
+                           .all()
     except Exception as e:
         # Something went wrong during query
         return (200,
@@ -83,6 +89,7 @@ def pc_items_get(username,pcid):
         return (200,
                 True,
                 'Equipment query successed (pcid:{})'.format(pc.id),
-                {"equipment": metas})
+                {"equipment": metas,
+                 "cosmetic": cosmetic})
     finally:
         session.close()
