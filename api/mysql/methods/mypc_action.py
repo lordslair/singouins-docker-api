@@ -12,6 +12,8 @@ from .fn_user           import fn_user_get
 from .fn_wallet         import fn_wallet_ammo_get,fn_wallet_ammo_set
 from .fn_global         import clog
 
+# To accessing dict keys like an attribute
+# Might refactor and use dataclasses instead
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
