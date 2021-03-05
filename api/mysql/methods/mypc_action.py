@@ -56,6 +56,11 @@ def mypc_action_move(username,pcid,path):
                 None)
     else:
         clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
+
+        # We put the info in queue for ws
+        qmsg = {"route": "mypc/{id1}/action/move", "payload": {"id": pcid, "x": x, "y": y}}
+        yqueue_put('broadcast', qmsg)
+
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
     finally:
         session.close()

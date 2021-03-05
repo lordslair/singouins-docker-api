@@ -1,6 +1,8 @@
 # -*- coding: utf8 -*-
 
+import json
 import redis
+import yarqueue
 
 from datetime  import datetime
 
@@ -78,3 +80,29 @@ def consolelog_add(pcid,consolelog):
 def consolelog_get(pcid):
     # TODO
     print(pcid)
+
+#
+# Queries: Queues
+#
+
+qr = redis.StrictRedis(host     = REDIS_HOST,
+                       port     = REDIS_PORT,
+                       db       = '1',
+                       encoding = 'utf-8')
+
+def yqueue_put(yqueue_name,msg):
+    # Opening Queue
+    try:
+        yqueue      = yarqueue.Queue(name=yqueue_name, redis=qr)
+    except:
+        print(f'Connection to yarqueue:{yqueue_name} [✗]')
+    else:
+        pass
+
+    # Put data in Queue
+    try:
+        yqueue.put(json.dumps(msg))
+    except:
+        print(f'yarqueue:{yqueue_name} <{msg}> [✗]')
+    else:
+        pass
