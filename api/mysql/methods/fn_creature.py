@@ -93,9 +93,6 @@ def fn_creature_kill(pc,tg):
                 '[SQL] PC Kill failed (tgid:{},tgname:{})'.format(tgid,tgname),
                 None)
     else:
-        clog(pc.id,tgid,f'Killed {tgname}')
-        clog(tgid,None,'Died')
-
         # We put the info in queue for ws
         qciphered = False
         qpayload  = {"id": pc.id, "target": {"id": tgid, "name": tgname}}
@@ -106,6 +103,8 @@ def fn_creature_kill(pc,tg):
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
 
+        clog(pc.id,tgid,f'Killed {tgname}')
+        clog(tgid,None,'Died')
         return (200,
                 True,
                 '[SQL] PC Kill successed (tgid:{},tgname:{})'.format(tgid,tgname),
