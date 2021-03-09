@@ -74,6 +74,11 @@ def fn_creature_wound(pc,tg,dmg):
 
 def fn_creature_kill(pc,tg):
     session = Session()
+
+    # As tg object will be destroyed, we store the info for later
+    tgid    = tg.id
+    tgname  = tg.name
+
     try:
         tg      = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
         tg.hp   = 0              # We update Health Points
@@ -84,14 +89,14 @@ def fn_creature_kill(pc,tg):
         # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] PC Kill failed (tgid:{},tgname:{})'.format(tg.id,tg.name),
+                '[SQL] PC Kill failed (tgid:{},tgname:{})'.format(tgid,tgname),
                 None)
     else:
-        clog(pc.id,tg.id,'Killed {}'.format(tg.name))
-        clog(tg.id,None,'Died'.format(pc.name))
+        clog(pc.id,tgid,f'Killed {tgname}')
+        clog(tgid,None,'Died')
         return (200,
                 True,
-                '[SQL] PC Kill successed (tgid:{},tgname:{})'.format(tg.id,tg.name),
+                '[SQL] PC Kill successed (tgid:{},tgname:{})'.format(tgid,tgname),
                 None)
     finally:
         session.close()
