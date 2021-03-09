@@ -5,6 +5,7 @@ from datetime           import datetime
 from ..session          import Session
 from ..models           import PJ,Wallet,Item
 from ..utils.loot       import *
+from ..utils.redis      import *
 
 from .fn_global         import clog
 
@@ -94,6 +95,17 @@ def fn_creature_kill(pc,tg):
     else:
         clog(pc.id,tgid,f'Killed {tgname}')
         clog(tgid,None,'Died')
+
+        # We put the info in queue for ws
+        qciphered = False
+        qpayload  = {"id": pc.id, "target": {"id": tgid, "name": tgname}}
+        qscope    = {"id": None, "scope": 'broadcast'}
+        qmsg = {"ciphered": qciphered,
+                "payload": qpayload,
+                "route": None,
+                "scope": qscope}
+        yqueue_put('broadcast', qmsg)
+
         return (200,
                 True,
                 '[SQL] PC Kill successed (tgid:{},tgname:{})'.format(tgid,tgname),
