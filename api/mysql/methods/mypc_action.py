@@ -58,7 +58,13 @@ def mypc_action_move(username,pcid,path):
         clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
 
         # We put the info in queue for ws
-        qmsg = {"route": "mypc/{id1}/action/move", "payload": {"id": pcid, "x": x, "y": y}}
+        qciphered = False
+        qpayload  = {"id": pc.id, "x": x, "y": y}
+        qscope    = {"id": None, "scope": 'broadcast'}
+        qmsg = {"ciphered": qciphered,
+                "payload": qpayload,
+                "route": "mypc/{id1}/action/move",
+                "scope": qscope}
         yqueue_put('broadcast', qmsg)
 
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
