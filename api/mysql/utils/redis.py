@@ -29,12 +29,12 @@ bluemaxttl     = bluepaduration * bluepamax
 
 def get_pa(pcid):
 
-    redkey    = str(pcid) + '-red'
+    redkey    = f'red:{pcid}'
     redttl    = r.ttl(redkey)
     redpa     = int(round(((redmaxttl - abs(redttl))  / redpaduration)))
     redttnpa  = r.ttl(redkey) % redpaduration
 
-    bluekey   = str(pcid) + '-blue'
+    bluekey   = f'blue:{pcid}'
     bluettl   = r.ttl(bluekey)
     bluepa    = int(round(((bluemaxttl - abs(bluettl))  / bluepaduration)))
     bluettnpa = r.ttl(bluekey) % bluepaduration
@@ -46,7 +46,7 @@ def set_pa(pcid,redpa,bluepa):
 
     if bluepa > 0:
         # An action consumed a blue PA, we need to update
-        key    = str(pcid) + '-blue'
+        key    = f'blue:{pcid}'
         ttl    = r.ttl(key)
         newttl = ttl + (bluepa * bluepaduration)
 
@@ -58,7 +58,7 @@ def set_pa(pcid,redpa,bluepa):
             r.set(key,'blue',ex=newttl)
     if redpa > 0:
         # An action consumed a red PA, we need to update
-        key    = str(pcid) + '-red'
+        key    = f'red:{pcid}'
         ttl    = r.ttl(key)
         newttl = ttl + (redpa * redpaduration)
 
