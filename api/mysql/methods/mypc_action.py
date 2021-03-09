@@ -55,8 +55,6 @@ def mypc_action_move(username,pcid,path):
                 '[SQL] Coords update failed (pcid:{},path:{})'.format(pcid,path),
                 None)
     else:
-        clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
-
         # We put the info in queue for ws
         qciphered = False
         qpayload  = {"id": pc.id, "x": x, "y": y}
@@ -67,6 +65,7 @@ def mypc_action_move(username,pcid,path):
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
 
+        clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
     finally:
         session.close()
