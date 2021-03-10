@@ -99,7 +99,7 @@ def fn_creature_kill(pc,tg):
         qscope    = {"id": None, "scope": 'broadcast'}
         qmsg = {"ciphered": qciphered,
                 "payload": qpayload,
-                "route": None,
+                "route": "mypc/{id1}/action/attack/{id2}/{id3}",
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
 
