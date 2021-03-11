@@ -69,18 +69,6 @@ def set_pa(pcid,redpa,bluepa):
             # Key does not exist anymore (PA count = PA max)
             r.set(key,'red',ex=newttl)
 
-def consolelog_set(pcid,consolelog):
-    # TODO
-    print(pcid,consolelog)
-
-def consolelog_add(pcid,consolelog):
-    # TODO
-    print(pcid,consolelog)
-
-def consolelog_get(pcid):
-    # TODO
-    print(pcid)
-
 #
 # Queries: Queues
 #
