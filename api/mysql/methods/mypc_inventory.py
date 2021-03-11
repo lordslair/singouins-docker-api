@@ -302,10 +302,23 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
                 '[SQL] Unequip failed (pcid:{},itemid:{})'.format(pcid,itemid),
                 None)
     else:
-        clog(pc.id,None,'Unequipped an item')
         equipment = session.query(CreatureSlots)\
                            .filter(CreatureSlots.id == pc.id)\
                            .one_or_none()
+
+        # We need to convert datetime to str before dumping it as a dict
+        equipment.date = equipment.date.strftime('%Y-%m-%d %H:%M:%S')
+
+        # We put the info in queue for ws
+        qciphered = False
+        qpayload  = dataclasses.asdict(equipment)
+        qscope    = {"id": None, "scope": 'broadcast'}
+        qmsg = {"ciphered": qciphered,
+                "payload": qpayload,
+                "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
+                "scope": qscope}
+        yqueue_put('broadcast', qmsg)
+
         return (200,
                 True,
                 'Unequipped successful (pcid:{},itemid:{})'.format(pcid,itemid),
