@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+import dataclasses      # Needed for WS JSON broadcast
+
 from ..session          import Session
 from ..models           import *
 from ..utils.redis      import *
@@ -207,9 +209,25 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 '[SQL] Equipment update failed (pcid:{},itemid:{})'.format(pcid,itemid),
                 None)
     else:
-        set_pa(pcid,costpa,0) # We consume the red PA (costpa) right now
-        clog(pc.id,None,'Equipment changed')
-        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+        equipment = session.query(CreatureSlots)\
+                           .filter(CreatureSlots.id == pc.id)\
+                           .one_or_none()
+
+        # We need to convert datetime to str before dumping it as a dict
+        equipment.date = equipment.date.strftime('%Y-%m-%d %H:%M:%S')
+
+        # We put the info in queue for ws
+        qciphered = False
+        qpayload  = dataclasses.asdict(equipment)
+        qscope    = {"id": None, "scope": 'broadcast'}
+        qmsg = {"ciphered": qciphered,
+                "payload": qpayload,
+                "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
+                "scope": qscope}
+        yqueue_put('broadcast', qmsg)
+
+        set_pa(pc.id,costpa,0) # We consume the red PA (costpa) right now
+
         return (200,
                 True,
                 'Equipment successfully updated (pcid:{},itemid:{})'.format(pcid,itemid),
