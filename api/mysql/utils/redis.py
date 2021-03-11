@@ -87,7 +87,7 @@ def consolelog_get(pcid):
 
 qr = redis.StrictRedis(host     = REDIS_HOST,
                        port     = REDIS_PORT,
-                       db       = '1',
+                       db       = REDIS_DB_NAME,
                        encoding = 'utf-8')
 
 def yqueue_put(yqueue_name,msg):
