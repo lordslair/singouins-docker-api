@@ -258,7 +258,14 @@ def mypc_get_stats(pc):
                 stats_items['def']['armor']['b'] += item.arm_b
                 stats_items['def']['armor']['p'] += item.arm_p
 
-        stats  = {"off":{
+        stats  = {"base":{
+                            "m": pc.m,
+                            "r": pc.r,
+                            "g": pc.g,
+                            "v": pc.v,
+                            "p": pc.p,
+                            "b": pc.b},
+                  "off":{
                             "capcom": round((pc.g + round((pc.m + pc.r)/2))/2),
                             "capsho": round((pc.v + round((pc.b + pc.r)/2))/2)},
                   "def":{
