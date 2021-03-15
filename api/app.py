@@ -253,6 +253,18 @@ def mypc_pa(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
+# Routes: /stats
+#
+
+@app.route('/mypc/<int:pcid>/stats', methods=['GET'])
+@jwt_required
+def api_mypc_stats_get(pcid):
+    pc = fn_creature_get(None,pcid)[3]
+    (code, success, msg, payload) = redis.get_stats(pc)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
 # Routes: /view
 #
 

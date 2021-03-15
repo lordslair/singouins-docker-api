@@ -69,6 +69,54 @@ def set_pa(pcid,redpa,bluepa):
             # Key does not exist anymore (PA count = PA max)
             r.set(key,'red',ex=newttl)
 
+
+#
+# Queries: Creature Stats
+#
+
+def set_stats(pc):
+    ttl    = 300
+    key    = f'stats:{pc.id}'
+    value  = {"base":{"m": pc.m,
+                      "r": pc.r,
+                      "g": pc.g,
+                      "v": pc.v,
+                      "p": pc.p,
+                      "b": pc.b},
+             "off":{"capcom": round((pc.g + round((pc.m + pc.r)/2))/2),
+                    "capsho": round((pc.v + round((pc.b + pc.r)/2))/2)},
+             "def":{"hpmax": 100 + pc.m + round(pc.level/2),
+                    "dodge": pc.r,
+                    "parry": round((pc.g-100)/50) * round((pc.m-100)/50)}}
+    try:
+        r.set(key,json.dumps(value),ttl)
+    except Exception as e:
+        print(f'set_stats failed:{e}')
+        return False
+    else:
+        return True
+
+def get_stats(pc):
+    key    = f'stats:{pc.id}'
+
+    try:
+        if r.exists(key):
+            # The pre-generated stats already exists in redis
+            stats = json.loads(r.get(key))
+        else:
+            set_stats(pc)
+            stats = json.loads(r.get(key))
+    except Exception as e:
+        return (200,
+                False,
+                f'[Redis] Stats query failed (pcid:{pc.id})',
+                None)
+    else:
+        return (200,
+                True,
+                f'Stats query Successed (pcid:{pc.id})',
+                stats)
+
 #
 # Queries: Queues
 #
