@@ -4,6 +4,7 @@ from datetime           import datetime
 
 from ..session          import Session
 from ..models           import *
+from ..utils.redis      import *
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get
@@ -202,5 +203,79 @@ def mypc_del(username,pcid):
                 True,
                 'PC successfully deleted (username:{},pcid:{})'.format(username,pcid),
                 None)
+    finally:
+        session.close()
+
+# API: GET /mypc/<int:pcid>/stats
+def mypc_get_stats(pc):
+
+    # We check if we have the data in redis
+    stats = get_stats(pc)
+    if stats:
+        # Data was in Redis, so we return it
+        return (200,
+                True,
+                f'Stats successfully found in Redis (pcid:{pc.id})',
+                stats)
+
+    # Data was not in Redis, so we compute it
+    session      = Session()
+    stats_items  = {"off":{
+                            "capcom": 0,
+                            "capsho": 0},
+                    "def":{
+                            "armor": {
+                                        "p": 0,
+                                        "b": 0},
+                            "hpmax": 0,
+                            "dodge": 0,
+                            "parry": 0}}
+
+    try:
+        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+
+        if equipment:
+            feet      = session.query(MetaArmor).filter(MetaArmor.id == equipment.feet).one_or_none()
+            hands     = session.query(MetaArmor).filter(MetaArmor.id == equipment.hands).one_or_none()
+            head      = session.query(MetaArmor).filter(MetaArmor.id == equipment.head).one_or_none()
+            shoulders = session.query(MetaArmor).filter(MetaArmor.id == equipment.shoulders).one_or_none()
+            torso     = session.query(MetaArmor).filter(MetaArmor.id == equipment.torso).one_or_none()
+            legs      = session.query(MetaArmor).filter(MetaArmor.id == equipment.legs).one_or_none()
+
+            holster   = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.holster).one_or_none()
+            lefthand  = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.lefthand).one_or_none()
+            righthand = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.righthand).one_or_none()
+
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                f'[SQL] Stats query failed (pcid:{pc.id})',
+                None)
+    else:
+        for item in (feet, hands, head, shoulders, torso, legs):
+            if item:
+                stats_items['def']['armor']['b'] += item.arm_b
+                stats_items['def']['armor']['p'] += item.arm_p
+
+        stats  = {"off":{
+                            "capcom": round((pc.g + round((pc.m + pc.r)/2))/2),
+                            "capsho": round((pc.v + round((pc.b + pc.r)/2))/2)},
+                  "def":{
+                            "armor": {
+                                        "p": 0 + stats_items['def']['armor']['p'],
+                                        "b": 0 + stats_items['def']['armor']['b']},
+                            "hpmax": 100 + pc.m + round(pc.level/2),
+                            "dodge": pc.r,
+                            "parry": round((pc.g-100)/50) * round((pc.m-100)/50)}}
+
+        # Data was not in Redis, so we push it
+        set_stats(pc,stats)
+
+        # To avoid errors, we return the freshly computed value
+        return (200,
+                True,
+                f'Stats successfully computed (pcid:{pc.id})',
+                stats)
     finally:
         session.close()

@@ -260,7 +260,7 @@ def mypc_pa(pcid):
 @jwt_required
 def api_mypc_stats_get(pcid):
     pc = fn_creature_get(None,pcid)[3]
-    (code, success, msg, payload) = redis.get_stats(pc)
+    (code, success, msg, payload) = mypc_get_stats(pc)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

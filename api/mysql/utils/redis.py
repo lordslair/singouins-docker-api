@@ -74,22 +74,13 @@ def set_pa(pcid,redpa,bluepa):
 # Queries: Creature Stats
 #
 
-def set_stats(pc):
+def set_stats(pc,stats):
     ttl    = 300
     key    = f'stats:{pc.id}'
-    value  = {"base":{"m": pc.m,
-                      "r": pc.r,
-                      "g": pc.g,
-                      "v": pc.v,
-                      "p": pc.p,
-                      "b": pc.b},
-             "off":{"capcom": round((pc.g + round((pc.m + pc.r)/2))/2),
-                    "capsho": round((pc.v + round((pc.b + pc.r)/2))/2)},
-             "def":{"hpmax": 100 + pc.m + round(pc.level/2),
-                    "dodge": pc.r,
-                    "parry": round((pc.g-100)/50) * round((pc.m-100)/50)}}
+    value  = json.dumps(stats)
+
     try:
-        r.set(key,json.dumps(value),ttl)
+        r.set(key,value,ttl)
     except Exception as e:
         print(f'set_stats failed:{e}')
         return False
@@ -104,18 +95,11 @@ def get_stats(pc):
             # The pre-generated stats already exists in redis
             stats = json.loads(r.get(key))
         else:
-            set_stats(pc)
-            stats = json.loads(r.get(key))
+            stats = None
     except Exception as e:
-        return (200,
-                False,
-                f'[Redis] Stats query failed (pcid:{pc.id})',
-                None)
+        stats = None
     else:
-        return (200,
-                True,
-                f'Stats query Successed (pcid:{pc.id})',
-                stats)
+        return stats
 
 #
 # Queries: Queues
