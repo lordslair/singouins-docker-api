@@ -260,7 +260,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
             return (201,
                     True,
                     'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
-                    None)
+                    members)
         finally:
             session.close()
     else:

@@ -5,8 +5,7 @@ import redis
 import sys
 import time
 
-code = os.path.dirname(os.environ['FLASK_APP'])
-sys.path.append(code)
+sys.path.append('/code') # Needed to load redis variables
 
 from variables import (REDIS_PORT, REDIS_HOST, REDIS_DB_NAME)
 
