@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+import dataclasses
+
 from ..session          import Session
 from ..models           import *
 
@@ -34,10 +36,30 @@ def mypc_view_get(username,pcid):
                     '[SQL] View query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
                     None)
         else:
+            # We create the empty list for the payload
+            creatures = []
+            # We loop over all the creatures in the view
+            for elem in view:
+                # We transform elem into a dict through the dataclass
+                creature = dataclasses.asdict(elem)
+
+                # We define the default diplomacy title
+                creature['diplo'] = 'neutral'
+
+                # We try to define the diplomacy based on tests
+                if creature['race'] > 11:
+                    creature['diplo'] = 'enemy'
+                if creature['squad'] == pc.squad:
+                    creature['diplo'] = 'squad'
+                else:
+                    pass
+
+                # We re-inject the creature into the final list
+                creatures.append(creature)
             return (200,
                     True,
                     'View successfully retrieved (range:{},x:{},y:{})'.format(range,pc.x,pc.y),
-                    view)
+                    creatures)
         finally:
             session.close()
 
