@@ -50,6 +50,8 @@ class MetaWeapon(Base):
     size:       str
     dmg_base:   int
     dmg_sneaky: int
+    dmg_shape:  str
+    dmg_radius: int
     parry:      int
     arpen:      int
     defcan:     int
@@ -77,6 +79,8 @@ class MetaWeapon(Base):
     size        = Column(Text)
     dmg_base    = Column(Integer)
     dmg_sneaky  = Column(Integer)
+    dmg_shape   = Column(Enum('Conic','Through'), nullable=True)
+    dmg_radius  = Column(Integer, nullable=True)
     parry       = Column(Integer)
     arpen       = Column(Integer)
     defcan      = Column(Integer)
