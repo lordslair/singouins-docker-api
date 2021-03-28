@@ -63,7 +63,7 @@ def mypc_action_move(username,pcid,path):
                 "route": "mypc/{id1}/action/move",
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
-        incr_hs(pc,'move','tiles', 1) # Redis HighScore increment
+        incr_hs(pc,'action:move', 1) # Redis HighScore
 
         clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
@@ -132,6 +132,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         pc.dmg_bonus = (100 + (pc.g - 100)/3)/100
         tg.avoid     = tg.r
         tg.armor     = tg.arm_p
+
+        rpath = 'contact' # Used for Redis HighScore path
     else:
         # Checking distance for ranged weapons
         if abs(pc.x - tg.x) > itemmeta.rng or abs(pc.y - tg.y) > itemmeta.rng:
@@ -145,6 +147,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         pc.dmg_bonus  = (100 + (pc.v - 100)/3)/100
         tg.avoid      = tg.r
         tg.armor      = tg.arm_b
+
+        rpath = 'range' # Used for Redis HighScore path
 
     if redpa < itemmeta.pas_use:
         # Not enough PA to attack
@@ -171,7 +175,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
 
     if randint(1, 100) > 97:
         # Failed action
-        incr_hs(pc,'combat','fails',1) # Redis HighScore increment
+        incr_hs(pc,f'combat:given:{rpath}:fails',1) # Redis HighScore
         clog(pc.id,None,'Failed an attack')
     else:
         # Successfull action
@@ -182,7 +186,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         action['hit'] = True
         # The target is now acquired to the attacker
         fn_creature_tag(pc,tg)
-        incr_hs(pc,'combat','hits',1) # Redis HighScore increment
+        incr_hs(pc,f'combat:given:{rpath}:hits',1) # Redis HighScore
     else:
         # Failed attack
         clog(pc.id,tg.id,'Missed {}'.format(tg.name))
@@ -202,12 +206,14 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     dmg_raw = round(itemmeta.dmg_base * pc.dmg_bonus * pc.dmg_crit / 100)
     dmg     = dmg_raw - tg.armor
 
-    incr_hs(pc,'combat','damages',dmg_raw) # Redis HighScore increment
+    incr_hs(pc,f'combat:given:{rpath}:damages',dmg_raw)    # Redis HighScore
+    incr_hs(tg,f'combat:received:{rpath}:damages',dmg_raw) # Redis HighScore
 
     if dmg > 0:
         # The attack deals damage
         action['damages'] = dmg
-        incr_hs(pc,'combat','wounds',dmg) # Redis HighScore increment
+        incr_hs(pc,f'combat:given:{rpath}:wounds',dmg)    # Redis HighScore
+        incr_hs(tg,f'combat:received:{rpath}:wounds',dmg) # Redis HighScore
 
         if tg.hp - dmg >= 0:
             # The attack wounds
@@ -215,8 +221,10 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         else:
             # The attack kills
             action['killed'] = True
+            incr_hs(pc,'combat:kills',1)        # Redis HighScore
+            incr_hs(tg,'combat:deaths',1)       # Redis HighScore
+            incr_hs(pc,f'bestiary:{tg.race}',1) # Redis HighScore
             fn_creature_kill(pc,tg)
-            incr_hs(pc,'combat','kills',1) # Redis HighScore increment
 
             # Experience points are generated
             (ret,msg) = fn_creature_gain_xp(pc,tg)
@@ -311,7 +319,7 @@ def mypc_action_reload(username,pcid,weaponid):
                 '[SQL] Weapon reload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
                 None)
     else:
-        incr_hs(pc,'weapon','reloads',1) # Redis HighScore increment
+        incr_hs(pc,'action:reload',1) # Redis HighScore
         clog(pc.id,None,'Reloaded a weapon')
         return (200,
                 True,
@@ -381,7 +389,7 @@ def mypc_action_unload(username,pcid,weaponid):
                 '[SQL] Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,weaponid),
                 None)
     else:
-        incr_hs(pc,'weapon','unloads',1) # Redis HighScore increment
+        incr_hs(pc,'action:unload',1) # Redis HighScore
         clog(pc.id,None,'Unloaded a weapon')
         return (200,
                 True,

@@ -105,9 +105,9 @@ def get_stats(pc):
 # Queries: Creature High Scores
 #
 
-def incr_hs(pc,entry,subentry,increment):
+def incr_hs(pc,path,increment):
 
-    key    = f'highscores:{pc.id}:{entry}:{subentry}'
+    key    = f'highscores:{pc.id}:{path}'
 
     try:
         r.incr(key, amount=increment)

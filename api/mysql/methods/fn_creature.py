@@ -79,7 +79,6 @@ def fn_creature_kill(pc,tg):
     # As tg object will be destroyed, we store the info for later
     tgid    = tg.id
     tgname  = tg.name
-    tgrace  = tg.race
 
     try:
         tg      = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
@@ -103,9 +102,6 @@ def fn_creature_kill(pc,tg):
                 "route": "mypc/{id1}/action/attack/{id2}/{id3}",
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
-
-        # We increment Redis HS
-        incr_hs(pc,'bestiary',tgrace,1)
 
         clog(pc.id,tgid,f'Killed {tgname}')
         clog(tgid,None,'Died')
