@@ -320,10 +320,9 @@ def mypc_action_reload(username,pcid,weaponid):
                 None)
     else:
         incr_hs(pc,'action:reload',1) # Redis HighScore
-        clog(pc.id,None,'Reloaded a weapon')
         return (200,
                 True,
-                'Weapon reload success (pcid:{},weaponid:{})'.format(pc.id,itemid),
+                'Weapon reload success (pcid:{},weaponid:{})'.format(pc.id,item.id),
                 get_pa(pcid)[3])
     finally:
         session.close()
