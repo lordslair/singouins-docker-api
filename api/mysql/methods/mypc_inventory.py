@@ -43,16 +43,22 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
 
     if   item.rarity == 'Broken':
         shards = [6,0,0,0,0,0]
+        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[0]) # Redis HighScore
     elif item.rarity == 'Common':
         shards = [0,5,0,0,0,0]
+        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[1]) # Redis HighScore
     elif item.rarity == 'Uncommon':
         shards = [0,0,4,0,0,0]
+        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[2]) # Redis HighScore
     elif item.rarity == 'Rare':
         shards = [0,0,0,3,0,0]
+        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[3]) # Redis HighScore
     elif item.rarity == 'Epic':
         shards = [0,0,0,0,2,0]
+        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[4]) # Redis HighScore
     elif item.rarity == 'Legendary':
         shards = [0,0,0,0,0,1]
+        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[5]) # Redis HighScore
 
     try:
         wallet = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
@@ -75,6 +81,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
                 None)
     else:
         set_pa(pcid,0,1) # We consume the blue PA (1)
+        incr_hs(pc,'action:dismantle:items', 1) # Redis HighScore
         return (200,
                 True,
                 'Item dismantle successed (pcid:{},itemid:{})'.format(pc.id,item.id),

@@ -119,6 +119,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
                 'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
                 None)
 
+    incr_hs(pc,'action:attack',1) # Redis HighScore
+
     if itemmeta.ranged is False:
         # Checking distance for contact weapons
         if abs(pc.x - tg.x) > 1 or abs(pc.y - tg.y) > 1:

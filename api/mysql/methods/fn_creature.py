@@ -148,8 +148,11 @@ def fn_creature_gain_loot(pc,tg):
             wallet           = session.query(Wallet)\
                                       .filter(Wallet.id == pc.id)\
                                       .one_or_none()
-            wallet.currency += loots[0]['currency'] # We add currency
-            wallet.date      = datetime.now()       # We update the date in DB
+            currency         = loots[0]['currency']
+            wallet.currency += currency       # We add currency
+            wallet.date      = datetime.now() # We update the date in DB
+
+            incr_hs(pc,f'combat:loot:currency', currency) # Redis HighScore
         else:
             # We add loot to the killer squad
             squadlist = session.query(PJ)\
@@ -161,8 +164,11 @@ def fn_creature_gain_loot(pc,tg):
                 wallet           = session.query(Wallet)\
                                           .filter(Wallet.id == pcsquad.id)\
                                           .one_or_none()
-                wallet.currency += round(loots[0]['currency']/len(squadlist)) # We add currency
-                wallet.date      = datetime.now()                             # We update the date in DB
+                currency = round(loots[0]['currency']/len(squadlist))
+                wallet.currency += currency       # We add currency
+                wallet.date      = datetime.now() # We update the date in DB
+
+                incr_hs(pcsquad,f'combat:loot:currency', currency) # Redis HighScore
 
                 if loots[0]['item'] is not None:
                     # Items are added
@@ -179,6 +185,7 @@ def fn_creature_gain_loot(pc,tg):
                                 offsety    = None,
                                 date       = datetime.now())
                     session.add(item)
+                    incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
         session.commit()
     except Exception as e:
         # Something went wrong during commit
