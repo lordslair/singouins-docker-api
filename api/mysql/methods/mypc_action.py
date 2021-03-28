@@ -256,27 +256,27 @@ def mypc_action_reload(username,pcid,weaponid):
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
 
-    # Retrieving weapon stats
-    item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
-    itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
-    session.expunge(itemmeta)
-
     # Pre-flight checks
+    item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
     if item is None:
         return (200,
                 False,
                 'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
                 None)
+
+    itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
     if itemmeta is None:
         return (200,
                 False,
                 'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
                 None)
+    session.expunge(itemmeta)
     if itemmeta.pas_reload is None:
         return (200,
                 False,
                 'Item is not reloadable (pcid:{},weaponid:{})'.format(pcid,weaponid),
                 None)
+
     if item.ammo == itemmeta.max_ammo:
         return (200,
                 False,
