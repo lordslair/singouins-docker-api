@@ -105,12 +105,12 @@ def get_stats(pc):
 # Queries: Creature High Scores
 #
 
-def incr_hs(pc,entry,subentry):
+def incr_hs(pc,entry,subentry,increment):
 
     key    = f'highscores:{pc.id}:{entry}:{subentry}'
 
     try:
-        r.incr(key)
+        r.incr(key, amount=increment)
     except Exception as e:
         print(f'incr_hs failed:{e}')
         return False

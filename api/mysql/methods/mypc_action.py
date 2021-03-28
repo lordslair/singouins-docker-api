@@ -63,8 +63,7 @@ def mypc_action_move(username,pcid,path):
                 "route": "mypc/{id1}/action/move",
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
-        # We increment Redis HS
-        incr_hs(pc,'move','tiles')
+        incr_hs(pc,'move','tiles', 1) # Redis HighScore increment
 
         clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
@@ -172,8 +171,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
 
     if randint(1, 100) > 97:
         # Failed action
-        # We increment Redis HS
-        incr_hs(pc,'attack','fails')
+        incr_hs(pc,'combat','fails',1) # Redis HighScore increment
         clog(pc.id,None,'Failed an attack')
     else:
         # Successfull action
@@ -184,8 +182,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         action['hit'] = True
         # The target is now acquired to the attacker
         fn_creature_tag(pc,tg)
-        # We increment Redis HS
-        incr_hs(pc,'attack','hits')
+        incr_hs(pc,'combat','hits',1) # Redis HighScore increment
     else:
         # Failed attack
         clog(pc.id,tg.id,'Missed {}'.format(tg.name))
@@ -202,11 +199,15 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
         clog(tg.id,None,'Hit by {}'.format(pc.name))
 
-    dmg = round(itemmeta.dmg_base * pc.dmg_bonus * pc.dmg_crit / 100) - tg.armor
+    dmg_raw = round(itemmeta.dmg_base * pc.dmg_bonus * pc.dmg_crit / 100)
+    dmg     = dmg_raw - tg.armor
+
+    incr_hs(pc,'combat','damages',dmg_raw) # Redis HighScore increment
 
     if dmg > 0:
         # The attack deals damage
         action['damages'] = dmg
+        incr_hs(pc,'combat','wounds',dmg) # Redis HighScore increment
 
         if tg.hp - dmg >= 0:
             # The attack wounds
@@ -215,9 +216,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             # The attack kills
             action['killed'] = True
             fn_creature_kill(pc,tg)
-
-            # We increment Redis HS
-            incr_hs(pc,'attack','kills')
+            incr_hs(pc,'combat','kills',1) # Redis HighScore increment
 
             # Experience points are generated
             (ret,msg) = fn_creature_gain_xp(pc,tg)
@@ -312,8 +311,7 @@ def mypc_action_reload(username,pcid,weaponid):
                 '[SQL] Weapon reload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
                 None)
     else:
-        # We increment Redis HS
-        incr_hs(pc,'weapon','reloads')
+        incr_hs(pc,'weapon','reloads',1) # Redis HighScore increment
         clog(pc.id,None,'Reloaded a weapon')
         return (200,
                 True,
@@ -383,8 +381,7 @@ def mypc_action_unload(username,pcid,weaponid):
                 '[SQL] Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,weaponid),
                 None)
     else:
-        # We increment Redis HS
-        incr_hs(pc,'weapon','unloads')
+        incr_hs(pc,'weapon','unloads',1) # Redis HighScore increment
         clog(pc.id,None,'Unloaded a weapon')
         return (200,
                 True,
