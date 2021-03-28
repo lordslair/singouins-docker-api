@@ -12,7 +12,6 @@ from ..utils.redis      import *
 
 from .fn_creature       import *
 from .fn_user           import *
-from .fn_highscore      import *
 from .fn_global         import clog
 
 #

@@ -7,7 +7,6 @@ from ..models           import *
 from ..utils.redis      import *
 
 from .fn_creature       import *
-from .fn_highscore      import *
 from .fn_user           import fn_user_get
 from .fn_wallet         import fn_wallet_ammo_get,fn_wallet_ammo_set
 from .fn_global         import clog
@@ -64,6 +63,8 @@ def mypc_action_move(username,pcid,path):
                 "route": "mypc/{id1}/action/move",
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
+        # We increment Redis HS
+        incr_hs(pc,'move','tiles')
 
         clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
         return (200, True, 'PC successfully moved', get_pa(pcid)[3])
@@ -171,6 +172,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
 
     if randint(1, 100) > 97:
         # Failed action
+        # We increment Redis HS
+        incr_hs(pc,'attack','fails')
         clog(pc.id,None,'Failed an attack')
     else:
         # Successfull action
@@ -181,6 +184,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         action['hit'] = True
         # The target is now acquired to the attacker
         fn_creature_tag(pc,tg)
+        # We increment Redis HS
+        incr_hs(pc,'attack','hits')
     else:
         # Failed attack
         clog(pc.id,tg.id,'Missed {}'.format(tg.name))
@@ -211,10 +216,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             action['killed'] = True
             fn_creature_kill(pc,tg)
 
-            # HighScores points are generated
-            (ret,msg) = fn_highscore_kill_set(pc)
-            if ret is not True:
-                return (200, False, msg, None)
+            # We increment Redis HS
+            incr_hs(pc,'attack','kills')
 
             # Experience points are generated
             (ret,msg) = fn_creature_gain_xp(pc,tg)
@@ -309,6 +312,8 @@ def mypc_action_reload(username,pcid,weaponid):
                 '[SQL] Weapon reload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
                 None)
     else:
+        # We increment Redis HS
+        incr_hs(pc,'weapon','reloads')
         clog(pc.id,None,'Reloaded a weapon')
         return (200,
                 True,
@@ -378,6 +383,8 @@ def mypc_action_unload(username,pcid,weaponid):
                 '[SQL] Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,weaponid),
                 None)
     else:
+        # We increment Redis HS
+        incr_hs(pc,'weapon','unloads')
         clog(pc.id,None,'Unloaded a weapon')
         return (200,
                 True,

@@ -102,6 +102,22 @@ def get_stats(pc):
         return stats
 
 #
+# Queries: Creature High Scores
+#
+
+def incr_hs(pc,entry,subentry):
+
+    key    = f'highscores:{pc.id}:{entry}:{subentry}'
+
+    try:
+        r.incr(key)
+    except Exception as e:
+        print(f'incr_hs failed:{e}')
+        return False
+    else:
+        return True
+
+#
 # Queries: Queues
 #
 
