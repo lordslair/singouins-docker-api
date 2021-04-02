@@ -2,6 +2,7 @@
 
 from ..session          import Session
 from ..models           import *
+from ..utils.redis      import *
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get
@@ -107,6 +108,12 @@ def add_squad(username,pcid,squadname):
                     '[SQL] Squad leader assignation failed (pcid:{},squadid:{})'.format(pc.id,squad.id),
                     None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** created this squad',
+                    "route": None,
+                    "scope": f'Squad-{pc.squad}'}
+            yqueue_put('discord', qmsg)
             return (201,
                     True,
                     'Squad successfully created (pcid:{},squadid:{})'.format(pc.id,squad.id),
@@ -146,6 +153,12 @@ def del_squad(username,leaderid,squadid):
             # Something went wrong during commit
             return (200, False, '[SQL] Squad deletion failed (squadid:{})'.format(squad.id), None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** deleted this squad',
+                    "route": None,
+                    "scope": f'Squad-{squad.id}'}
+            yqueue_put('discord', qmsg)
             return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
         finally:
             session.close()
@@ -199,6 +212,12 @@ def invite_squad_member(username,leaderid,squadid,targetid):
                     '[SQL] PC Invite failed (slots:{}/{})'.format(len(members),maxmembers),
                     None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this squad',
+                    "route": None,
+                    "scope": f'Squad-{leader.squad}'}
+            yqueue_put('discord', qmsg)
             return (201,
                     True,
                     'PC successfully invited (slots:{}/{})'.format(len(members),maxmembers),
@@ -257,6 +276,12 @@ def kick_squad_member(username,leaderid,squadid,targetid):
                     '[SQL] PC Kick failed (pcid:{},squadid:{})'.format(target.id,target.squad),
                     None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this squad',
+                    "route": None,
+                    "scope": f'Squad-{leader.squad}'}
+            yqueue_put('discord', qmsg)
             return (201,
                     True,
                     'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
@@ -297,6 +322,12 @@ def accept_squad_member(username,pcid,squadid):
                     '[SQL] PC squad invite accept failed (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** declined this squad',
+                    "route": None,
+                    "scope": f'Squad-{pc.squad}'}
+            yqueue_put('discord', qmsg)
             return (201,
                     True,
                     'PC successfully accepted squad invite (pcid:{},squadid:{})'.format(pc.id,squadid),
@@ -334,6 +365,12 @@ def decline_squad_member(username,pcid,squadid):
                     '[SQL] PC squad invite decline failed (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
+                    "route": None,
+                    "scope": f'Squad-{pc.squad}'}
+            yqueue_put('discord', qmsg)
             return (201, True, 'PC successfully declined squad invite (pcid:{},squadid:{})'.format(pc.id,squadid), None)
         finally:
             session.close()
@@ -371,6 +408,12 @@ def leave_squad_member(username,pcid,squadid):
                     '[SQL] PC squad leave failed (pcid:{},squadid:{})'.format(pc.id,squadid),
                     None)
         else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** left this squad',
+                    "route": None,
+                    "scope": f'Squad-{pc.squad}'}
+            yqueue_put('discord', qmsg)
             return (201,
                     True,
                     'PC successfully left (pcid:{},squadid:{})'.format(pc.id,squadid),

@@ -103,6 +103,13 @@ def fn_creature_kill(pc,tg):
                 "scope": qscope}
         yqueue_put('broadcast', qmsg)
 
+        # We put the info in queue for ws
+        qmsg = {"ciphered": False,
+                "payload": f':pirate_flag: **[{pc.id}] {pc.name}** killed **[{tgid}] {tgname}**',
+                "route": None,
+                "scope": f'Squad-{pc.squad}'}
+        yqueue_put('discord', qmsg)
+
         clog(pc.id,tgid,f'Killed {tgname}')
         clog(tgid,None,'Died')
         return (200,
@@ -186,6 +193,13 @@ def fn_creature_gain_loot(pc,tg):
                                 date       = datetime.now())
                     session.add(item)
                     incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
+                    # We put the info in queue for ws
+                    payload = f':package: **[{pcsquad.id}] {pcsquad.name}** looted something {item.rarity} !'
+                    qmsg = {"ciphered": False,
+                            "payload": payload,
+                            "route": None,
+                            "scope": f'Squad-{pc.squad}'}
+                    yqueue_put('discord', qmsg)
         session.commit()
     except Exception as e:
         # Something went wrong during commit
