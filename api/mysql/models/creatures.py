@@ -216,7 +216,7 @@ class Squad(Base):
     date:    str
 
     id       = Column(Integer, primary_key=True)
-    name     = Column(Text   , nullable=False)
+    name     = Column(Text   , nullable=True)
     leader   = Column(Integer, nullable=False)
     created  = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

@@ -71,22 +71,22 @@ def get_squad(username,pcid,squadid):
     else: return (409, False, 'Token/username mismatch', None)
 
 # API: /mypc/<int:pcid>/squad
-def add_squad(username,pcid,squadname):
+def add_squad(username,pcid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()
 
     if pc and pc.account == user.id:
-        if session.query(Squad).filter(Squad.name == squadname).one_or_none():
-            return (409, False, 'Squad already exists', None)
+        # Unicity test commented before release:alpha. Meditation needed
+        #if session.query(Squad).filter(Squad.name == squadname).one_or_none():
+        #    return (409, False, f'Squad already exists (squadname:{squadname})', None)
         if pc.squad is not None:
             return (200,
                     False,
                     'Squad leader already in a squad (pcid:{},squadid:{})'.format(pc.id,squad.id),
                     None)
 
-        squad = Squad(name    = squadname,
-                      leader  = pc.id)
+        squad = Squad(leader  = pc.id)
         session.add(squad)
 
         try:

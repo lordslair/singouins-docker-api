@@ -472,11 +472,12 @@ def squad_details(pcid,squadid):
 @app.route('/mypc/<int:pcid>/squad', methods=['POST'])
 @jwt_required
 def squad_create(pcid):
+    # Unicity test commented before release:alpha. Meditation needed
+    #if not request.is_json:
+    #    return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-    (code, success, msg, payload) = add_squad(get_jwt_identity(),
-                                    pcid,
-                                    request.json.get('name', None))
+    (code, success, msg, payload) = add_squad(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
