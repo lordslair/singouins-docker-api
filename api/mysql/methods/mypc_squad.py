@@ -4,9 +4,9 @@ from ..session          import Session
 from ..models           import *
 from ..utils.redis      import *
 
-from .fn_creature       import fn_creature_get,
-                               fn_creature_clean,
-                               fn_creatures_clean
+from .fn_creature       import (fn_creature_get,
+                                fn_creature_clean,
+                                fn_creatures_clean)
 from .fn_user           import fn_user_get
 
 #
