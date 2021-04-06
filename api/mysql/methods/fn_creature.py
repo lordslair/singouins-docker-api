@@ -196,7 +196,15 @@ def fn_creature_gain_loot(pc,tg):
                     session.add(item)
                     incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
                     # We put the info in queue for ws
-                    payload = f':package: **[{pcsquad.id}] {pcsquad.name}** looted something {item.rarity} !'
+                    r              = {}
+                    r['Broken']    = ':brown_square:'
+                    r['Common']    = ':white_medium_square:'
+                    r['Uncommon']  = ':green_square:'
+                    r['Rare']      = ':blue_square:'
+                    r['Epic']      = ':purple_square:'
+                    r['Legendary'] = ':purple_square:'
+                    emoji         = r[item.rarity]
+                    payload = f':package: **[{pcsquad.id}] {pcsquad.name}** looted something {emoji} {item.rarity} [{item.bound_type}]  !'
                     qmsg = {"ciphered": False,
                             "payload": payload,
                             "route": None,
