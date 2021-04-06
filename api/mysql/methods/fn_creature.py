@@ -204,7 +204,7 @@ def fn_creature_gain_loot(pc,tg):
                     r['Epic']      = ':purple_square:'
                     r['Legendary'] = ':purple_square:'
                     emoji         = r[item.rarity]
-                    payload = f':package: **[{pcsquad.id}] {pcsquad.name}** looted something {emoji} {item.rarity} [{item.bound_type}]  !'
+                    payload = f':package: **[{pcsquad.id}] {pcsquad.name}** looted something {emoji} {item.rarity} [{item.bound_type}] !'
                     qmsg = {"ciphered": False,
                             "payload": payload,
                             "route": None,
