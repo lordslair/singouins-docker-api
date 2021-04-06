@@ -60,7 +60,6 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                 pc        = fn_creature_get(pcname,None)[3]
                 equipment = CreatureSlots(id = pc.id)
                 wallet    = Wallet(id = pc.id)
-                highscore = HighScore(id = pc.id)
 
                 stats     = CreatureStats(id = pc.id,
                                           m_race = race.min_m,
@@ -72,7 +71,6 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
 
                 session.add(equipment)
                 session.add(wallet)
-                session.add(highscore)
                 session.add(stats)
 
                 if pcclass == '1': stats.m_class = 10
@@ -174,13 +172,11 @@ def mypc_del(username,pcid):
         pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
         wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
-        highscore = session.query(HighScore).filter(HighScore.id == pc.id).one_or_none()
         stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()
 
         if pc: session.delete(pc)
         if equipment: session.delete(equipment)
         if wallet: session.delete(wallet)
-        if highscore: session.delete(highscore)
         if stats: session.delete(stats)
 
         items = session.query(Item).filter(Item.bearer == pc.id).all()
