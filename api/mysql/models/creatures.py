@@ -39,7 +39,7 @@ class PJ(Base):
     id           = Column(Integer, primary_key=True)
     name         = Column(Text   , nullable=False)
     race         = Column(Integer, nullable=False)
-    rarity       = Column(Enum('Small','Normal','Big','Unique','Boss','God'), default='Normal')
+    rarity       = Column(Enum('Small','Medium','Big','Unique','Boss','God'), default='Medium')
     account      = Column(Integer, nullable=True)
     targeted_by  = Column(Integer, nullable=True)
     level        = Column(Integer, nullable=False, server_default='1')
