@@ -371,7 +371,7 @@ def decline_squad_member(username,pcid,squadid):
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
                     "route": None,
-                    "scope": f'Squad-{pc.squad}'}
+                    "scope": f'Squad-{squadid}'}
             yqueue_put('discord', qmsg)
             return (201, True, 'PC successfully declined squad invite (pcid:{},squadid:{})'.format(pc.id,squadid), None)
         finally:
@@ -414,7 +414,7 @@ def leave_squad_member(username,pcid,squadid):
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** left this squad',
                     "route": None,
-                    "scope": f'Squad-{pc.squad}'}
+                    "scope": f'Squad-{squadid}'}
             yqueue_put('discord', qmsg)
             return (201,
                     True,
