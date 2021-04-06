@@ -4,7 +4,9 @@ from ..session          import Session
 from ..models           import *
 from ..utils.redis      import *
 
-from .fn_creature       import fn_creature_get
+from .fn_creature       import fn_creature_get,
+                               fn_creature_clean,
+                               fn_creatures_clean
 from .fn_user           import fn_user_get
 
 #
@@ -221,7 +223,7 @@ def invite_squad_member(username,leaderid,squadid,targetid):
             return (201,
                     True,
                     'PC successfully invited (slots:{}/{})'.format(len(members),maxmembers),
-                    pc)
+                    fn_creature_clean(pc))
         finally:
             session.close()
     else:
@@ -285,7 +287,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
             return (201,
                     True,
                     'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
-                    members)
+                    fn_creatures_clean(members))
         finally:
             session.close()
     else:
@@ -482,7 +484,7 @@ def mysquad_view_get(username,pcid,squadid):
                     return (200,
                             True,
                             f'Squad view query successed (pcid:{pcid},squadid:{squadid})',
-                            views)
+                            fn_creatures_clean(views))
         finally:
             session.close()
     else: return (409, False, 'Token/username mismatch', None)

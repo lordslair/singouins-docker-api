@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+import dataclasses
+
 from datetime           import datetime
 
 from ..session          import Session
@@ -210,3 +212,35 @@ def fn_creature_gain_loot(pc,tg):
         return (True, None)
     finally:
         session.close()
+
+def fn_creatures_clean(creatures):
+    # REMINDER: We expect a list
+    list  = []
+    for creature in creatures:
+        dict = fn_creature_clean(creature)
+        list.append(dict)
+    return list
+
+def fn_creature_clean(creature):
+    # REMINDER: We expect an dataclass
+    # If needed we convert the date
+    if isinstance(creature.date, datetime):
+        creature.date = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+
+    # We load the Creature dataclass into a python dict
+    dict          = dataclasses.asdict(creature)
+    # We remove MRVGPB caracs
+    del dict['m']
+    del dict['r']
+    del dict['v']
+    del dict['g']
+    del dict['p']
+    del dict['b']
+    # We remove HP, ARM, and XP too
+    del dict['hp']
+    del dict['hp_max']
+    del dict['arm_b']
+    del dict['arm_p']
+    del dict['xp']
+
+    return dict
