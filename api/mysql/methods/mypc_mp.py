@@ -133,7 +133,9 @@ def mypc_mp_addressbook(username,pcid):
 
     if pc and pc.account == user.id:
         try:
-            addressbook = session.query(PJ).with_entities(PJ.id,PJ.name).all()
+            addressbook = session.query(PJ)\
+                                 .filter(PJ.race < 10)\
+                                 .with_entities(PJ.id,PJ.name).all()
         except Exception as e:
             # Something went wrong during commit
             return (200, False, f'[SQL] Addressbook query failed (pcid:{pc.id})', None)
