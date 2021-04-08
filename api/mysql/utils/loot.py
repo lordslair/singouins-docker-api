@@ -2,6 +2,31 @@
 
 from random         import randint,choices
 
+# We define color lists for embeds, messages, etc
+color_int              = {}
+color_int['Broken']    = 10197915
+color_int['Common']    = 16777215
+color_int['Uncommon']  = 8311585
+color_int['Rare']      = 4886754
+color_int['Epic']      = 9442302
+color_int['Legendary'] = 16098851
+
+color_hex              = {}
+color_hex['Broken']    = '9B9B9B'
+color_hex['Common']    = 'FFFFFF'
+color_hex['Uncommon']  = '7ED321'
+color_hex['Rare']      = '4A90E2'
+color_hex['Epic']      = '9013FE'
+color_hex['Legendary'] = 'F5A623'
+
+color_dis              = {}
+color_dis['Broken']    = ':brown_square:'
+color_dis['Common']    = ':white_medium_square:'
+color_dis['Uncommon']  = ':green_square:'
+color_dis['Rare']      = ':blue_square:'
+color_dis['Epic']      = ':purple_square:'
+color_dis['Legendary'] = ':purple_square:'
+
 def get_loot_weight(rarity):
     weight = {}
     if   rarity == 'Small':

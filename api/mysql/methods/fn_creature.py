@@ -5,7 +5,7 @@ import dataclasses
 from datetime           import datetime
 
 from ..session          import Session
-from ..models           import PJ,Wallet,Item
+from ..models           import PJ,Wallet,Item,MetaWeapon,MetaArmor
 from ..utils.loot       import *
 from ..utils.redis      import *
 
@@ -108,7 +108,7 @@ def fn_creature_kill(pc,tg):
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
                 "payload": f':pirate_flag: **[{pc.id}] {pc.name}** killed **[{tgid}] {tgname}**',
-                "route": None,
+                "embed": None,
                 "scope": f'Squad-{pc.squad}'}
         yqueue_put('discord', qmsg)
 
@@ -195,19 +195,20 @@ def fn_creature_gain_loot(pc,tg):
                                 date       = datetime.now())
                     session.add(item)
                     incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
+
                     # We put the info in queue for ws
-                    r              = {}
-                    r['Broken']    = ':brown_square:'
-                    r['Common']    = ':white_medium_square:'
-                    r['Uncommon']  = ':green_square:'
-                    r['Rare']      = ':blue_square:'
-                    r['Epic']      = ':purple_square:'
-                    r['Legendary'] = ':purple_square:'
-                    emoji         = r[item.rarity]
-                    payload = f':package: **[{pcsquad.id}] {pcsquad.name}** looted something {emoji} {item.rarity} [{item.bound_type}] !'
+                    if   item.metatype == 'weapon':
+                         itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+                    elif item.metatype == 'armor':
+                         itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
+
                     qmsg = {"ciphered": False,
-                            "payload": payload,
-                            "route": None,
+                            "payload": {"color_int": color_int[item.rarity],
+                                        "path": f'/resources/sprites/{item.metatype}s/{item.metaid}.png',
+                                        "title": f'{itemmeta.name}',
+                                        "item": f'Looted by [{pcsquad.id}] {pcsquad.name}',
+                                        "footer": f'NB: This item is [{item.bound_type}]'},
+                            "embed": True,
                             "scope": f'Squad-{pc.squad}'}
                     yqueue_put('discord', qmsg)
         session.commit()

@@ -113,7 +113,7 @@ def add_squad(username,pcid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** created this squad',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{pc.squad}'}
             yqueue_put('discord', qmsg)
             return (201,
@@ -158,7 +158,7 @@ def del_squad(username,leaderid,squadid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** deleted this squad',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{squad.id}'}
             yqueue_put('discord', qmsg)
             return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
@@ -217,7 +217,7 @@ def invite_squad_member(username,leaderid,squadid,targetid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this squad',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{leader.squad}'}
             yqueue_put('discord', qmsg)
             return (201,
@@ -281,7 +281,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this squad',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{leader.squad}'}
             yqueue_put('discord', qmsg)
             return (201,
@@ -327,7 +327,7 @@ def accept_squad_member(username,pcid,squadid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** declined this squad',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{pc.squad}'}
             yqueue_put('discord', qmsg)
             return (201,
@@ -370,7 +370,7 @@ def decline_squad_member(username,pcid,squadid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{squadid}'}
             yqueue_put('discord', qmsg)
             return (201, True, 'PC successfully declined squad invite (pcid:{},squadid:{})'.format(pc.id,squadid), None)
@@ -413,7 +413,7 @@ def leave_squad_member(username,pcid,squadid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** left this squad',
-                    "route": None,
+                    "embed": None,
                     "scope": f'Squad-{squadid}'}
             yqueue_put('discord', qmsg)
             return (201,
