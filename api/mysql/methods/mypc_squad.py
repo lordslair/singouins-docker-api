@@ -278,12 +278,18 @@ def kick_squad_member(username,leaderid,squadid,targetid):
                     '[SQL] PC Kick failed (pcid:{},squadid:{})'.format(target.id,target.squad),
                     None)
         else:
-            # We put the info in queue for ws
+            # We put the info in queue for ws Discord
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this squad',
                     "embed": None,
                     "scope": f'Squad-{leader.squad}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}/kick/{id3}',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     'PC successfully kicked (slots:{}/{})'.format(len(members),maxmembers),
