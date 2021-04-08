@@ -13,7 +13,7 @@ from .fn_user           import fn_user_get
 #
 
 # API: POST /mypc/<int:pcid>/mp
-def add_mp(username,src,dsts,subject,body):
+def mypc_mp_add(username,src,dsts,subject,body):
     (code, success, msg, pcsrc) = fn_creature_get(None,src)
     user                        = fn_user_get(username)
     session                     = Session()
@@ -56,7 +56,7 @@ def add_mp(username,src,dsts,subject,body):
                 None)
 
 # API: GET /mypc/<int:pcid>/mp/<int:mpid>
-def get_mp(username,pcid,mpid):
+def mypc_mp_get(username,pcid,mpid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()
@@ -83,7 +83,7 @@ def get_mp(username,pcid,mpid):
     else: return (409, False, 'Token/username mismatch', None)
 
 # API: DELETE /mypc/<int:pcid>/mp/<int:mpid>
-def del_mp(username,pcid,mpid):
+def mypc_mp_del(username,pcid,mpid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()
@@ -104,7 +104,7 @@ def del_mp(username,pcid,mpid):
     else: return (409, False, 'Token/username mismatch', None)
 
 # API: GET /mypc/<int:pcid>/mp
-def get_mps(username,pcid):
+def mypc_mps_get(username,pcid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()
@@ -126,7 +126,7 @@ def get_mps(username,pcid):
     else: return (409, False, 'Token/username mismatch', None)
 
 # API: GET /mypc/<int:pcid>/mp/addressbook
-def get_mp_addressbook(username,pcid):
+def mypc_mp_addressbook(username,pcid):
     (code, success, msg, pc) = fn_creature_get(None,pcid)
     user                     = fn_user_get(username)
     session                  = Session()

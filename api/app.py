@@ -281,8 +281,8 @@ def api_mypc_view(pcid):
 
 @app.route('/mypc/<int:pcid>/mp', methods=['POST'])
 @jwt_required
-def mp_send(pcid):
-    (code, success, msg, payload) = add_mp(get_jwt_identity(),
+def api_mypc_mp_add(pcid):
+    (code, success, msg, payload) = mypc_mp_add(get_jwt_identity(),
                                     request.json.get('src',     None),
                                     request.json.get('dst',     None),
                                     request.json.get('subject', None),
@@ -292,29 +292,29 @@ def mp_send(pcid):
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['GET'])
 @jwt_required
-def mp_detail(pcid,mpid):
-    (code, success, msg, payload) = get_mp(get_jwt_identity(),pcid,mpid)
+def api_mypc_mp_get(pcid,mpid):
+    (code, success, msg, payload) = mypc_mp_get(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['DELETE'])
 @jwt_required
-def mp_delete(pcid,mpid):
-    (code, success, msg, payload) = del_mp(get_jwt_identity(),pcid,mpid)
+def api_mypc_mp_del(pcid,mpid):
+    (code, success, msg, payload) = mypc_mp_del(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp', methods=['GET'])
 @jwt_required
-def mp_list(pcid):
-    (code, success, msg, payload) = get_mps(get_jwt_identity(),pcid)
+def api_mypc_mps_get(pcid):
+    (code, success, msg, payload) = mypc_mps_get(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/addressbook', methods=['GET'])
 @jwt_required
-def mp_addressbook(pcid):
-    (code, success, msg, payload) = get_mp_addressbook(get_jwt_identity(),pcid)
+def api_mypc_mp_addressbook(pcid):
+    (code, success, msg, payload) = mypc_mp_addressbook(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": [{"id": row[0], "name": row[1]} for row in payload]}), code
 
