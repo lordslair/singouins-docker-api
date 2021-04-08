@@ -121,15 +121,10 @@ def incr_hs(pc,path,increment):
 # Queries: Queues
 #
 
-qr = redis.StrictRedis(host     = REDIS_HOST,
-                       port     = REDIS_PORT,
-                       db       = REDIS_DB_NAME,
-                       encoding = 'utf-8')
-
 def yqueue_put(yqueue_name,msg):
     # Opening Queue
     try:
-        yqueue      = yarqueue.Queue(name=yqueue_name, redis=qr)
+        yqueue      = yarqueue.Queue(name=yqueue_name, redis=r)
     except:
         print(f'Connection to yarqueue:{yqueue_name} [✗]')
     else:
