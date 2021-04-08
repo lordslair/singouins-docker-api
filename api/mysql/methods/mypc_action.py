@@ -76,7 +76,15 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     user        = fn_user_get(username)
     tg          = fn_creature_get(None,targetid)[3]
     session     = Session()
+    pa          = get_pa(pcid)[3]
 
+    action = {"failed": True,
+              "hit": False,
+              "critical": False,
+              "damages": None,
+              "killed": False}
+
+    # Check if target is taggued
     if tg.targeted_by is not None:
         # Target already taggued by a pc
         (code, success, msg, tag) = fn_creature_get(None,tg.targeted_by)
@@ -87,14 +95,6 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
 
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
-
-    tg     = fn_creature_get(None,targetid)[3]
-    redpa  = get_pa(pcid)[3]['red']['pa']
-    action = {"failed": True,
-              "hit": False,
-              "critical": False,
-              "damages": None,
-              "killed": False}
 
     if weaponid == 0:
         item     = AttrDict()
@@ -119,7 +119,20 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
                 'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
                 None)
 
-    incr_hs(pc,'action:attack',1) # Redis HighScore
+    # Check it PC has enough PA
+
+    if pa['red']['pa'] < itemmeta.pas_use:
+        # Not enough PA to attack
+        return (200,
+                False,
+                'Not enough PA to attack',
+                {"red": pa['red'],
+                 "blue": pa['blue'],
+                 "action": None})
+    else:
+        # Enough PA to attack, we consume the red PAs
+        incr_hs(pc,'action:attack',1) # Redis HighScore
+        set_pa(pcid,itemmeta.pas_use,0)
 
     if itemmeta.ranged is False:
         # Checking distance for contact weapons
@@ -152,25 +165,13 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
 
         rpath = 'range' # Used for Redis HighScore path
 
-    if redpa < itemmeta.pas_use:
-        # Not enough PA to attack
-        return (200,
-                False,
-                'Not enough PA to attack',
-                {"red": get_pa(pcid)[3]['red'],
-                 "blue": get_pa(pcid)[3]['blue'],
-                 "action": None})
-    else:
-        # Enough PA to attack, we consume the red PAs
-        set_pa(pcid,itemmeta.pas_use,0)
-
-    if itemmeta.ranged is True:
+        # Checking ammo
         if item.ammo < 1:
             return (200,
                     False,
                     'Not enough Ammo to attack',
-                    {"red": get_pa(pcid)[3]['red'],
-                     "blue": get_pa(pcid)[3]['blue'],
+                    {"red": pa['red'],
+                     "blue": pa['blue'],
                      "action": None})
         else:
             item.ammo -= 1
@@ -178,7 +179,6 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     if randint(1, 100) > 97:
         # Failed action
         incr_hs(pc,f'combat:given:{rpath}:fails',1) # Redis HighScore
-        clog(pc.id,None,'Failed an attack')
     else:
         # Successfull action
         action['failed'] = False
@@ -191,19 +191,14 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         incr_hs(pc,f'combat:given:{rpath}:hits',1) # Redis HighScore
     else:
         # Failed attack
-        clog(pc.id,tg.id,'Missed {}'.format(tg.name))
-        clog(tg.id,None,'Avoided {}'.format(pc.name))
+        pass
 
     if randint(1, 100) <= 5:
         # The attack is a critical Hit
         pc.dmg_crit = round(150 + pc.r / 10)
-        clog(pc.id,tg.id,'Critically Attacked {}'.format(tg.name))
-        clog(tg.id,None,'Critically Hit by {}'.format(pc.name))
     else:
         # The attack is a normal Hit
         pc.dmg_crit = 100
-        clog(pc.id,tg.id,'Attacked {}'.format(tg.name))
-        clog(tg.id,None,'Hit by {}'.format(pc.name))
 
     dmg_raw = round(itemmeta.dmg_base * pc.dmg_bonus * pc.dmg_crit / 100)
     dmg     = dmg_raw - tg.armor
@@ -238,8 +233,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             if ret is not True:
                 return (200, False, msg, None)
     else:
-        clog(tg.id,None,'Suffered no injuries')
         # The attack does not deal damage
+        pass
 
     return (200,
             True,
