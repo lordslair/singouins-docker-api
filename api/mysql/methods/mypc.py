@@ -107,20 +107,20 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                                         date       = datetime.now())
                             session.add(rh)
 
-                            if base_equipment['lefthand'] is not None:
-                                lh   = Item(metatype   = base_equipment['lefthand']['metatype'],
-                                        metaid     = base_equipment['lefthand']['metaid'],
-                                        bearer     = pc.id,
-                                        bound      = True,
-                                        bound_type = 'BoP',
-                                        modded     = False,
-                                        mods       = None,
-                                        state      = 100,
-                                        rarity     = 'Common',
-                                        offsetx    = 4,
-                                        offsety    = 0,
-                                        date       = datetime.now())
-                            session.add(lh)
+                        if base_equipment['lefthand'] is not None:
+                            lh   = Item(metatype   = base_equipment['lefthand']['metatype'],
+                                    metaid     = base_equipment['lefthand']['metaid'],
+                                    bearer     = pc.id,
+                                    bound      = True,
+                                    bound_type = 'BoP',
+                                    modded     = False,
+                                    mods       = None,
+                                    state      = 100,
+                                    rarity     = 'Common',
+                                    offsetx    = 4,
+                                    offsety    = 0,
+                                    date       = datetime.now())
+                        session.add(lh)
 
                     try:
                         session.commit()
