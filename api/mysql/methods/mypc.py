@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 from datetime           import datetime
+from random             import randint
 
 from ..session          import Session
 from ..models           import *
@@ -43,7 +44,9 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                 race    = race.id,
                 account = fn_user_get(username).id,
                 hp      = 100 + race.min_m,
-                hp_max  = 100 + race.min_m)
+                hp_max  = 100 + race.min_m,
+                x       = randint(2,4), # TODO: replace with rand(empty coords)
+                y       = randint(2,5)) # TODO: replace with rand(empty coords)
 
         session.add(pc)
 
