@@ -75,7 +75,7 @@ def fn_creature_wound(pc,tg,dmg):
     finally:
         session.close()
 
-def fn_creature_kill(pc,tg):
+def fn_creature_kill(pc,tg,action):
     session = Session()
 
     # As tg object will be destroyed, we store the info for later
@@ -97,7 +97,7 @@ def fn_creature_kill(pc,tg):
     else:
         # We put the info in queue for ws
         qciphered = False
-        qpayload  = {"id": pc.id, "target": {"id": tgid, "name": tgname}}
+        qpayload  = {"id": pc.id, "target": {"id": tgid, "name": tgname}, "action": action}
         qscope    = {"id": None, "scope": 'broadcast'}
         qmsg = {"ciphered": qciphered,
                 "payload": qpayload,

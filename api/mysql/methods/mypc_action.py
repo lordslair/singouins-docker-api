@@ -221,7 +221,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             incr_hs(pc,'combat:kills',1)        # Redis HighScore
             incr_hs(tg,'combat:deaths',1)       # Redis HighScore
             incr_hs(pc,f'bestiary:{tg.race}',1) # Redis HighScore
-            fn_creature_kill(pc,tg)
+            fn_creature_kill(pc,tg,action)
 
             # Experience points are generated
             (ret,msg) = fn_creature_gain_xp(pc,tg)
@@ -240,7 +240,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
             True,
             'Target successfully attacked',
             {"red": get_pa(pcid)[3]['red'],
-             "blue": get_pa(pcid)[3]['blue'],
+             "blue": pa['blue'],
              "action": action})
 
 # API: /mypc/<int:pcid>/action/reload/<int:weaponid>
