@@ -48,7 +48,7 @@ def mypc_view_get(username,pcid):
 
             return (200,
                     True,
-                    f'View successfully retrieved (range:{range},x:{x},y:{y})',
+                    f'View successfully retrieved (range:{range},x:{pc.x},y:{pc.y})',
                     creatures)
         finally:
             session.close()
