@@ -18,7 +18,10 @@ def mypc_items_get(username,pcid):
     session                  = Session()
 
     if pc.account is None:
-        return (200, False, 'NPCs do not have items (pcid:{})'.format(pc.id), None)
+        return (200,
+                False,
+                f'NPCs do not have items (pcid:{pc.id})',
+                None)
 
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
@@ -42,15 +45,14 @@ def mypc_items_get(username,pcid):
                            .filter(Wallet.id == pc.id)\
                            .all()
     except Exception as e:
-        # Something went wrong during query
         return (200,
                 False,
-                '[SQL] Equipment query failed (pcid:{})'.format(pc.id),
+                f'[SQL] Equipment query failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
         return (200,
                 True,
-                'Equipment query successed (pcid:{})'.format(pc.id),
+                f'Equipment query successed (pcid:{pc.id})',
                 {"weapon": weapon,
                  "armor": armor,
                  "equipment": equipment,

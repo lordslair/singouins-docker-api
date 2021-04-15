@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-import dataclasses
+import                  dataclasses
 
 from datetime           import datetime
 
@@ -22,24 +22,23 @@ def fn_creature_get(pcname,pcid):
         else:
             return (200,
                     False,
-                    'Wrong pcid/pcname (pcid:{},pcname:{})'.format(pcid,pcname),
+                    f'Wrong pcid/pcname (pcid:{pcid},pcname:{pcname})',
                     None)
     except Exception as e:
-        # Something went wrong during query
         return (200,
                 False,
-                '[SQL] PC query failed (pcid:{},pcname:{})'.format(pcid,pcname),
+                f'[SQL] PC query failed (pcid:{pcid},pcname:{pcname}) [{e}]',
                 None)
     else:
         if pc:
             return (200,
                     True,
-                    'PC successfully found (pcid:{},pcname:{})'.format(pcid,pcname),
+                    f'PC successfully found (pcid:{pcid},pcname:{pcname})',
                     pc)
         else:
             return (200,
                     False,
-                    'PC does not exist (pcid:{},pcname:{})'.format(pcid,pcname),
+                    f'PC does not exist (pcid:{pcid},pcname:{pcname})',
                     None)
     finally:
         session.close()
@@ -50,13 +49,12 @@ def fn_creature_tag(pc,tg):
         tg.targeted_by = pc.id
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] Targeted_by update failed (pcid:{},tgid:{})'.format(pc.id,tg.id),
+                f'[SQL] Targeted_by update failed (pcid:{pc.id},tgid:{tg.id}) [{e}]',
                 None)
     else:
-        clog(tg.id,None,'Targeted by {}'.format(pc.name))
+        clog(tg.id,None,f'Targeted by {pc.name}')
     finally:
         session.close()
 
@@ -68,7 +66,6 @@ def fn_creature_wound(pc,tg,dmg):
         tg.date = datetime.now() # We update date
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
         return (200, False, 'HP update failed', None)
     else:
         clog(tg.id,None,'Suffered minor injuries')
@@ -89,10 +86,9 @@ def fn_creature_kill(pc,tg,action):
         #session.delete(tg)
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] PC Kill failed (tgid:{},tgname:{})'.format(tgid,tgname),
+                f'[SQL] PC Kill failed (tgid:{tgid},tgname:{tgname}) [{e}]',
                 None)
     else:
         # We put the info in queue for ws
@@ -116,7 +112,7 @@ def fn_creature_kill(pc,tg,action):
         clog(tgid,None,'Died')
         return (200,
                 True,
-                '[SQL] PC Kill successed (tgid:{},tgname:{})'.format(tgid,tgname),
+                f'PC Kill successed (tgid:{tgid},tgname:{tgname})',
                 None)
     finally:
         session.close()
@@ -138,9 +134,8 @@ def fn_creature_gain_xp(pc,tg):
                 pcsquad.date = datetime.now()                 # We update date
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
         return (False,
-                '[SQL] XP update failed (pcid:{},tgid:{})'.format(pc.id,tg.id))
+                f'[SQL] XP update failed (pcid:{pc.id},tgid:{tg.id})')
     else:
         clog(pc.id,None,'Gained Experience')
         return (True, None)
@@ -215,7 +210,7 @@ def fn_creature_gain_loot(pc,tg):
     except Exception as e:
         # Something went wrong during commit
         return (False,
-                '[SQL] Loot update failed (pcid:{})'.format(pc.id))
+                f'[SQL] Loot update failed (pcid:{pc.id})')
     else:
         clog(pc.id,None,'Gained Loot')
         return (True, None)

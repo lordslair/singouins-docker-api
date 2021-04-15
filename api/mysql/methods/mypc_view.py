@@ -28,10 +28,9 @@ def mypc_view_get(username,pcid):
                                             .filter(PJ.y.between(miny,maxy))\
                                             .all()
         except Exception as e:
-            # Something went wrong during query
             return (200,
                     False,
-                    '[SQL] View query failed (username:{},pcid:{}) [{}]'.format(username,pcid,e),
+                    f'[SQL] View query failed (username:{username},pcid:{pcid}) [{e}]',
                     None)
         else:
             # We clean the creatures in view, and get a list
@@ -49,7 +48,7 @@ def mypc_view_get(username,pcid):
 
             return (200,
                     True,
-                    'View successfully retrieved (range:{},x:{},y:{})'.format(range,pc.x,pc.y),
+                    f'View successfully retrieved (range:{range},x:{x},y:{y})',
                     creatures)
         finally:
             session.close()

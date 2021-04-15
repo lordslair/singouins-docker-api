@@ -32,14 +32,14 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
     if fn_creature_get(pcname,None)[1]:
         return (409,
                 False,
-                'PC already exists (username:{},pcname:{})'.format(username,pcname),
+                f'PC already exists (username:{username},pcname:{pcname})',
                 None)
     else:
         race = session.query(MetaRace).filter(MetaRace.id == pcrace).one_or_none()
         if race is None:
             return (200,
                     False,
-                    'MetaRce not found (race:{})'.format(pcrace),
+                    f'MetaRace not found (race:{pcrace})',
                     None)
 
         pc = PJ(name    = pcname,
@@ -59,7 +59,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
             session.rollback()
             return (200,
                     False,
-                    '[SQL] PC creation failed (username:{},pcname:{})'.format(username,pcname),
+                    f'[SQL] PC creation failed (username:{username},pcname:{pcname}) [{e}]',
                     None)
         else:
                 cosmetic = Cosmetic(metaid = pccosmetic['metaid'],
@@ -99,7 +99,10 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
                 except Exception as e:
                     # Something went wrong during commit
                     session.rollback()
-                    return (200, False, '[SQL] PC Slots/Wallet/HS/Stats creation failed', None)
+                    return (200,
+                            False,
+                            f'[SQL] PC Slots/Wallet/HS/Stats creation failed [{e}]',
+                            None)
                 else:
                     # Money is added
                     wallet.currency = 250
@@ -140,9 +143,16 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
                         session.commit()
                     except Exception as e:
                         # Something went wrong during commit
-                        return (200, False, '[SQL] PC Wallet/Inventory population failed', None)
+                        session.rollback()
+                        return (200,
+                                False,
+                                f'[SQL] PC Wallet/Inventory population failed [{e}]',
+                                None)
                     else:
-                        return (201, True, 'PC successfully created', pc)
+                        return (201,
+                                True,
+                                f'PC successfully created (pcid:{pc.id})',
+                                pc)
         finally:
             session.close()
 
@@ -157,18 +167,18 @@ def mypc_get_all(username):
         # Something went wrong during query
         return (200,
                 False,
-                '[SQL] PCs query failed (username:{})'.format(username),
+                f'[SQL] PCs query failed (username:{username}) [{e}]',
                 None)
     else:
         if pcs:
             return (200,
                     True,
-                    'PCs successfully found (username:{})'.format(username),
+                    f'PCs successfully found (username:{username})',
                     pcs)
         else:
             return (200,
                     False,
-                    'No PC found for this user (username:{})'.format(username),
+                    f'No PC found for this user (username:{username})',
                     None)
     finally:
         session.close()
@@ -178,7 +188,10 @@ def mypc_del(username,pcid):
     session = Session()
 
     if not fn_creature_get(None,pcid)[3]:
-        return (200, False, 'PC does not exist (pcid:{})'.format(pcid), None)
+        return (200,
+                False,
+                f'PC does not exist (pcid:{pcid})',
+                None)
 
     try:
         userid    = fn_user_get(username).id
@@ -208,12 +221,12 @@ def mypc_del(username,pcid):
         # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] PC deletion failed (username:{},pcid:{})'.format(username,pcid),
+                f'[SQL] PC deletion failed (username:{username},pcid:{pcid}) [{e}]',
                 None)
     else:
         return (200,
                 True,
-                'PC successfully deleted (username:{},pcid:{})'.format(username,pcid),
+                f'PC successfully deleted (username:{username},pcid:{pcid})',
                 None)
     finally:
         session.close()
@@ -262,7 +275,7 @@ def mypc_get_stats(pc):
         # Something went wrong during query
         return (200,
                 False,
-                f'[SQL] Stats query failed (pcid:{pc.id})',
+                f'[SQL] CreatureSlots query failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
         for item in (feet, hands, head, shoulders, torso, legs):

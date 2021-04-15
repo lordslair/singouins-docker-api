@@ -18,7 +18,11 @@ def pc_items_get(username,pcid):
     user    = fn_user_get(username)
     session = Session()
 
-    if pc.account is None: return (200, False, 'NPCs do not have items (pcid:{})'.format(pc.id), None)
+    if pc.account is None:
+        return (200,
+                False,
+                f'NPCs do not have items (pcid:{pc.id})',
+                None)
 
     try:
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).all()
@@ -41,7 +45,7 @@ def pc_items_get(username,pcid):
         # Something went wrong during query
         return (200,
                 False,
-                '[SQL] Equipment query failed (pcid:{})'.format(pc.id),
+                f'[SQL] Equipment query failed (pcid:{pc.id})',
                 None)
     else:
         feetmetaid      = feet.metaid      if feet      is not None else None
@@ -88,7 +92,7 @@ def pc_items_get(username,pcid):
                 "legs": {"metaid": legsmetaid,"metatype": legsmetatype}}
         return (200,
                 True,
-                'Equipment query successed (pcid:{})'.format(pc.id),
+                f'Equipment query successed (pcid:{pc.id})',
                 {"equipment": metas,
                  "cosmetic": cosmetic})
     finally:
