@@ -211,12 +211,17 @@ def api_mypc_create():
     pcname       = request.json.get('name', None)
     pcrace       = request.json.get('race', None)
     pcclass      = request.json.get('class', None)
-    equipment    = request.json.get('equipment', None)
+    pcequipment  = request.json.get('equipment', None)
+    pccosmetic   = request.json.get('cosmetic', None)
+
+
 
     if not pcname or not pcrace:
         return jsonify({"msg": "Missing name/race parameter"}), 400
 
-    (code, success, msg, payload) = mypc_create(current_user,pcname,pcrace,pcclass,equipment)
+    (code, success, msg, payload) = mypc_create(current_user,
+                                                pcname,pcrace,pcclass,
+                                                pcequipment,pccosmetic)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

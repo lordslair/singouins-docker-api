@@ -12,6 +12,7 @@ class Cosmetic(Base):
     __tablename__ = 'cosmetics'
 
     id:         int
+    metaid:     int
     bearer:     int
     bound:      bool
     bound_type: str
@@ -21,6 +22,7 @@ class Cosmetic(Base):
     date:       str
 
     id          = Column(Integer, primary_key=True)
+    metaid      = Column(Integer, nullable=False)
     bearer      = Column(Integer, nullable=True)
     bound       = Column(Boolean, nullable=False)
     bound_type  = Column(Enum('BoE','BoP','BoA','BoU','BtA'))

@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+import                  json
+
 from datetime           import datetime
 from random             import randint
 
@@ -16,7 +18,7 @@ from .fn_global         import clog
 #
 
 # API: POST /mypc
-def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
+def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
     session = Session()
 
     mypc_nbr = mypc_get_all(username)[3]
@@ -60,6 +62,14 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                     '[SQL] PC creation failed (username:{},pcname:{})'.format(username,pcname),
                     None)
         else:
+                cosmetic = Cosmetic(metaid = pccosmetic['metaid'],
+                                    bearer = pc.id,
+                                    bound = 1,
+                                    bound_type = 'BoP',
+                                    state = 99,
+                                    rarity = 'Epic',
+                                    data = str(pccosmetic['data']))
+
                 pc        = fn_creature_get(pcname,None)[3]
                 equipment = CreatureSlots(id = pc.id)
                 wallet    = Wallet(id = pc.id)
@@ -75,6 +85,7 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                 session.add(equipment)
                 session.add(wallet)
                 session.add(stats)
+                session.add(cosmetic)
 
                 if pcclass == '1': stats.m_class = 10
                 if pcclass == '2': stats.r_class = 10
@@ -93,11 +104,11 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                     # Money is added
                     wallet.currency = 250
 
-                    if base_equipment:
+                    if pcequipment:
                         # Items are added
-                        if base_equipment['righthand'] is not None:
-                            rh   = Item(metatype   = base_equipment['righthand']['metatype'],
-                                        metaid     = base_equipment['righthand']['metaid'],
+                        if pcequipment['righthand'] is not None:
+                            rh   = Item(metatype   = pcequipment['righthand']['metatype'],
+                                        metaid     = pcequipment['righthand']['metaid'],
                                         bearer     = pc.id,
                                         bound      = True,
                                         bound_type = 'BoP',
@@ -110,9 +121,9 @@ def mypc_create(username,pcname,pcrace,pcclass,base_equipment):
                                         date       = datetime.now())
                             session.add(rh)
 
-                        if base_equipment['lefthand'] is not None:
-                            lh   = Item(metatype   = base_equipment['lefthand']['metatype'],
-                                    metaid     = base_equipment['lefthand']['metaid'],
+                        if pcequipment['lefthand'] is not None:
+                            lh   = Item(metatype   = pcequipment['lefthand']['metatype'],
+                                    metaid     = pcequipment['lefthand']['metaid'],
                                     bearer     = pc.id,
                                     bound      = True,
                                     bound_type = 'BoP',
@@ -176,11 +187,13 @@ def mypc_del(username,pcid):
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
         wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
         stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()
+        cosmetics = session.query(Cosmetic).filter(Cosmetic.bearer == pc.id).one_or_none()
 
         if pc: session.delete(pc)
         if equipment: session.delete(equipment)
         if wallet: session.delete(wallet)
         if stats: session.delete(stats)
+        if cosmetics: session.delete(cosmetics)
 
         items = session.query(Item).filter(Item.bearer == pc.id).all()
         if items:
