@@ -16,7 +16,9 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from mysql.methods      import *
 from mysql.utils        import redis
-from variables          import SEP_SECRET_KEY, API_URL, SEP_SHA, DISCORD_URL, LDP_HOST, LDP_TOKEN
+from variables          import (SEP_SECRET_KEY, SEP_SHA,
+                                API_URL, DISCORD_URL, API_ADMIN_TOKEN,
+                                LDP_HOST, LDP_TOKEN)
 from utils.mail         import send
 from utils.token        import generate_confirmation_token
 
@@ -611,7 +613,7 @@ def log_send():
 
 @app.route('/admin/mypc', methods=['POST'])
 def api_admin_mypc_get_all():
-    if request.headers.get('Authorization') != f'Bearer {ADMIN_TOKEN}':
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
@@ -627,7 +629,7 @@ def api_admin_mypc_get_all():
 
 @app.route('/admin/mypc/<int:pcid>', methods=['POST'])
 def api_admin_mypc_get_one(pcid):
-    if request.headers.get('Authorization') != f'Bearer {ADMIN_TOKEN}':
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
