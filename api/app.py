@@ -57,6 +57,7 @@ def auth_login():
 
     username = request.json.get('username', None)
     password = request.json.get('password', None)
+
     if not username:
         return jsonify({"msg": "Missing username parameter"}), 400
     if not password:
@@ -552,7 +553,6 @@ def map_get(mapid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-
 #
 # Routes /log
 #
@@ -605,6 +605,41 @@ def log_send():
     finally:
         logging.getLogger().removeHandler(handler)
 
+#
+# Routes /admin
+#
+
+@app.route('/admin/mypc', methods=['POST'])
+def api_admin_mypc_get_all():
+    if request.headers.get('Authorization') != f'Bearer {ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+    current_user = fn_user_get_from_discord(discordname).name
+    if current_user is None:
+        return jsonify({"msg": 'Discordname unknown', "success": False, "payload": None}), 200
+
+    (code, success, msg, payload) = mypc_get_all(current_user)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/admin/mypc/<int:pcid>', methods=['POST'])
+def api_admin_mypc_get_one(pcid):
+    if request.headers.get('Authorization') != f'Bearer {ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+    current_user = fn_user_get_from_discord(discordname).name
+    if current_user is None:
+        return jsonify({"msg": 'Discordname unknown', "success": False, "payload": None}), 200
+
+    (code, success, msg, payload) = mypc_get_one(current_user,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 if __name__ == '__main__':
     app.run()
