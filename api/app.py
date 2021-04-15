@@ -643,5 +643,23 @@ def api_admin_mypc_get_one(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/admin/squad/<int:squadid>', methods=['GET'])
+def api_admin_squad_get_one(squadid):
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    (code, success, msg, payload) = admin_squad_get_one(squadid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/admin/squad', methods=['GET'])
+def api_admin_squad_get_all():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    (code, success, msg, payload) = admin_squad_get_all()
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 if __name__ == '__main__':
     app.run()
