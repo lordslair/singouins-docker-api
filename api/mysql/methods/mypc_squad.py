@@ -83,7 +83,7 @@ def add_squad(username,pcid):
         if pc.squad is not None:
             return (200,
                     False,
-                    'Squad leader already in a squad (pcid:{},squadid:{})'.format(pc.id,squad.id),
+                    'Squad leader already in a squad (pcid:{},squadid:{})'.format(pc.id,pc.squad),
                     None)
 
         squad = Squad(leader  = pc.id)
@@ -103,6 +103,7 @@ def add_squad(username,pcid):
 
         try:
             session.commit()
+            members       = session.query(PJ).filter(PJ.squad == pc.squad).all()
         except Exception as e:
             # Something went wrong during commit
             return (200,
@@ -116,6 +117,12 @@ def add_squad(username,pcid):
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     'Squad successfully created (pcid:{},squadid:{})'.format(pc.id,squad.id),
@@ -147,10 +154,11 @@ def del_squad(username,leaderid,squadid):
             if count > 1: return (200, False, 'Squad not empty (squadid:{})'.format(squad.id), None)
 
             session.delete(squad)
-            pc = session.query(PJ).filter(PJ.id == leader.id).one_or_none()
+            pc            = session.query(PJ).filter(PJ.id == leader.id).one_or_none()
             pc.squad      = None
             pc.squad_rank = None
             session.commit()
+            members       = session.query(PJ).filter(PJ.squad == leader.squad).all()
         except Exception as e:
             # Something went wrong during commit
             return (200, False, '[SQL] Squad deletion failed (squadid:{})'.format(squad.id), None)
@@ -161,6 +169,12 @@ def del_squad(username,leaderid,squadid):
                     "embed": None,
                     "scope": f'Squad-{squad.id}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
         finally:
             session.close()
@@ -220,6 +234,12 @@ def invite_squad_member(username,leaderid,squadid,targetid):
                     "embed": None,
                     "scope": f'Squad-{leader.squad}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}/invite/{id3}',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     'PC successfully invited (slots:{}/{})'.format(len(members),maxmembers),
@@ -320,9 +340,10 @@ def accept_squad_member(username,pcid,squadid):
             return (200, False, 'PC is not pending in a squad', None)
 
         try:
-            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc            = session.query(PJ).filter(PJ.id == pcid).one_or_none()
             pc.squad_rank = 'Member'
             session.commit()
+            members       = session.query(PJ).filter(PJ.squad == pc.squad).all()
         except Exception as e:
             # Something went wrong during commit
             return (200,
@@ -336,6 +357,12 @@ def accept_squad_member(username,pcid,squadid):
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}/accept',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     'PC successfully accepted squad invite (pcid:{},squadid:{})'.format(pc.id,squadid),
@@ -362,10 +389,11 @@ def decline_squad_member(username,pcid,squadid):
             return (200, False, 'PC is not pending in a squad', None)
 
         try:
-            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc            = session.query(PJ).filter(PJ.id == pcid).one_or_none()
             pc.squad      = None
             pc.squad_rank = None
             session.commit()
+            members       = session.query(PJ).filter(PJ.squad == pc.squad).all()
         except Exception as e:
             # Something went wrong during commit
             return (200,
@@ -379,6 +407,12 @@ def decline_squad_member(username,pcid,squadid):
                     "embed": None,
                     "scope": f'Squad-{squadid}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}/decline',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (201, True, 'PC successfully declined squad invite (pcid:{},squadid:{})'.format(pc.id,squadid), None)
         finally:
             session.close()
@@ -405,10 +439,11 @@ def leave_squad_member(username,pcid,squadid):
                     None)
 
         try:
-            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc            = session.query(PJ).filter(PJ.id == pcid).one_or_none()
             pc.squad      = None
             pc.squad_rank = None
             session.commit()
+            members       = session.query(PJ).filter(PJ.squad == pc.squad).all()
         except Exception as e:
             # Something went wrong during commit
             return (200,
@@ -422,6 +457,12 @@ def leave_squad_member(username,pcid,squadid):
                     "embed": None,
                     "scope": f'Squad-{squadid}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": fn_creatures_clean(members),
+                    "route": '/mypc/{id1}/squad/{id2}/leave',
+                    "scope": 'squad'}
+            yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     'PC successfully left (pcid:{},squadid:{})'.format(pc.id,squadid),
