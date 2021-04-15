@@ -34,3 +34,6 @@ DISCORD_URL   = os.environ['SEP_DISCORD_URL']
 # LDP credentials for log forwarding
 LDP_HOST      = os.environ['SEP_LDP_HOST']
 LDP_TOKEN     = os.environ['SEP_LDP_TOKEN']
+
+# Admin token used from Discord
+API_ADMIN_TOKEN = os.environ['SEP_ADMIN_TOKEN']

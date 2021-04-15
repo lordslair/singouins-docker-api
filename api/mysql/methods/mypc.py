@@ -183,6 +183,36 @@ def mypc_get_all(username):
     finally:
         session.close()
 
+# API: GET /mypc/<int:pcid>
+def mypc_get_one(username,pcid):
+    session = Session()
+
+    try:
+        userid = fn_user_get(username).id
+        pcs    = session.query(PJ)\
+                        .filter(PJ.account == userid, PJ.id == pcid)\
+                        .one_or_none()
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                f'[SQL] PC query failed (username:{username},pcid:{pcid}) [{e}]',
+                None)
+    else:
+        if pcs:
+            return (200,
+                    True,
+                    f'PCs successfully found (username:{username},pcid:{pcid})',
+                    pcs)
+        else:
+            return (200,
+                    False,
+                    f'No PC found for this user (username:{username},pcid:{pcid})',
+                    None)
+    finally:
+        session.close()
+
+
 # API: DELETE /mypc/<int:pcid>
 def mypc_del(username,pcid):
     session = Session()
