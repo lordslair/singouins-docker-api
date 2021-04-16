@@ -155,6 +155,32 @@ def fn_creature_gain_loot(pc,tg):
             wallet.date      = datetime.now() # We update the date in DB
 
             incr_hs(pc,f'combat:loot:currency', currency) # Redis HighScore
+
+            if loots[0]['item'] is not None:
+                # Items are added
+                item = Item(metatype   = loots[0]['item']['metatype'],
+                            metaid     = loots[0]['item']['metaid'],
+                            bearer     = pc.id,
+                            bound      = loots[0]['item']['bound'],
+                            bound_type = loots[0]['item']['bound_type'],
+                            modded     = False,
+                            mods       = None,
+                            state      = randint(0,100),
+                            rarity     = loots[0]['item']['rarity'],
+                            offsetx    = None,
+                            offsety    = None,
+                            date       = datetime.now())
+
+                session.add(item)
+                incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
+
+                if   item.metatype == 'weapon':
+                     itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+                     # item.ammo is by default None, we initialize it here
+                     if itemmeta.ranged == True:
+                         item.ammo = 0
+                elif item.metatype == 'armor':
+                     itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
         else:
             # We add loot to the killer squad
             squadlist = session.query(PJ)\
