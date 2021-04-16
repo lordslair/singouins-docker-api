@@ -120,7 +120,7 @@ def add_squad(username,pcid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (201,
@@ -172,7 +172,7 @@ def del_squad(username,leaderid,squadid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (200, True, 'Squad successfully deleted (squadid:{})'.format(squad.id), None)
@@ -237,7 +237,7 @@ def invite_squad_member(username,leaderid,squadid,targetid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}/invite/{id3}',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (201,
@@ -307,7 +307,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}/kick/{id3}',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (201,
@@ -360,7 +360,7 @@ def accept_squad_member(username,pcid,squadid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}/accept',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (201,
@@ -410,7 +410,7 @@ def decline_squad_member(username,pcid,squadid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}/decline',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (201, True, 'PC successfully declined squad invite (pcid:{},squadid:{})'.format(pc.id,squadid), None)
@@ -460,7 +460,7 @@ def leave_squad_member(username,pcid,squadid):
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
-                    "route": '/mypc/{id1}/squad/{id2}/leave',
+                    "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
             yqueue_put('broadcast', qmsg)
             return (201,
