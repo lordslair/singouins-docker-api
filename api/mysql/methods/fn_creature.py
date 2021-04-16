@@ -81,9 +81,7 @@ def fn_creature_kill(pc,tg,action):
 
     try:
         tg      = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
-        tg.hp   = 0              # We update Health Points
-        tg.date = datetime.now() # We update date
-        #session.delete(tg)
+        session.delete(tg)
         session.commit()
     except Exception as e:
         return (200,
