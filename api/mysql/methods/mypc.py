@@ -124,6 +124,12 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
                                         date       = datetime.now())
                             session.add(rh)
 
+                            if rh.metatype == 'weapon':
+                                 itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == rh.metaid).one_or_none()
+                                 # item.ammo is by default None, we initialize it here
+                                 if itemmeta.ranged == True:
+                                     rh.ammo = itemmeta.max_ammo
+
                         if pcequipment['lefthand'] is not None:
                             lh   = Item(metatype   = pcequipment['lefthand']['metatype'],
                                     metaid     = pcequipment['lefthand']['metaid'],
@@ -137,7 +143,13 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
                                     offsetx    = 4,
                                     offsety    = 0,
                                     date       = datetime.now())
-                        session.add(lh)
+                            session.add(lh)
+
+                        if lh.metatype == 'weapon':
+                             itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == lh.metaid).one_or_none()
+                             # item.ammo is by default None, we initialize it here
+                             if itemmeta.ranged == True:
+                                 lh.ammo = itemmeta.max_ammo
 
                     try:
                         session.commit()

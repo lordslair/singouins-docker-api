@@ -163,7 +163,7 @@ class Item(Base):
     modded      = Column(Boolean, nullable=False, server_default='0')
     mods        = Column(Text   , nullable=True)
     state       = Column(Integer, nullable=True)
-    ammo        = Column(Integer, nullable=False, server_default='0')
+    ammo        = Column(Integer, nullable=True)
     rarity      = Column(Enum('Legendary','Epic','Rare','Common','Uncommon','Broken'))
     offsetx     = Column(Integer, nullable=True)
     offsety     = Column(Integer, nullable=True)

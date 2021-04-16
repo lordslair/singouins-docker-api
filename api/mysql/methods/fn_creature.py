@@ -188,15 +188,19 @@ def fn_creature_gain_loot(pc,tg):
                                 offsetx    = None,
                                 offsety    = None,
                                 date       = datetime.now())
+
                     session.add(item)
                     incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
 
-                    # We put the info in queue for ws
                     if   item.metatype == 'weapon':
                          itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+                         # item.ammo is by default None, we initialize it here
+                         if itemmeta.ranged == True:
+                             item.ammo = 0
                     elif item.metatype == 'armor':
                          itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
 
+                    # We put the info in queue for ws Discord
                     qmsg = {"ciphered": False,
                             "payload": {"color_int": color_int[item.rarity],
                                         "path": f'/resources/sprites/{item.metatype}s/{item.metaid}.png',
