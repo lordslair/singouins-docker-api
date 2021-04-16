@@ -17,7 +17,7 @@ def admin_squad_get_all():
     except Exception as e:
         return (200,
                 False,
-                f'[SQL] Squads query failed (squadid:{squadid}) [{e}]',
+                f'[SQL] Squads query failed [{e}]',
                 None)
     else:
         if squads:
