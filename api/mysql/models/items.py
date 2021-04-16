@@ -157,7 +157,7 @@ class Item(Base):
     id          = Column(Integer, primary_key=True)
     metatype    = Column(Enum('armor','weapon'))
     metaid      = Column(Integer, nullable=False)
-    bearer      = Column(Integer, nullable=False)
+    bearer      = Column(Integer, nullable=True)
     bound       = Column(Boolean, nullable=False)
     bound_type  = Column(Enum('BoE','BoP','BoA','BoU','BtA'))
     modded      = Column(Boolean, nullable=False, server_default='0')
