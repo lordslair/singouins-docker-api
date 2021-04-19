@@ -207,7 +207,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         # Successfull attack
         action['hit'] = True
         # The target is now acquired to the attacker
-        fn_creature_tag(pc,tg)
+        if tg.targeted_by is None:
+            fn_creature_tag(pc,tg)
         incr_hs(pc,f'combat:given:{rpath}:hits',1) # Redis HighScore
     else:
         # Failed attack
