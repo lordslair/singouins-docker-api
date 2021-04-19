@@ -612,54 +612,49 @@ def log_send():
 #
 
 @app.route('/admin/mypc', methods=['POST'])
-def api_admin_mypc_get_all():
+def api_admin_mypc():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
 
     discordname  = request.json.get('discordname')
+    pcid         = request.json.get('pcid', None)
+
     current_user = fn_user_get_from_discord(discordname).name
     if current_user is None:
         return jsonify({"msg": 'Discordname unknown', "success": False, "payload": None}), 200
 
-    (code, success, msg, payload) = mypc_get_all(current_user)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+    if pcid is None:
+        (code, success, msg, payload) = mypc_get_all(current_user)
+        if isinstance(code, int):
+            return jsonify({"msg": msg, "success": success, "payload": payload}), code
+    elif isinstance(pcid, int):
+        (code, success, msg, payload) = mypc_get_one(current_user,pcid)
+        if isinstance(code, int):
+            return jsonify({"msg": msg, "success": success, "payload": payload}), code
+    else:
+        return jsonify({"msg": f'PC unknown (pcid:{pcid})', "success": False, "payload": None}), 200
 
-@app.route('/admin/mypc/<int:pcid>', methods=['POST'])
-def api_admin_mypc_get_one(pcid):
+@app.route('/admin/squad', methods=['POST'])
+def api_admin_squad():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
 
-    discordname  = request.json.get('discordname')
-    current_user = fn_user_get_from_discord(discordname).name
-    if current_user is None:
-        return jsonify({"msg": 'Discordname unknown', "success": False, "payload": None}), 200
+    squadid      = request.json.get('squadid', None)
 
-    (code, success, msg, payload) = mypc_get_one(current_user,pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/squad/<int:squadid>', methods=['GET'])
-def api_admin_squad_get_one(squadid):
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-
-    (code, success, msg, payload) = admin_squad_get_one(squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/squad', methods=['GET'])
-def api_admin_squad_get_all():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-
-    (code, success, msg, payload) = admin_squad_get_all()
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+    if squadid is None:
+        (code, success, msg, payload) = admin_squad_get_all()
+        if isinstance(code, int):
+            return jsonify({"msg": msg, "success": success, "payload": payload}), code
+    elif isinstance(squadid, int):
+        (code, success, msg, payload) = admin_squad_get_one(squadid)
+        if isinstance(code, int):
+            return jsonify({"msg": msg, "success": success, "payload": payload}), code
+    else:
+        return jsonify({"msg": f'Squad unknown (squadid:{squadid})', "success": False, "payload": None}), 200
 
 if __name__ == '__main__':
     app.run()
