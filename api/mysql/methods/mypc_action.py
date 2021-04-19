@@ -84,6 +84,13 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
               "damages": None,
               "killed": False}
 
+    # Check if target exists
+    if tg is None:
+        return (200,
+                False,
+                f'Target does not exists (targetid:{targetid})',
+                action)
+
     # Check if target is taggued
     if tg.targeted_by is not None:
         # Target already taggued by a pc
@@ -105,6 +112,13 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     else:
         # Retrieving weapon stats
         item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+        # Check if item exists/is owned by PC
+        if item is None:
+            return (200,
+                    False,
+                    f'Weapon does not exists/not belong to PC (pcid:{pcid},weaponid:{weaponid})',
+                    action)
+
         itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
         session.expunge(itemmeta)
 
@@ -119,28 +133,13 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
                 'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
                 None)
 
-    # Check it PC has enough PA
-
-    if pa['red']['pa'] < itemmeta.pas_use:
-        # Not enough PA to attack
-        return (200,
-                False,
-                'Not enough PA to attack',
-                {"red": pa['red'],
-                 "blue": pa['blue'],
-                 "action": None})
-    else:
-        # Enough PA to attack, we consume the red PAs
-        incr_hs(pc,'action:attack',1) # Redis HighScore
-        set_pa(pcid,itemmeta.pas_use,0)
-
     if itemmeta.ranged is False:
         # Checking distance for contact weapons
         if abs(pc.x - tg.x) > 1 or abs(pc.y - tg.y) > 1:
             # Target is not on a adjacent tile
             return (200,
                     False,
-                    'Target is not on contact',
+                    f'Target is out of range (pcid:{pcid},targetid:{targetid})',
                     None)
         # Combat Capacity (Contact weapons)
         pc.capacity  = (pc.g + (pc.m + pc.r)/2 )/2
@@ -152,11 +151,11 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     else:
         # Checking distance for ranged weapons
         if abs(pc.x - tg.x) > itemmeta.rng or abs(pc.y - tg.y) > itemmeta.rng:
-            # Target is not on a adjacent tile
+            # Target is not in range
             return (200,
                     False,
-                    'Target is out of range',
-                    None)
+                    f'Target is out of range (pcid:{pcid},targetid:{targetid})',
+                    action)
         # Shooting capacity (Ranged weapons)
         pc.capacity   = (pc.v + (pc.b + pc.r)/2 )/2
         pc.dmg_bonus  = (100 + (pc.v - 100)/3)/100
@@ -182,6 +181,21 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     else:
         # Successfull action
         action['failed'] = False
+
+    # At this point, we consider that the attack can happen, and manage the PA
+    # Check it PC has enough PA
+    if pa['red']['pa'] < itemmeta.pas_use:
+        # Not enough PA to attack
+        return (200,
+                False,
+                'Not enough PA to attack',
+                {"red": pa['red'],
+                 "blue": pa['blue'],
+                 "action": None})
+    else:
+        # Enough PA to attack, we consume the red PAs
+        incr_hs(pc,'action:attack',1) # Redis HighScore
+        set_pa(pcid,itemmeta.pas_use,0)
 
     if pc.capacity > tg.avoid:
         # Successfull attack
