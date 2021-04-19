@@ -611,6 +611,13 @@ def log_send():
 # Routes /admin
 #
 
+@app.route('/admin', methods=['GET'])
+def api_admin_up():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    return jsonify({"msg": f'UP and running', "success": True, "payload": None}), 200
+
 @app.route('/admin/mypc', methods=['POST'])
 def api_admin_mypc():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
