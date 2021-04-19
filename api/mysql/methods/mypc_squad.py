@@ -353,7 +353,7 @@ def accept_squad_member(username,pcid,squadid):
         else:
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
-                    "payload": f':information_source: **[{pc.id}] {pc.name}** declined this squad',
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this squad',
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
             yqueue_put('discord', qmsg)
