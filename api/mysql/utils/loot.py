@@ -119,9 +119,9 @@ def get_loots(tg):
             loots[0]['item']['bound'] = True
 
         if loots[0]['item']['metatype'] == 'weapon':
-            loots[0]['item']['metaid'] = randint(1,58)
+            loots[0]['item']['metaid'] = randint(1,60)  # len(metaArmors)
         elif loots[0]['item']['metatype'] == 'armor':
-            loots[0]['item']['metaid'] = randint(1,114)
+            loots[0]['item']['metaid'] = randint(1,120) # len(metaWeapons)
     else:
         # Loots are currency + consommables/compos + item
         loots[0]['currency']           = tg.level * loots[0]['rand']
