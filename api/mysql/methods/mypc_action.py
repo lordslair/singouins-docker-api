@@ -38,12 +38,18 @@ def mypc_action_move(username,pcid,path):
         x,y                      = map(int, coords.strip('()').split(','))
 
         if abs(pc.x - x) <= 1 and abs(pc.y - y) <= 1:
-            if bluepa > 1:
+            if bluepa > 3:
                 # Enough PA to move
-                set_pa(pcid,0,1) # We consume the blue PA (1) right now
+                set_pa(pcid,0,3) # We consume the blue PA (3) right now
                 pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
                 pc.x = x
                 pc.y = y
+            else:
+                # Not enough PA to move
+                return (200,
+                        False,
+                        'Not enough PA to move',
+                        get_pa(pcid)[3])
 
     try:
         session.commit()
@@ -51,7 +57,7 @@ def mypc_action_move(username,pcid,path):
         # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] Coords update failed (pcid:{},path:{})'.format(pcid,path),
+                f'[SQL] Coords update failed (pcid:{pcid},path:{path})',
                 None)
     else:
         # We put the info in queue for ws
