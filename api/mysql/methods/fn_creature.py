@@ -46,6 +46,7 @@ def fn_creature_get(pcname,pcid):
 def fn_creature_tag(pc,tg):
     session = Session()
     try:
+        tg             = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
         tg.targeted_by = pc.id
         session.commit()
     except Exception as e:
@@ -54,8 +55,12 @@ def fn_creature_tag(pc,tg):
                 f'[SQL] Targeted_by update failed (pcid:{pc.id},tgid:{tg.id}) [{e}]',
                 None)
     else:
-        clog(tg.id,None,f'Targeted by {pc.name}')
+        return (200,
+                True,
+                f'Targeted_by update successed (pcid:{pc.id},tgid:{tg.id})',
+                None)
     finally:
+        clog(tg.id,None,f'Targeted by {pc.name}')
         session.close()
 
 def fn_creature_wound(pc,tg,dmg):
