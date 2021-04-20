@@ -299,49 +299,95 @@ def mypc_get_stats(pc):
                             "parry": 0}}
 
     try:
-        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+        equipment = session.query(CreatureSlots)\
+                           .filter(CreatureSlots.id == pc.id)\
+                           .one_or_none()
 
+        # Equipement Slots are items.id, not meta.id - need to double query it
         if equipment:
-            feet      = session.query(MetaArmor).filter(MetaArmor.id == equipment.feet).one_or_none()
-            hands     = session.query(MetaArmor).filter(MetaArmor.id == equipment.hands).one_or_none()
-            head      = session.query(MetaArmor).filter(MetaArmor.id == equipment.head).one_or_none()
-            shoulders = session.query(MetaArmor).filter(MetaArmor.id == equipment.shoulders).one_or_none()
-            torso     = session.query(MetaArmor).filter(MetaArmor.id == equipment.torso).one_or_none()
-            legs      = session.query(MetaArmor).filter(MetaArmor.id == equipment.legs).one_or_none()
+            feet      = session.query(Item).filter(Item.id == equipment.feet).one_or_none()
+            hands     = session.query(Item).filter(Item.id == equipment.hands).one_or_none()
+            head      = session.query(Item).filter(Item.id == equipment.head).one_or_none()
+            shoulders = session.query(Item).filter(Item.id == equipment.shoulders).one_or_none()
+            torso     = session.query(Item).filter(Item.id == equipment.torso).one_or_none()
+            legs      = session.query(Item).filter(Item.id == equipment.legs).one_or_none()
+
+            armormetas = []
+            if feet:
+                feetmeta      = session.query(MetaArmor).filter(MetaArmor.id == feet.metaid).one_or_none()
+                armormetas.append(feetmeta)
+            if hands:
+                handsmeta     = session.query(MetaArmor).filter(MetaArmor.id == hands.metaid).one_or_none()
+                armormetas.append(handsmeta)
+            if head:
+                headmeta      = session.query(MetaArmor).filter(MetaArmor.id == head.metaid).one_or_none()
+                armormetas.append(headmeta)
+            if shoulders:
+                shouldersmeta = session.query(MetaArmor).filter(MetaArmor.id == shoulders.metaid).one_or_none()
+                armormetas.append(shouldersmeta)
+            if torso:
+                torsometa     = session.query(MetaArmor).filter(MetaArmor.id == torso.metaid).one_or_none()
+                armormetas.append(torsometa)
+            if legs:
+                legsmeta      = session.query(MetaArmor).filter(MetaArmor.id == legs.metaid).one_or_none()
+                armormetas.append(legsmeta)
 
             holster   = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.holster).one_or_none()
             lefthand  = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.lefthand).one_or_none()
             righthand = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.righthand).one_or_none()
 
+        # We need to query Creature base stats
+        cs        = session.query(CreatureStats)\
+                           .filter(CreatureStats.id == pc.id)\
+                           .one_or_none()
+
     except Exception as e:
         # Something went wrong during query
         return (200,
                 False,
-                f'[SQL] CreatureSlots query failed (pcid:{pc.id}) [{e}]',
+                f'[SQL] CreatureSlots or CreatureStats query failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
-        for item in (feet, hands, head, shoulders, torso, legs):
-            if item:
-                stats_items['def']['armor']['b'] += item.arm_b
-                stats_items['def']['armor']['p'] += item.arm_p
+        for meta in armormetas:
+            if meta:
+                stats_items['def']['armor']['b'] += meta.arm_b
+                stats_items['def']['armor']['p'] += meta.arm_p
 
+        if cs:
+            # We got Creature base stats
+            base_m = cs.m_race + cs.m_class + cs.m_skill + cs.m_point
+            base_r = cs.r_race + cs.r_class + cs.r_skill + cs.r_point
+            base_g = cs.g_race + cs.g_class + cs.g_skill + cs.g_point
+            base_v = cs.v_race + cs.v_class + cs.v_skill + cs.v_point
+            base_p = cs.p_race + cs.p_class + cs.p_skill + cs.p_point
+            base_b = cs.b_race + cs.b_class + cs.b_skill + cs.b_point
+        else:
+            # Something is probably wrong
+            base_m = 0
+            base_r = 0
+            base_g = 0
+            base_v = 0
+            base_p = 0
+            base_b = 0
+
+        # We push data in final dict
         stats  = {"base":{
-                            "m": pc.m,
-                            "r": pc.r,
-                            "g": pc.g,
-                            "v": pc.v,
-                            "p": pc.p,
-                            "b": pc.b},
+                            "m": 0 + base_m,
+                            "r": 0 + base_r,
+                            "g": 0 + base_g,
+                            "v": 0 + base_v,
+                            "p": 0 + base_p,
+                            "b": 0 + base_b},
                   "off":{
-                            "capcom": round((pc.g + round((pc.m + pc.r)/2))/2),
-                            "capsho": round((pc.v + round((pc.b + pc.r)/2))/2)},
+                            "capcom": round((pc.g + round((base_m + base_r)/2))/2),
+                            "capsho": round((pc.v + round((base_b + base_r)/2))/2)},
                   "def":{
                             "armor": {
                                         "p": 0 + stats_items['def']['armor']['p'],
                                         "b": 0 + stats_items['def']['armor']['b']},
-                            "hpmax": 100 + pc.m + round(pc.level/2),
-                            "dodge": pc.r,
-                            "parry": round((pc.g-100)/50) * round((pc.m-100)/50)}}
+                            "hpmax": 100 + base_m + round(pc.level/2),
+                            "dodge": base_r,
+                            "parry": round(((base_g-100)/50) * ((base_m-100)/50))}}
 
         # Data was not in Redis, so we push it
         set_stats(pc,stats)
