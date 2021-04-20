@@ -81,7 +81,6 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     tg          = fn_creature_get(None,targetid)[3]
-    session     = Session()
     pa          = get_pa(pcid)[3]
 
     action = {"failed": True,
@@ -116,17 +115,28 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         itemmeta.pas_use  = 4
         itemmeta.dmg_base = 20
     else:
-        # Retrieving weapon stats
-        item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
-        # Check if item exists/is owned by PC
-        if item is None:
+        session     = Session()
+        try:
+            # Retrieving weapon stats
+            item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+            itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+        except Exception as e:
             return (200,
                     False,
-                    f'Weapon does not exists/not belong to PC (pcid:{pcid},weaponid:{weaponid})',
-                    action)
-
-        itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
-        session.expunge(itemmeta)
+                    f'[SQL] Item query failed (pcid:{pc.id},weaponid:{weaponid}) [{e}]',
+                    None)
+        else:
+            # Make it persistent after session.close()
+            session.expunge(item)
+            session.expunge(itemmeta)
+            # Check if item exists/is owned by PC
+            if item is None:
+                return (200,
+                        False,
+                        f'Weapon does not exists/not belong to PC (pcid:{pc.id},weaponid:{weaponid})',
+                        action)
+        finally:
+            session.close()
 
     if item is None:
         return (200,
