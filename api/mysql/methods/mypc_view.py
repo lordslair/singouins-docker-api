@@ -39,7 +39,7 @@ def mypc_view_get(username,pcid):
                 # We define the default diplomacy title
                 creature['diplo'] = 'neutral'
                 # We try to define the diplomacy based on tests
-                if creature['race'] > 11:
+                if creature['race'] >= 11:
                     creature['diplo'] = 'enemy'
                 if creature['squad'] == pc.squad:
                     creature['diplo'] = 'squad'
