@@ -38,7 +38,7 @@ def mypc_action_move(username,pcid,path):
         x,y                      = map(int, coords.strip('()').split(','))
 
         if abs(pc.x - x) <= 1 and abs(pc.y - y) <= 1:
-            if bluepa > 3:
+            if bluepa >= 3:
                 # Enough PA to move
                 set_pa(pcid,0,3) # We consume the blue PA (3) right now
                 pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
