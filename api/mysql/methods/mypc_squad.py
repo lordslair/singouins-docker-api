@@ -19,56 +19,64 @@ def get_squad(username,pcid,squadid):
     user                     = fn_user_get(username)
     session                  = Session()
 
-    if pc and pc.account == user.id:
-        # PC is not the Squad member
-        if pc.squad != squadid:
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
+    if pc.squad != squadid:
+        return (200,
+                False,
+                f'Squad request outside of your scope (pcid:{pc.id},squadid:{squadid})',
+                None)
+
+    try:
+        squad = session.query(Squad).\
+                        filter(Squad.id == pc.squad).\
+                        filter(PJ.id == pc.id)
+
+        pc_is_member  = squad.filter(PJ.squad_rank != 'Pending').one_or_none()
+        pc_is_pending = squad.filter(PJ.squad_rank == 'Pending').one_or_none()
+
+        if pc_is_member:
+            squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
+            members = session.query(PJ).filter(PJ.squad == squad.id).filter(PJ.squad_rank != 'Pending').all()
+            pending = session.query(PJ).filter(PJ.squad == squad.id).filter(PJ.squad_rank == 'Pending').all()
+        elif pc_is_pending:
+            squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
+
+    except Exception as e:
+        # Something went wrong during commit
+        return (200,
+                False,
+                f'[SQL] Squad query failed (pcid:{pcid},squadid:{squadid}) [{e}]',
+                None)
+    else:
+        if pc_is_member:
+            if squad:
+                if isinstance(members, list):
+                    if isinstance(pending, list):
+                        return (200,
+                                True,
+                                f'Squad query successed (pcid:{pcid},squadid:{squadid})',
+                                {"squad": squad, "members": members, "pending": pending})
+        elif pc_is_pending:
             return (200,
-                    False,
-                    'Squad request outside of your scope (pcid:{},squadid:{})'.format(pc.id,squadid),
-                    None)
-
-        try:
-            squad = session.query(Squad).\
-                            filter(Squad.id == pc.squad).\
-                            filter(PJ.id == pc.id)
-
-            pc_is_member  = squad.filter(PJ.squad_rank != 'Pending').one_or_none()
-            pc_is_pending = squad.filter(PJ.squad_rank == 'Pending').one_or_none()
-
-            if pc_is_member:
-                squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
-                members = session.query(PJ).filter(PJ.squad == squad.id).filter(PJ.squad_rank != 'Pending').all()
-                pending = session.query(PJ).filter(PJ.squad == squad.id).filter(PJ.squad_rank == 'Pending').all()
-            elif pc_is_pending:
-                squad   = squad.session.query(Squad).filter(Squad.id == pc.squad).one_or_none()
-
-        except Exception as e:
-            # Something went wrong during commit
-            return (200,
-                    False,
-                    '[SQL] Squad query failed (pcid:{},squadid:{})'.format(pcid,squadid),
-                    None)
-        else:
-            if pc_is_member:
-                if squad:
-                    if isinstance(members, list):
-                        if isinstance(pending, list):
-                            return (200,
-                                    True,
-                                    'Squad query successed (pcid:{},squadid:{})'.format(pcid,squadid),
-                                    {"squad": squad, "members": members, "pending": pending})
-            elif pc_is_pending:
-                return (200,
-                        True,
-                        'PC is pending in a squad (pcid:{},squadid:{})'.format(pcid,squadid),
-                        {"squad": squad})
-            else: return (200,
-                          False,
-                          'PC is not in a squad (pcid:{},squadid:{})'.format(pcid,squadid),
-                          None)
-        finally:
-            session.close()
-    else: return (409, False, 'Token/username mismatch', None)
+                    True,
+                    f'PC is pending in a squad (pcid:{pcid},squadid:{squadid})',
+                    {"squad": squad})
+        else: return (200,
+                      False,
+                      f'PC is not in a squad (pcid:{pcid},squadid:{squadid})',
+                      None)
+    finally:
+        session.close()
 
 # API: /mypc/<int:pcid>/squad
 def add_squad(username,pcid):
