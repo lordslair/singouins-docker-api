@@ -7,7 +7,12 @@ import requests
 API_URL     = os.environ['SEP_API_URL']
 pjname_test = 'PJTest'
 payload     = {'username': 'user@exemple.com', 'password': 'plop'}
-payload_c   = {'race': '2', 'name': 'PJTest'}
+payload_c   = {'name': 'PJTest',
+               'gender': '2',
+               'race': '2',
+               'class': '3',
+               'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
+               'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
 
 def test_singouins_pj_create():
     url      = API_URL + '/auth/login'
