@@ -631,6 +631,20 @@ def api_admin_user():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/admin/user/validate', methods=['POST'])
+def api_admin_user_validate():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+    usermail     = request.json.get('usermail')
+
+    (code, success, msg, payload) = admin_user_validate(discordname,usermail)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 @app.route('/admin/mypc', methods=['POST'])
 def api_admin_mypc():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
