@@ -9,7 +9,7 @@ from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get_from_discord
 
 #
-# Queries /admin/squad/*
+# Queries /admin/mypc/*
 #
 
 # API: POST /admin/mypc
