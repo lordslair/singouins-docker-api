@@ -626,22 +626,24 @@ def api_admin_mypc():
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
 
     discordname  = request.json.get('discordname')
-    pcid         = request.json.get('pcid', None)
+    pcid         = request.json.get('pcid')
 
-    current_user = fn_user_get_from_discord(discordname).name
-    if current_user is None:
-        return jsonify({"msg": 'Discordname unknown', "success": False, "payload": None}), 200
+    (code, success, msg, payload) = admin_mypc_one(discordname,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-    if pcid is None:
-        (code, success, msg, payload) = mypc_get_all(current_user)
-        if isinstance(code, int):
-            return jsonify({"msg": msg, "success": success, "payload": payload}), code
-    elif isinstance(pcid, int):
-        (code, success, msg, payload) = mypc_get_one(current_user,pcid)
-        if isinstance(code, int):
-            return jsonify({"msg": msg, "success": success, "payload": payload}), code
-    else:
-        return jsonify({"msg": f'PC unknown (pcid:{pcid})', "success": False, "payload": None}), 200
+@app.route('/admin/mypcs', methods=['POST'])
+def api_admin_mypcs():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+
+    (code, success, msg, payload) = admin_mypc_all(discordname)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/admin/squad', methods=['POST'])
 def api_admin_squad():
@@ -676,6 +678,20 @@ def api_admin_mypc_pa():
     bluepa       = request.json.get('bluepa', None)
 
     (code, success, msg, payload) = admin_mypc_pa(discordname,pcid,redpa,bluepa)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/admin/mypc/wallet', methods=['POST'])
+def api_admin_mypc_wallet():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+    pcid         = request.json.get('pcid')
+
+    (code, success, msg, payload) = admin_mypc_wallet(discordname,pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
