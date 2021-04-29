@@ -1,0 +1,15 @@
+dataclasses               ~= 0.6
+Flask                     ~= 1.1
+Flask-bcrypt              ~= 0.7
+Flask-cors                ~= 3.0
+Flask-JWT-Extended        ~= 3.25
+Flask-Swagger-UI          ~= 3.36
+gunicorn                  ~= 20.0
+logging-ldp               ~= 0.0.6
+marshmallow               ~= 3.10
+prometheus-flask-exporter ~= 0.18
+pyMySQL                   ~= 1.0
+redis                     ~= 3.5
+requests                  ~= 2.25
+SQLAlchemy                ~= 1.3
+yarqueue                  == 0.4.1
