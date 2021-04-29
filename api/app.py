@@ -16,7 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from mysql.methods      import *
 from mysql.utils        import redis
-from variables          import (SEP_SECRET_KEY, SEP_SHA,
+from variables          import (SEP_SECRET_KEY,
                                 API_URL, DISCORD_URL, API_ADMIN_TOKEN,
                                 LDP_HOST, LDP_TOKEN)
 from utils.mail         import send
@@ -32,9 +32,6 @@ from logging_ldp.schemas    import LDPSchema
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
 metrics = PrometheusMetrics(app) # We wrap around all the app the metrics
-
-# static information as metric
-metrics.info('singouins_info', 'Application info', version='0.0.1', commit=SEP_SHA[0:7])
 
 # Setup the flask_swagger_ui extension
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(

@@ -17,9 +17,6 @@ SQL_DSN        = MYSQL_USER + ':' + MYSQL_PASSWORD + '@' + MYSQL_HOST + ':3306/'
 # External URL
 API_URL        = os.environ['SEP_API_URL']
 
-# Latest commit used in this apps
-SEP_SHA        = open('/code/.git', 'r').read().rstrip()
-
 # Redis variables
 REDIS_HOST    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST']
 REDIS_PORT    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT']
