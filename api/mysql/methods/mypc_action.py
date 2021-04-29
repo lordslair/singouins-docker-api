@@ -189,7 +189,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
                      "blue": pa['blue'],
                      "action": None})
         else:
-            item.ammo -= 1
+            item.ammo -= 1 # /!\ item was expunged earlier
 
     if randint(1, 100) > 97:
         # Failed action
