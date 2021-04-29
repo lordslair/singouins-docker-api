@@ -1,22 +1,20 @@
 #!/bin/sh
 
-echo "`date +"%F %X"` Building Python dependencies and system set-up ..."
+echo "`date +"%F %X"` Starting ..."
+echo "FLASK    env    | $FLASK_ENV"
+echo "GUNICORN chdir  | /code"
+echo "GUNICORN bind   | $GUNICORN_HOST:$GUNICORN_PORT"
+echo "GUNICORN w:t    | $GUNICORN_WORKERS:$GUNICORN_THREADS"
+echo "GUNICORN reload | $GUNICORN_RELOAD"
 
-apk update --no-cache \
-    && apk add --no-cache python3 py3-pip \
-    && apk add --no-cache --virtual .build-deps \
-                                    gcc \
-                                    libc-dev \
-                                    python3-dev \
-                                    libffi-dev \
-                                    tzdata \
-    && pip3 --no-cache-dir install -U -r /code/requirements.txt \
-    && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
-    && apk del .build-deps
-
-echo "`date +"%F %X"` Build done ..."
-
-exec flask run --host=$FLASK_HOST \
-               --port=$FLASK_PORT \
-               $FLASK_DEBUG \
-               $FLASK_THREAD
+exec gunicorn app:app \
+				--chdir /code \
+	      --bind $GUNICORN_HOST:$GUNICORN_PORT \
+	      --log-file=- \
+        --access-logfile=- \
+        --error-logfile=- \
+        --worker-tmp-dir /dev/shm \
+        --workers=$GUNICORN_WORKERS \
+        --threads=$GUNICORN_THREADS \
+        --worker-class=gthread \
+        $GUNICORN_RELOAD

@@ -2,7 +2,7 @@ FROM alpine:3.12
 MAINTAINER @Lordslair
 
 COPY requirements.txt /requirements.txt
-COPY entrypoint.sh    /entrypoint.sh
+COPY /api             /code
 
 RUN apk update --no-cache \
     && apk add --no-cache python3 py3-pip \
@@ -18,4 +18,4 @@ RUN apk update --no-cache \
     && apk del .build-deps \
     && rm /requirements.txt
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/code/entrypoint.sh"]
