@@ -17,10 +17,13 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from mysql.methods      import *
 from mysql.utils        import redis
 from variables          import (SEP_SECRET_KEY,
-                                API_URL, DISCORD_URL, API_ADMIN_TOKEN,
+                                API_URL, DISCORD_URL,
                                 LDP_HOST, LDP_TOKEN)
 from utils.mail         import send
 from utils.token        import generate_confirmation_token
+
+# Imports of endpoint functions
+import                  routes.admin
 
 # Imports only for LDP forwarding. Might be temporary
 import logging
@@ -608,116 +611,14 @@ def log_send():
 # Routes /admin
 #
 
-@app.route('/admin', methods=['GET'])
-def api_admin_up():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-
-    return jsonify({"msg": f'UP and running', "success": True, "payload": None}), 200
-
-@app.route('/admin/user', methods=['POST'])
-def api_admin_user():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname  = request.json.get('discordname')
-
-    (code, success, msg, payload) = admin_user(discordname)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/user/validate', methods=['POST'])
-def api_admin_user_validate():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname  = request.json.get('discordname')
-    usermail     = request.json.get('usermail')
-
-    (code, success, msg, payload) = admin_user_validate(discordname,usermail)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/mypc', methods=['POST'])
-def api_admin_mypc():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname  = request.json.get('discordname')
-    pcid         = request.json.get('pcid')
-
-    (code, success, msg, payload) = admin_mypc_one(discordname,pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/mypcs', methods=['POST'])
-def api_admin_mypcs():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname  = request.json.get('discordname')
-
-    (code, success, msg, payload) = admin_mypc_all(discordname)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/squad', methods=['POST'])
-def api_admin_squad():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    squadid      = request.json.get('squadid', None)
-
-    if squadid is None:
-        (code, success, msg, payload) = admin_squad_get_all()
-        if isinstance(code, int):
-            return jsonify({"msg": msg, "success": success, "payload": payload}), code
-    elif isinstance(squadid, int):
-        (code, success, msg, payload) = admin_squad_get_one(squadid)
-        if isinstance(code, int):
-            return jsonify({"msg": msg, "success": success, "payload": payload}), code
-    else:
-        return jsonify({"msg": f'Squad unknown (squadid:{squadid})', "success": False, "payload": None}), 200
-
-@app.route('/admin/mypc/pa', methods=['POST'])
-def api_admin_mypc_pa():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname  = request.json.get('discordname')
-    pcid         = request.json.get('pcid')
-    redpa        = request.json.get('redpa', None)
-    bluepa       = request.json.get('bluepa', None)
-
-    (code, success, msg, payload) = admin_mypc_pa(discordname,pcid,redpa,bluepa)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/admin/mypc/wallet', methods=['POST'])
-def api_admin_mypc_wallet():
-    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname  = request.json.get('discordname')
-    pcid         = request.json.get('pcid')
-
-    (code, success, msg, payload) = admin_mypc_wallet(discordname,pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/admin',               methods=['GET'],  view_func=routes.admin.up)
+app.add_url_rule('/admin/user',          methods=['POST'], view_func=routes.admin.user)
+app.add_url_rule('/admin/user/validate', methods=['POST'], view_func=routes.admin.user_validate)
+app.add_url_rule('/admin/mypc',          methods=['POST'], view_func=routes.admin.mypc)
+app.add_url_rule('/admin/mypc/pa',       methods=['POST'], view_func=routes.admin.mypc_pa)
+app.add_url_rule('/admin/mypc/wallet',   methods=['POST'], view_func=routes.admin.mypc_wallet)
+app.add_url_rule('/admin/mypcs',         methods=['POST'], view_func=routes.admin.mypcs)
+app.add_url_rule('/admin/squad',         methods=['POST'], view_func=routes.admin.squad)
 
 if __name__ == '__main__':
     app.run()
