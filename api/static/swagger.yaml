@@ -5,6 +5,149 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
+  /admin:
+    get:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: Admin UP request
+      responses:
+        '200':
+          description: OK
+      security:
+        - admin_token: []
+  /admin/user:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: User information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyShort'
+      responses:
+        '200':
+          description: OK - User found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/user/validate:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: User validation request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserValidate'
+      responses:
+        '200':
+          description: OK - User found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC information request (one)
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyLong'
+      responses:
+        '200':
+          description: OK - PC found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc/pa:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC PA information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminMypcPa'
+      responses:
+        '200':
+          description: OK - PC PA found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc/wallet:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC Wallet information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyLong'
+      responses:
+        '200':
+          description: OK - PC Wallet found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypcs:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PCs information request (all)
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyShort'
+      responses:
+        '200':
+          description: OK - PCs found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/squad:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: Squad information request (one)
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSquad'
+      responses:
+        '200':
+          description: OK - Squad found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
 
   /auth/register:
     post:
@@ -512,6 +655,64 @@ paths:
 
 components:
   schemas:
+    AdminDefaultBodyLong:
+      type: object
+      properties:
+        discordname:
+          type: string
+          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+          example: 'DiscordName#1234'
+        pcid:
+          type: integer
+          minimum: 1
+    AdminDefaultBodyShort:
+      type: object
+      properties:
+        discordname:
+          type: string
+          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+          example: 'DiscordName#1234'
+    AdminUserValidate:
+      type: object
+      properties:
+        discordname:
+          type: string
+          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+          example: 'DiscordName#1234'
+        usermail:
+          type: string
+          format: email
+    AdminMypcPa:
+      type: object
+      properties:
+        discordname:
+          type: string
+          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+          example: 'DiscordName#1234'
+        pcid:
+          type: integer
+          minimum: 1
+        redpa:
+          type: integer
+          minimum: 1
+          maximum: 16
+          nullable: true
+        bluepa:
+          type: integer
+          minimum: 1
+          maximum: 8
+          nullable: true
+      required:
+        - discordname
+        - pcid
+    AdminSquad:
+      type: object
+      properties:
+        squadid:
+          type: integer
+          minimum: 1
+          nullable: true
+
     AuthRegisterPostBody:
       type: object
       properties:
@@ -577,7 +778,12 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    admin_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
 security:
   - refresh_token: []
   - access_token: []
+  - admin_token: []
