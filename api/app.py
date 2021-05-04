@@ -255,7 +255,7 @@ def api_mypc_del(pcid):
 
 @app.route('/mypc/<int:pcid>/pa', methods=['GET'])
 @jwt_required
-def mypc_pa(pcid):
+def api_mypc_pa(pcid):
     (code, success, msg, payload) = redis.get_pa(pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
