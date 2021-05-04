@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 import json
+import re
 import redis
 import yarqueue
 
@@ -100,6 +101,50 @@ def get_stats(pc):
         stats = None
     else:
         return stats
+
+#
+# Queries: Creature CDs/States/Effects
+#
+
+def set_cd(pc,skillid,pa):
+    ttl    = pa * redpaduration
+    key    = f'cds:{pc.instance}:{pc.id}:{skillid}'
+    value  = ''
+
+    try:
+        r.set(key,value,ttl)
+    except Exception as e:
+        print(f'set_cd failed:{e}')
+        return False
+    else:
+        return True
+
+def get_cds(pc):
+    cds       = {}
+    mypattern = f'cds:{pc.instance}:{pc.id}:*'
+
+    try:
+        mylua = """
+        local keys = redis.call('keys', '%s')
+    local result = {}
+    for i,k in ipairs(keys) do
+        local ttl = redis.call('ttl', k)
+        result[i] = {ttl}
+    end
+    return result
+        """ % (mypattern) # Gruik but difficult to format a HereDoc
+        mttl = r.register_script(mylua)
+
+        keys   = r.keys(pattern=mypattern)
+        ttls   = mttl()
+    except Exception as e:
+        print(e)
+    else:
+        for key,ttl in zip(keys,ttls):
+            m = re.search(r":(?P<skillid>\d+)$", key.decode("utf-8"))
+            if m is not None:
+                cds[m.group('skillid')] = ttl[0]
+        return cds
 
 #
 # Queries: Creature High Scores

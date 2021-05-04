@@ -438,3 +438,37 @@ def mypc_get_skills(username,pcid):
                 skills)
     finally:
         session.close()
+
+# API: GET /mypc/<int:pcid>/cds
+def mypc_get_cds(username,pcid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
+
+    try:
+        cds = get_cds(pc)
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                f'[Redis] CDs query failed (pcid:{pc.id}) [{e}]',
+                None)
+    else:
+        return (200,
+                True,
+                f'CDs found (pcid:{pc.id})',
+                cds)
+    finally:
+        session.close()

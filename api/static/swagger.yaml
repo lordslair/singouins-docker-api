@@ -325,6 +325,23 @@ paths:
       responses:
         '200':
           description: OK - Skills found
+  /mypc/{pcid}/cds:
+    get:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC CDs
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: OK - Skills found
 
   /pc/{pcid}:
     get:
