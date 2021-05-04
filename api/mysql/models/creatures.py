@@ -260,3 +260,15 @@ class MetaRace(Base):
     max_p      = Column(Integer, nullable=False)
     min_b      = Column(Integer, nullable=False)
     max_b      = Column(Integer, nullable=False)
+
+@dataclass
+class CreatureSkills(Base):
+    __tablename__ = 'creaturesSkills'
+
+    id:      int
+    skills:  str
+    date:    str
+
+    id       = Column(Integer, primary_key=True)
+    skills   = Column(Text   , nullable=True)    # Here it will be a JSON
+    date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

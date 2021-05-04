@@ -308,6 +308,23 @@ paths:
       responses:
         '200':
           description: OK - PC deleted
+  /mypc/{pcid}/skills:
+    get:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC skills
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: OK - Skills found
 
   /pc/{pcid}:
     get:

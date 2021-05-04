@@ -273,6 +273,17 @@ def api_mypc_stats_get(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
+# Routes: /skills
+#
+
+@app.route('/mypc/<int:pcid>/skills', methods=['GET'])
+@jwt_required
+def api_mypc_skills_get(pcid):
+    (code, success, msg, payload) = mypc_get_skills(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
 # Routes: /view
 #
 
