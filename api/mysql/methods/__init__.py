@@ -3,6 +3,7 @@
 from .all               import *
 
 from .auth              import *
+from .admin_korp        import *
 from .admin_mypc        import *
 from .admin_squad       import *
 from .admin_user        import *

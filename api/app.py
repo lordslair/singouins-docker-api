@@ -705,6 +705,8 @@ def log_send():
 #
 
 app.add_url_rule('/admin',               methods=['GET'],  view_func=routes.admin.up)
+app.add_url_rule('/admin/korp',          methods=['POST'], view_func=routes.admin.korp)
+app.add_url_rule('/admin/korps',         methods=['POST'], view_func=routes.admin.korps)
 app.add_url_rule('/admin/user',          methods=['POST'], view_func=routes.admin.user)
 app.add_url_rule('/admin/user/validate', methods=['POST'], view_func=routes.admin.user_validate)
 app.add_url_rule('/admin/mypc',          methods=['POST'], view_func=routes.admin.mypc)

@@ -148,6 +148,35 @@ paths:
           description: KO - Malformed JSON
       security:
         - admin_token: []
+  /admin/korp:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: Korp information request (one)
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminKorp'
+      responses:
+        '200':
+          description: OK - Korp found
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/korps:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: Korp information request (all)
+      responses:
+        '200':
+          description: OK - Korps found
+      security:
+        - admin_token: []
 
   /auth/register:
     post:
@@ -926,6 +955,13 @@ components:
           type: integer
           minimum: 1
           nullable: true
+    AdminKorp:
+      type: object
+      properties:
+        korpid:
+          type: integer
+          minimum: 1
+          nullable: false
 
     AuthRegisterPostBody:
       type: object
