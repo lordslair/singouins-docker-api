@@ -489,6 +489,77 @@ def meta_item(itemtype):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
+# Routes /korp
+#
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>', methods=['GET'])
+@jwt_required
+def api_mypc_korp_details(pcid,korpid):
+    (code, success, msg, payload) = mypc_korp_details(get_jwt_identity(),pcid,korpid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp', methods=['POST'])
+@jwt_required
+def api_mypc_korp_create(pcid):
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    (code, success, msg, payload) = mypc_korp_create(get_jwt_identity(),
+                                                     pcid,
+                                                     request.json.get('name'))
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>', methods=['DELETE'])
+@jwt_required
+def api_mypc_korp_delete(pcid,korpid):
+    (code, success, msg, payload) = mypc_korp_delete(get_jwt_identity(),pcid,korpid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>/invite/<int:targetid>', methods=['POST'])
+@jwt_required
+def api_mypc_korp_invite(pcid,korpid,targetid):
+    (code, success, msg, payload) = mypc_korp_invite(get_jwt_identity(),
+                                    pcid,
+                                    korpid,
+                                    targetid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>/kick/<int:targetid>', methods=['POST'])
+@jwt_required
+def api_mypc_korp_kick(pcid,korpid,targetid):
+    (code, success, msg, payload) = mypc_korp_kick(get_jwt_identity(),
+                                    pcid,
+                                    korpid,
+                                    targetid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>/accept', methods=['POST'])
+@jwt_required
+def api_mypc_korp_accept(pcid,korpid):
+    (code, success, msg, payload) = mypc_korp_accept(get_jwt_identity(),pcid,korpid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>/leave', methods=['POST'])
+@jwt_required
+def api_mypc_korp_leave(pcid,korpid):
+    (code, success, msg, payload) = mypc_korp_leave(get_jwt_identity(),pcid,korpid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+@app.route('/mypc/<int:pcid>/korp/<int:korpid>/decline', methods=['POST'])
+@jwt_required
+def api_mypc_korp_decline(pcid,korpid):
+    (code, success, msg, payload) = mypc_korp_decline(get_jwt_identity(),pcid,korpid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
 # Routes /squad
 #
 

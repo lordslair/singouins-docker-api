@@ -28,6 +28,8 @@ class PJ(Base):
     instance:    int
     squad:       int
     squad_rank:  str
+    korp:        int
+    korp_rank:   str
     m:           int
     r:           int
     g:           int
@@ -53,6 +55,8 @@ class PJ(Base):
     instance     = Column(Integer, nullable=True)
     squad        = Column(Integer, nullable=True)
     squad_rank   = Column(Enum('Leader','Member','Pending'), nullable=True)
+    korp         = Column(Integer, nullable=True)
+    korp_rank    = Column(Enum('Leader','Member','Pending'), nullable=True)
     m            = Column(Integer, nullable=False, server_default='0')
     r            = Column(Integer, nullable=False, server_default='0')
     g            = Column(Integer, nullable=False, server_default='0')
@@ -208,6 +212,22 @@ class CreatureStats(Base):
 @dataclass
 class Squad(Base):
     __tablename__ = 'creaturesSquads'
+
+    id:      int
+    name:    str
+    leader:  int
+    created: str
+    date:    str
+
+    id       = Column(Integer, primary_key=True)
+    name     = Column(Text   , nullable=True)
+    leader   = Column(Integer, nullable=False)
+    created  = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
+
+@dataclass
+class Korp(Base):
+    __tablename__ = 'creaturesKorps'
 
     id:      int
     name:    str

@@ -669,6 +669,186 @@ paths:
         '200':
           description: OK
 
+  /mypc/{pcid}/korp:
+    post:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Create a korp for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KorpCreateBody'
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/korp/{korpid}:
+    get:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Get korp list for a PC
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+    delete:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Delete a korp for a PC (Leader only)
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/korp/{korpid}/invite/{targetid}:
+    post:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Invite a PC into a korp (Leader only)
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: targetid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/korp/{korpid}/kick/{targetid}:
+    post:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Kick a PC from a korp (Leader only)
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: targetid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/korp/{korpid}/accept:
+    post:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Accept a korp invite
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/korp/{korpid}/decline:
+    post:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Decline a korp invite
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+  /mypc/{pcid}/korp/{korpid}/leave:
+    post:
+      tags:
+        - '/korp : Korp Requests'
+      summary: Leave a korp
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: korpid
+          schema:
+            type: integer
+          required: true
+      security:
+        - access_token: []
+      responses:
+        '200':
+          description: OK
+
   /meta/item/{itemtype}:
     get:
       tags:
@@ -796,12 +976,15 @@ components:
           type: string
           format: string
 
-    SquadPostBody:
+    KorpCreateBody:
       type: object
       properties:
         name:
           type: string
           format: string
+          nullable: false
+          example: 'My fancy Korp'
+          pattern: '^.{16}$'      # regex for 16chars string
 
   securitySchemes:
     refresh_token:
