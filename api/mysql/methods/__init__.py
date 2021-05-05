@@ -8,6 +8,7 @@ from .admin_squad       import *
 from .admin_user        import *
 from .mypc              import *
 from .mypc_action       import *
+from .mypc_korp         import *
 from .mypc_inventory    import *
 from .mypc_item         import *
 from .mypc_mp           import *
