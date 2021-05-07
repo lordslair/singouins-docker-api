@@ -110,7 +110,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     if equipment is None:
         return (200,
                 False,
-                'Equipment not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'Equipment not found (pcid:{pc.id})',
                 None)
 
     stats = get_stats(pc)
@@ -125,7 +125,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         # Weird weaponid
         return (200,
                 False,
-                'Itemid incorrect (pcid:{},itemid:{})'.format(pcid),
+                f'Itemid incorrect (pcid:{pc.id},itemid:{itemid})',
                 None)
 
     if   type == 'weapon':
@@ -138,12 +138,12 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     if item is None:
         return (200,
                 False,
-                'Item not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'Item not found (pcid:{pc.id},itemid:{itemid})',
                 None)
     if itemmeta is None:
         return (200,
                 False,
-                'ItemMeta not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'ItemMeta not found (pcid:{pc.id},itemid:{itemid})',
                 None)
 
     sizex,sizey = itemmeta.size.split("x")
@@ -151,7 +151,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     if redpa < costpa:
         return (200,
                 False,
-                'Not enough PA (pcid:{},redpa:{},cost:{})'.format(pcid,redpa,costpa),
+                f'Not enough PA (pcid:{pc.id},redpa:{redpa},cost:{costpa})',
                 None)
 
     # Pre-requisite checks
@@ -200,7 +200,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         else:
             return (200,
                     False,
-                    'Item does not fit in holster (itemid:{},size:{})'.format(item.id,itemmeta.size),
+                    f'Item does not fit in holster (itemid:{item.id},size:{itemmeta.size})',
                     None)
     elif slotname == 'righthand':
         equipped     = session.query(Item).filter(Item.id == equipment.righthand, Item.bearer == pc.id).one_or_none()
@@ -238,7 +238,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         else:
             return (200,
                     False,
-                    'Item does not fit in left hand (itemid:{},size:{})'.format(item.id,itemmeta.size),
+                    f'Item does not fit in left hand (itemid:{item.id},size:{itemmeta.size})',
                     None)
 
     equipment.date = datetime.now() # We update the date in DB
@@ -253,7 +253,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         session.rollback()
         return (200,
                 False,
-                '[SQL] Equipment update failed (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'[SQL] Equipment update failed (pcid:{pc.id},itemid:{itemid})',
                 None)
     else:
         equipment = session.query(CreatureSlots)\
@@ -277,7 +277,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
 
         return (200,
                 True,
-                'Equipment successfully updated (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'Equipment successfully updated (pcid:{pc.id},itemid:{itemid})',
                 {"red": get_pa(pcid)[3]['red'],
                  "blue": get_pa(pcid)[3]['blue'],
                  "equipment": equipment})
