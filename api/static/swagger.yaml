@@ -533,13 +533,6 @@ paths:
           schema:
             type: integer
           required: true
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SquadPostBody'
       security:
         - access_token: []
       responses:
