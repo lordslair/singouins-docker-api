@@ -113,6 +113,14 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 'Equipment not found (pcid:{},itemid:{})'.format(pcid,itemid),
                 None)
 
+    stats = get_stats(pc)
+    print(stats)
+    if stats is None:
+        return (200,
+                False,
+                f'Stats not found (pcid:{pc.id})',
+                None)
+
     if itemid <= 0:
         # Weird weaponid
         return (200,
@@ -144,6 +152,38 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         return (200,
                 False,
                 'Not enough PA (pcid:{},redpa:{},cost:{})'.format(pcid,redpa,costpa),
+                None)
+
+    # Pre-requisite checks
+    if itemmeta.min_m > stats['base']['m']:
+        return (200,
+                False,
+                f"M prequisites failed (m_min:{itemmeta.min_m},m:{stats['base']['m']})",
+                None)
+    elif itemmeta.min_r > stats['base']['r']:
+        return (200,
+                False,
+                f"R prequisites failed (r_min:{itemmeta.min_r},r:{stats['base']['r']})",
+                None)
+    elif itemmeta.min_g > stats['base']['g']:
+        return (200,
+                False,
+                f"G prequisites failed (g_min:{itemmeta.min_g},g:{stats['base']['g']})",
+                None)
+    elif itemmeta.min_v > stats['base']['v']:
+        return (200,
+                False,
+                f"V prequisites failed (v_min:{itemmeta.min_v},v:{stats['base']['v']})",
+                None)
+    elif itemmeta.min_p > stats['base']['p']:
+        return (200,
+                False,
+                f"P prequisites failed (p_min:{itemmeta.min_p},p:{stats['base']['p']})",
+                None)
+    elif itemmeta.min_b > stats['base']['b']:
+        return (200,
+                False,
+                f"B prequisites failed (b_min:{itemmeta.min_b},b:{stats['base']['b']})",
                 None)
 
     # The item to equip exists, is owned by the PC, and we retrieved his equipment from DB
@@ -210,7 +250,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     try:
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
+        session.rollback()
         return (200,
                 False,
                 '[SQL] Equipment update failed (pcid:{},itemid:{})'.format(pcid,itemid),
