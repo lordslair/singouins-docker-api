@@ -95,7 +95,14 @@ def mypc_korp_create(username,pcid,korpname):
                 False,
                 f'Token/username mismatch (pcid:{pcid},username:{username})',
                 None)
-
+    # Remove everything, except alphanumeric, space, squote
+    korpname = ''.join([c for c in korpname if c.isalnum() or c in [" ","'"]])
+    # Size check
+    if len(korpname) > 16:
+        return (200,
+                False,
+                f'Korp name too long (korpname:{korpname})',
+                None)
     # Unicity test
     if session.query(Korp).filter(Korp.name == korpname).one_or_none():
         return (409,
