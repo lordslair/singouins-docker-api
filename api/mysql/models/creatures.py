@@ -14,6 +14,7 @@ class PJ(Base):
     id:          int
     name:        str
     race:        int
+    gender:      bool
     rarity:      str
     account:     int
     targeted_by: int
@@ -41,6 +42,7 @@ class PJ(Base):
     id           = Column(Integer, primary_key=True)
     name         = Column(Text   , nullable=False)
     race         = Column(Integer, nullable=False)
+    gender       = Column(Boolean, nullable=True, server_default='1')
     rarity       = Column(Enum('Small','Medium','Big','Unique','Boss','God'), default='Medium')
     account      = Column(Integer, nullable=True)
     targeted_by  = Column(Integer, nullable=True)

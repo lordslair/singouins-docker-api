@@ -18,7 +18,7 @@ from .fn_global         import clog
 #
 
 # API: POST /mypc
-def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
+def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
     session = Session()
 
     mypc_nbr = mypc_get_all(username)[3]
@@ -44,6 +44,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic):
 
         pc = PJ(name    = pcname,
                 race    = race.id,
+                gender  = pcgender,
                 account = fn_user_get(username).id,
                 hp      = 100 + race.min_m,
                 hp_max  = 100 + race.min_m,

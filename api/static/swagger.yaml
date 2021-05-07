@@ -287,12 +287,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PjCreatePostBody'
+              $ref: '#/components/schemas/PcCreateBody'
       security:
         - access_token: []
       responses:
         '201':
           description: OK - PC created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
         '400':
           description: KO - Missing information in request
         '409':
@@ -985,15 +989,71 @@ components:
           type: string
           format: password
 
-    PjCreatePostBody:
+    PcCreateBody:
       type: object
       properties:
+        class:
+          type: integer
+          minimum: 1
+          maximum: 6
+          example: 3
+          nullable: false
         race:
-          type: string
-          format: string
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 4
+          nullable: false
         name:
           type: string
           format: string
+          nullable: false
+          example: "Mÿ fàncy Sîng'0uin"
+          pattern: "^[\\w ']{20}$" # regex for 20chars string
+        gender:
+          type: boolean
+          nullable: false
+        cosmetic:
+          type: object
+          properties:
+            metaid:
+              type: integer
+              example: 17
+            data:
+              type: object
+              properties:
+                hasGender:
+                  type: boolean
+                  example: True
+                beforeArmor:
+                  type: boolean
+                  example: False
+                hideArmor:
+                  type: array
+                  items:
+                    type: integer
+                  nullable: true
+        equipment:
+          type: object
+          properties:
+            lefthand:
+              type: object
+              properties:
+                metaid:
+                  type: integer
+                  example: 1
+                metatype:
+                  type: string
+                  example: 'weapon'
+            righthand:
+              type: object
+              properties:
+                metaid:
+                  type: integer
+                  example: 14
+                metatype:
+                  type: string
+                  example: 'weapon'
 
     MpSendPostBody:
       type: object
@@ -1021,6 +1081,20 @@ components:
           nullable: false
           example: 'My fancy Korp'
           pattern: '^.{16}$'      # regex for 16chars string
+
+    GenericResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+        success:
+          type: boolean
+          nullable: false
 
   securitySchemes:
     refresh_token:
