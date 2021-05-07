@@ -211,16 +211,11 @@ def api_pc_get(pcid):
 @jwt_required
 def api_mypc_create():
     current_user = get_jwt_identity()
-    pcname       = request.json.get('name', None)
-    pcrace       = request.json.get('race', None)
-    pcclass      = request.json.get('class', None)
+    pcclass      = request.json.get('class',     None)
+    pccosmetic   = request.json.get('cosmetic',  None)
     pcequipment  = request.json.get('equipment', None)
-    pccosmetic   = request.json.get('cosmetic', None)
-
-
-
-    if not pcname or not pcrace:
-        return jsonify({"msg": "Missing name/race parameter"}), 400
+    pcname       = request.json.get('name',      None)
+    pcrace       = request.json.get('race',      None)
 
     (code, success, msg, payload) = mypc_create(current_user,
                                                 pcname,pcrace,pcclass,
