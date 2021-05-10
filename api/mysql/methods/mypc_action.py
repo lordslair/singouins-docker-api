@@ -103,7 +103,10 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         if tag.id != pc.id and tag.squad != pc.squad:
             # Target not taggued by the pc itself
             # Target not taggued by a pc squad member
-            return (200, False, 'Target does not belong to the PC/Squad', None)
+            return (200,
+                    False,
+                    f'Target does not belong to the PC/Squad (targeted_by:{tg.targeted_by})',
+                    None)
 
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
@@ -141,12 +144,12 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     if item is None:
         return (200,
                 False,
-                'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'Item not found (pcid:{pc.id},weaponid:{weaponid})',
                 None)
     if itemmeta is None:
         return (200,
                 False,
-                'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'ItemMeta not found (pcid:{pc.id},weaponid:{weaponid})',
                 None)
 
     if itemmeta.ranged is False:
