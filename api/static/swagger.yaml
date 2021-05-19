@@ -375,6 +375,27 @@ paths:
       responses:
         '200':
           description: OK - Skills found
+  /mypc/{pcid}/view:
+    get:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC view
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: OK - view found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
 
   /pc/{pcid}:
     get:

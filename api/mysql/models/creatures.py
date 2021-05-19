@@ -11,6 +11,9 @@ from ..base                     import Base
 class PJ(Base):
     __tablename__ = 'creatures'
 
+    def __hash__(self):        # Used to aggregate & dedup lists of Creatures
+        return hash(self.name) # ex: with set() in /view
+
     id:          int
     name:        str
     race:        int
