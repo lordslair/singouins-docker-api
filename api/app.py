@@ -627,13 +627,6 @@ def squad_decline(pcid,squadid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>/view', methods=['GET'])
-@jwt_required
-def api_mysquad_view(pcid,squadid):
-    (code, success, msg, payload) = mysquad_view_get(get_jwt_identity(),pcid,squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
 #
 # Routes /map
 #
