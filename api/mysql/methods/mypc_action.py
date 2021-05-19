@@ -69,10 +69,8 @@ def mypc_action_move(username,pcid,path):
                 f'[SQL] Coords update failed (pcid:{pcid},path:{path})',
                 None)
     else:
-        print(get_pa(pcid)[3])
         set_pa(pcid,0,8 - bluepa) # We consume the blue 🔵 PA
         set_pa(pcid,16 - redpa,0)  # We consume the red  🔴 PA
-        print(get_pa(pcid)[3])
         # We put the info in queue for ws
         qciphered = False
         qpayload  = {"id": pc.id, "x": x, "y": y}

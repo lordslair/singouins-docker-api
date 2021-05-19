@@ -27,5 +27,4 @@ def send(adress, subject, body):
         mail.close()
         return True
     except smtplib.SMTPException as e:
-        print(e)
         return False

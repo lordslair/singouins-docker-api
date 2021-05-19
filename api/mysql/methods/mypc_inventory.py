@@ -114,7 +114,6 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 None)
 
     stats = get_stats(pc)
-    print(stats)
     if stats is None:
         return (200,
                 False,
