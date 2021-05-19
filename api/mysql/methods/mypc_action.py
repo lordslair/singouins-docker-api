@@ -33,23 +33,32 @@ def mypc_action_move(username,pcid,path):
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
 
-    for coords in path:
-        bluepa                   = get_pa(pcid)[3]['blue']['pa']
-        x,y                      = map(int, coords.strip('()').split(','))
+    pa         = get_pa(pcid)[3]
+    bluepa     = pa['blue']['pa']
+    redpa      = pa['red']['pa']
 
+    for coords in path:
+        x,y        = map(int, coords.strip('()').split(','))
         if abs(pc.x - x) <= 1 and abs(pc.y - y) <= 1:
             if bluepa >= 3:
-                # Enough PA to move
-                set_pa(pcid,0,3) # We consume the blue PA (3) right now
+                # Enough PA to move ONLY on blue 🔵 PA
+                bluepa     -= 3
                 pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
                 pc.x = x
                 pc.y = y
-            else:
-                # Not enough PA to move
-                return (200,
-                        False,
-                        'Not enough PA to move',
-                        get_pa(pcid)[3])
+            elif 0 < bluepa < 3 and redpa >= 1:
+                # Enough PA to move on blue 🔵 + red 🔴 PA
+                redpa      -= (3 - bluepa)
+                bluepa      = 0
+                pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                pc.x = x
+                pc.y = y
+            elif bluepa == 0 and redpa >= 3:
+                # Enough PA to move ONLY on red 🔴 PA
+                redpa     -= 3
+                pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                pc.x = x
+                pc.y = y
 
     try:
         session.commit()
@@ -60,6 +69,10 @@ def mypc_action_move(username,pcid,path):
                 f'[SQL] Coords update failed (pcid:{pcid},path:{path})',
                 None)
     else:
+        print(get_pa(pcid)[3])
+        set_pa(pcid,0,8 - bluepa) # We consume the blue 🔵 PA
+        set_pa(pcid,16 - redpa,0)  # We consume the red  🔴 PA
+        print(get_pa(pcid)[3])
         # We put the info in queue for ws
         qciphered = False
         qpayload  = {"id": pc.id, "x": x, "y": y}
