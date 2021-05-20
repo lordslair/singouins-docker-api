@@ -180,3 +180,70 @@ def mypc_instance_leave(username,pcid,instanceid):
                 pc)
     finally:
         session.close()
+
+# API: POST /mypc/<int:pcid>/instance/<int:instanceid>/join
+def mypc_instance_join(username,pcid,instanceid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pc.id},username:{username})',
+                None)
+    if not isinstance(instanceid, int):
+        return (200,
+                False,
+                f'Instance ID should be an integer (instanceid:{instanceid})',
+                None)
+    if pc.instance is not None:
+        return (200,
+                False,
+                f'PC should not be in an instance (pcid:{pc.id},instanceid:{pc.instance})',
+                None)
+
+    # Check if the instance exists
+    try:
+        instance = session.query(Instance)\
+                          .filter(Instance.id == instanceid)\
+                          .one_or_none()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL] Instance query failed (instanceid:{instanceid}) [{e}]',
+                None)
+    else:
+        if instance is None:
+            return (200,
+                    False,
+                    f'Instance not found (instanceid:{instanceid})',
+                    None)
+
+    # We add the PC into the instance
+    try:
+        pc = session.query(PJ)\
+                     .filter(PJ.id == pc.id)\
+                     .one_or_none()
+        pc.instance = instance.id # We set the PC instance
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Instance join failed (instanceid:{instance.id}) [{e}]',
+                None)
+    else:
+        session.refresh(pc)
+        return (200,
+                True,
+                f'Instance join successed (instanceid:{instance.id})',
+                pc)
+    finally:
+        session.close()

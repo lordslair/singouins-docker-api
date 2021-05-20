@@ -452,6 +452,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericResponse'
+  /mypc/{pcid}/instance/{instanceid}/join:
+    post:
+      tags:
+        - '/mypc/{pcid}/instance: Instance Requests'
+      summary: Join an instance
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+        - in: path
+          name: instanceid
+          schema:
+            type: integer
+            example: 14
+          required: true
+      responses:
+        '200':
+          description: OK - Instance join successed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
 
   /pc/{pcid}:
     get:
