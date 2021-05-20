@@ -10,7 +10,7 @@ from .fn_user           import fn_user_get
 # Queries /mypc/<int:pcid>/instance/*
 #
 
-# API: /mypc/<int:pcid>/instance
+# API: POST /mypc/<int:pcid>/instance
 def mypc_instance_create(username,pcid,hardcore,fast,mapid,public):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
@@ -25,7 +25,7 @@ def mypc_instance_create(username,pcid,hardcore,fast,mapid,public):
     if pc.account != user.id:
         return (409,
                 False,
-                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                f'Token/username mismatch (pcid:{pc.id},username:{username})',
                 None)
     if not isinstance(mapid, int):
         return (200,
@@ -114,7 +114,7 @@ def mypc_instance_leave(username,pcid,instanceid):
     if pc.account != user.id:
         return (409,
                 False,
-                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                f'Token/username mismatch (pcid:{pc.id},username:{username})',
                 None)
     if not isinstance(instanceid, int):
         return (200,
@@ -139,7 +139,7 @@ def mypc_instance_leave(username,pcid,instanceid):
                     f'Instance not found (instanceid:{instanceid})',
                     None)
 
-    # Check if PC is thelast inside the instance
+    # Check if PC is the last inside the instance
     try:
         pcs = session.query(PJ)\
                      .filter(PJ.instance == instance.id)\
