@@ -421,6 +421,22 @@ def api_mypc_trade_wallet_give(pcid,currtype,targetid,amount):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
+# Routes: /instance
+#
+
+@app.route('/mypc/<int:pcid>/instance', methods=['POST'])
+@jwt_required
+def api_mypc_instance_create(pcid):
+    (code, success, msg, payload) = mypc_instance_create(
+                                        get_jwt_identity(),
+                                        pcid,
+                                        request.json.get('hardcore', None),
+                                        request.json.get('fast',     None),
+                                        request.json.get('mapid',    None),
+                                        request.json.get('public',   None))
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+#
 # Routes: /action
 #
 

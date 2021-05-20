@@ -396,6 +396,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericResponse'
+  /mypc/{pcid}/instance:
+    post:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Create a fresh instance
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceCreateBody'
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '201':
+          description: OK - view found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
 
   /pc/{pcid}:
     get:
@@ -1095,6 +1123,27 @@ components:
           nullable: false
           example: 'My fancy Korp'
           pattern: '^.{16}$'      # regex for 16chars string
+
+    InstanceCreateBody:
+      type: object
+      properties:
+        hardcore:
+          type: boolean
+          nullable: false
+          example: False
+        fast:
+          type: boolean
+          nullable: false
+          example: False
+        public:
+          type: boolean
+          nullable: false
+          example: True
+        mapid:
+          type: integer
+          nullable: false
+          example: 1
+          minimum: 1
 
     GenericResponse:
       type: object
