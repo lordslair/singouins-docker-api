@@ -98,3 +98,85 @@ def mypc_instance_create(username,pcid,hardcore,fast,mapid,public):
                     instance)
     finally:
         session.close()
+
+# API: POST /mypc/<int:pcid>/instance/<int:instanceid>/leave
+def mypc_instance_leave(username,pcid,instanceid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
+    if not isinstance(instanceid, int):
+        return (200,
+                False,
+                f'Instance ID should be an integer (instanceid:{instanceid})',
+                None)
+
+    # Check if the instance exists
+    try:
+        instance = session.query(Instance)\
+                          .filter(Instance.id == instanceid)\
+                          .one_or_none()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL] Instance query failed (instanceid:{instanceid}) [{e}]',
+                None)
+    else:
+        if instance is None:
+            return (200,
+                    False,
+                    f'Instance not found (instanceid:{instanceid})',
+                    None)
+
+    # Check if PC is thelast inside the instance
+    try:
+        pcs = session.query(PJ)\
+                     .filter(PJ.instance == instance.id)\
+                     .all()
+        pc = session.query(PJ)\
+                     .filter(PJ.id == pc.id)\
+                     .one_or_none()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL] PCs query failed (instanceid:{instance.id}) [{e}]',
+                None)
+
+    try:
+        if len(pcs) == 1:
+            # The PC is the last inside: we delete the instance
+            creatures = session.query(PJ)\
+                         .filter(PJ.instance == instance.id)\
+                         .filter(PJ.account == None)\
+                         .all()
+            if len(creatures) > 0:
+                session.delete(creatures) # We delete the instance creatures
+            session.delete(instance) # We delete the instance
+
+        pc.instance = None # We set the PC instance back to NULL
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Instance leave failed (instanceid:{instanceid}) [{e}]',
+                None)
+    else:
+        session.refresh(pc)
+        return (200,
+                True,
+                f'Instance leave successed (instanceid:{instanceid})',
+                pc)
+    finally:
+        session.close()

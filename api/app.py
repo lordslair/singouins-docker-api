@@ -436,6 +436,13 @@ def api_mypc_instance_create(pcid):
                                         request.json.get('public',   None))
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
+@app.route('/mypc/<int:pcid>/instance/<int:instanceid>/leave', methods=['POST'])
+@jwt_required
+def api_mypc_instance_leave(pcid,instanceid):
+    (code, success, msg, payload) = mypc_instance_leave(get_jwt_identity(),pcid,instanceid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 #
 # Routes: /action
 #

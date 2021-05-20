@@ -396,10 +396,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericResponse'
+
   /mypc/{pcid}/instance:
     post:
       tags:
-        - '/mypc: PC Requests (on your own PC)'
+        - '/mypc/{pcid}/instance: Instance Requests'
       summary: Create a fresh instance
       requestBody:
         description: ''
@@ -419,7 +420,34 @@ paths:
           required: true
       responses:
         '201':
-          description: OK - view found
+          description: OK - Instance creation successed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+  /mypc/{pcid}/instance/{instanceid}/leave:
+    post:
+      tags:
+        - '/mypc/{pcid}/instance: Instance Requests'
+      summary: Leave an instance
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+        - in: path
+          name: instanceid
+          schema:
+            type: integer
+            example: 14
+          required: true
+      responses:
+        '200':
+          description: OK - Instance leave successed
           content:
             application/json:
               schema:
