@@ -2,6 +2,7 @@
 
 from ..session          import Session
 from ..models           import Instance, Map, PJ
+from ..utils.redis      import yqueue_put
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get
@@ -92,6 +93,12 @@ def mypc_instance_create(username,pcid,hardcore,fast,mapid,public):
         else:
             # Everything went well
             session.refresh(instance)
+            # We put the info in queue for Discord
+            qmsg = {"ciphered": False,
+                    "payload": f':map: **[{pc.id}] {pc.name}** opened an Instance',
+                    "embed": None,
+                    "scope": f'Korp-{pc.korp}'}
+            yqueue_put('discord', qmsg)
             return (201,
                     True,
                     f'Instance creation successed (pcid:{pc.id})',
@@ -174,6 +181,12 @@ def mypc_instance_leave(username,pcid,instanceid):
                 None)
     else:
         session.refresh(pc)
+        # We put the info in queue for Discord
+        qmsg = {"ciphered": False,
+                "payload": f':map: **[{pc.id}] {pc.name}** closed an Instance',
+                "embed": None,
+                "scope": f'Korp-{pc.korp}'}
+        yqueue_put('discord', qmsg)
         return (200,
                 True,
                 f'Instance leave successed (instanceid:{instanceid})',
