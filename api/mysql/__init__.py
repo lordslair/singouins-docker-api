@@ -3,6 +3,7 @@
 from .engine                    import engine
 from .base                      import Base
 from .methods                   import *
-from .utils.initialize          import initialize_db
+from .utils.initialize          import initialize_db, initialize_redis
 
 initialize_db()
+initialize_redis()
