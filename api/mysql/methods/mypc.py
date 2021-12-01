@@ -367,3 +367,33 @@ def mypc_get_cds(username,pcid):
                 cds)
     finally:
         session.close()
+
+# API: GET /mypc/<int:pcid>/effects
+def mypc_get_effects(username,pcid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(username)
+
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
+
+    try:
+        effects = get_effects(pc)
+    except Exception as e:
+        return (200,
+                False,
+                f'[Redis] Effects query failed (pcid:{pc.id}) [{e}]',
+                None)
+    else:
+        return (200,
+                True,
+                f'Effects found (pcid:{pc.id})',
+                effects)

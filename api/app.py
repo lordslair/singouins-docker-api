@@ -281,6 +281,17 @@ def api_mypc_cds_get(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
+# Routes: /effects
+#
+
+@app.route('/mypc/<int:pcid>/effects', methods=['GET'])
+@jwt_required
+def api_mypc_effects_get(pcid):
+    (code, success, msg, payload) = mypc_get_effects(get_jwt_identity(),pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
 # Routes: /skills
 #
 

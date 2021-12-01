@@ -146,6 +146,23 @@ def get_cds(pc):
                 cds[m.group('skillid')] = ttl[0]
         return cds
 
+
+def get_effects(pc):
+    effects   = []
+    mypattern = f'effects:{pc.instance}:{pc.id}:*'
+
+    try:
+        for key in r.scan_iter(mypattern):
+            value  = r.get(key)
+            ttl    = r.ttl(key)
+            value_json = json.loads(value.decode("utf-8"))
+            value_json['duration'] = ttl
+            effects.append(value_json)
+    except Exception as e:
+        print(f'get_effects failed:{e}')
+    else:
+        return effects
+
 #
 # Queries: Creature High Scores
 #
