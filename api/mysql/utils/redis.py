@@ -77,7 +77,7 @@ def set_pa(pcid,redpa,bluepa):
 
 def set_stats(pc,stats):
     ttl    = 300
-    key    = f'stats:{pc.id}'
+    key    = f'stats:{pc.id}:json'
     value  = json.dumps(stats)
 
     try:
@@ -89,7 +89,7 @@ def set_stats(pc,stats):
         return True
 
 def get_stats(pc):
-    key    = f'stats:{pc.id}'
+    key    = f'stats:{pc.id}:json'
 
     try:
         if r.exists(key):
@@ -98,9 +98,35 @@ def get_stats(pc):
         else:
             stats = None
     except Exception as e:
+        print(f'get_stats failed:{e}')
         stats = None
     else:
         return stats
+
+def get_hp(pc):
+    key    = f'stats:{pc.id}:def:hp'
+
+    try:
+        if r.exists(key):
+            hp = int(r.get(key).decode())
+        else:
+            hp = None
+    except Exception as e:
+        print(f'get_hp failed:{e}')
+        hp = None
+    else:
+        return hp
+
+def set_hp(pc,hp):
+    key    = f'stats:{pc.id}:def:hp'
+
+    try:
+        r.set(key,hp)
+    except Exception as e:
+        print(f'set_hp failed:{e}')
+        return False
+    else:
+        return True
 
 #
 # Queries: Creature CDs/States/Effects

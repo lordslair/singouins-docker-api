@@ -292,6 +292,7 @@ def fn_creature_stats(pc):
                                         "p": 0,
                                         "b": 0},
                             "hpmax": 0,
+                            "hp": 0,
                             "dodge": 0,
                             "parry": 0}}
 
@@ -363,6 +364,15 @@ def fn_creature_stats(pc):
             base_p = 0
             base_b = 0
 
+        # About HP
+        hpmax = 100 + base_m + round(pc.level/2)
+        hp    = get_hp(pc)
+        if hp:
+            pass # Meaning key was already populated
+        else:
+            set_hp(pc,hpmax)
+            hp = hpmax
+
         # We push data in final dict
         stats  = {"base":{
                             "m": 0 + base_m,
@@ -378,7 +388,8 @@ def fn_creature_stats(pc):
                             "armor": {
                                         "p": 0 + stats_items['def']['armor']['p'],
                                         "b": 0 + stats_items['def']['armor']['b']},
-                            "hpmax": 100 + base_m + round(pc.level/2),
+                            "hpmax": hpmax,
+                            "hp": hp,
                             "dodge": base_r,
                             "parry": round(((base_g-100)/50) * ((base_m-100)/50))}}
 
