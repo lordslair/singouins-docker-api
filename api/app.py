@@ -746,6 +746,7 @@ app.add_url_rule('/admin/mypc/pa',       methods=['POST'], view_func=routes.admi
 app.add_url_rule('/admin/mypc/wallet',   methods=['POST'], view_func=routes.admin.mypc_wallet)
 app.add_url_rule('/admin/mypcs',         methods=['POST'], view_func=routes.admin.mypcs)
 app.add_url_rule('/admin/squad',         methods=['POST'], view_func=routes.admin.squad)
+app.add_url_rule('/admin/mypc/statuses',  methods=['POST'], view_func=routes.admin.mypc_statuses)
 
 if __name__ == '__main__':
     app.run()

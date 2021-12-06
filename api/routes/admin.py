@@ -113,6 +113,20 @@ def mypc_wallet():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+
+def mypc_statuses():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+    pcid         = request.json.get('pcid')
+
+    (code, success, msg, payload) = admin_mypc_statuses(discordname,pcid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 def korp():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
