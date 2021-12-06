@@ -174,18 +174,33 @@ def get_cds(pc):
 
 
 def get_effects(pc):
+    mypattern = f'effects:{pc.instance}:{pc.id}'
     effects   = []
-    mypattern = f'effects:{pc.instance}:{pc.id}:*'
 
     try:
-        for key in r.scan_iter(mypattern):
-            value  = r.get(key)
-            ttl    = r.ttl(key)
-            value_json = json.loads(value.decode("utf-8"))
-            value_json['duration'] = ttl
-            effects.append(value_json)
+        keys = r.scan_iter(mypattern + ':*:bearer')
     except Exception as e:
-        print(f'get_effects failed:{e}')
+        print(f'scan_iter({mypattern}) failed:{e}')
+
+    try:
+        for key in keys:
+            m = re.match(f"{mypattern}:(\d+)", key.decode("utf-8"))
+            if m:
+                ts      = int(m.group(1))
+                fullkey = mypattern + ':' + f'{ts}'
+                ttl     = int(r.ttl(fullkey))
+                effect  = {"bearer":          int(r.get(fullkey + ':bearer').decode("utf-8")),
+                           "charge_base":     int(r.get(fullkey + ':charge_base').decode("utf-8")),
+                           "charge_left":     int(r.get(fullkey + ':charge_left').decode("utf-8")),
+                           "duration_base":   int(r.get(fullkey + ':duration_base').decode("utf-8")),
+                           "duration_left":   ttl,
+                           "timestamp_start": ts,
+                           "timestamp_end":   ts - ttl,
+                           "type":            r.get(fullkey + ':type').decode("utf-8")}
+            effects.append(effect)
+    except Exception as e:
+        print(f'Effects fetching failed:{e}')
+        return effects
     else:
         return effects
 
