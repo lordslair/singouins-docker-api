@@ -746,6 +746,7 @@ app.add_url_rule('/admin/mypc/effects',   methods=['POST'], view_func=routes.adm
 app.add_url_rule('/admin/mypc/pa',        methods=['POST'], view_func=routes.admin.mypc_pa)
 app.add_url_rule('/admin/mypc/equipment', methods=['POST'], view_func=routes.admin.mypc_equipment)
 app.add_url_rule('/admin/mypc/statuses',  methods=['POST'], view_func=routes.admin.mypc_statuses)
+app.add_url_rule('/admin/mypc/stats',     methods=['POST'], view_func=routes.admin.mypc_stats)
 app.add_url_rule('/admin/mypc/wallet',    methods=['POST'], view_func=routes.admin.mypc_wallet)
 app.add_url_rule('/admin/mypcs',          methods=['POST'], view_func=routes.admin.mypcs)
 app.add_url_rule('/admin/squad',          methods=['POST'], view_func=routes.admin.squad)

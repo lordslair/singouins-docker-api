@@ -8,7 +8,7 @@ from ..models           import PJ,Wallet,CreatureSlots,Item
 
 from ..utils.redis      import *
 
-from .fn_creature       import fn_creature_get
+from .fn_creature       import fn_creature_get,fn_creature_stats
 from .fn_user           import fn_user_get_from_discord
 
 #
@@ -469,4 +469,56 @@ def admin_mypc_statuses(discordname,pcid):
         return (200,
                 False,
                 f'Statuses query failed (discordname:{discordname},pcid:{pc.id})',
+                None)
+
+# API: POST /admin/mypc/stats
+def admin_mypc_stats(discordname,pcid):
+    # Input checks
+    if not isinstance(pcid, int):
+        return (200,
+                False,
+                f'Bad PC id format (pcid:{pcid})',
+                None)
+
+    # Pre-flight checks
+    pc          = fn_creature_get(None,pcid)[3]
+    if pc is None:
+        return (200,
+                False,
+                f'PC unknown (pcid:{pcid})',
+                None)
+
+    if discordname == 'Wukong':
+        # We received an admin query (no Discorname to match)
+        pass
+    else:
+        # We received an user query (with Discorname to match)
+        if not isinstance(discordname, str):
+            return (200,
+                    False,
+                    f'Bad Discordname format (discordname:{discordname})',
+                    None)
+
+        user        = fn_user_get_from_discord(discordname)
+        if user is None:
+            return (200,
+                    False,
+                    f'Discordname unknown (discordname:{discordname})',
+                    None)
+        if pc.account != user.id:
+            return (409, False, 'Token/username mismatch', None)
+
+    # We force stats re-compute
+    stats = fn_creature_stats(pc)
+    if stats:
+        # Data was computed, so we return it
+        return (200,
+                True,
+                f'Stats computation successed (pcid:{pc.id})',
+                {"stats": stats,
+                 "pc": pc})
+    else:
+        return (200,
+                False,
+                f'Stats query failed (discordname:{discordname},pcid:{pc.id})',
                 None)
