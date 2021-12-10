@@ -1214,6 +1214,330 @@ components:
           type: boolean
           nullable: false
 
+    EffectObject:
+      type: object
+      nullable: false
+      properties:
+        bearer:
+          type: integer
+          nullable: false
+        charge_base:
+          type: integer
+          nullable: false
+        charge_left:
+          type: integer
+          nullable: false
+        duration_base:
+          type: integer
+          nullable: false
+        duration_left:
+          type: integer
+          nullable: false
+        timestamp_end:
+          type: integer
+          nullable: false
+        timestamp_start:
+          type: integer
+          nullable: false
+        type:
+          type: string
+          nullable: false
+
+    KorpObject:
+      type: object
+      nullable: false
+      properties:
+        created:
+          type: string
+          nullable: false
+        date:
+          type: string
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        leader:
+          type: integer
+          nullable: false
+        name:
+          type: string
+          nullable: true
+
+    PaObject:
+      type: object
+      nullable: true
+      properties:
+        blue:
+          type: object
+          properties:
+            pa:
+              type: integer
+              nullable: false
+            ttl:
+              type: integer
+              nullable: false
+            ttnpa:
+              type: integer
+              nullable: false
+        red:
+          type: object
+          properties:
+            pa:
+              type: integer
+              nullable: false
+            ttl:
+              type: integer
+              nullable: false
+            ttnpa:
+              type: integer
+              nullable: false
+
+    PcObject:
+      type: object
+      nullable: true
+      properties:
+        account:
+          type: integer
+          nullable: false
+        date:
+          type: string
+          nullable: false
+        gender:
+          type: boolean
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        instance:
+          type: integer
+          nullable: true
+        korp:
+          type: integer
+          nullable: true
+        korp_rank:
+          type: string
+          nullable: true
+        level:
+          type: integer
+          nullable: false
+        name:
+          type: string
+          nullable: false
+        race:
+          type: integer
+          nullable: false
+        rarity:
+          type: string
+          nullable: false
+        squad:
+          type: integer
+          nullable: true
+        squad_rank:
+          type: string
+          nullable: false
+        targeted_by:
+          type: integer
+          nullable: true
+        x:
+          type: integer
+          nullable: true
+        xp:
+          type: integer
+          nullable: false
+        y:
+          type: integer
+          nullable: true
+
+    SquadObject:
+      type: object
+      nullable: false
+      properties:
+        created:
+          type: string
+          nullable: false
+        date:
+          type: string
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        leader:
+          type: integer
+          nullable: false
+        name:
+          type: string
+          nullable: true
+
+    StatsObject:
+      type: object
+      nullable: true
+      properties:
+        base:
+          type: object
+          properties:
+            b:
+              type: integer
+              nullable: false
+            g:
+              type: integer
+              nullable: false
+            m:
+              type: integer
+              nullable: false
+            p:
+              type: integer
+              nullable: false
+            r:
+              type: integer
+              nullable: false
+            v:
+              type: integer
+              nullable: false
+        def:
+          type: object
+          properties:
+            armor:
+              type: object
+              properties:
+                b:
+                  type: integer
+                  nullable: false
+                p:
+                  type: integer
+                  nullable: false
+            dodge:
+              type: integer
+              nullable: false
+            hp:
+              type: integer
+              nullable: false
+            hpmax:
+              type: integer
+              nullable: false
+            parry:
+              type: integer
+              nullable: false
+        off:
+          type: object
+          properties:
+            capcom:
+              type: integer
+              nullable: false
+            capsho:
+              type: integer
+              nullable: false
+
+    StatusObject:
+      type: object
+      nullable: false
+      properties:
+        bearer:
+          type: integer
+          nullable: false
+        duration_base:
+          type: integer
+          nullable: false
+        duration_left:
+          type: integer
+          nullable: false
+        timestamp_end:
+          type: integer
+          nullable: false
+        timestamp_start:
+          type: integer
+          nullable: false
+        type:
+          type: string
+          nullable: false
+
+    UserObject:
+      type: object
+      nullable: true
+      properties:
+        active:
+          type: boolean
+          nullable: false
+        created:
+          type: string
+          nullable: false
+        d_ack:
+          type: boolean
+          nullable: false
+        d_name:
+          type: string
+          nullable: false
+        date:
+          type: string
+          nullable: false
+        hash:
+          type: string
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        mail:
+          type: string
+          nullable: false
+        name:
+          type: string
+          nullable: false
+
+    WalletObject:
+      type: object
+      nullable: false
+      properties:
+        arrow:
+          type: integer
+          nullable: false
+        bolt:
+          type: integer
+          nullable: false
+        broken:
+          type: integer
+          nullable: false
+        cal22:
+          type: integer
+          nullable: false
+        cal223:
+          type: integer
+          nullable: false
+        cal311:
+          type: integer
+          nullable: false
+        cal50:
+          type: integer
+          nullable: false
+        cal55:
+          type: integer
+          nullable: false
+        common:
+          type: integer
+          nullable: false
+        currency:
+          type: integer
+          nullable: false
+        date:
+          type: string
+          nullable: false
+        epic:
+          type: integer
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        legendary:
+          type: integer
+          nullable: false
+        rare:
+          type: integer
+          nullable: false
+        shell:
+          type: integer
+          nullable: false
+        uncommon:
+          type: integer
+          nullable: false
+
   securitySchemes:
     refresh_token:
       type: http
