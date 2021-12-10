@@ -352,6 +352,12 @@ paths:
       tags:
         - '/auth: Authentificaton Requests'
       summary: Conirm a new user
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+          required: true
       requestBody:
         description: ''
         required: true
