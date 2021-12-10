@@ -13,6 +13,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
       security:
         - admin_token: []
   /admin/user:
@@ -30,6 +34,10 @@ paths:
       responses:
         '200':
           description: OK - User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -49,6 +57,10 @@ paths:
       responses:
         '200':
           description: OK - User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -68,6 +80,56 @@ paths:
       responses:
         '200':
           description: OK - PC found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminMypcResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc/cds:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC Effects information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyLong'
+      responses:
+        '200':
+          description: OK - CDs found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc/effects:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC Effects information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyLong'
+      responses:
+        '200':
+          description: OK - Effects found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminEffectsResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -86,7 +148,57 @@ paths:
               $ref: '#/components/schemas/AdminMypcPa'
       responses:
         '200':
-          description: OK - PC PA found
+          description: OK - PA found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminPaResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc/stats:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC Stats information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyLong'
+      responses:
+        '200':
+          description: OK - Stats found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatsResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/mypc/statuses:
+    post:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: PC Statuses information request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDefaultBodyLong'
+      responses:
+        '200':
+          description: OK - Statuses found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatusesResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -106,6 +218,10 @@ paths:
       responses:
         '200':
           description: OK - PC Wallet found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminWalletResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -125,6 +241,10 @@ paths:
       responses:
         '200':
           description: OK - PCs found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminMypcsResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -144,6 +264,26 @@ paths:
       responses:
         '200':
           description: OK - Squad found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSquadResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /admin/squads:
+    get:
+      tags:
+        - '/admin : Admin request (from Discord)'
+      summary: Squads information request (all)
+      responses:
+        '200':
+          description: OK - Squads found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSquadsResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -163,18 +303,26 @@ paths:
       responses:
         '200':
           description: OK - Korp found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminKorpResponse'
         '400':
           description: KO - Malformed JSON
       security:
         - admin_token: []
   /admin/korps:
-    post:
+    get:
       tags:
         - '/admin : Admin request (from Discord)'
-      summary: Korp information request (all)
+      summary: Korps information request (all)
       responses:
         '200':
           description: OK - Korps found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminKorpsResponse'
       security:
         - admin_token: []
 
@@ -1036,16 +1184,6 @@ components:
         pcid:
           type: integer
           minimum: 1
-        redpa:
-          type: integer
-          minimum: 1
-          maximum: 16
-          nullable: true
-        bluepa:
-          type: integer
-          minimum: 1
-          maximum: 8
-          nullable: true
       required:
         - discordname
         - pcid
