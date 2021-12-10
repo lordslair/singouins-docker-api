@@ -1200,6 +1200,220 @@ components:
           example: 1
           minimum: 1
 
+    AdminEffectsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            effects:
+              type: array
+              items:
+                $ref: '#/components/schemas/EffectObject'
+            pc:
+              $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminKorpResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            pending:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            korp:
+              $ref: '#/components/schemas/KorpObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminKorpsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/KorpObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminMypcResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminMypcsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminPaResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            pc:
+              $ref: '#/components/schemas/PcObject'
+            pa:
+              $ref: '#/components/schemas/PaObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminSquadResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            pending:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            squad:
+              $ref: '#/components/schemas/SquadObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminSquadsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/SquadObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminStatsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            pc:
+              $ref: '#/components/schemas/PcObject'
+            stats:
+              $ref: '#/components/schemas/StatsObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminStatusesResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            statuses:
+              type: array
+              items:
+                $ref: '#/components/schemas/StatusObject'
+            pc:
+              $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminUserResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/UserObject'
+        success:
+          type: boolean
+          nullable: false
+
+    AdminWalletResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            pc:
+              $ref: '#/components/schemas/PcObject'
+            stats:
+              $ref: '#/components/schemas/WalletObject'
+        success:
+          type: boolean
+          nullable: false
+
     GenericResponse:
       type: object
       properties:
