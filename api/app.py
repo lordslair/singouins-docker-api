@@ -737,8 +737,8 @@ def log_send():
 #
 
 app.add_url_rule('/admin',                methods=['GET'],  view_func=routes.admin.up)
-app.add_url_rule('/admin/korp',           methods=['POST'], view_func=routes.admin.korp)
-app.add_url_rule('/admin/korps',          methods=['POST'], view_func=routes.admin.korps)
+app.add_url_rule('/admin/korp',           methods=['POST'], view_func=routes.admin.mypc_korp)
+app.add_url_rule('/admin/korps',          methods=['GET'],  view_func=routes.admin.mypc_korps)
 app.add_url_rule('/admin/user',           methods=['POST'], view_func=routes.admin.user)
 app.add_url_rule('/admin/user/validate',  methods=['POST'], view_func=routes.admin.user_validate)
 app.add_url_rule('/admin/mypc',           methods=['POST'], view_func=routes.admin.mypc)
@@ -749,7 +749,8 @@ app.add_url_rule('/admin/mypc/statuses',  methods=['POST'], view_func=routes.adm
 app.add_url_rule('/admin/mypc/stats',     methods=['POST'], view_func=routes.admin.mypc_stats)
 app.add_url_rule('/admin/mypc/wallet',    methods=['POST'], view_func=routes.admin.mypc_wallet)
 app.add_url_rule('/admin/mypcs',          methods=['POST'], view_func=routes.admin.mypcs)
-app.add_url_rule('/admin/squad',          methods=['POST'], view_func=routes.admin.squad)
+app.add_url_rule('/admin/squad',          methods=['POST'], view_func=routes.admin.mypc_squad)
+app.add_url_rule('/admin/squads',         methods=['GET'],  view_func=routes.admin.mypc_squads)
 
 if __name__ == '__main__':
     app.run()

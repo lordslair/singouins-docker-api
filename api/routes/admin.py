@@ -66,7 +66,7 @@ def mypcs():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def squad():
+def mypc_squad():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
@@ -74,16 +74,17 @@ def squad():
 
     squadid      = request.json.get('squadid', None)
 
-    if squadid is None:
-        (code, success, msg, payload) = admin_squad_get_all()
-        if isinstance(code, int):
-            return jsonify({"msg": msg, "success": success, "payload": payload}), code
-    elif isinstance(squadid, int):
-        (code, success, msg, payload) = admin_squad_get_one(squadid)
-        if isinstance(code, int):
-            return jsonify({"msg": msg, "success": success, "payload": payload}), code
-    else:
-        return jsonify({"msg": f'Squad unknown (squadid:{squadid})', "success": False, "payload": None}), 200
+    (code, success, msg, payload) = admin_squad_get_one(squadid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def mypc_squads():
+    if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    (code, success, msg, payload) = admin_squad_get_all()
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 def mypc_pa():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
@@ -165,7 +166,7 @@ def mypc_stats():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def korp():
+def mypc_korp():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
@@ -177,7 +178,7 @@ def korp():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def korps():
+def mypc_korps():
     if request.headers.get('Authorization') != f'Bearer {API_ADMIN_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
