@@ -24,6 +24,7 @@ from utils.token        import generate_confirmation_token
 
 # Imports of endpoint functions
 import                  routes.admin
+import                  routes.internal
 
 # Imports only for LDP forwarding. Might be temporary
 import logging
@@ -736,9 +737,6 @@ def log_send():
 # Routes /admin
 #
 
-app.add_url_rule('/admin',                methods=['GET'],  view_func=routes.admin.up)
-app.add_url_rule('/admin/korp',           methods=['POST'], view_func=routes.admin.mypc_korp)
-app.add_url_rule('/admin/korps',          methods=['GET'],  view_func=routes.admin.mypc_korps)
 app.add_url_rule('/admin/user',           methods=['POST'], view_func=routes.admin.user)
 app.add_url_rule('/admin/user/validate',  methods=['POST'], view_func=routes.admin.user_validate)
 app.add_url_rule('/admin/mypc',           methods=['POST'], view_func=routes.admin.mypc)
@@ -749,8 +747,18 @@ app.add_url_rule('/admin/mypc/statuses',  methods=['POST'], view_func=routes.adm
 app.add_url_rule('/admin/mypc/stats',     methods=['POST'], view_func=routes.admin.mypc_stats)
 app.add_url_rule('/admin/mypc/wallet',    methods=['POST'], view_func=routes.admin.mypc_wallet)
 app.add_url_rule('/admin/mypcs',          methods=['POST'], view_func=routes.admin.mypcs)
-app.add_url_rule('/admin/squad',          methods=['POST'], view_func=routes.admin.mypc_squad)
-app.add_url_rule('/admin/squads',         methods=['GET'],  view_func=routes.admin.mypc_squads)
+
+#
+# Routes /internal
+#
+# Routes /internal/*
+app.add_url_rule('/internal/korp',               methods=['POST'], view_func=routes.internal.korp)
+app.add_url_rule('/internal/korps',              methods=['GET'],  view_func=routes.internal.korps)
+app.add_url_rule('/internal/up',                 methods=['GET'],  view_func=routes.internal.up)
+app.add_url_rule('/internal/squad',              methods=['POST'], view_func=routes.internal.squad)
+app.add_url_rule('/internal/squads',             methods=['GET'],  view_func=routes.internal.squads)
+# Routes /internal/creature/*
+app.add_url_rule('/internal/creature/equipment', methods=['POST'], view_func=routes.internal.creature_equipment)
 
 if __name__ == '__main__':
     app.run()

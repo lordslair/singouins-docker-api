@@ -5,11 +5,32 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
-  /admin:
+  /internal/creature/equipment:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Equipment request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureEquipmentResponse'
+      security:
+        - internal_token: []
+  /internal/up:
     get:
       tags:
-        - '/admin : Admin request (from Discord)'
-      summary: Admin UP request
+        - '/internal : Internal requests'
+      summary: Internal UP request
       responses:
         '200':
           description: OK
@@ -18,7 +39,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GenericResponse'
       security:
-        - admin_token: []
+        - internal_token: []
   /admin/user:
     post:
       tags:
@@ -249,10 +270,10 @@ paths:
           description: KO - Malformed JSON
       security:
         - admin_token: []
-  /admin/squad:
+  /internal/squad:
     post:
       tags:
-        - '/admin : Admin request (from Discord)'
+        - '/internal : Internal requests'
       summary: Squad information request (one)
       requestBody:
         description: ''
@@ -260,22 +281,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminSquad'
+              $ref: '#/components/schemas/InternalSquad'
       responses:
         '200':
           description: OK - Squad found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminSquadResponse'
+                $ref: '#/components/schemas/InternalSquadResponse'
         '400':
           description: KO - Malformed JSON
       security:
-        - admin_token: []
-  /admin/squads:
+        - internal_token: []
+  /internal/squads:
     get:
       tags:
-        - '/admin : Admin request (from Discord)'
+        - '/internal : Internal requests'
       summary: Squads information request (all)
       responses:
         '200':
@@ -283,15 +304,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminSquadsResponse'
+                $ref: '#/components/schemas/InternalSquadsResponse'
         '400':
           description: KO - Malformed JSON
       security:
-        - admin_token: []
-  /admin/korp:
+        - internal_token: []
+  /internal/korp:
     post:
       tags:
-        - '/admin : Admin request (from Discord)'
+        - '/internal : Internal requests'
       summary: Korp information request (one)
       requestBody:
         description: ''
@@ -299,22 +320,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminKorp'
+              $ref: '#/components/schemas/InternalKorp'
       responses:
         '200':
           description: OK - Korp found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminKorpResponse'
+                $ref: '#/components/schemas/InternalKorpResponse'
         '400':
           description: KO - Malformed JSON
       security:
-        - admin_token: []
-  /admin/korps:
+        - internal_token: []
+  /internal/korps:
     get:
       tags:
-        - '/admin : Admin request (from Discord)'
+        - '/internal : Internal requests'
       summary: Korps information request (all)
       responses:
         '200':
@@ -322,9 +343,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminKorpsResponse'
+                $ref: '#/components/schemas/InternalKorpsResponse'
       security:
-        - admin_token: []
+        - internal_token: []
 
   /auth/register:
     post:
@@ -1193,17 +1214,24 @@ components:
       required:
         - discordname
         - pcid
-    AdminSquad:
+    InternalSquad:
       type: object
       properties:
         squadid:
           type: integer
           minimum: 1
           nullable: true
-    AdminKorp:
+    InternalKorp:
       type: object
       properties:
         korpid:
+          type: integer
+          minimum: 1
+          nullable: false
+    InternalCreature:
+      type: object
+      properties:
+        creatureid:
           type: integer
           minimum: 1
           nullable: false
@@ -1364,7 +1392,7 @@ components:
           type: boolean
           nullable: false
 
-    AdminKorpResponse:
+    InternalKorpResponse:
       type: object
       properties:
         msg:
@@ -1388,7 +1416,7 @@ components:
           type: boolean
           nullable: false
 
-    AdminKorpsResponse:
+    InternalKorpsResponse:
       type: object
       properties:
         msg:
@@ -1449,7 +1477,7 @@ components:
           type: boolean
           nullable: false
 
-    AdminSquadResponse:
+    InternalSquadResponse:
       type: object
       properties:
         msg:
@@ -1473,7 +1501,7 @@ components:
           type: boolean
           nullable: false
 
-    AdminSquadsResponse:
+    InternalSquadsResponse:
       type: object
       properties:
         msg:
@@ -1554,6 +1582,25 @@ components:
               $ref: '#/components/schemas/PcObject'
             stats:
               $ref: '#/components/schemas/WalletObject'
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreatureEquipmentResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            creature:
+              $ref: '#/components/schemas/PcObject'
+            equipment:
+              $ref: '#/components/schemas/EquipmentObject'
         success:
           type: boolean
           nullable: false
@@ -1896,6 +1943,73 @@ components:
           type: integer
           nullable: false
 
+    EquipmentObject:
+      type: object
+      nullable: false
+      properties:
+        feet:
+          $ref: '#/components/schemas/ItemObject'
+        hands:
+          $ref: '#/components/schemas/ItemObject'
+        head:
+          $ref: '#/components/schemas/ItemObject'
+        holster:
+          $ref: '#/components/schemas/ItemObject'
+        lefthand:
+          $ref: '#/components/schemas/ItemObject'
+        legs:
+          $ref: '#/components/schemas/ItemObject'
+        righthand:
+          $ref: '#/components/schemas/ItemObject'
+        shoulders:
+          $ref: '#/components/schemas/ItemObject'
+        torso:
+          $ref: '#/components/schemas/ItemObject'
+
+    ItemObject:
+      type: object
+      nullable: true
+      properties:
+        ammo:
+          type: integer
+          nullable: true
+        bearer:
+          type: integer
+          nullable: false
+        bound:
+          type: boolean
+          nullable: false
+        bound_type:
+          type: string
+          nullable: false
+        date:
+          type: string
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        metaid:
+          type: integer
+          nullable: false
+        modded:
+          type: boolean
+          nullable: false
+        mods:
+          type: string
+          nullable: true
+        offsetx:
+          type: integer
+          nullable: true
+        offsety:
+          type: integer
+          nullable: true
+        rarity:
+          type: string
+          nullable: false
+        state:
+          type: integer
+          nullable: false
+
   securitySchemes:
     refresh_token:
       type: http
@@ -1909,8 +2023,13 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    internal_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
 security:
   - refresh_token: []
   - access_token: []
   - admin_token: []
+  - internal_token: []

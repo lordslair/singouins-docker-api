@@ -33,5 +33,6 @@ DISCORD_URL   = os.environ['SEP_DISCORD_URL']
 LDP_HOST      = os.environ['SEP_LDP_HOST']
 LDP_TOKEN     = os.environ['SEP_LDP_TOKEN']
 
-# Admin token used from Discord
-API_ADMIN_TOKEN = os.environ['SEP_ADMIN_TOKEN']
+# Token used for /internal routes
+API_ADMIN_TOKEN    = os.environ['SEP_ADMIN_TOKEN']
+API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
