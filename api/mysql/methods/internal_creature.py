@@ -117,3 +117,35 @@ def internal_creature_equipment(creatureid):
 
     finally:
         session.close()
+
+# API: POST /internal/creature/stats
+def internal_creature_stats(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # We force stats re-compute
+    stats = fn_creature_stats(creature)
+    if stats:
+        # Data was computed, so we return it
+        return (200,
+                True,
+                f'Stats computation successed (creatureid:{creature.id})',
+                {"stats": stats,
+                 "creature": creature})
+    else:
+        return (200,
+                False,
+                f'Stats query failed (creatureid:{creature.id})',
+                None)

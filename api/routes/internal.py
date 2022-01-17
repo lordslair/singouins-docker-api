@@ -22,6 +22,18 @@ def creature_equipment():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+def creature_stats():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    creatureid = request.json.get('creatureid')
+
+    (code, success, msg, payload) = internal_creature_stats(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 # /internal/* subpath
 def up():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
