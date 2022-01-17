@@ -4,11 +4,11 @@ from ..session          import Session
 from ..models           import PJ, Korp
 
 #
-# Queries /admin/korp/*
+# Queries /internal/korp/*
 #
 
-# API: GET /admin/korp
-def admin_korp_get_all():
+# API: POST /internal/korp
+def internal_korp_get_all():
     session = Session()
 
     try:
@@ -33,8 +33,8 @@ def admin_korp_get_all():
     finally:
         session.close()
 
-# API: GET /admin/korp/<int:korpid>
-def admin_korp_get_one(korpid):
+# API: POST /internal/korp
+def internal_korp_get_one(korpid):
     session = Session()
 
     if not isinstance(korpid, int):

@@ -4,11 +4,11 @@ from ..session          import Session
 from ..models           import PJ, Squad
 
 #
-# Queries /admin/squad/*
+# Queries /internal/squad/*
 #
 
-# API: GET /admin/squad
-def admin_squad_get_all():
+# API: POST /internal/squad
+def internal_squad_get_all():
     session = Session()
 
     try:
@@ -33,8 +33,8 @@ def admin_squad_get_all():
     finally:
         session.close()
 
-# API: GET /admin/squad/<int:squadid>
-def admin_squad_get_one(squadid):
+# API: POST /internal/squad
+def internal_squad_get_one(squadid):
     session = Session()
 
     try:

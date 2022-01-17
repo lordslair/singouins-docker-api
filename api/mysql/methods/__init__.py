@@ -3,11 +3,11 @@
 from .all               import *
 
 from .auth              import *
-from .admin_korp        import *
 from .admin_mypc        import *
-from .admin_squad       import *
 from .admin_user        import *
 from .internal_creature import *
+from .internal_korp     import *
+from .internal_squad    import *
 from .mypc              import *
 from .mypc_action       import *
 from .mypc_korp         import *
