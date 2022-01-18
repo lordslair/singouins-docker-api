@@ -764,6 +764,7 @@ app.add_url_rule('/internal/creature/pa/reset',  methods=['POST'], view_func=rou
 app.add_url_rule('/internal/creature/permission',methods=['POST'], view_func=routes.internal.creature_permission)
 app.add_url_rule('/internal/creature/profile',   methods=['POST'], view_func=routes.internal.creature_profile)
 app.add_url_rule('/internal/creature/stats',     methods=['POST'], view_func=routes.internal.creature_stats)
+app.add_url_rule('/internal/creature/wallet',    methods=['POST'], view_func=routes.internal.creature_wallet)
 
 if __name__ == '__main__':
     app.run()

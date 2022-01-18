@@ -282,3 +282,45 @@ def internal_creature_stats(creatureid):
                 False,
                 f'Stats query failed (creatureid:{creature.id})',
                 None)
+
+# API: POST /internal/creature/wallet
+def internal_creature_wallet(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    session = Session()
+    try:
+        wallet = session.query(Wallet)\
+                        .filter(Wallet.id == creature.id)\
+                        .one_or_none()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL] Wallet query failed (creatureid:{creature.id}) [{e}]',
+                None)
+    else:
+        if wallet:
+            return (200,
+                    True,
+                    f'Wallet found (creatureid:{creature.id})',
+                    {"wallet": wallet,
+                     "creature": creature})
+        else:
+            return (200,
+                    False,
+                    f'Wallet not found (creatureid:{creature.id})',
+                    None)
+    finally:
+        session.close()

@@ -141,6 +141,27 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatsResponse'
       security:
         - internal_token: []
+  /internal/creature/wallet:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Wallet request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureWalletResponse'
+      security:
+        - internal_token: []
   /internal/up:
     get:
       tags:
@@ -1783,6 +1804,25 @@ components:
               $ref: '#/components/schemas/PcObject'
             stats:
               $ref: '#/components/schemas/StatsObject'
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreatureWalletResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            pc:
+              $ref: '#/components/schemas/PcObject'
+            stats:
+              $ref: '#/components/schemas/WalletObject'
         success:
           type: boolean
           nullable: false
