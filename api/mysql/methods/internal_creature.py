@@ -28,7 +28,7 @@ def internal_creature_equipment(creatureid):
     if creature is None:
         return (200,
                 False,
-                f'PC unknown (creatureid:{creatureid})',
+                f'Creature unknown (creatureid:{creatureid})',
                 None)
 
     session = Session()
