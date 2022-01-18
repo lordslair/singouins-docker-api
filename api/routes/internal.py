@@ -3,6 +3,7 @@
 from flask              import Flask, jsonify, request
 
 from mysql.methods      import *
+from mysql.utils        import redis
 
 from variables          import API_INTERNAL_TOKEN
 
@@ -18,6 +19,7 @@ def creature_equipment():
 
     creatureid = request.json.get('creatureid')
 
+    redis.incr_query_count('internal:creature:equipment')
     (code, success, msg, payload) = internal_creature_equipment(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -30,6 +32,7 @@ def creature_stats():
 
     creatureid = request.json.get('creatureid')
 
+    redis.incr_query_count('internal:creature:stats')
     (code, success, msg, payload) = internal_creature_stats(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -39,6 +42,7 @@ def up():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
+    redis.incr_query_count('internal:up')
     return jsonify({"msg": f'UP and running', "success": True, "payload": None}), 200
 
 def squad():
@@ -49,6 +53,7 @@ def squad():
 
     squadid      = request.json.get('squadid', None)
 
+    redis.incr_query_count('internal:squad')
     (code, success, msg, payload) = internal_squad_get_one(squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -57,6 +62,7 @@ def squads():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
+    redis.incr_query_count('internal:squads')
     (code, success, msg, payload) = internal_squad_get_all()
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -69,6 +75,7 @@ def korp():
 
     korpid  = request.json.get('korpid')
 
+    redis.incr_query_count('internal:korp')
     (code, success, msg, payload) = internal_korp_get_one(korpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -77,6 +84,7 @@ def korps():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
+    redis.incr_query_count('internal:korps')
     (code, success, msg, payload) = internal_korp_get_all()
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code

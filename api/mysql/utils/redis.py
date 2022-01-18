@@ -249,6 +249,18 @@ def incr_hs(pc,path,increment):
     else:
         return True
 
+def incr_query_count(route):
+    increment = 1
+    key       = f'queries:{route}'
+
+    try:
+        r.incr(key, amount=increment)
+    except Exception as e:
+        print(f'[Redis] incr_query_count({route}) failed [{e}]')
+        return False
+    else:
+        return True
+
 #
 # Queries: Queues
 #
