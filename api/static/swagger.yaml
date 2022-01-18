@@ -291,52 +291,6 @@ paths:
           description: KO - Malformed JSON
       security:
         - admin_token: []
-  /admin/mypc/pa:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC PA information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminMypcPa'
-      responses:
-        '200':
-          description: OK - PA found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminPaResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
-  /admin/mypc/stats:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC Stats information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyLong'
-      responses:
-        '200':
-          description: OK - Stats found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminStatsResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
   /admin/mypc/statuses:
     post:
       tags:
@@ -356,29 +310,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminStatusesResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
-  /admin/mypc/wallet:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC Wallet information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyLong'
-      responses:
-        '200':
-          description: OK - PC Wallet found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminWalletResponse'
         '400':
           description: KO - Malformed JSON
       security:
@@ -1337,19 +1268,6 @@ components:
         usermail:
           type: string
           format: email
-    AdminMypcPa:
-      type: object
-      properties:
-        discordname:
-          type: string
-          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-          example: 'DiscordName#1234'
-        pcid:
-          type: integer
-          minimum: 1
-      required:
-        - discordname
-        - pcid
     InternalSquad:
       type: object
       properties:
@@ -1595,24 +1513,6 @@ components:
           type: boolean
           nullable: false
 
-    AdminPaResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            pc:
-              $ref: '#/components/schemas/PcObject'
-            pa:
-              $ref: '#/components/schemas/PaObject'
-        success:
-          type: boolean
-          nullable: false
-
     InternalCreaturePaResponse:
       type: object
       properties:
@@ -1701,24 +1601,6 @@ components:
           type: boolean
           nullable: false
 
-    AdminStatsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            pc:
-              $ref: '#/components/schemas/PcObject'
-            stats:
-              $ref: '#/components/schemas/StatsObject'
-        success:
-          type: boolean
-          nullable: false
-
     AdminStatusesResponse:
       type: object
       properties:
@@ -1748,25 +1630,6 @@ components:
           nullable: false
         payload:
           $ref: '#/components/schemas/UserObject'
-        success:
-          type: boolean
-          nullable: false
-
-    AdminWalletResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            pc:
-              $ref: '#/components/schemas/PcObject'
-            stats:
-              $ref: '#/components/schemas/WalletObject'
         success:
           type: boolean
           nullable: false

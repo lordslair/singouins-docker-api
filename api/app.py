@@ -467,6 +467,21 @@ def api_mypc_instance_leave(pcid,instanceid):
 # Routes: /action
 #
 
+@app.route('/mypc/<int:pcid>/action/resolver/move', methods=['POST'])
+@jwt_required
+def api_mypc_action_resolver_move(pcid):
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    path = request.json.get('path', None)
+    (code, success, msg, payload) = mypc_action_resolver_move(get_jwt_identity(),pcid,path)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+#
+#
+#
+
 @app.route('/mypc/<int:pcid>/action/move', methods=['POST'])
 @jwt_required
 def api_mypc_action_move(pcid):
@@ -741,11 +756,7 @@ app.add_url_rule('/admin/user',           methods=['POST'], view_func=routes.adm
 app.add_url_rule('/admin/user/validate',  methods=['POST'], view_func=routes.admin.user_validate)
 app.add_url_rule('/admin/mypc',           methods=['POST'], view_func=routes.admin.mypc)
 app.add_url_rule('/admin/mypc/effects',   methods=['POST'], view_func=routes.admin.mypc_effects)
-app.add_url_rule('/admin/mypc/pa',        methods=['POST'], view_func=routes.admin.mypc_pa)
-app.add_url_rule('/admin/mypc/equipment', methods=['POST'], view_func=routes.admin.mypc_equipment)
 app.add_url_rule('/admin/mypc/statuses',  methods=['POST'], view_func=routes.admin.mypc_statuses)
-app.add_url_rule('/admin/mypc/stats',     methods=['POST'], view_func=routes.admin.mypc_stats)
-app.add_url_rule('/admin/mypc/wallet',    methods=['POST'], view_func=routes.admin.mypc_wallet)
 app.add_url_rule('/admin/mypcs',          methods=['POST'], view_func=routes.admin.mypcs)
 
 #
