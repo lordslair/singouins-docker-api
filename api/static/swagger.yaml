@@ -26,6 +26,37 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureEquipmentResponse'
       security:
         - internal_token: []
+  /internal/creature/permission:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature permission request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                discordname:
+                  type: string
+                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+                  example: 'DiscordName#1234'
+                  nullable: false
+                creatureid:
+                  type: integer
+                  minimum: 1
+                  nullable: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreaturePermissionResponse'
+      security:
+        - internal_token: []
   /internal/creature/stats:
     post:
       tags:
@@ -1494,6 +1525,24 @@ components:
               $ref: '#/components/schemas/PcObject'
             pa:
               $ref: '#/components/schemas/PaObject'
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreaturePermissionResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            creature:
+              $ref: '#/components/schemas/PcObject'
+            user:
+              $ref: '#/components/schemas/UserObject'
         success:
           type: boolean
           nullable: false

@@ -118,6 +118,48 @@ def internal_creature_equipment(creatureid):
     finally:
         session.close()
 
+# API: POST /internal/creature/permission
+def internal_creature_permission(creatureid,discordname):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(discordname, str):
+        return (200,
+                False,
+                f'Bad Discordname format (discordname:{discordname})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+    user        = fn_user_get_from_discord(discordname)
+    if user is None:
+        return (200,
+                False,
+                f'Discordname unknown (discordname:{discordname})',
+                None)
+
+    if creature.account == user.id:
+        # The Discord user owns the Creature
+        return (200,
+                True,
+                f'User has permissions on Creature (discordname:{discordname},creatureid:{creature.id})',
+                {"user": user,
+                "creature": creature})
+    else:
+        # The Discord user do NOT own the Creature
+        return (200,
+                False,
+                f'User has NOT permissions on Creature (discordname:{discordname},creatureid:{creature.id})',
+                None)
+
 # API: POST /internal/creature/stats
 def internal_creature_stats(creatureid):
     # Input checks

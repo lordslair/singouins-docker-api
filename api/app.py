@@ -759,6 +759,7 @@ app.add_url_rule('/internal/squad',              methods=['POST'], view_func=rou
 app.add_url_rule('/internal/squads',             methods=['GET'],  view_func=routes.internal.squads)
 # Routes /internal/creature/*
 app.add_url_rule('/internal/creature/equipment', methods=['POST'], view_func=routes.internal.creature_equipment)
+app.add_url_rule('/internal/creature/permission',methods=['POST'], view_func=routes.internal.creature_permission)
 app.add_url_rule('/internal/creature/stats',     methods=['POST'], view_func=routes.internal.creature_stats)
 
 if __name__ == '__main__':
