@@ -229,6 +229,28 @@ def internal_creature_permission(creatureid,discordname):
                 f'User has NOT permissions on Creature (discordname:{discordname},creatureid:{creature.id})',
                 None)
 
+# API: POST /internal/creature/profile
+def internal_creature_profile(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+    else:
+        return (200,
+                True,
+                f'Creature found (creatureid:{creatureid})',
+                creature)
+
 # API: POST /internal/creature/stats
 def internal_creature_stats(creatureid):
     # Input checks

@@ -99,6 +99,27 @@ paths:
                 $ref: '#/components/schemas/InternalCreaturePermissionResponse'
       security:
         - internal_token: []
+  /internal/creature/profile:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature profile request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureProfileResponse'
+      security:
+        - internal_token: []
   /internal/creature/stats:
     post:
       tags:
@@ -1603,6 +1624,19 @@ components:
               $ref: '#/components/schemas/PcObject'
             user:
               $ref: '#/components/schemas/UserObject'
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreatureProfileResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/PcObject'
         success:
           type: boolean
           nullable: false
