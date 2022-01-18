@@ -26,6 +26,48 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureEquipmentResponse'
       security:
         - internal_token: []
+  /internal/creature/pa:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature PA request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreaturePaResponse'
+      security:
+        - internal_token: []
+  /internal/creature/pa/reset:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature PA reset request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
   /internal/creature/permission:
     post:
       tags:
@@ -1522,6 +1564,24 @@ components:
           type: object
           properties:
             pc:
+              $ref: '#/components/schemas/PcObject'
+            pa:
+              $ref: '#/components/schemas/PaObject'
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreaturePaResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            creature:
               $ref: '#/components/schemas/PcObject'
             pa:
               $ref: '#/components/schemas/PaObject'

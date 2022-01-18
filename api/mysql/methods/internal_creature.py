@@ -118,6 +118,75 @@ def internal_creature_equipment(creatureid):
     finally:
         session.close()
 
+# API: POST /internal/creature/pa
+def internal_creature_pa(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    try:
+        pa = get_pa(creature.id)[3]
+    except Exception as e:
+        return (200,
+                False,
+                f'[Redis] PA query failed (creatureid:{creature.id}) [{e}]',
+                None)
+    else:
+        if pa:
+            return (200,
+                    True,
+                    f'PAs found (creatureid:{creature.id})',
+                    {"pa": pa,
+                     "creature": creature})
+        else:
+            return (200,
+                    False,
+                    f'PAs not found (creatureid:{creature.id})',
+                    None)
+
+# API: POST /internal/creature/pa/reset
+def internal_creature_pa_reset(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # TODO: We only do a reset by laziness, could be better
+    try:
+        r.set(f'red:{creature.id}','red',ex=1)
+        r.set(f'blue:{creature.id}','blue',ex=1)
+    except Exception as e:
+        return (200,
+                False,
+                f'[Redis] PA query failed (creatureid:{creature.id}) [{e}]',
+                None)
+    else:
+        return (200,
+                True,
+                f'PAs set successed (creatureid:{creature.id})',
+                None)
+
 # API: POST /internal/creature/permission
 def internal_creature_permission(creatureid,discordname):
     # Input checks
