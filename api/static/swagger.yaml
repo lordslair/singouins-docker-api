@@ -176,10 +176,101 @@ paths:
                 $ref: '#/components/schemas/GenericResponse'
       security:
         - internal_token: []
-  /admin/user:
+  /internal/discord/associate:
     post:
       tags:
-        - '/admin : Admin request (from Discord)'
+        - '/internal : Internal requests'
+      summary: User/Discord association request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                discordname:
+                  type: string
+                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+                  example: 'DiscordName#1234'
+                  nullable: false
+                usermail:
+                  type: string
+                  format: email
+                  nullable: false
+      responses:
+        '200':
+          description: OK - User/Discord associated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalUserResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - admin_token: []
+  /internal/discord/creature:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature access request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                discordname:
+                  type: string
+                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+                  example: 'DiscordName#1234'
+                  nullable: false
+                creatureid:
+                  type: integer
+                  minimum: 1
+                  nullable: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalDiscordCreatureResponse'
+      security:
+        - internal_token: []
+  /internal/discord/creatures:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creatures request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                discordname:
+                  type: string
+                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+                  example: 'DiscordName#1234'
+                  nullable: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalDiscordCreaturesResponse'
+      security:
+        - internal_token: []
+  /internal/discord/user:
+    post:
+      tags:
+        - '/internal : Internal requests'
       summary: User information request
       requestBody:
         description: ''
@@ -187,41 +278,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminDefaultBodyShort'
+              type: object
+              properties:
+                discordname:
+                  type: string
+                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
+                  example: 'DiscordName#1234'
+                  nullable: false
       responses:
         '200':
           description: OK - User found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserResponse'
+                $ref: '#/components/schemas/InternalUserResponse'
         '400':
           description: KO - Malformed JSON
       security:
-        - admin_token: []
-  /admin/user/validate:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: User validation request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminUserValidate'
-      responses:
-        '200':
-          description: OK - User found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
+        - internal_token: []
   /admin/mypc:
     post:
       tags:
@@ -1531,7 +1605,7 @@ components:
           type: boolean
           nullable: false
 
-    InternalCreaturePermissionResponse:
+    InternalDiscordCreatureResponse:
       type: object
       properties:
         msg:
@@ -1548,7 +1622,20 @@ components:
         success:
           type: boolean
           nullable: false
-
+    InternalDiscordCreaturesResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
     InternalCreatureProfileResponse:
       type: object
       properties:
@@ -1621,7 +1708,7 @@ components:
           type: boolean
           nullable: false
 
-    AdminUserResponse:
+    InternalUserResponse:
       type: object
       properties:
         msg:

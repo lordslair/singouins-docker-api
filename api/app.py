@@ -772,10 +772,15 @@ app.add_url_rule('/internal/squads',             methods=['GET'],  view_func=rou
 app.add_url_rule('/internal/creature/equipment', methods=['POST'], view_func=routes.internal.creature_equipment)
 app.add_url_rule('/internal/creature/pa',        methods=['POST'], view_func=routes.internal.creature_pa)
 app.add_url_rule('/internal/creature/pa/reset',  methods=['POST'], view_func=routes.internal.creature_pa_reset)
-app.add_url_rule('/internal/creature/permission',methods=['POST'], view_func=routes.internal.creature_permission)
 app.add_url_rule('/internal/creature/profile',   methods=['POST'], view_func=routes.internal.creature_profile)
 app.add_url_rule('/internal/creature/stats',     methods=['POST'], view_func=routes.internal.creature_stats)
 app.add_url_rule('/internal/creature/wallet',    methods=['POST'], view_func=routes.internal.creature_wallet)
+# Routes /internal/discord/*
+app.add_url_rule('/internal/discord/associate', methods=['POST'], view_func=routes.internal.discord_associate)
+app.add_url_rule('/internal/discord/creature',  methods=['POST'], view_func=routes.internal.discord_creature)
+app.add_url_rule('/internal/discord/creatures', methods=['POST'], view_func=routes.internal.discord_creatures)
+app.add_url_rule('/internal/discord/user',      methods=['POST'], view_func=routes.internal.discord_user)
+
 
 if __name__ == '__main__':
     app.run()

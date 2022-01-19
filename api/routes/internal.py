@@ -50,20 +50,6 @@ def creature_pa_reset():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def creature_permission():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    discordname = request.json.get('discordname')
-    creatureid  = request.json.get('creatureid')
-
-    redis.incr_query_count('internal:creature:permission')
-    (code, success, msg, payload) = internal_creature_permission(creatureid,discordname)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
 def creature_profile():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
@@ -100,6 +86,61 @@ def creature_wallet():
 
     redis.incr_query_count('internal:creature:wallet')
     (code, success, msg, payload) = internal_creature_wallet(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+# /internal/discord/* subpath
+def discord_associate():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+    usermail     = request.json.get('usermail')
+
+    redis.incr_query_count('internal:discord:associate')
+    (code, success, msg, payload) = internal_user_discord_associate(discordname,usermail)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def discord_creature():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname = request.json.get('discordname')
+    creatureid  = request.json.get('creatureid')
+
+    redis.incr_query_count('internal:discord:creature')
+    (code, success, msg, payload) = internal_discord_creature(creatureid,discordname)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def discord_creatures():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+
+    redis.incr_query_count('internal:discord:creatures')
+    (code, success, msg, payload) = internal_discord_creatures(discordname)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def discord_user():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    discordname  = request.json.get('discordname')
+
+    redis.incr_query_count('internal:discord:user')
+    (code, success, msg, payload) = internal_user_discord(discordname)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
