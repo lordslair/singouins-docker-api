@@ -311,121 +311,6 @@ paths:
           description: KO - Malformed JSON
       security:
         - internal_token: []
-  /admin/mypc:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC information request (one)
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyLong'
-      responses:
-        '200':
-          description: OK - PC found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminMypcResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
-  /admin/mypc/cds:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC Effects information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyLong'
-      responses:
-        '200':
-          description: OK - CDs found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
-  /admin/mypc/effects:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC Effects information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyLong'
-      responses:
-        '200':
-          description: OK - Effects found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminEffectsResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
-  /admin/mypc/statuses:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PC Statuses information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyLong'
-      responses:
-        '200':
-          description: OK - Statuses found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminStatusesResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
-  /admin/mypcs:
-    post:
-      tags:
-        - '/admin : Admin request (from Discord)'
-      summary: PCs information request (all)
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminDefaultBodyShort'
-      responses:
-        '200':
-          description: OK - PCs found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminMypcsResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - admin_token: []
   /internal/squad:
     post:
       tags:
@@ -1330,33 +1215,6 @@ paths:
 
 components:
   schemas:
-    AdminDefaultBodyLong:
-      type: object
-      properties:
-        discordname:
-          type: string
-          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-          example: 'DiscordName#1234'
-        pcid:
-          type: integer
-          minimum: 1
-    AdminDefaultBodyShort:
-      type: object
-      properties:
-        discordname:
-          type: string
-          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-          example: 'DiscordName#1234'
-    AdminUserValidate:
-      type: object
-      properties:
-        discordname:
-          type: string
-          pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-          example: 'DiscordName#1234'
-        usermail:
-          type: string
-          format: email
     InternalSquad:
       type: object
       properties:
@@ -1573,35 +1431,6 @@ components:
         success:
           type: boolean
           nullable: false
-
-    AdminMypcResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
-
-    AdminMypcsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
-
     InternalCreaturePaResponse:
       type: object
       properties:
@@ -2206,10 +2035,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    admin_token:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
     internal_token:
       type: http
       scheme: bearer
@@ -2218,5 +2043,4 @@ components:
 security:
   - refresh_token: []
   - access_token: []
-  - admin_token: []
   - internal_token: []

@@ -3,8 +3,6 @@
 from .all               import *
 
 from .auth              import *
-from .admin_mypc        import *
-from .admin_user        import *
 from .internal_creature import *
 from .internal_discord  import *
 from .internal_korp     import *

@@ -23,7 +23,6 @@ from utils.mail         import send
 from utils.token        import generate_confirmation_token
 
 # Imports of endpoint functions
-import                  routes.admin
 import                  routes.internal
 
 # Imports only for LDP forwarding. Might be temporary
@@ -747,17 +746,6 @@ def log_send():
         return jsonify({"msg": 'OK!', "success": True, "payload": None}), 200
     finally:
         logging.getLogger().removeHandler(handler)
-
-#
-# Routes /admin
-#
-
-app.add_url_rule('/admin/user',           methods=['POST'], view_func=routes.admin.user)
-app.add_url_rule('/admin/user/validate',  methods=['POST'], view_func=routes.admin.user_validate)
-app.add_url_rule('/admin/mypc',           methods=['POST'], view_func=routes.admin.mypc)
-app.add_url_rule('/admin/mypc/effects',   methods=['POST'], view_func=routes.admin.mypc_effects)
-app.add_url_rule('/admin/mypc/statuses',  methods=['POST'], view_func=routes.admin.mypc_statuses)
-app.add_url_rule('/admin/mypcs',          methods=['POST'], view_func=routes.admin.mypcs)
 
 #
 # Routes /internal

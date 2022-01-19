@@ -34,5 +34,4 @@ LDP_HOST      = os.environ['SEP_LDP_HOST']
 LDP_TOKEN     = os.environ['SEP_LDP_TOKEN']
 
 # Token used for /internal routes
-API_ADMIN_TOKEN    = os.environ['SEP_ADMIN_TOKEN']
 API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
