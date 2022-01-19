@@ -5,6 +5,29 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
+  /internal/creature/effects:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Effects request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK - Effects found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureEffectsResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - internal_token: []
   /internal/creature/equipment:
     post:
       tags:
@@ -68,37 +91,6 @@ paths:
                 $ref: '#/components/schemas/GenericResponse'
       security:
         - internal_token: []
-  /internal/creature/permission:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature permission request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                discordname:
-                  type: string
-                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-                  example: 'DiscordName#1234'
-                  nullable: false
-                creatureid:
-                  type: integer
-                  minimum: 1
-                  nullable: false
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreaturePermissionResponse'
-      security:
-        - internal_token: []
   /internal/creature/profile:
     post:
       tags:
@@ -139,6 +131,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreatureStatsResponse'
+      security:
+        - internal_token: []
+  /internal/creature/statuses:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Stats request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK - Statuses found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureStatusesResponse'
+        '400':
+          description: KO - Malformed JSON
       security:
         - internal_token: []
   /internal/creature/wallet:
@@ -208,7 +223,7 @@ paths:
         '400':
           description: KO - Malformed JSON
       security:
-        - admin_token: []
+        - internal_token: []
   /internal/discord/creature:
     post:
       tags:
@@ -1500,7 +1515,7 @@ components:
           example: 1
           minimum: 1
 
-    AdminEffectsResponse:
+    InternalCreatureEffectsResponse:
       type: object
       properties:
         msg:
@@ -1514,7 +1529,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/EffectObject'
-            pc:
+            creature:
               $ref: '#/components/schemas/PcObject'
         success:
           type: boolean
@@ -1688,7 +1703,7 @@ components:
           type: boolean
           nullable: false
 
-    AdminStatusesResponse:
+    InternalCreatureStatusesResponse:
       type: object
       properties:
         msg:

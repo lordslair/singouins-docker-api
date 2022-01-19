@@ -11,6 +11,19 @@ from variables          import API_INTERNAL_TOKEN
 # Routes /internal
 #
 # /internal/creature/* subpath
+def creature_effects():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    creatureid = request.json.get('creatureid')
+
+    redis.incr_query_count('internal:creature:effects')
+    (code, success, msg, payload) = internal_creature_effects(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 def creature_equipment():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
@@ -73,6 +86,19 @@ def creature_stats():
 
     redis.incr_query_count('internal:creature:stats')
     (code, success, msg, payload) = internal_creature_stats(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_statuses():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    creatureid = request.json.get('creatureid')
+
+    redis.incr_query_count('internal:creature:statuses')
+    (code, success, msg, payload) = internal_creature_statuses(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
