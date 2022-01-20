@@ -36,7 +36,7 @@ def internal_creature_effects(creatureid):
 
     # Effects fetching
     effects  = get_effects(creature)
-    if effects:
+    if isinstance(effects, list):
         return (200,
                 True,
                 f'Effects found (creatureid:{creature.id})',
@@ -294,7 +294,7 @@ def internal_creature_statuses(creatureid):
 
     # Statuese fetching
     statuses  = get_statuses(creature)
-    if statuses:
+    if isinstance(statuses, list):
         return (200,
                 True,
                 f'Statuses found (creatureid:{creatureid})',
