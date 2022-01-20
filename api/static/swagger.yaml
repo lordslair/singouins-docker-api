@@ -177,20 +177,6 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureWalletResponse'
       security:
         - internal_token: []
-  /internal/up:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal UP request
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
   /internal/discord/associate:
     post:
       tags:
@@ -311,6 +297,43 @@ paths:
           description: KO - Malformed JSON
       security:
         - internal_token: []
+  /internal/korp:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Korp information request (one)
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalKorp'
+      responses:
+        '200':
+          description: OK - Korp found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalKorpResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - internal_token: []
+  /internal/korps:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Korps information request (all)
+      responses:
+        '200':
+          description: OK - Korps found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalKorpsResponse'
+      security:
+        - internal_token: []
   /internal/squad:
     post:
       tags:
@@ -350,41 +373,18 @@ paths:
           description: KO - Malformed JSON
       security:
         - internal_token: []
-  /internal/korp:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Korp information request (one)
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalKorp'
-      responses:
-        '200':
-          description: OK - Korp found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalKorpResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - internal_token: []
-  /internal/korps:
+  /internal/up:
     get:
       tags:
         - '/internal : Internal requests'
-      summary: Korps information request (all)
+      summary: Internal UP request
       responses:
         '200':
-          description: OK - Korps found
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalKorpsResponse'
+                $ref: '#/components/schemas/GenericResponse'
       security:
         - internal_token: []
 
@@ -1215,20 +1215,6 @@ paths:
 
 components:
   schemas:
-    InternalSquad:
-      type: object
-      properties:
-        squadid:
-          type: integer
-          minimum: 1
-          nullable: true
-    InternalKorp:
-      type: object
-      properties:
-        korpid:
-          type: integer
-          minimum: 1
-          nullable: false
     InternalCreature:
       type: object
       properties:
@@ -1236,6 +1222,20 @@ components:
           type: integer
           minimum: 1
           nullable: false
+    InternalKorp:
+      type: object
+      properties:
+        korpid:
+          type: integer
+          minimum: 1
+          nullable: false
+    InternalSquad:
+      type: object
+      properties:
+        squadid:
+          type: integer
+          minimum: 1
+          nullable: true
 
     AuthRegisterPostBody:
       type: object
@@ -1373,6 +1373,24 @@ components:
           example: 1
           minimum: 1
 
+    InternalCreatureEquipmentResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            creature:
+              $ref: '#/components/schemas/PcObject'
+            equipment:
+              $ref: '#/components/schemas/EquipmentObject'
+        success:
+          type: boolean
+          nullable: false
     InternalCreatureEffectsResponse:
       type: object
       properties:
@@ -1389,45 +1407,6 @@ components:
                 $ref: '#/components/schemas/EffectObject'
             creature:
               $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
-
-    InternalKorpResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            members:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            pending:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            korp:
-              $ref: '#/components/schemas/KorpObject'
-        success:
-          type: boolean
-          nullable: false
-
-    InternalKorpsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/KorpObject'
         success:
           type: boolean
           nullable: false
@@ -1448,7 +1427,72 @@ components:
         success:
           type: boolean
           nullable: false
-
+    InternalCreatureProfileResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
+    InternalCreatureStatsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            creature:
+              $ref: '#/components/schemas/PcObject'
+            stats:
+              $ref: '#/components/schemas/StatsObject'
+        success:
+          type: boolean
+          nullable: false
+    InternalCreatureStatusesResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            statuses:
+              type: array
+              items:
+                $ref: '#/components/schemas/StatusObject'
+            pc:
+              $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
+    InternalCreatureWalletResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            pc:
+              $ref: '#/components/schemas/PcObject'
+            stats:
+              $ref: '#/components/schemas/WalletObject'
+        success:
+          type: boolean
+          nullable: false
     InternalDiscordCreatureResponse:
       type: object
       properties:
@@ -1480,7 +1524,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreatureProfileResponse:
+    InternalKorpResponse:
       type: object
       properties:
         msg:
@@ -1488,11 +1532,35 @@ components:
           format: string
           nullable: false
         payload:
-          $ref: '#/components/schemas/PcObject'
+          type: object
+          properties:
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            pending:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            korp:
+              $ref: '#/components/schemas/KorpObject'
         success:
           type: boolean
           nullable: false
-
+    InternalKorpsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/KorpObject'
+        success:
+          type: boolean
+          nullable: false
     InternalSquadResponse:
       type: object
       properties:
@@ -1516,7 +1584,6 @@ components:
         success:
           type: boolean
           nullable: false
-
     InternalSquadsResponse:
       type: object
       properties:
@@ -1531,27 +1598,6 @@ components:
         success:
           type: boolean
           nullable: false
-
-    InternalCreatureStatusesResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            statuses:
-              type: array
-              items:
-                $ref: '#/components/schemas/StatusObject'
-            pc:
-              $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
-
     InternalUserResponse:
       type: object
       properties:
@@ -1561,62 +1607,6 @@ components:
           nullable: false
         payload:
           $ref: '#/components/schemas/UserObject'
-        success:
-          type: boolean
-          nullable: false
-
-    InternalCreatureEquipmentResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            equipment:
-              $ref: '#/components/schemas/EquipmentObject'
-        success:
-          type: boolean
-          nullable: false
-
-    InternalCreatureStatsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            stats:
-              $ref: '#/components/schemas/StatsObject'
-        success:
-          type: boolean
-          nullable: false
-
-    InternalCreatureWalletResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            pc:
-              $ref: '#/components/schemas/PcObject'
-            stats:
-              $ref: '#/components/schemas/WalletObject'
         success:
           type: boolean
           nullable: false
