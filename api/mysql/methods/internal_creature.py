@@ -8,7 +8,8 @@ from ..models           import PJ,Wallet,CreatureSlots,Item
 
 from ..utils.redis      import (get_effects,
                                 get_pa,
-                                get_statuses)
+                                get_statuses,
+                                r)
 
 from .fn_creature       import fn_creature_get,fn_creature_stats
 from .fn_user           import fn_user_get_from_discord
@@ -98,31 +99,31 @@ def internal_creature_equipment(creatureid):
                 torso     = session.query(Item).filter(Item.id == slots.torso).one_or_none()
                 legs      = session.query(Item).filter(Item.id == slots.legs).one_or_none()
 
-                if feet and isinstance(feet.date, datetime):
+                if feet and isinstance(feet.date, datetime.datetime):
                     feet.date      = feet.date.strftime('%Y-%m-%d %H:%M:%S')
                     feet           = dataclasses.asdict(feet)
-                if hands and isinstance(hands.date, datetime):
+                if hands and isinstance(hands.date, datetime.datetime):
                     hands.date     = hands.date.strftime('%Y-%m-%d %H:%M:%S')
                     hands          = dataclasses.asdict(hands)
-                if head and isinstance(head.date, datetime):
+                if head and isinstance(head.date, datetime.datetime):
                     head.date      = head.date.strftime('%Y-%m-%d %H:%M:%S')
                     head           = dataclasses.asdict(head)
-                if holster and isinstance(holster.date, datetime):
+                if holster and isinstance(holster.date, datetime.datetime):
                     holster.date   = holster.date.strftime('%Y-%m-%d %H:%M:%S')
                     holster        = dataclasses.asdict(holster)
-                if lefthand and isinstance(lefthand.date, datetime):
+                if lefthand and isinstance(lefthand.date, datetime.datetime):
                     lefthand.date  = lefthand.date.strftime('%Y-%m-%d %H:%M:%S')
                     lefthand       = dataclasses.asdict(lefthand)
-                if righthand and isinstance(righthand.date, datetime):
+                if righthand and isinstance(righthand.date, datetime.datetime):
                     righthand.date = righthand.date.strftime('%Y-%m-%d %H:%M:%S')
                     righthand      = dataclasses.asdict(righthand)
-                if shoulders and isinstance(shoulders.date, datetime):
+                if shoulders and isinstance(shoulders.date, datetime.datetime):
                     shoulders.date = shoulders.date.strftime('%Y-%m-%d %H:%M:%S')
                     shoulders      = dataclasses.asdict(shoulders)
-                if torso and isinstance(torso.date, datetime):
+                if torso and isinstance(torso.date, datetime.datetime):
                     torso.date     = torso.date.strftime('%Y-%m-%d %H:%M:%S')
                     torso          = dataclasses.asdict(torso)
-                if legs and isinstance(legs.date, datetime):
+                if legs and isinstance(legs.date, datetime.datetime):
                     legs.date      = legs.date.strftime('%Y-%m-%d %H:%M:%S')
                     legs           = dataclasses.asdict(legs)
 
