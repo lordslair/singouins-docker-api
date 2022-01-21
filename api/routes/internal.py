@@ -11,6 +11,19 @@ from variables          import API_INTERNAL_TOKEN
 # Routes /internal
 #
 # /internal/creature/* subpath
+def creature_cds():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    creatureid = request.json.get('creatureid')
+
+    redis.incr_query_count('internal:creature:cds')
+    (code, success, msg, payload) = internal_creature_cds(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 def creature_effects():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403

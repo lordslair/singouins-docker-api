@@ -5,6 +5,29 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
+  /internal/creature/cds:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature CDs request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreature'
+      responses:
+        '200':
+          description: OK - CDs found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureCdsResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - internal_token: []
   /internal/creature/effects:
     post:
       tags:
@@ -1373,6 +1396,25 @@ components:
           example: 1
           minimum: 1
 
+    InternalCreatureCdsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            cds:
+              type: array
+              items:
+                $ref: '#/components/schemas/CdObject'
+            creature:
+              $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
     InternalCreatureEquipmentResponse:
       type: object
       properties:
@@ -1623,6 +1665,29 @@ components:
           nullable: true
         success:
           type: boolean
+          nullable: false
+
+    CdObject:
+      type: object
+      nullable: false
+      properties:
+        bearer:
+          type: integer
+          nullable: false
+        duration_base:
+          type: integer
+          nullable: false
+        duration_left:
+          type: integer
+          nullable: false
+        timestamp_end:
+          type: integer
+          nullable: false
+        timestamp_start:
+          type: integer
+          nullable: false
+        type:
+          type: string
           nullable: false
 
     EffectObject:

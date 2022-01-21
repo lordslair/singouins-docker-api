@@ -6,7 +6,8 @@ import datetime
 from ..session          import Session
 from ..models           import PJ,Wallet,CreatureSlots,Item
 
-from ..utils.redis      import (get_effects,
+from ..utils.redis      import (get_cds,
+                                get_effects,
                                 get_pa,
                                 get_statuses,
                                 r)
@@ -17,6 +18,37 @@ from .fn_user           import fn_user_get_from_discord
 #
 # Queries /internal/creature/*
 #
+# API: POST /internal/creature/cds
+def internal_creature_cds(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # CDs fetching
+    cds  = get_cds(creature)
+    if isinstance(cds, list):
+        return (200,
+                True,
+                f'CDs found (creatureid:{creature.id})',
+                {"cds": cds,
+                 "creature": creature})
+    else:
+        return (200,
+                False,
+                f'CDs query failed (creatureid:{creature.id})',
+                None)
+
 # API: POST /internal/creature/effects
 def internal_creature_effects(creatureid):
     # Input checks
