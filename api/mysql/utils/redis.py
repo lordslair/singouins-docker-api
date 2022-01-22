@@ -3,6 +3,7 @@
 import json
 import re
 import redis
+import time
 import yarqueue
 
 from datetime  import datetime
@@ -203,36 +204,86 @@ def get_cds(pc):
 #                cds[m.group('skillid')] = ttl[0]
 #        return cds
 
-def get_effects(pc):
-    mypattern = f'effects:{pc.instance}:{pc.id}'
+def add_effect(creature,duration,effectname,source):
+    # Input checks
+    if not isinstance(duration, int):
+        print(f'set_effect() Bad ticks format (ticks:{ticks})')
+        return False
+    if not isinstance(effectname, str):
+        print(f'set_effect() Bad Effectname format (effectname:{effectname})')
+        return False
+
+    ttl       = duration * redpaduration
+    ns        = time.time_ns()
+    mypattern = f'effects:{creature.instance}:{creature.id}:{effectname}:{ns}'
+
+    try:
+        r.set(f'{mypattern}:bearer',creature.id)
+        r.set(f'{mypattern}:duration_base',duration)
+        r.set(f'{mypattern}:duration_left',duration)
+        r.set(f'{mypattern}:source',source.id)
+        r.set(f'{mypattern}:type','effect')
+    except Exception as e:
+        print(f'set_effect() failed [{e}]')
+        return False
+    else:
+        return True
+
+def get_effects(creature):
+    mypattern = f'effects:{creature.instance}:{creature.id}'
     effects   = []
 
     try:
-        keys = r.scan_iter(mypattern + ':*:bearer')
+        keys = r.scan_iter(mypattern + ':*:*:bearer')
+        #                                │ └──> Wildcard for {nanosec}
+        #                                └────> Wildcard for {effectname}
     except Exception as e:
         print(f'scan_iter({mypattern}) failed:{e}')
 
     try:
         for key in keys:
-            m = re.match(f"{mypattern}:(\d+)", key.decode("utf-8"))
+            m = re.match(f"{mypattern}:(\w+):(\d+)", key.decode("utf-8"))
             if m:
-                ts      = int(m.group(1))
-                fullkey = mypattern + ':' + f'{ts}'
-                ttl     = int(r.ttl(fullkey))
-                effect  = {"bearer":          int(r.get(fullkey + ':bearer').decode("utf-8")),
-                           "charge_base":     int(r.get(fullkey + ':charge_base').decode("utf-8")),
-                           "charge_left":     int(r.get(fullkey + ':charge_left').decode("utf-8")),
-                           "duration_base":   int(r.get(fullkey + ':duration_base').decode("utf-8")),
-                           "duration_left":   ttl,
-                           "timestamp_start": ts,
-                           "timestamp_end":   ts - ttl,
-                           "type":            r.get(fullkey + ':type').decode("utf-8")}
-            effects.append(effect)
+                effectname = m.group(1)
+                ns         = int(m.group(2))
+                fullkey    = mypattern + f':{effectname}:{ns}'
+                effect     = {"bearer":          int(r.get(fullkey + ':bearer').decode("utf-8")),
+                              "duration_base":   int(r.get(fullkey + ':duration_base').decode("utf-8")),
+                              "duration_left":   int(r.get(fullkey + ':duration_left').decode("utf-8")),
+                              "id":              ns,
+                              "source":          r.get(fullkey + ':source').decode("utf-8"),
+                              "type":            r.get(fullkey + ':type').decode("utf-8"),
+                              "name":            effectname}
+                effects.append(effect)
+            else:
+                print('shit happened in regex')
     except Exception as e:
         print(f'Effects fetching failed:{e}')
         return effects
     else:
         return effects
+
+def del_effect(effectid):
+    # Input checks
+    if not isinstance(effectid, int):
+        print(f'set_effect() Bad ticks format (ticks:{ticks})')
+        return False
+
+    count     = 0
+    mypattern = f'effects:*:*:*:{effectid}:*'
+    #                     │ │ └─> effectname
+    #                     │ └───> creatureid
+    #                     └─────> instanceid
+
+    try:
+        for key in r.scan_iter(mypattern):
+            r.delete(key)
+            count += 1
+    except Exception as e:
+        print(f'del_effect() failed [{e}]')
+        return False
+    else:
+        return count
 
 def get_statuses(pc):
     mypattern = f'statuses:{pc.instance}:{pc.id}'

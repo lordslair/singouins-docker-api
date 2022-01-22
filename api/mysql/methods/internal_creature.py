@@ -6,7 +6,9 @@ import datetime
 from ..session          import Session
 from ..models           import PJ,Wallet,CreatureSlots,Item
 
-from ..utils.redis      import (get_cds,
+from ..utils.redis      import (add_effect,
+                                del_effect,
+                                get_cds,
                                 get_effects,
                                 get_pa,
                                 get_statuses,
@@ -49,7 +51,7 @@ def internal_creature_cds(creatureid):
                 f'CDs query failed (creatureid:{creature.id})',
                 None)
 
-# API: POST /internal/creature/effects
+# API: POST /internal/creature/{creatureid}/effects
 def internal_creature_effects(creatureid):
     # Input checks
     if not isinstance(creatureid, int):
@@ -66,7 +68,7 @@ def internal_creature_effects(creatureid):
                 f'Creature unknown (creatureid:{creatureid})',
                 None)
 
-    # Effects fetching
+    # Effects fetch
     effects  = get_effects(creature)
     if isinstance(effects, list):
         return (200,
@@ -78,6 +80,86 @@ def internal_creature_effects(creatureid):
         return (200,
                 False,
                 f'Effects query failed (creatureid:{creature.id})',
+                None)
+
+# API: PUT /internal/creature/effects
+def internal_creature_effects_add(creatureid,duration,effectname,sourceid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(duration, int):
+        return (200,
+                False,
+                f'Bad Duration format (duration:{duration})',
+                None)
+    if not isinstance(effectname, str):
+        return (200,
+                False,
+                f'Bad Effect name format (effectname:{effectname})',
+                None)
+    if not isinstance(sourceid, int):
+        return (200,
+                False,
+                f'Bad Source id format (sourceid:{sourceid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+    source      = fn_creature_get(None,sourceid)[3]
+    if source is None:
+        return (200,
+                False,
+                f'Creature unknown (sourceid:{sourceid})',
+                None)
+
+    # Effect add
+    effect  = add_effect(creature,duration,effectname,source)
+    effects = get_effects(creature)
+    if effect:
+        return (200,
+                True,
+                f'Effect add successed (creatureid:{creature.id})',
+                {"effects": effects,
+                 "creature": creature})
+    else:
+        return (200,
+                False,
+                f'Effects add failed (creatureid:{creature.id})',
+                None)
+
+# API: DELETE /internal/creature/effect/{effectid}
+def internal_creature_effects_del(effectid):
+    # Input checks
+    if not isinstance(effectid, int):
+        return (200,
+                False,
+                f'Bad Effect id format (effectid:{effectid})',
+                None)
+
+    # Effect delete
+    effect  = del_effect(effectid)
+    if effect > 0:
+        return (200,
+                True,
+                f'Effect del successed (effectid:{effectid})',
+                None)
+    elif effect == 0:
+        return (200,
+                False,
+                f'Effect not found (effectid:{effectid})',
+                None)
+    else:
+        return (200,
+                False,
+                f'Effect del failed (effectid:{effectid})',
                 None)
 
 # API: POST /internal/creature/equipment

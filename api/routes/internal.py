@@ -24,16 +24,36 @@ def creature_cds():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def creature_effects():
+def creature_effects(creatureid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    redis.incr_query_count('internal:creature:effects')
+    (code, success, msg, payload) = internal_creature_effects(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_effect_add(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
 
-    creatureid = request.json.get('creatureid')
+    duration   = request.json.get('duration')
+    effectname = request.json.get('effectname')
+    sourceid   = request.json.get('sourceid')
 
-    redis.incr_query_count('internal:creature:effects')
-    (code, success, msg, payload) = internal_creature_effects(creatureid)
+    redis.incr_query_count('internal:creature:effect:add')
+    (code, success, msg, payload) = internal_creature_effects_add(creatureid,duration,effectname,sourceid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_effect_del(creatureid,effectid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    redis.incr_query_count('internal:creature:effect:del')
+    (code, success, msg, payload) = internal_creature_effects_del(effectid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

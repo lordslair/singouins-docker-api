@@ -28,18 +28,81 @@ paths:
           description: KO - Malformed JSON
       security:
         - internal_token: []
-  /internal/creature/effects:
-    post:
+  /internal/creature/{creatureid}/effect:
+    put:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature Effects request
+      summary: Internal Creature ADD Effect request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       requestBody:
         description: ''
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InternalCreature'
+              type: object
+              properties:
+                duration:
+                  type: integer
+                  nullable: false
+                effectname:
+                  type: string
+                  nullable: false
+                sourceid:
+                  type: integer
+                  nullable: false
+      responses:
+        '200':
+          description: OK - Effect added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureEffectsResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/effect/{effectid}:
+    delete:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature DEL Effect request
+      parameters:
+        - in: path
+          name: effectid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK - Effect deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+        '400':
+          description: KO - Malformed JSON
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/effects:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Effects request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: OK - Effects found
@@ -47,8 +110,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreatureEffectsResponse'
-        '400':
-          description: KO - Malformed JSON
       security:
         - internal_token: []
   /internal/creature/equipment:
@@ -1697,22 +1758,19 @@ components:
         bearer:
           type: integer
           nullable: false
-        charge_base:
-          type: integer
-          nullable: false
-        charge_left:
-          type: integer
-          nullable: false
         duration_base:
           type: integer
           nullable: false
         duration_left:
           type: integer
           nullable: false
-        timestamp_end:
+        id:
           type: integer
           nullable: false
-        timestamp_start:
+        name:
+          type: string
+          nullable: false
+        source:
           type: integer
           nullable: false
         type:

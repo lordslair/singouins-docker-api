@@ -15,15 +15,6 @@ def test_singouins_internal_creature_cds():
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_internal_creature_effects():
-    url       = API_URL + '/internal/creature/effects'
-    payload   = {"creatureid": 1}
-    headers   = json.loads('{"Authorization": "Bearer '+ API_INTERNAL_TOKEN + '"}')
-    response  = requests.post(url, headers=headers, json = payload)
-
-    assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
-
 def test_singouins_internal_creature_equipment():
     url       = API_URL + '/internal/creature/equipment'
     payload   = {"creatureid": 1}
