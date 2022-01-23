@@ -329,11 +329,17 @@ def mypc_get_skills(username,pcid):
                 f'[SQL] CreatureSkills query failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
-        skills.skills = json.loads(skills.skills) # GruikFix, ugly
-        return (200,
-                True,
-                f'Skills found (pcid:{pc.id})',
-                skills)
+        if skills:
+            skills.skills = json.loads(skills.skills) # GruikFix, ugly
+            return (200,
+                    True,
+                    f'Skills found (pcid:{pc.id})',
+                    skills)
+        else:
+            return (200,
+                    True,
+                    f'Skills not found (pcid:{pc.id})',
+                    None)
     finally:
         session.close()
 
