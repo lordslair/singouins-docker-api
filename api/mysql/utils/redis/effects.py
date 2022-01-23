@@ -15,10 +15,10 @@ bluepaduration = 3600
 def add_effect(creature,duration,effectname,source):
     # Input checks
     if not isinstance(duration, int):
-        print(f'set_effect() Bad ticks format (ticks:{ticks})')
+        print(f'add_effect() Bad duration format (duration:{duration})')
         return False
     if not isinstance(effectname, str):
-        print(f'set_effect() Bad Effectname format (effectname:{effectname})')
+        print(f'add_effect() Bad Effectname format (effectname:{effectname})')
         return False
 
     ttl       = duration * redpaduration
@@ -46,7 +46,7 @@ def get_effects(creature):
         #                                │ └──> Wildcard for {nanosec}
         #                                └────> Wildcard for {effectname}
     except Exception as e:
-        print(f'scan_iter({mypattern}) failed:{e}')
+        print(f'scan_iter({mypattern}) failed [{e}]')
 
     try:
         for key in keys:
@@ -74,7 +74,7 @@ def get_effects(creature):
 def del_effect(effectid):
     # Input checks
     if not isinstance(effectid, int):
-        print(f'set_effect() Bad ticks format (ticks:{ticks})')
+        print(f'del_effect() effectid format (effectid:{effectid})')
         return False
 
     count     = 0
