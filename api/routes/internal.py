@@ -3,7 +3,7 @@
 from flask              import Flask, jsonify, request
 
 from mysql.methods      import *
-from mysql.utils        import redis
+from mysql.utils.redis  import incr
 
 from variables          import API_INTERNAL_TOKEN
 
@@ -19,7 +19,7 @@ def creature_cds():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:cds')
+    incr.one('queries:internal:creature:cds')
     (code, success, msg, payload) = internal_creature_cds(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -28,7 +28,7 @@ def creature_effects(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
-    redis.incr_query_count('internal:creature:effects')
+    incr.one('queries:internal:creature:effects')
     (code, success, msg, payload) = internal_creature_effects(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -43,7 +43,7 @@ def creature_effect_add(creatureid):
     effectname = request.json.get('effectname')
     sourceid   = request.json.get('sourceid')
 
-    redis.incr_query_count('internal:creature:effect:add')
+    incr.one('queries:internal:creature:effect:add')
     (code, success, msg, payload) = internal_creature_effects_add(creatureid,duration,effectname,sourceid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -52,7 +52,7 @@ def creature_effect_del(creatureid,effectid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
-    redis.incr_query_count('internal:creature:effect:del')
+    incr.one('queries:internal:creature:effect:del')
     (code, success, msg, payload) = internal_creature_effects_del(effectid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -65,7 +65,7 @@ def creature_equipment():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:equipment')
+    incr.one('queries:internal:creature:equipment')
     (code, success, msg, payload) = internal_creature_equipment(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -78,7 +78,7 @@ def creature_pa():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:pa')
+    incr.one('queries:internal:creature:pa')
     (code, success, msg, payload) = internal_creature_pa(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -91,7 +91,7 @@ def creature_pa_reset():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:pa:reset')
+    incr.one('queries:internal:creature:pa:reset')
     (code, success, msg, payload) = internal_creature_pa_reset(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -104,7 +104,7 @@ def creature_profile():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:profile')
+    incr.one('queries:internal:creature:profile')
     (code, success, msg, payload) = internal_creature_profile(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -117,7 +117,7 @@ def creature_stats():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:stats')
+    incr.one('queries:internal:creature:stats')
     (code, success, msg, payload) = internal_creature_stats(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -130,7 +130,7 @@ def creature_statuses():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:statuses')
+    incr.one('queries:internal:creature:statuses')
     (code, success, msg, payload) = internal_creature_statuses(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -143,7 +143,7 @@ def creature_wallet():
 
     creatureid = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:creature:wallet')
+    incr.one('queries:internal:creature:wallet')
     (code, success, msg, payload) = internal_creature_wallet(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -158,7 +158,7 @@ def discord_associate():
     discordname  = request.json.get('discordname')
     usermail     = request.json.get('usermail')
 
-    redis.incr_query_count('internal:discord:associate')
+    incr.one('queries:internal:discord:associate')
     (code, success, msg, payload) = internal_user_discord_associate(discordname,usermail)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -172,7 +172,7 @@ def discord_creature():
     discordname = request.json.get('discordname')
     creatureid  = request.json.get('creatureid')
 
-    redis.incr_query_count('internal:discord:creature')
+    incr.one('queries:internal:discord:creature')
     (code, success, msg, payload) = internal_discord_creature(creatureid,discordname)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -185,7 +185,7 @@ def discord_creatures():
 
     discordname  = request.json.get('discordname')
 
-    redis.incr_query_count('internal:discord:creatures')
+    incr.one('queries:internal:discord:creatures')
     (code, success, msg, payload) = internal_discord_creatures(discordname)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -198,7 +198,7 @@ def discord_user():
 
     discordname  = request.json.get('discordname')
 
-    redis.incr_query_count('internal:discord:user')
+    incr.one('queries:internal:discord:user')
     (code, success, msg, payload) = internal_user_discord(discordname)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -208,7 +208,7 @@ def up():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
-    redis.incr_query_count('internal:up')
+    incr.one('queries:internal:up')
     return jsonify({"msg": f'UP and running', "success": True, "payload": None}), 200
 
 def squad():
@@ -219,7 +219,7 @@ def squad():
 
     squadid      = request.json.get('squadid', None)
 
-    redis.incr_query_count('internal:squad')
+    incr.one('queries:internal:squad')
     (code, success, msg, payload) = internal_squad_get_one(squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -228,7 +228,7 @@ def squads():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
-    redis.incr_query_count('internal:squads')
+    incr.one('queries:internal:squads')
     (code, success, msg, payload) = internal_squad_get_all()
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -241,7 +241,7 @@ def korp():
 
     korpid  = request.json.get('korpid')
 
-    redis.incr_query_count('internal:korp')
+    incr.one('queries:internal:korp')
     (code, success, msg, payload) = internal_korp_get_one(korpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -250,7 +250,7 @@ def korps():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
-    redis.incr_query_count('internal:korps')
+    incr.one('queries:internal:korps')
     (code, success, msg, payload) = internal_korp_get_all()
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code

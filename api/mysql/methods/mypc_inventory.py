@@ -2,9 +2,11 @@
 
 import dataclasses      # Needed for WS JSON broadcast
 
-from ..session          import Session
-from ..models           import *
-from ..utils.redis      import *
+from ..session           import Session
+from ..models            import *
+from ..utils.redis       import incr
+from ..utils.redis.pa    import *
+from ..utils.redis.queue import *
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get
@@ -43,22 +45,22 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
 
     if   item.rarity == 'Broken':
         shards = [6,0,0,0,0,0]
-        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[0]) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[0])
     elif item.rarity == 'Common':
         shards = [0,5,0,0,0,0]
-        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[1]) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[1])
     elif item.rarity == 'Uncommon':
         shards = [0,0,4,0,0,0]
-        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[2]) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[2])
     elif item.rarity == 'Rare':
         shards = [0,0,0,3,0,0]
-        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[3]) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[3])
     elif item.rarity == 'Epic':
         shards = [0,0,0,0,2,0]
-        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[4]) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[4])
     elif item.rarity == 'Legendary':
         shards = [0,0,0,0,0,1]
-        incr_hs(pc,f'action:dismantle:shards:{item.rarity}', shards[5]) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[5])
 
     try:
         wallet = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
@@ -81,7 +83,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
                 None)
     else:
         set_pa(pcid,0,1) # We consume the blue PA (1)
-        incr_hs(pc,'action:dismantle:items', 1) # Redis HighScore
+        incr.many(f'highscores:{pc.id}:action:dismantle:items', 1)
         return (200,
                 True,
                 'Item dismantle successed (pcid:{},itemid:{})'.format(pc.id,item.id),

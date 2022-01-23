@@ -1,11 +1,13 @@
 # -*- coding: utf8 -*-
 
-from ..session          import Session
-from ..models           import *
-from ..utils.redis      import *
+from ..session           import Session
+from ..models            import *
+from ..utils.redis.stats import *
 
-from .fn_creature       import fn_creature_get, fn_creatures_clean, fn_creature_stats
-from .fn_user           import fn_user_get
+from .fn_creature        import (fn_creature_get,
+                                 fn_creatures_clean,
+                                 fn_creature_stats)
+from .fn_user            import fn_user_get
 
 #
 # Queries /mypc/{pcid}/view/*

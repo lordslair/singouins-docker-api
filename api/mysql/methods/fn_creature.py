@@ -1,15 +1,15 @@
 # -*- coding: utf8 -*-
 
-import                  dataclasses
+import dataclasses
 
-from datetime           import datetime
+from datetime            import datetime
 
-from ..session          import Session
-from ..models           import *
-from ..utils.loot       import *
-from ..utils.redis      import *
+from ..session           import Session
+from ..models            import *
+from ..utils.loot        import *
+from ..utils.redis.stats import *
 
-from .fn_global         import clog
+from .fn_global          import clog
 
 def fn_creature_get(pcname,pcid):
     session = Session()

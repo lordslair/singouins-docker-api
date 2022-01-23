@@ -14,16 +14,17 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from mysql.methods      import *
-from mysql.utils        import redis
-from variables          import (SEP_SECRET_KEY,
-                                API_URL, DISCORD_URL,
-                                LDP_HOST, LDP_TOKEN)
-from utils.mail         import send
-from utils.token        import generate_confirmation_token
+from mysql.methods          import *
+from mysql.utils.redis.pa   import *
+
+from variables              import (SEP_SECRET_KEY,
+                                    API_URL, DISCORD_URL,
+                                    LDP_HOST, LDP_TOKEN)
+from utils.mail             import send
+from utils.token            import generate_confirmation_token
 
 # Imports of endpoint functions
-import                  routes.internal
+import                      routes.internal
 
 # Imports only for LDP forwarding. Might be temporary
 import logging
@@ -253,7 +254,7 @@ def api_mypc_del(pcid):
 @app.route('/mypc/<int:pcid>/pa', methods=['GET'])
 @jwt_required
 def api_mypc_pa(pcid):
-    (code, success, msg, payload) = redis.get_pa(pcid)
+    (code, success, msg, payload) = get_pa(pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

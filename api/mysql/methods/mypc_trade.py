@@ -2,7 +2,6 @@
 
 from ..session          import Session
 from ..models           import *
-from ..utils.redis      import *
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get

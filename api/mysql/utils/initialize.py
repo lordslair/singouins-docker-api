@@ -5,7 +5,7 @@ from datetime                   import datetime
 from ..engine                   import engine
 from ..base                     import Base
 
-from .redis                     import *
+from .redis.connector           import r
 
 def initialize_db():
     print('DB init: start')

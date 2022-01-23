@@ -1,17 +1,20 @@
 # -*- coding: utf8 -*-
 
-import                  json
+import json
 
-from datetime           import datetime
-from random             import randint
+from datetime              import datetime
+from random                import randint
 
-from ..session          import Session
-from ..models           import *
-from ..utils.redis      import *
+from ..session             import Session
+from ..models              import *
+from ..utils.redis.cds     import *
+from ..utils.redis.effects import *
+from ..utils.redis.stats   import *
 
-from .fn_creature       import fn_creature_get, fn_creature_stats
-from .fn_user           import fn_user_get
-from .fn_global         import clog
+from .fn_creature          import (fn_creature_get,
+                                   fn_creature_stats)
+from .fn_user              import fn_user_get
+from .fn_global            import clog
 
 #
 # Queries /mypc/*

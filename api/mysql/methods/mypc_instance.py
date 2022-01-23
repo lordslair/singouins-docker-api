@@ -1,11 +1,11 @@
 # -*- coding: utf8 -*-
 
-from ..session          import Session
-from ..models           import Instance, Map, PJ
-from ..utils.redis      import yqueue_put
+from ..session           import Session
+from ..models            import Instance, Map, PJ
+from ..utils.redis.queue import yqueue_put
 
-from .fn_creature       import fn_creature_get
-from .fn_user           import fn_user_get
+from .fn_creature        import fn_creature_get
+from .fn_user            import fn_user_get
 
 #
 # Queries /mypc/<int:pcid>/instance/*
