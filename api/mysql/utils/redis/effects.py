@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import json
 import re
 import time
 
@@ -8,87 +9,119 @@ from .connector import r
 redpaduration  = 3600
 bluepaduration = 3600
 
+# Get the Meta stored in REDIS
+try:
+    metaEffects = json.loads(r.get('system:meta:effects'))
+except Exception as e:
+    print(f'[Redis] metaEffects fetching failed [{e}]')
+
 #
 # Queries: effects:*
 #
 
-def add_effect(creature,duration,effectname,source):
-    # Input checks
-    if not isinstance(duration, int):
-        print(f'add_effect() Bad duration format (duration:{duration})')
-        return False
-    if not isinstance(effectname, str):
-        print(f'add_effect() Bad Effectname format (effectname:{effectname})')
+def add_effect(creature,duration,effectmetaid,source):
+    # Pre-flight checks
+    try:
+        effect = metaEffects[effectmetaid - 1]
+    except Exception as e:
+        print(f'[Redis] effect not found (effectmetaid:{effectmetaid})')
         return False
 
     ttl       = duration * redpaduration
-    ns        = time.time_ns()
-    mypattern = f'effects:{creature.instance}:{creature.id}:{effectname}:{ns}'
+    effectid  = time.time_ns() // 1000000 # Time in milliseconds
+    mypattern = f"effects:{creature.instance}:{creature.id}:{effect['id']}:{effectid}"
 
     try:
-        r.set(f'{mypattern}:bearer',creature.id)
         r.set(f'{mypattern}:duration_base',duration)
-        r.set(f'{mypattern}:duration_left',duration)
         r.set(f'{mypattern}:source',source.id)
-        r.set(f'{mypattern}:type','effect')
     except Exception as e:
-        print(f'set_effect() failed [{e}]')
+        print(f'[Redis] add_effect({mypattern}) failed [{e}]')
         return False
     else:
         return True
+
+def get_effect(creature,effectid):
+    count     = 0
+    mypattern = f'effects:{creature.instance}:{creature.id}'
+
+    try:
+        path = f'{mypattern}:*:{effectid}:source'
+        #                    └────> Wildcard for {effectmetaid}
+        keys = r.scan_iter(path)
+    except Exception as e:
+        print(f'[Redis] scan_iter({path}) failed [{e}]')
+
+    try:
+        for key in keys:
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+            #                            │     └────> Regex for {effectid}
+            #                            └──────────> Regex for {effectmetaid}
+            if m:
+                count       += 1
+                effectmetaid = int(m.group(1))
+                fullkey      = f'{mypattern}:{effectmetaid}:{effectid}'
+                effect       = {"bearer":          creature.id,
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_left":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "id":              effectid,
+                                "name":            metaEffects[effectmetaid - 1]['name'],
+                                "source":          r.get(f'{fullkey}:source').decode("utf-8"),
+                                "type":            'effect'}
+    except Exception as e:
+        print(f'[Redis] get_effect({path}) failed [{e}]')
+        return None
+    else:
+        if count == 0:
+            return False
+        else:
+            return effect
 
 def get_effects(creature):
     mypattern = f'effects:{creature.instance}:{creature.id}'
     effects   = []
 
     try:
-        keys = r.scan_iter(mypattern + ':*:*:bearer')
-        #                                │ └──> Wildcard for {nanosec}
-        #                                └────> Wildcard for {effectname}
+        path = f'{mypattern}:*:*:source'
+        #                    │ └──> Wildcard for {effectid}
+        #                    └────> Wildcard for {effectmetaid}
+        keys = r.scan_iter(path)
     except Exception as e:
-        print(f'scan_iter({mypattern}) failed [{e}]')
+        print(f'[Redis] scan_iter({path}) failed [{e}]')
 
     try:
         for key in keys:
-            m = re.match(f"{mypattern}:(\w+):(\d+)", key.decode("utf-8"))
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+            #                            │     └────> Regex for {effectid}
+            #                            └──────────> Regex for {effectmetaid}
             if m:
-                effectname = m.group(1)
-                ns         = int(m.group(2))
-                fullkey    = mypattern + f':{effectname}:{ns}'
-                effect     = {"bearer":          int(r.get(fullkey + ':bearer').decode("utf-8")),
-                              "duration_base":   int(r.get(fullkey + ':duration_base').decode("utf-8")),
-                              "duration_left":   int(r.get(fullkey + ':duration_left').decode("utf-8")),
-                              "id":              ns,
-                              "source":          r.get(fullkey + ':source').decode("utf-8"),
-                              "type":            r.get(fullkey + ':type').decode("utf-8"),
-                              "name":            effectname}
+                effectmetaid = int(m.group(1))
+                effectid     = int(m.group(2))
+                fullkey      = f'{mypattern}:{effectmetaid}:{effectid}'
+                effect       = {"bearer":          creature.id,
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_left":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "id":              effectid,
+                                "name":            metaEffects[effectmetaid - 1]['name'],
+                                "source":          r.get(f'{fullkey}:source').decode("utf-8"),
+                                "type":            'effect'}
                 effects.append(effect)
-            else:
-                print('shit happened in regex')
     except Exception as e:
-        print(f'Effects fetching failed:{e}')
+        print(f'[Redis] get_effects({path}) failed [{e}]')
         return effects
     else:
         return effects
 
-def del_effect(effectid):
-    # Input checks
-    if not isinstance(effectid, int):
-        print(f'del_effect() effectid format (effectid:{effectid})')
-        return False
-
+def del_effect(creature,effectid):
     count     = 0
-    mypattern = f'effects:*:*:*:{effectid}:*'
-    #                     │ │ └─> effectname
-    #                     │ └───> creatureid
-    #                     └─────> instanceid
+    mypattern = f'effects:{creature.instance}:{creature.id}:*:{effectid}:*'
+    #                                                       └─> effectmetaid
 
     try:
         for key in r.scan_iter(mypattern):
             r.delete(key)
             count += 1
     except Exception as e:
-        print(f'del_effect() failed [{e}]')
+        print(f'[Redis] del_effect({mypattern}) failed [{e}]')
         return False
     else:
         return count

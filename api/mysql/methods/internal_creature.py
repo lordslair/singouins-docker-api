@@ -17,7 +17,7 @@ from .fn_user               import fn_user_get_from_discord
 #
 # Queries /internal/creature/*
 #
-# API: POST /internal/creature/cds
+# API: POST /internal/creature/{creatureid}/cds
 def internal_creature_cds(creatureid):
     # Input checks
     if not isinstance(creatureid, int):
@@ -46,6 +46,128 @@ def internal_creature_cds(creatureid):
         return (200,
                 False,
                 f'CDs query failed (creatureid:{creature.id})',
+                None)
+
+# API: PUT /internal/creature/{creatureid}/cd/{skillmetaid}
+def internal_creature_cd_add(creatureid,duration,skillmetaid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(duration, int):
+        return (200,
+                False,
+                f'Bad Duration format (duration:{duration})',
+                None)
+    if not isinstance(skillmetaid, int):
+        return (200,
+                False,
+                f'Bad SkillMeta id format (skillmetaid:{skillmetaid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # Effect add
+    cd      = add_cd(creature,duration,skillmetaid)
+    cds     = get_cds(creature)
+    if cd:
+        return (200,
+                True,
+                f'CD add successed (creatureid:{creature.id})',
+                {"cds": cds,
+                 "creature": creature})
+    else:
+        return (200,
+                False,
+                f'CD add failed (creatureid:{creature.id})',
+                None)
+
+# API: DELETE /internal/creature/{creatureid}/cd/{skillmetaid}
+def internal_creature_cd_del(creatureid,skillmetaid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(skillmetaid, int):
+        return (200,
+                False,
+                f'Bad SkillMeta id format (skillmetaid:{skillmetaid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # CD delete
+    cd  = del_cd(creature,skillmetaid)
+    if cd > 0:
+        return (200,
+                True,
+                f'CD del successed (skillmetaid:{skillmetaid})',
+                None)
+    elif cd == 0:
+        return (200,
+                False,
+                f'CD not found (skillmetaid:{skillmetaid})',
+                None)
+    else:
+        return (200,
+                False,
+                f'CD del failed (skillmetaid:{skillmetaid})',
+                None)
+
+# API: GET /internal/creature/{creatureid}/cd/{skillmetaid}
+def internal_creature_cd_get(creatureid,skillmetaid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(skillmetaid, int):
+        return (200,
+                False,
+                f'Bad SkillMeta id format (skillmetaid:{skillmetaid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # CD get
+    cd  = get_cd(creature,skillmetaid)
+    if cd is False:
+        return (200,
+                False,
+                f'CD not found (skillmetaid:{skillmetaid})',
+                None)
+    elif cd:
+        return (200,
+                True,
+                f'CD get successed (skillmetaid:{skillmetaid})',
+                cd)
+    else:
+        return (200,
+                False,
+                f'CD get failed (skillmetaid:{skillmetaid})',
                 None)
 
 # API: POST /internal/creature/{creatureid}/effects
@@ -79,8 +201,8 @@ def internal_creature_effects(creatureid):
                 f'Effects query failed (creatureid:{creature.id})',
                 None)
 
-# API: PUT /internal/creature/effects
-def internal_creature_effects_add(creatureid,duration,effectname,sourceid):
+# API: PUT /internal/creature/{creatureid}/effect/{effectmetaid}
+def internal_creature_effect_add(creatureid,duration,effectmetaid,sourceid):
     # Input checks
     if not isinstance(creatureid, int):
         return (200,
@@ -92,10 +214,10 @@ def internal_creature_effects_add(creatureid,duration,effectname,sourceid):
                 False,
                 f'Bad Duration format (duration:{duration})',
                 None)
-    if not isinstance(effectname, str):
+    if not isinstance(effectmetaid, int):
         return (200,
                 False,
-                f'Bad Effect name format (effectname:{effectname})',
+                f'Bad EffectMeta id format (effectmetaid:{effectmetaid})',
                 None)
     if not isinstance(sourceid, int):
         return (200,
@@ -118,7 +240,7 @@ def internal_creature_effects_add(creatureid,duration,effectname,sourceid):
                 None)
 
     # Effect add
-    effect  = add_effect(creature,duration,effectname,source)
+    effect  = add_effect(creature,duration,effectmetaid,source)
     effects = get_effects(creature)
     if effect:
         return (200,
@@ -132,8 +254,8 @@ def internal_creature_effects_add(creatureid,duration,effectname,sourceid):
                 f'Effects add failed (creatureid:{creature.id})',
                 None)
 
-# API: DELETE /internal/creature/effect/{effectid}
-def internal_creature_effects_del(effectid):
+# API: DELETE /internal/creature/{creatureid}/effect/{effectid}
+def internal_creature_effect_del(creatureid,effectid):
     # Input checks
     if not isinstance(effectid, int):
         return (200,
@@ -141,8 +263,16 @@ def internal_creature_effects_del(effectid):
                 f'Bad Effect id format (effectid:{effectid})',
                 None)
 
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
     # Effect delete
-    effect  = del_effect(effectid)
+    effect  = del_effect(creature,effectid)
     if effect > 0:
         return (200,
                 True,
@@ -157,6 +287,41 @@ def internal_creature_effects_del(effectid):
         return (200,
                 False,
                 f'Effect del failed (effectid:{effectid})',
+                None)
+
+# API: GET /internal/creature/{creatureid}/effect/{effectid}
+def internal_creature_effect_get(creatureid,effectid):
+    # Input checks
+    if not isinstance(effectid, int):
+        return (200,
+                False,
+                f'Bad Effect id format (effectid:{effectid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # Effect get
+    effect  = get_effect(creature,effectid)
+    if effect is False:
+        return (200,
+                False,
+                f'Effect not found (effectid:{effectid})',
+                None)
+    elif effect:
+        return (200,
+                True,
+                f'Effect get successed (effectid:{effectid})',
+                effect)
+    else:
+        return (200,
+                False,
+                f'Effect get failed (effectid:{effectid})',
                 None)
 
 # API: POST /internal/creature/equipment

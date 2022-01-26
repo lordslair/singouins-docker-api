@@ -3,11 +3,13 @@
 import json
 import requests
 
-from variables import *
+from variables import (API_INTERNAL_TOKEN,
+                       API_URL,
+                       SQUAD_ID)
 
 def test_singouins_internal_squad():
     url       = API_URL + '/internal/squad'
-    payload   = {"squadid": 1}
+    payload   = {"squadid": SQUAD_ID}
     headers   = json.loads('{"Authorization": "Bearer '+ API_INTERNAL_TOKEN + '"}')
     response  = requests.post(url, headers=headers, json = payload)
 

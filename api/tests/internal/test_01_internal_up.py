@@ -3,7 +3,8 @@
 import json
 import requests
 
-from variables import *
+from variables import (API_INTERNAL_TOKEN,
+                       API_URL)
 
 def test_singouins_internal_up():
     url       = API_URL + '/internal/up'

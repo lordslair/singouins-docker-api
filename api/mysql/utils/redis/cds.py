@@ -1,57 +1,107 @@
 # -*- coding: utf8 -*-
 
+import json
 import re
-import time
 
 from .connector import r
 
 redpaduration  = 3600
 bluepaduration = 3600
 
+# Get the Meta stored in REDIS
+try:
+    metaSkills = json.loads(r.get('system:meta:skills'))
+except Exception as e:
+    print(f'[Redis] metaSkills fetching failed [{e}]')
+
 #
 # Queries: cds:*
 #
 
-def set_cd(pc,skillid,pa):
-    ttl       = pa * redpaduration
-    mypattern = f'cds:{pc.instance}:{pc.id}:*'
-    value     = ''
+def add_cd(creature,duration,skillmetaid):
+    # Pre-flight checks
+    try:
+        skill = metaSkills[skillmetaid - 1]
+    except Exception as e:
+        print(f'[Redis] skill not found (skillmetaid:{skillmetaid})')
+        return False
+
+    ttl       = duration * redpaduration
+    mypattern = f"cds:{creature.instance}:{creature.id}:{skill['id']}"
 
     try:
-        r.set(f'{mypattern}:{skillid}:bearer',pc.id,ttl)
-        r.set(f'{mypattern}:{skillid}:duration_base',ttl,ttl)
-        r.set(f'{mypattern}:{skillid}:type','cd',ttl)
+        r.set(f'{mypattern}:duration_base',ttl,        ttl)
+        r.set(f'{mypattern}:source'       ,creature.id,ttl)
     except Exception as e:
-        print(f'set_cd failed:{e}')
+        print(f'[Redis] add_cd({mypattern}) failed [{e}]')
         return False
     else:
         return True
 
-def get_cds(pc):
-    mypattern = f'cds:{pc.instance}:{pc.id}'
+def get_cd(creature,skillmetaid):
+    mypattern = f'cds:{creature.instance}:{creature.id}:{skillmetaid}'
+
+    if r.get(f'{mypattern}:source') is None:
+        return False
+
+    try:
+        cd = {"bearer":        creature.id,
+              "duration_base": int(r.get(f'{mypattern}:duration_base').decode("utf-8")),
+              "duration_left": int(r.ttl(f'{mypattern}:duration_base')),
+              "id":            skillmetaid,
+              "name":          metaSkills[skillmetaid - 1]['name'],
+              "source":        int(r.get(f'{mypattern}:source').decode("utf-8")),
+              "type":          'cd'}
+    except Exception as e:
+        print(f'[Redis] get_cd({mypattern}) failed [{e}]')
+        return None
+    else:
+        if cd:
+            return cd
+
+def get_cds(creature):
+    mypattern = f'cds:{creature.instance}:{creature.id}'
     cds       = []
 
     try:
-        keys = r.scan_iter(mypattern + ':*:bearer')
+        path = f'{mypattern}:*:source'
+        #                    └────> Wildcard for {skillmetaid}
+        keys = r.scan_iter(path)
     except Exception as e:
-        print(f'scan_iter({mypattern}) failed:{e}')
+        print(f'[Redis] scan_iter({path}) failed [{e}]')
 
     try:
         for key in keys:
             m = re.match(f"{mypattern}:(\d+)", key.decode("utf-8"))
+            #                            └────> Regex for {skillmetaid}
             if m:
-                ts      = int(m.group(1))
-                fullkey = mypattern + ':' + f'{ts}'
-                ttl     = int(r.ttl(fullkey))
-                cd      = {"bearer":          int(r.get(fullkey + ':bearer').decode("utf-8")),
-                          "duration_base":   int(r.get(fullkey + ':duration_base').decode("utf-8")),
-                          "duration_left":   ttl,
-                          "timestamp_start": ts,
-                          "timestamp_end":   ts - ttl,
-                          "type":            r.get(fullkey + ':type').decode("utf-8")}
+                skillmetaid = int(m.group(1))
+                skill       = metaSkills[skillmetaid - 1]
+                fullkey     = f'{mypattern}:{skillmetaid}'
+                cd          = {"bearer":        creature.id,
+                               "duration_base": int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                               "duration_left": int(r.ttl(f'{fullkey}:duration_base')),
+                               "id":            skillmetaid,
+                               "name":          skill['name'],
+                               "source":        int(r.get(f'{fullkey}:source').decode("utf-8")),
+                               "type":          'cd'}
             cds.append(cd)
     except Exception as e:
-        print(f'CDs fetching failed:{e}')
+        print(f'[Redis] get_cds({path}) failed [{e}]')
         return cds
     else:
         return cds
+
+def del_cd(creature,skillmetaid):
+    count     = 0
+    mypattern = f'cds:{creature.instance}:{creature.id}:{skillmetaid}:*'
+
+    try:
+        for key in r.scan_iter(mypattern):
+            r.delete(key)
+            count += 1
+    except Exception as e:
+        print(f'[Redis] del_cd({mypattern}) failed [{e}]')
+        return False
+    else:
+        return count

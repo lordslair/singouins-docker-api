@@ -3,11 +3,13 @@
 import json
 import requests
 
-from variables import *
+from variables import (API_INTERNAL_TOKEN,
+                       API_URL,
+                       KORP_ID)
 
 def test_singouins_internal_korp():
     url       = API_URL + '/internal/korp'
-    payload   = {"korpid": 1}
+    payload   = {"korpid": KORP_ID}
     headers   = json.loads('{"Authorization": "Bearer '+ API_INTERNAL_TOKEN + '"}')
     response  = requests.post(url, headers=headers, json = payload)
 

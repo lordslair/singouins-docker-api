@@ -5,37 +5,19 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
-  /internal/creature/cds:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature CDs request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
-      responses:
-        '200':
-          description: OK - CDs found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureCdsResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/effect:
+  /internal/creature/{creatureid}/cd/{skillmetaid}:
     put:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature ADD Effect request
+      summary: Internal Creature ADD CD request
       parameters:
         - in: path
           name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: skillmetaid
           schema:
             type: integer
           required: true
@@ -50,15 +32,116 @@ paths:
                 duration:
                   type: integer
                   nullable: false
-                effectname:
-                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureCdsResponse'
+      security:
+        - internal_token: []
+    delete:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature DEL CD request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: skillmetaid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature GET CD request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: skillmetaid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureCdResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/cds:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature CDs request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureCdsResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/effect/{effectmetaid}:
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature ADD Effect request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: effectmetaid
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  type: integer
                   nullable: false
                 sourceid:
                   type: integer
                   nullable: false
       responses:
         '200':
-          description: OK - Effect added
+          description: OK
           content:
             application/json:
               schema:
@@ -83,20 +166,17 @@ paths:
           required: true
       responses:
         '200':
-          description: OK - Effect deleted
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericResponse'
-        '400':
-          description: KO - Malformed JSON
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/effects:
     get:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature Effects request
+      summary: Internal Creature GET Effect request
       parameters:
         - in: path
           name: creatureid
@@ -105,7 +185,27 @@ paths:
           required: true
       responses:
         '200':
-          description: OK - Effects found
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureEffectResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/effects:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature GET Effects request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
           content:
             application/json:
               schema:
@@ -1457,6 +1557,18 @@ components:
           example: 1
           minimum: 1
 
+    InternalCreatureCdResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/CdObject'
+        success:
+          type: boolean
+          nullable: false
     InternalCreatureCdsResponse:
       type: object
       properties:
@@ -1491,6 +1603,18 @@ components:
               $ref: '#/components/schemas/PcObject'
             equipment:
               $ref: '#/components/schemas/EquipmentObject'
+        success:
+          type: boolean
+          nullable: false
+    InternalCreatureEffectResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/EffectObject'
         success:
           type: boolean
           nullable: false
@@ -1741,10 +1865,20 @@ components:
         duration_left:
           type: integer
           nullable: false
-        timestamp_end:
+        id:
           type: integer
           nullable: false
-        timestamp_start:
+        name:
+          type: object
+          nullable: false
+          properties:
+            en:
+              type: string
+              nullable: false
+            fr:
+              type: string
+              nullable: false
+        source:
           type: integer
           nullable: false
         type:
@@ -1768,8 +1902,15 @@ components:
           type: integer
           nullable: false
         name:
-          type: string
+          type: object
           nullable: false
+          properties:
+            en:
+              type: string
+              nullable: false
+            fr:
+              type: string
+              nullable: false
         source:
           type: integer
           nullable: false

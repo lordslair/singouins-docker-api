@@ -1,0 +1,44 @@
+[
+    {
+        "id":1,
+        "name":{
+            "fr":"Coup de sang",
+            "en":"Bloodstrike"
+        }
+    },
+    {
+        "id":2,
+        "name":{
+            "fr":"Détection des faiblesses",
+            "en":"Find the weaknesses"
+        }
+    },
+    {
+        "id":3,
+        "name":{
+            "fr":"Repérage",
+            "en":"Tracking"
+        }
+    },
+    {
+        "id":4,
+        "name":{
+            "fr":"Chants de guerre",
+            "en":"Warsong"
+        }
+    },
+    {
+        "id":5,
+        "name":{
+            "fr":"Premiers soins",
+            "en":"First Aid"
+        }
+    },
+    {
+        "id":6,
+        "name":{
+            "fr":"Nettoyer l'équipement",
+            "en":"Cleaning"
+        }
+    }
+]

@@ -11,15 +11,42 @@ from variables          import API_INTERNAL_TOKEN
 # Routes /internal
 #
 # /internal/creature/* subpath
-def creature_cds():
+def creature_cd_add(creatureid,skillmetaid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
 
-    creatureid = request.json.get('creatureid')
+    duration    = request.json.get('duration')
 
-    incr.one('queries:internal:creature:cds')
+    incr.one('queries:internal:creature:cd:add')
+    (code, success, msg, payload) = internal_creature_cd_add(creatureid,duration,skillmetaid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_cd_del(creatureid,skillmetaid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    incr.one('queries:internal:creature:cd:del')
+    (code, success, msg, payload) = internal_creature_cd_del(creatureid,skillmetaid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_cd_get(creatureid,skillmetaid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    incr.one('queries:internal:creature:cd:get')
+    (code, success, msg, payload) = internal_creature_cd_get(creatureid,skillmetaid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_cds(creatureid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    incr.one('queries:internal:creature:cd:get')
     (code, success, msg, payload) = internal_creature_cds(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
@@ -28,23 +55,22 @@ def creature_effects(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
-    incr.one('queries:internal:creature:effects')
+    incr.one('queries:internal:creature:effect:get')
     (code, success, msg, payload) = internal_creature_effects(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def creature_effect_add(creatureid):
+def creature_effect_add(creatureid,effectmetaid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
 
-    duration   = request.json.get('duration')
-    effectname = request.json.get('effectname')
-    sourceid   = request.json.get('sourceid')
+    duration     = request.json.get('duration')
+    sourceid     = request.json.get('sourceid')
 
     incr.one('queries:internal:creature:effect:add')
-    (code, success, msg, payload) = internal_creature_effects_add(creatureid,duration,effectname,sourceid)
+    (code, success, msg, payload) = internal_creature_effect_add(creatureid,duration,effectmetaid,sourceid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -53,7 +79,16 @@ def creature_effect_del(creatureid,effectid):
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
     incr.one('queries:internal:creature:effect:del')
-    (code, success, msg, payload) = internal_creature_effects_del(effectid)
+    (code, success, msg, payload) = internal_creature_effect_del(creatureid,effectid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_effect_get(creatureid,effectid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    incr.one('queries:internal:creature:effect:get')
+    (code, success, msg, payload) = internal_creature_effect_get(creatureid,effectid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
