@@ -35,3 +35,7 @@ LDP_TOKEN     = os.environ['SEP_LDP_TOKEN']
 
 # Token used for /internal routes
 API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
+
+# Resolver variables
+RESOLVER_HOST    = os.environ['SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST']
+RESOLVER_PORT    = os.environ['SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT']

@@ -92,6 +92,42 @@ def get_cds(creature):
     else:
         return cds
 
+def get_instance_cds(creature):
+    mypattern = f'cds:{creature.instance}'
+    cds       = []
+
+    try:
+        path = f'{mypattern}:*:*:source'
+            #                │ └────────> Wildcard for {creatureid}
+            #                └──────────> Wildcard for {skillmetaid}
+        keys = r.scan_iter(path)
+    except Exception as e:
+        print(f'[Redis] scan_iter({path}) failed [{e}]')
+
+    try:
+        for key in keys:
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+            #                            │     └────────> Regex for {skillmetaid}
+            #                            └──────────────> Regex for {creatureid}
+            if m:
+                creatureid  = int(m.group(1))
+                skillmetaid = int(m.group(2))
+                skill       = metaSkills[skillmetaid - 1]
+                fullkey     = f'{mypattern}:{creatureid}:{skillmetaid}'
+                cd          = {"bearer":        creatureid,
+                               "duration_base": int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                               "duration_left": int(r.ttl(f'{fullkey}:duration_base')),
+                               "id":            skillmetaid,
+                               "name":          skill['name'],
+                               "source":        int(r.get(f'{fullkey}:source').decode("utf-8")),
+                               "type":          'cd'}
+            cds.append(cd)
+    except Exception as e:
+        print(f'[Redis] get_cds({path}) failed [{e}]')
+        return cds
+    else:
+        return cds
+
 def del_cd(creature,skillmetaid):
     count     = 0
     mypattern = f'cds:{creature.instance}:{creature.id}:{skillmetaid}:*'

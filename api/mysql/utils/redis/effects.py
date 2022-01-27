@@ -111,6 +111,44 @@ def get_effects(creature):
     else:
         return effects
 
+def get_instance_effects(creature):
+    mypattern = f'effects:{creature.instance}'
+    effects   = []
+
+    try:
+        path = f'{mypattern}:*:*:*:source'
+        #                    │ │ └──> Wildcard for {effectid}
+        #                    │ └────> Wildcard for {effectmetaid}
+        #                    └──────> Wildcard for {creatureid}
+        keys = r.scan_iter(path)
+    except Exception as e:
+        print(f'[Redis] scan_iter({path}) failed [{e}]')
+
+    try:
+        for key in keys:
+            m = re.match(f"{mypattern}:(\d+):(\d+):(\d+)", key.decode("utf-8"))
+            #                            │     │     └────> Regex for {effectid}
+            #                            │     └──────────> Regex for {effectmetaid}
+            #                            └────────────────> Regex for {creatureid}
+            if m:
+                creatureid   = int(m.group(1))
+                effectmetaid = int(m.group(2))
+                effectid     = int(m.group(3))
+                fullkey      = f'{mypattern}:{creatureid}:{effectmetaid}:{effectid}'
+                effect       = {"bearer":          creatureid,
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_left":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "id":              effectid,
+                                "name":            metaEffects[effectmetaid - 1]['name'],
+                                "source":          r.get(f'{fullkey}:source').decode("utf-8"),
+                                "type":            'effect'}
+                effects.append(effect)
+    except Exception as e:
+        print(f'[Redis] get_effects({path}) failed [{e}]')
+        return effects
+    else:
+        return effects
+
 def del_effect(creature,effectid):
     count     = 0
     mypattern = f'effects:{creature.instance}:{creature.id}:*:{effectid}:*'
