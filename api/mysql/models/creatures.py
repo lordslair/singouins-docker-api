@@ -297,25 +297,3 @@ class CreatureSkills(Base):
     id       = Column(Integer, primary_key=True)
     skills   = Column(Text   , nullable=True)    # Here it will be a JSON
     date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
-
-@dataclass
-class Instance(Base):
-    __tablename__ = 'creaturesInstances'
-
-    id:       int
-    map:      int
-    creator:  int
-    hardcore: bool
-    public:   bool
-    fast:     bool
-    tick:     int
-    date:     str
-
-    id       = Column(Integer, primary_key=True)
-    map      = Column(Integer, nullable=False)
-    creator  = Column(Integer, nullable=False)
-    hardcore = Column(Boolean, nullable=False)
-    public   = Column(Boolean, nullable=False)
-    fast     = Column(Boolean, nullable=False)
-    tick     = Column(Integer, nullable=False)
-    date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())

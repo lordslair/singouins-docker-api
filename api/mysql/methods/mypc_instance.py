@@ -1,8 +1,12 @@
 # -*- coding: utf8 -*-
 
 from ..session           import Session
-from ..models            import Instance, Map, PJ
-from ..utils.redis.queue import yqueue_put
+from ..models            import PJ
+
+from ..utils.redis.instances import (add_instance,
+                                     get_instance)
+from ..utils.redis.maps      import get_map
+from ..utils.redis.queue     import yqueue_put
 
 from .fn_creature        import fn_creature_get
 from .fn_user            import fn_user_get
@@ -11,22 +15,27 @@ from .fn_user            import fn_user_get
 # Queries /mypc/<int:pcid>/instance/*
 #
 
-# API: POST /mypc/<int:pcid>/instance
-def mypc_instance_create(username,pcid,hardcore,fast,mapid,public):
-    pc          = fn_creature_get(None,pcid)[3]
+# API: PUT /mypc/<int:creatureid>/instance
+def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
+    creature    = fn_creature_get(None,creatureid)[3]
     user        = fn_user_get(username)
     session     = Session()
 
     # Pre-flight checks
-    if pc is None:
+    if creature is None:
         return (200,
                 False,
-                f'PC not found (pcid:{pcid})',
+                f'PC not found (creatureid:{creatureid})',
                 None)
-    if pc.account != user.id:
+    if creature.account != user.id:
         return (409,
                 False,
-                f'Token/username mismatch (pcid:{pc.id},username:{username})',
+                f'Token/username mismatch (creatureid:{creature.id},username:{username})',
+                None)
+    if creature.instance is not None:
+        return (200,
+                False,
+                f'PC is already in an instance (creatureid:{creatureid},instanceid:{creature.instance})',
                 None)
     if not isinstance(mapid, int):
         return (200,
@@ -49,79 +58,125 @@ def mypc_instance_create(username,pcid,hardcore,fast,mapid,public):
                 f'Public param should be a boolean (public:{public})',
                 None)
 
-
     # Check if map related to mapid exists
     try:
-        map = session.query(Map)\
-                     .filter(Map.id == mapid)\
-                     .one_or_none()
+        map = get_map(mapid)
     except Exception as e:
         return (200,
                 False,
-                f'[SQL] Map query failed (mapid:{mapid}) [{e}]',
+                f'[Redis] Map query failed (mapid:{mapid}) [{e}]',
                 None)
 
     # Create the new instance
-    instance = Instance(map      = mapid,
-                        creator  = pc.id,
-                        hardcore = hardcore,
-                        public   = public,
-                        tick     = 3600,
-                        fast     = fast)
-    session.add(instance)
-
     try:
-        session.commit()
+        instance = add_instance(creature,fast,hardcore,mapid,public)
     except Exception as e:
-        session.rollback()
         return (200,
                 False,
-                f'[SQL] Instance creation failed (pcid:{pc.id}) [{e}]',
+                f'[Redis] Instance creation failed [{e}]',
                 None)
     else:
-        # Assign the PC into the instance
-        pc          = session.query(PJ).filter(PJ.id == pc.id).one_or_none()
-        pc.instance = instance.id
-        try:
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            return (200,
-                    False,
-                    f'[SQL] Instance association failed (pcid:{pc.id},instanceid:{instance.id}) [{e}]',
-                    None)
-        else:
-            # Everything went well
-            session.refresh(instance)
+        if instance:
+            # Everything went well so far
+            try:
+                # Assign the PC into the instance
+                pc          = session.query(PJ).filter(PJ.id == creature.id).one_or_none()
+                pc.instance = instance['id']
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                return (200,
+                        False,
+                        f"[SQL] Instance association failed (creatureid:{creature.id},instanceid:{instance['id']}) [{e}]",
+                        None)
+            # Everything went well, creation DONE
             # We put the info in queue for Discord
             qmsg = {"ciphered": False,
-                    "payload": f':map: **[{pc.id}] {pc.name}** opened an Instance',
+                    "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({creature.instance})',
                     "embed": None,
                     "scope": f'Korp-{pc.korp}'}
             yqueue_put('discord', qmsg)
             return (201,
                     True,
-                    f'Instance creation successed (pcid:{pc.id})',
+                    f'Instance creation successed (creatureid:{creature.id})',
                     instance)
+        else:
+            return (200,
+                    False,
+                    f'Instance creation failed (creatureid:{creature.id})',
+                    None)
     finally:
         session.close()
 
-# API: POST /mypc/<int:pcid>/instance/<int:instanceid>/leave
-def mypc_instance_leave(username,pcid,instanceid):
-    pc          = fn_creature_get(None,pcid)[3]
+# API: GET /mypc/<int:creatureid>/instance/<int:instanceid>
+def mypc_instance_get(username,creatureid,instanceid):
+    creature    = fn_creature_get(None,creatureid)[3]
     user        = fn_user_get(username)
     session     = Session()
 
     # Pre-flight checks
-    if pc is None:
+    if creature is None:
         return (200,
                 False,
-                f'PC not found (pcid:{pcid})',
+                f'PC not found (creatureid:{creatureid})',
                 None)
-    if pc.account != user.id:
+    if creature.account != user.id:
         return (409,
                 False,
-                f'Token/username mismatch (pcid:{pc.id},username:{username})',
+                f'Token/username mismatch (creatureid:{creature.id},username:{username})',
+                None)
+    if not isinstance(instanceid, int):
+        return (200,
+                False,
+                f'Instance ID should be an integer (instanceid:{instanceid})',
+                None)
+    if creature.instance != instanceid:
+        return (200,
+                False,
+                f'PC is not in this instance (creatureid:{creature.id},instanceid:{creature.instance})',
+                None)
+
+    # Check if the instance exists
+    try:
+        instance = get_instance(instanceid)
+    except Exception as e:
+        return (200,
+                False,
+                f'[Redis] Instance query failed (creatureid:{creature.id},instanceid:{instanceid}) [{e}]',
+                None)
+    else:
+        if instance is False:
+            return (200,
+                    False,
+                    f'[Redis] Instance not found (creatureid:{creature.id},instanceid:{instanceid})',
+                    None)
+        else:
+            return (200,
+                    True,
+                    f"Instance found (creatureid:{creature.id},instanceid:{instance['id']})",
+                    instance)
+
+# API: POST /mypc/<int:creatureid>/instance/<int:instanceid>/leave
+def mypc_instance_leave(username,creatureid,instanceid):
+    creature    = fn_creature_get(None,creatureid)[3]
+    user        = fn_user_get(username)
+    session     = Session()
+
+    # Pre-flight checks
+    if creature is None:
+        return (200,
+                False,
+                f'PC not found (creatureid:{creatureid})',
+                None)
+    if creature.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (creatureid:{creature.id},username:{username})',
+                None)
+    if creature.instance is None:
+        return (200,
+                False,
+                f'PC is not in an instance (creatureid:{creature.id},instanceid:{creature.instance})',
                 None)
     if not isinstance(instanceid, int):
         return (200,
@@ -131,132 +186,164 @@ def mypc_instance_leave(username,pcid,instanceid):
 
     # Check if the instance exists
     try:
-        instance = session.query(Instance)\
-                          .filter(Instance.id == instanceid)\
-                          .one_or_none()
+        instance = get_instance(instanceid)
     except Exception as e:
         return (200,
                 False,
-                f'[SQL] Instance query failed (instanceid:{instanceid}) [{e}]',
+                f'[Redis] Instance query failed (creatureid:{creature.id},instanceid:{instanceid}) [{e}]',
                 None)
     else:
-        if instance is None:
+        if instance is False:
             return (200,
                     False,
-                    f'Instance not found (instanceid:{instanceid})',
+                    f'[Redis] Instance not found (creatureid:{creature.id},instanceid:{instanceid})',
                     None)
 
     # Check if PC is the last inside the instance
     try:
         pcs = session.query(PJ)\
-                     .filter(PJ.instance == instance.id)\
+                     .filter(PJ.instance == instance['id'])\
                      .all()
         pc = session.query(PJ)\
-                     .filter(PJ.id == pc.id)\
+                     .filter(PJ.id == creature.id)\
                      .one_or_none()
     except Exception as e:
         return (200,
                 False,
-                f'[SQL] PCs query failed (instanceid:{instance.id}) [{e}]',
+                f"[SQL] PCs query failed (instanceid:{instance['id']}) [{e}]",
                 None)
 
-    try:
-        if len(pcs) == 1:
-            # The PC is the last inside: we delete the instance
-            creatures = session.query(PJ)\
-                         .filter(PJ.instance == instance.id)\
-                         .filter(PJ.account == None)\
-                         .all()
-            if len(creatures) > 0:
-                session.delete(creatures) # We delete the instance creatures
-            session.delete(instance) # We delete the instance
 
-        pc.instance = None # We set the PC instance back to NULL
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        return (200,
-                False,
-                f'[SQL] Instance leave failed (instanceid:{instanceid}) [{e}]',
-                None)
+    if len(pcs) == 1:
+        # The PC is the last inside: we delete the instance
+        # SQL modifications
+        try:
+            # Start with Redis deletion
+            count = del_instance(instanceid)
+            if count is None or count == 0:
+                # Delete keys failes, or keys not found
+                return (200,
+                        False,
+                        f'[Redis] Instance cleaning failed (instanceid:{instanceid}) [{e}]',
+                        None)
+            # SQL data deletion
+            pc.instance       = None # We set the PC instance back to NULL
+            creature.instance = None # Only for the returned payload
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            return (200,
+                    False,
+                    f'[SQL] Instance cleaning failed (instanceid:{instanceid}) [{e}]',
+                    None)
+        else:
+            #session.refresh(pc)
+            # We put the info in queue for Discord
+            qmsg = {"ciphered": False,
+                    "payload": f':map: **[{creature.id}] {creature.name}** closed an Instance',
+                    "embed": None,
+                    "scope": f'Korp-{creature.korp}'}
+            yqueue_put('discord', qmsg)
+            return (200,
+                    True,
+                    f'Instance leave successed (instanceid:{instanceid})',
+                    creature)
+        finally:
+            session.close()
     else:
-        session.refresh(pc)
-        # We put the info in queue for Discord
-        qmsg = {"ciphered": False,
-                "payload": f':map: **[{pc.id}] {pc.name}** closed an Instance',
-                "embed": None,
-                "scope": f'Korp-{pc.korp}'}
-        yqueue_put('discord', qmsg)
-        return (200,
-                True,
-                f'Instance leave successed (instanceid:{instanceid})',
-                pc)
-    finally:
-        session.close()
+        # Other players are still in the instance
+        try:
+            pc.instance       = None # We set the PC instance back to NULL
+            creature.instance = None # Only for the returned payload
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            return (200,
+                    False,
+                    f'[SQL] Instance cleaning failed (instanceid:{instanceid}) [{e}]',
+                    None)
+        else:
+            #session.refresh(pc)
+            # We put the info in queue for Discord
+            qmsg = {"ciphered": False,
+                    "payload": f':map: **[{creature.id}] {creature.name}** left an Instance',
+                    "embed": None,
+                    "scope": f'Korp-{creature.korp}'}
+            yqueue_put('discord', qmsg)
+            return (200,
+                    True,
+                    f'Instance leave successed (instanceid:{instanceid})',
+                    creature)
+        finally:
+            session.close()
 
-# API: POST /mypc/<int:pcid>/instance/<int:instanceid>/join
-def mypc_instance_join(username,pcid,instanceid):
-    pc          = fn_creature_get(None,pcid)[3]
+# API: POST /mypc/<int:creatureid>/instance/<int:instanceid>/join
+def mypc_instance_join(username,creatureid,instanceid):
+    creature    = fn_creature_get(None,creatureid)[3]
     user        = fn_user_get(username)
     session     = Session()
 
     # Pre-flight checks
-    if pc is None:
+    if creature is None:
         return (200,
                 False,
-                f'PC not found (pcid:{pcid})',
+                f'PC not found (creatureid:{creatureid})',
                 None)
-    if pc.account != user.id:
+    if creature.account != user.id:
         return (409,
                 False,
-                f'Token/username mismatch (pcid:{pc.id},username:{username})',
+                f'Token/username mismatch (creatureid:{creature.id},username:{username})',
                 None)
     if not isinstance(instanceid, int):
         return (200,
                 False,
                 f'Instance ID should be an integer (instanceid:{instanceid})',
                 None)
-    if pc.instance is not None:
+    if creature.instance is not None:
         return (200,
                 False,
-                f'PC should not be in an instance (pcid:{pc.id},instanceid:{pc.instance})',
+                f'PC should not be in an instance (creatureid:{creature.id},instanceid:{creature.instance})',
                 None)
 
     # Check if the instance exists
     try:
-        instance = session.query(Instance)\
-                          .filter(Instance.id == instanceid)\
-                          .one_or_none()
+        instance = get_instance(instanceid)
     except Exception as e:
         return (200,
                 False,
-                f'[SQL] Instance query failed (instanceid:{instanceid}) [{e}]',
+                f'[Redis] Instance query failed (creatureid:{creature.id},instanceid:{instanceid}) [{e}]',
                 None)
     else:
-        if instance is None:
+        if instance is False:
             return (200,
                     False,
-                    f'Instance not found (instanceid:{instanceid})',
+                    f'[Redis] Instance not found (creatureid:{creature.id},instanceid:{instanceid})',
+                    None)
+        if instance['public'] is False:
+            return (200,
+                    False,
+                    f"[Redis] Instance not public (creatureid:{creature.id},instanceid:{instance['id']},public:i{nstance['public']})",
                     None)
 
     # We add the PC into the instance
     try:
         pc = session.query(PJ)\
-                     .filter(PJ.id == pc.id)\
+                     .filter(PJ.id == creature.id)\
                      .one_or_none()
-        pc.instance = instance.id # We set the PC instance
+        pc.instance       = instance['id'] # We set the PC instance
+        creature.instance = instance['id'] # Only for the returned payload
         session.commit()
     except Exception as e:
         session.rollback()
         return (200,
                 False,
-                f'[SQL] Instance join failed (instanceid:{instance.id}) [{e}]',
+                f"[SQL] Instance join failed (instanceid:{instance['id']}) [{e}]",
                 None)
     else:
-        session.refresh(pc)
+        #session.refresh(pc)
         return (200,
                 True,
-                f'Instance join successed (instanceid:{instance.id})',
-                pc)
+                f"Instance join successed (instanceid:{instance['id']})",
+                creature)
     finally:
         session.close()

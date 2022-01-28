@@ -798,7 +798,7 @@ paths:
                 $ref: '#/components/schemas/GenericResponse'
 
   /mypc/{pcid}/instance:
-    post:
+    put:
       tags:
         - '/mypc/{pcid}/instance: Instance Requests'
       summary: Create a fresh instance
@@ -809,8 +809,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/InstanceCreateBody'
-      security:
-        - access_token: []
       parameters:
         - in: path
           name: pcid
@@ -824,14 +822,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenericResponse'
-  /mypc/{pcid}/instance/{instanceid}/leave:
-    post:
-      tags:
-        - '/mypc/{pcid}/instance: Instance Requests'
-      summary: Leave an instance
+                $ref: '#/components/schemas/MypcInstanceResponse'
       security:
         - access_token: []
+  /mypc/{pcid}/instance/{instanceid}:
+    get:
+      tags:
+        - '/mypc/{pcid}/instance: Instance Requests'
+      summary: Get Instance Infos
       parameters:
         - in: path
           name: pcid
@@ -847,11 +845,40 @@ paths:
           required: true
       responses:
         '200':
-          description: OK - Instance leave successed
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenericResponse'
+                $ref: '#/components/schemas/MypcInstanceResponse'
+      security:
+        - access_token: []
+  /mypc/{pcid}/instance/{instanceid}/leave:
+    post:
+      tags:
+        - '/mypc/{pcid}/instance: Instance Requests'
+      summary: Leave an instance
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+        - in: path
+          name: instanceid
+          schema:
+            type: integer
+            example: 14
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureProfileResponse'
+      security:
+        - access_token: []
   /mypc/{pcid}/instance/{instanceid}/join:
     post:
       tags:
@@ -874,11 +901,11 @@ paths:
           required: true
       responses:
         '200':
-          description: OK - Instance join successed
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenericResponse'
+                $ref: '#/components/schemas/InternalCreatureProfileResponse'
 
   /pc/{pcid}:
     get:
@@ -1837,6 +1864,18 @@ components:
         success:
           type: boolean
           nullable: false
+    MypcInstanceResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/InstanceObject'
+        success:
+          type: boolean
+          nullable: false
 
     GenericResponse:
       type: object
@@ -1917,7 +1956,31 @@ components:
         type:
           type: string
           nullable: false
-
+    InstanceObject:
+      type: object
+      nullable: true
+      properties:
+        creator:
+          type: integer
+          nullable: false
+        fast:
+          type: boolean
+          nullable: false
+        hardcore:
+          type: boolean
+          nullable: false
+        id:
+          type: integer
+          nullable: false
+        map:
+          type: integer
+          nullable: false
+        public:
+          type: boolean
+          nullable: false
+        tick:
+          type: integer
+          nullable: false
     KorpObject:
       type: object
       nullable: false
