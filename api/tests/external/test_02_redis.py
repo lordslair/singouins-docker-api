@@ -5,13 +5,9 @@ import redis
 import sys
 import time
 
-sys.path.append('/code') # Needed to load redis variables
-
-from variables import (REDIS_PORT, REDIS_HOST, REDIS_DB_NAME)
-
-r = redis.StrictRedis(host     = REDIS_HOST,
-                      port     = REDIS_PORT,
-                      db       = REDIS_DB_NAME,
+r = redis.StrictRedis(host     = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST'],
+                      port     = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT'],
+                      db       = os.environ['SEP_REDIS_DB'],
                       encoding = 'utf-8')
 
 def test_singouins_redis_connection():

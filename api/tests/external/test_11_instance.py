@@ -10,7 +10,7 @@ def test_singouins_mypc_instance_get():
     url      = f'{API_URL}/auth/login'
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
-    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
+    headers  = {"Authorization": f"Bearer {token}"}
 
     url      = f'{API_URL}/mypc'
     response = requests.get(url, headers=headers)
@@ -28,7 +28,7 @@ def test_singouins_mypc_instance_leave():
     url      = f'{API_URL}/auth/login'
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
-    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
+    headers  = {"Authorization": f"Bearer {token}"}
 
     url      = f'{API_URL}/mypc'
     response = requests.get(url, headers=headers)
@@ -46,7 +46,7 @@ def test_singouins_mypc_instance_create():
     url      = f'{API_URL}/auth/login'
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
-    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
+    headers  = {"Authorization": f"Bearer {token}"}
 
     url      = f'{API_URL}/mypc'
     response = requests.get(url, headers=headers)

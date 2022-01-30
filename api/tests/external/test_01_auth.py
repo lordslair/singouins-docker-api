@@ -1,33 +1,32 @@
 # -*- coding: utf8 -*-
 
 import json
-import os
 import requests
 
-API_URL     = os.environ['SEP_API_URL']
-payload     = {'username': 'user@exemple.com', 'password': 'plop'}
+from variables import (AUTH_PAYLOAD,
+                       API_URL)
 
 def test_singouins_auth_register():
-    url       = API_URL + '/auth/register'
-    payload_c = {'password': 'plop', 'mail': 'user@exemple.com'}
-    response  = requests.post(url, json = payload_c)
+    url       = f'{API_URL}/auth/register'
+    payload   = {'password': 'plop', 'mail': 'user@exemple.com'}
+    response  = requests.post(url, json = payload)
 
     assert response.status_code == 201
 
 def test_singouins_auth_login():
-    url      = API_URL + '/auth/login'
-    response = requests.post(url, json = payload)
+    url      = f'{API_URL}/auth/login'
+    response = requests.post(url, json = AUTH_PAYLOAD)
 
     assert response.status_code == 200
     assert json.loads(response.text)
 
 def test_singouins_auth_infos():
-    url      = API_URL + '/auth/login'
-    response = requests.post(url, json = payload)
+    url      = f'{API_URL}/auth/login'
+    response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
-    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
+    headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = API_URL + '/auth/infos'
+    url      = f'{API_URL}/auth/infos'
     response = requests.get(url, headers=headers)
     infos    = json.loads(response.text)
 
@@ -35,12 +34,12 @@ def test_singouins_auth_infos():
     assert infos['logged_in_as'] == 'user@exemple.com'
 
 def test_singouins_auth_refresh():
-    url      = API_URL + '/auth/login'
-    response = requests.post(url, json = payload)
+    url      = f'{API_URL}/auth/login'
+    response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['refresh_token']
-    headers  = json.loads('{"Authorization": "Bearer '+ token + '"}')
+    headers  = {"Authorization": f"Bearer {token}"}
 
-    url       = API_URL + '/auth/refresh'
+    url       = f'{API_URL}/auth/refresh'
     response  = requests.post(url, headers=headers)
     refreshed = json.loads(response.text)
 
