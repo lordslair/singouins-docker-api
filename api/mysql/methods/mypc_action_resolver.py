@@ -55,17 +55,17 @@ def mypc_action_resolver_move(username,creatureid,path):
                 None)
 
     try:
-        instance = get_instance(creature)
+        instance = get_instance(creature.instance)
     except Exception as e:
         return (200,
                 False,
-                f'[Redis] Instance query failed (creatureid:{creature.id},instanceid:{creature.instance}) [{e}]',
+                f'[Redis get_instance()] Instance query failed (creatureid:{creature.id},instanceid:{creature.instance}) [{e}]',
                 None)
     else:
         if instance == False:
             return (200,
                     False,
-                    f'[Redis] Instance query failed (creatureid:{creature.id},instanceid:{creature.instance}) [{e}]',
+                    f'[Redis get_instance()] Instance query failed (creatureid:{creature.id},instanceid:{creature.instance})',
                     None)
 
     creatures   = []

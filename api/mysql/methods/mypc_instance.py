@@ -4,6 +4,7 @@ from ..session           import Session
 from ..models            import PJ
 
 from ..utils.redis.instances import (add_instance,
+                                     del_instance,
                                      get_instance)
 from ..utils.redis.maps      import get_map
 from ..utils.redis.queue     import yqueue_put

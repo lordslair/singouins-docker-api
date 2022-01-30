@@ -439,7 +439,7 @@ def api_mypc_trade_wallet_give(pcid,currtype,targetid,amount):
 @app.route('/mypc/<int:pcid>/instance', methods=['PUT'])
 @jwt_required
 def api_mypc_instance_create(pcid):
-    (code, success, msg, payload) = mypc_instance_add(
+    (code, success, msg, payload) = mypc_instance_create(
                                         get_jwt_identity(),
                                         pcid,
                                         request.json.get('hardcore', None),
