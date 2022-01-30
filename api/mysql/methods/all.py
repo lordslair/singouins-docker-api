@@ -38,28 +38,6 @@ def get_meta_item(metatype):
         session.close()
 
 #
-# Queries /map
-#
-
-def get_map(mapid):
-    session = Session()
-
-    if mapid:
-        try:
-            map = session.query(Map).filter(Map.id == mapid).one_or_none()
-        except Exception as e:
-            # Something went wrong during commit
-            return (200, False, '[SQL] Map query failed (mapid:{})'.format(mapid), None)
-        else:
-            if map:
-                return (200, True, 'Map query successed (mapid:{})'.format(mapid), map)
-            else:
-                return (200, False, 'Map does not exist (mapid:{})'.format(mapid), None)
-        finally:
-            session.close()
-    else: return (200, False, 'Incorrect mapid (mapid:{})'.format(mapid), None)
-
-#
 # Queries /events
 #
 

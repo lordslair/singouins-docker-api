@@ -698,8 +698,8 @@ def squad_decline(pcid,squadid):
 
 @app.route('/map/<int:mapid>', methods=['GET'])
 @jwt_required
-def map_get(mapid):
-    (code, success, msg, payload) = get_map(mapid)
+def public_map(mapid):
+    (code, success, msg, payload) = mypc_map_get(mapid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
