@@ -23,6 +23,8 @@ from variables               import (RESOLVER_HOST,
 # Queries /mypc/{pcid}/action/resolver/*
 #
 
+RESOLVER_URL = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
+
 # API: POST /mypc/<int:creatureid>/action/resolver/move
 def mypc_action_resolver_move(username,creatureid,path):
     creature    = fn_creature_get(None,creatureid)[3]
@@ -80,7 +82,6 @@ def mypc_action_resolver_move(username,creatureid,path):
         creatures.append(dict)
 
     # Supposedly got all infos
-    url     = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}/'
     payload = { "context": {
                     "map": instance['map'],
                     "instance": creature.instance,
@@ -106,16 +107,16 @@ def mypc_action_resolver_move(username,creatureid,path):
               }
 
     try:
-        response  = requests.post(url, json = payload)
+        response  = requests.post(f'{RESOLVER_URL}/', json = payload)
     except Exception as e:
         return (200,
                 False,
-                f'Resolver query failed (creatureid:{creature.id}) [{e}]',
+                f'[Resolver] Request failed (creatureid:{creature.id}) [{e}]',
                 None)
     else:
         return (200,
                 True,
-                f'Resolver query successed (creatureid:{creature.id})',
+                f'[Resolver] Request answered (creatureid:{creature.id})',
                 {"resolver": json.loads(response.text),
                 "internal": payload})
     finally:
