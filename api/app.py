@@ -761,9 +761,12 @@ def log_send():
 # Routes /internal/*
 app.add_url_rule('/internal/korp',               methods=['POST'], view_func=routes.internal.korp)
 app.add_url_rule('/internal/korps',              methods=['GET'],  view_func=routes.internal.korps)
-app.add_url_rule('/internal/up',                 methods=['GET'],  view_func=routes.internal.up)
+app.add_url_rule('/internal/meta/<string:metatype>',
+                 methods=['GET'],
+                 view_func=routes.internal.meta)
 app.add_url_rule('/internal/squad',              methods=['POST'], view_func=routes.internal.squad)
 app.add_url_rule('/internal/squads',             methods=['GET'],  view_func=routes.internal.squads)
+app.add_url_rule('/internal/up',                 methods=['GET'],  view_func=routes.internal.up)
 # Routes /internal/creature/*
 # Routes /internal/creature/{creatureid}/cd/*
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
