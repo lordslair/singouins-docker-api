@@ -798,6 +798,9 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature_effects)
+app.add_url_rule('/internal/creatures',
+                 methods=['GET'],
+                 view_func=routes.internal.creatures_get)
 # Routes /internal/discord/*
 app.add_url_rule('/internal/discord/associate', methods=['POST'], view_func=routes.internal.discord_associate)
 app.add_url_rule('/internal/discord/creature',  methods=['POST'], view_func=routes.internal.discord_creature)

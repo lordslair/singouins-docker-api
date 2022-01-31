@@ -183,6 +183,15 @@ def creature_wallet():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+def creatures_get():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    incr.one('queries:internal:creatures:get')
+    (code, success, msg, payload) = internal_creatures_get()
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 # /internal/discord/* subpath
 def discord_associate():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':

@@ -4,7 +4,7 @@ import dataclasses
 import datetime
 
 from ..session              import Session
-from ..models               import CreatureSlots,Item,PJ,Wallet
+from ..models               import CreatureSlots,Item,Creature,Wallet
 
 from ..utils.redis.effects  import *
 from ..utils.redis.cds      import *
@@ -621,5 +621,31 @@ def internal_creature_wallet(creatureid):
                     False,
                     f'Wallet not found (creatureid:{creature.id})',
                     None)
+    finally:
+        session.close()
+
+# API: GET /internal/creatures
+def internal_creatures_get():
+    session = Session()
+    try:
+        creatures = session.query(Creature)\
+                           .filter(Creature.instance > 0)\
+                           .all()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL:internal_creatures_get()] Query failed [{e}]',
+                None)
+    else:
+        if creatures:
+            return (200,
+                    True,
+                    f'Creatures found',
+                    creatures)
+        else:
+            return (200,
+                    True,
+                    f'Creatures not found',
+                    [])
     finally:
         session.close()
