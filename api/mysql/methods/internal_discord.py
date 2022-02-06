@@ -14,43 +14,6 @@ from .fn_user           import (fn_user_get,
 # Queries /internal/discord/*
 #
 
-# API: POST /internal/discord/associate
-def internal_discord_associate(discordname, usermail):
-    session = Session()
-
-    if not isinstance(discordname, str):
-        return (200,
-                False,
-                f'Bad Discordname format (discordname:{discordname})',
-                None)
-    if not isinstance(usermail, str):
-        return (200,
-                False,
-                f'Bad Usermail format (usermail:{usermail})',
-                None)
-    try:
-        user = session.query(User)\
-                      .filter(User.mail == usermail)\
-                      .one_or_none()
-
-        user.d_name    = discordname
-        user.d_ack     = True
-        user.date      = datetime.now()
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        return (200,
-                False,
-                f'[SQL] Discord association failed (discordname:{discordname},usermail:{usermail}) [{e}]',
-                None)
-    else:
-        return (200,
-                True,
-                f'Discord association successed (discordname:{discordname},usermail:{usermail})',
-                fn_user_get(usermail))
-    finally:
-        session.close()
-
 # API: POST /internal/discord/creature
 def internal_discord_creature(creatureid,discordname):
     # Input checks
@@ -153,3 +116,40 @@ def internal_discord_user(discordname):
                 False,
                 f'Discordname not found (discordname:{discordname})',
                 None)
+
+# API: POST /internal/discord/user/associate
+def internal_discord_user_associate(discordname, usermail):
+    session = Session()
+
+    if not isinstance(discordname, str):
+        return (200,
+                False,
+                f'Bad Discordname format (discordname:{discordname})',
+                None)
+    if not isinstance(usermail, str):
+        return (200,
+                False,
+                f'Bad Usermail format (usermail:{usermail})',
+                None)
+    try:
+        user = session.query(User)\
+                      .filter(User.mail == usermail)\
+                      .one_or_none()
+
+        user.d_name    = discordname
+        user.d_ack     = True
+        user.date      = datetime.now()
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Discord association failed (discordname:{discordname},usermail:{usermail}) [{e}]',
+                None)
+    else:
+        return (200,
+                True,
+                f'Discord association successed (discordname:{discordname},usermail:{usermail})',
+                fn_user_get(usermail))
+    finally:
+        session.close()

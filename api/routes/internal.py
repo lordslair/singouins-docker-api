@@ -203,7 +203,7 @@ def discord_associate():
     usermail     = request.json.get('usermail')
 
     incr.one('queries:internal:discord:associate')
-    (code, success, msg, payload) = internal_user_discord_associate(discordname,usermail)
+    (code, success, msg, payload) = internal_discord_user_associate(discordname,usermail)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -243,7 +243,7 @@ def discord_user():
     discordname  = request.json.get('discordname')
 
     incr.one('queries:internal:discord:user')
-    (code, success, msg, payload) = internal_user_discord(discordname)
+    (code, success, msg, payload) = internal_discord_user(discordname)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
