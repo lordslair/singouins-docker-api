@@ -361,6 +361,20 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureWalletResponse'
       security:
         - internal_token: []
+  /internal/creatures:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creatures request
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreaturesResponse'
+      security:
+        - internal_token: []
   /internal/discord/associate:
     post:
       tags:
@@ -449,7 +463,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalDiscordCreaturesResponse'
+                $ref: '#/components/schemas/InternalCreaturesResponse'
       security:
         - internal_token: []
   /internal/discord/user:
@@ -1747,6 +1761,20 @@ components:
         success:
           type: boolean
           nullable: false
+    InternalCreaturesResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/PcObject'
+        success:
+          type: boolean
+          nullable: false
     InternalDiscordCreatureResponse:
       type: object
       properties:
@@ -1761,20 +1789,6 @@ components:
               $ref: '#/components/schemas/PcObject'
             user:
               $ref: '#/components/schemas/UserObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalDiscordCreaturesResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/PcObject'
         success:
           type: boolean
           nullable: false

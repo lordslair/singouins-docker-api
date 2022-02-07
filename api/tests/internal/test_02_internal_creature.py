@@ -69,3 +69,11 @@ def test_singouins_internal_creature_wallet():
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
+
+def test_singouins_internal_creatures():
+    url       = API_URL + '/internal/creatures'
+    headers   = json.loads('{"Authorization": "Bearer '+ API_INTERNAL_TOKEN + '"}')
+    response  = requests.get(url, headers=headers)
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] == True
