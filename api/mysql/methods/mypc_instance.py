@@ -104,6 +104,12 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
                         "embed": None,
                         "scope": f'Squad-{pc.squad}'}
                 yqueue_put('discord', qmsg)
+            # We put the info in queue for IA to populate the instance
+            try:
+                yqueue_put('yarqueue:instances', {"action": 'create', "instance": instance})
+            except:
+                pass
+            # Finally everything is done
             return (201,
                     True,
                     f'Instance creation successed (creatureid:{creature.id})',
@@ -252,6 +258,12 @@ def mypc_instance_leave(username,creatureid,instanceid):
                     "embed": None,
                     "scope": f'Korp-{creature.korp}'}
             yqueue_put('discord', qmsg)
+            # We put the info in queue for IA to clean the instance
+            try:
+                yqueue_put('yarqueue:instances', {"action": 'delete', "instance": instance})
+            except:
+                pass
+            # Finally everything is done
             return (200,
                     True,
                     f'Instance leave successed (instanceid:{instanceid})',
