@@ -94,16 +94,22 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
             # We put the info in queue for Discord
             if pc.korp is not None:
                 qmsg = {"ciphered": False,
-                        "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({creature.instance})',
+                        "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({pc.instance})',
                         "embed": None,
                         "scope": f'Korp-{pc.korp}'}
-                yqueue_put('discord', qmsg)
+                try:
+                    yqueue_put('discord', qmsg)
+                except:
+                    pass
             if pc.squad is not None:
                 qmsg = {"ciphered": False,
-                        "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({creature.instance})',
+                        "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({pc.instance})',
                         "embed": None,
                         "scope": f'Squad-{pc.squad}'}
-                yqueue_put('discord', qmsg)
+                try:
+                    yqueue_put('discord', qmsg)
+                except:
+                    pass
             # We put the info in queue for IA to populate the instance
             try:
                 yqueue_put('yarqueue:instances', {"action": 'create', "instance": instance})
@@ -251,13 +257,26 @@ def mypc_instance_leave(username,creatureid,instanceid):
                     f'[SQL] Instance cleaning failed (instanceid:{instanceid}) [{e}]',
                     None)
         else:
-            #session.refresh(pc)
+            # Everything went well, deletion DONE
             # We put the info in queue for Discord
-            qmsg = {"ciphered": False,
-                    "payload": f':map: **[{creature.id}] {creature.name}** closed an Instance',
-                    "embed": None,
-                    "scope": f'Korp-{creature.korp}'}
-            yqueue_put('discord', qmsg)
+            if pc.korp is not None:
+                qmsg = {"ciphered": False,
+                        "payload": f':map: **[{creature.id}] {creature.name}** closed an Instance ({instanceid})',
+                        "embed": None,
+                        "scope": f'Korp-{pc.korp}'}
+                try:
+                    yqueue_put('discord', qmsg)
+                except:
+                    pass
+            if pc.squad is not None:
+                qmsg = {"ciphered": False,
+                        "payload": f':map: **[{creature.id}] {creature.name}** closed an Instance ({instanceid})',
+                        "embed": None,
+                        "scope": f'Squad-{pc.squad}'}
+                try:
+                    yqueue_put('discord', qmsg)
+                except:
+                    pass
             # We put the info in queue for IA to clean the instance
             try:
                 yqueue_put('yarqueue:instances', {"action": 'delete', "instance": instance})
