@@ -43,6 +43,8 @@ def fn_creature_get(pcname,pcid):
     finally:
         session.close()
 
+
+
 def fn_creature_tag(pc,tg):
     session = Session()
     try:
@@ -109,7 +111,7 @@ def fn_creature_kill(pc,tg,action):
                 "payload": f':pirate_flag: **[{pc.id}] {pc.name}** killed **[{tgid}] {tgname}**',
                 "embed": None,
                 "scope": f'Squad-{pc.squad}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
 
         clog(pc.id,tgid,f'Killed {tgname}')
         clog(tgid,None,'Died')
@@ -238,7 +240,7 @@ def fn_creature_gain_loot(pc,tg):
                                         "footer": f'NB: This item is [{item.bound_type}]'},
                             "embed": True,
                             "scope": f'Squad-{pc.squad}'}
-                    yqueue_put('discord', qmsg)
+                    yqueue_put('yarqueue:discord', qmsg)
         session.commit()
     except Exception as e:
         # Something went wrong during commit

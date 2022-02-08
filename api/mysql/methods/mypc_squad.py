@@ -124,7 +124,7 @@ def add_squad(username,pcid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** created this squad',
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
@@ -176,7 +176,7 @@ def del_squad(username,leaderid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** deleted this squad',
                     "embed": None,
                     "scope": f'Squad-{squad.id}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
@@ -241,7 +241,7 @@ def invite_squad_member(username,leaderid,squadid,targetid):
                     "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this squad',
                     "embed": None,
                     "scope": f'Squad-{leader.squad}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
@@ -311,7 +311,7 @@ def kick_squad_member(username,leaderid,squadid,targetid):
                     "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this squad',
                     "embed": None,
                     "scope": f'Squad-{leader.squad}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
@@ -364,7 +364,7 @@ def accept_squad_member(username,pcid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this squad',
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
@@ -414,7 +414,7 @@ def decline_squad_member(username,pcid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
                     "embed": None,
                     "scope": f'Squad-{squadid}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),
@@ -464,7 +464,7 @@ def leave_squad_member(username,pcid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** left this squad',
                     "embed": None,
                     "scope": f'Squad-{squadid}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": fn_creatures_clean(members),

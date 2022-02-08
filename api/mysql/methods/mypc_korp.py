@@ -149,7 +149,7 @@ def mypc_korp_create(username,pcid,korpname):
                 "payload": f':information_source: **[{pc.id}] {pc.name}** created this Korp',
                 "embed": None,
                 "scope": f'Korp-{pc.korp}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": fn_creatures_clean(members),
@@ -226,7 +226,7 @@ def mypc_korp_delete(username,leaderid,korpid):
                 "payload": f':information_source: **[{leader.id}] {leader.name}** deleted this korp',
                 "embed": None,
                 "scope": f'Korp-{korp.id}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": None,
@@ -307,7 +307,7 @@ def mypc_korp_invite(username,leaderid,korpid,targetid):
                 "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this korp',
                 "embed": None,
                 "scope": f'Korp-{leader.korp}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": fn_creatures_clean(members),
@@ -386,7 +386,7 @@ def mypc_korp_kick(username,leaderid,korpid,targetid):
                 "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this korp',
                 "embed": None,
                 "scope": f'Korp-{leader.korp}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": fn_creatures_clean(members),
@@ -445,7 +445,7 @@ def mypc_korp_accept(username,pcid,korpid):
                 "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this korp',
                 "embed": None,
                 "scope": f'Korp-{pc.korp}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": fn_creatures_clean(members),
@@ -505,7 +505,7 @@ def mypc_korp_leave(username,pcid,korpid):
                 "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
                 "embed": None,
                 "scope": f'Korp-{korpid}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": fn_creatures_clean(members),
@@ -565,7 +565,7 @@ def mypc_korp_decline(username,pcid,korpid):
                 "payload": f':information_source: **[{pc.id}] {pc.name}** left this korp',
                 "embed": None,
                 "scope": f'Korp-{korpid}'}
-        yqueue_put('discord', qmsg)
+        yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": fn_creatures_clean(members),

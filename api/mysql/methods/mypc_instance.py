@@ -98,7 +98,7 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
                         "embed": None,
                         "scope": f'Korp-{pc.korp}'}
                 try:
-                    yqueue_put('discord', qmsg)
+                    yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             if pc.squad is not None:
@@ -107,7 +107,7 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
                         "embed": None,
                         "scope": f'Squad-{pc.squad}'}
                 try:
-                    yqueue_put('discord', qmsg)
+                    yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             # We put the info in queue for IA to populate the instance
@@ -265,7 +265,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
                         "embed": None,
                         "scope": f'Korp-{pc.korp}'}
                 try:
-                    yqueue_put('discord', qmsg)
+                    yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             if pc.squad is not None:
@@ -274,7 +274,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
                         "embed": None,
                         "scope": f'Squad-{pc.squad}'}
                 try:
-                    yqueue_put('discord', qmsg)
+                    yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             # We put the info in queue for IA to clean the instance
@@ -308,7 +308,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
                     "payload": f':map: **[{creature.id}] {creature.name}** left an Instance',
                     "embed": None,
                     "scope": f'Korp-{creature.korp}'}
-            yqueue_put('discord', qmsg)
+            yqueue_put('yarqueue:discord', qmsg)
             return (200,
                     True,
                     f'Instance leave successed (instanceid:{instanceid})',
