@@ -8,6 +8,7 @@ from ..models               import CreatureSlots,Item,Creature,Wallet
 
 from ..utils.redis.effects  import *
 from ..utils.redis.cds      import *
+from ..utils.redis.metas    import get_meta
 from ..utils.redis.statuses import *
 from ..utils.redis.pa       import *
 
@@ -17,6 +18,162 @@ from .fn_user               import fn_user_get_from_discord
 #
 # Queries /internal/creature/*
 #
+# API: PUT /internal/creature
+def internal_creature_add(raceid,gender,rarity,
+                          instanceid,
+                          x,y,
+                          m,r,g,v,p,b):
+    # Input checks
+    if not isinstance(raceid, int):
+        return (200,
+                False,
+                f'Bad format (raceid:{raceid}) [Should be an INT]',
+                None)
+    if not isinstance(gender, bool):
+        return (200,
+                False,
+                f'Bad format (gender:{gender}) [Should be a BOOL]',
+                None)
+    if not isinstance(rarity, str) or rarity not in ['Small','Medium','Big','Unique','Boss','God']:
+        return (200,
+                False,
+                f'Bad format (rarity:{rarity}) [Should be a STR]',
+                None)
+    if not isinstance(instanceid, int):
+        return (200,
+                False,
+                f'Bad format (instanceid:{instanceid}) [Should be an INT]',
+                None)
+    if not isinstance(x, int):
+        return (200,
+                False,
+                f'Bad format (x:{x}) [Should be an INT]',
+                None)
+    if not isinstance(y, int):
+        return (200,
+                False,
+                f'Bad format (y:{y}) [Should be an INT]',
+                None)
+    if not isinstance(m, int):
+        return (200,
+                False,
+                f'Bad format (m:{m}) [Should be an INT]',
+                None)
+    if not isinstance(r, int):
+        return (200,
+                False,
+                f'Bad format (r:{r}) [Should be an INT]',
+                None)
+    if not isinstance(g, int):
+        return (200,
+                False,
+                f'Bad format (g:{g}) [Should be an INT]',
+                None)
+    if not isinstance(v, int):
+        return (200,
+                False,
+                f'Bad format (v:{v}) [Should be an INT]',
+                None)
+    if not isinstance(p, int):
+        return (200,
+                False,
+                f'Bad format (p:{p}) [Should be an INT]',
+                None)
+    if not isinstance(b, int):
+        return (200,
+                False,
+                f'Bad format (b:{b}) [Should be an INT]',
+                None)
+
+    # Pre-flight checks
+    metaRaces = get_meta('races')
+    if metaRaces is None:
+        return (200,
+                False,
+                f'[Redis:get_meta()] failed (meta:races)',
+                None)
+    if raceid > len(metaRaces) or raceid < 11 :
+        return (200,
+                False,
+                f'Bad format (raceid:{raceid}) [Should be >= 11 and =< {len(metaRaces)}]',
+                None)
+
+    session  = Session()
+    creature = Creature(name     = metaRaces[raceid-1]['name'],
+                        race     = raceid,
+                        rarity   = rarity,
+                        gender   = gender,
+                        account  = None,
+                        instance = instanceid,
+                        x        = x,
+                        y        = y)
+
+    try:
+        session.add(creature)
+        session.commit()
+    except Exception as e:
+        # Something went wrong during commit
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Creature creation failed [{e}]',
+                None)
+    else:
+        return (201,
+                True,
+                f'Creature creation successed (creature:{creature.id})',
+                creature)
+    finally:
+        session.close()
+
+# API: DELETE /internal/creature/{creatureid}
+def internal_creature_del(creatureid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad format (creatureid:{creatureid}) [Should be an INT]',
+                None)
+
+    session  = Session()
+
+    # Checking if the Creature exists, and is a NPC (race > 10)
+    try:
+        creature = session.query(Creature)\
+                           .filter(Creature.id == creatureid)\
+                           .filter(Creature.race > 10)\
+                           .one_or_none()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL] Creature query failed (creatureid:{creatureid}) [{e}]',
+                None)
+    else:
+        if creature is None:
+            return (200,
+                    False,
+                    f'Creature deletion aborted (creatureid:{creatureid}) [Not found in DB]',
+                    None)
+
+    # We got the creature in DB, we delete it
+    # As it is a NPC creature, thhere is only the entry in Creature table
+    try:
+        session.delete(creature)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Creature deletion failed [{e}]',
+                None)
+    else:
+        return (200,
+                True,
+                f'Creature deletion successed (creatureid:{creatureid})',
+                None)
+    finally:
+        session.close()
+
 # API: POST /internal/creature/{creatureid}/cds
 def internal_creature_cds(creatureid):
     # Input checks

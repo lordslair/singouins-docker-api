@@ -5,6 +5,47 @@ info:
   title: S&P Internal API
   contact: {}
 paths:
+  /internal/creature:
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature ADD request
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalCreatureCreateBody'
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreature'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}:
+    delete:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature DEL request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/cd/{skillmetaid}:
     put:
       tags:
@@ -1597,6 +1638,61 @@ components:
           nullable: false
           example: 1
           minimum: 1
+
+    InternalCreatureCreateBody:
+      type: object
+      properties:
+        raceid:
+          type: integer
+          nullable: false
+          example: 14
+          minimum: 11
+        gender:
+          type: boolean
+          nullable: false
+          example: False
+        rarity:
+          type: string
+          enum: ['Small','Medium','Big','Unique','Boss','God']
+          nullable: false
+          example: 'Boss'
+        instanceid:
+          type: integer
+          nullable: false
+          example: 1
+          minimum: 1
+        x:
+          type: integer
+          nullable: false
+          example: 5
+        y:
+          type: integer
+          nullable: false
+          example: 5
+        m:
+          type: integer
+          nullable: false
+          example: 60
+        r:
+          type: integer
+          nullable: false
+          example: 80
+        g:
+          type: integer
+          nullable: false
+          example: 100
+        v:
+          type: integer
+          nullable: false
+          example: 80
+        p:
+          type: integer
+          nullable: false
+          example: 90
+        b:
+          type: integer
+          nullable: false
+          example: 100
 
     InternalCreatureCdResponse:
       type: object

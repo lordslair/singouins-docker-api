@@ -768,6 +768,12 @@ app.add_url_rule('/internal/squad',              methods=['POST'], view_func=rou
 app.add_url_rule('/internal/squads',             methods=['GET'],  view_func=routes.internal.squads)
 app.add_url_rule('/internal/up',                 methods=['GET'],  view_func=routes.internal.up)
 # Routes /internal/creature/*
+app.add_url_rule('/internal/creature',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature_add)
+app.add_url_rule('/internal/creature',
+                 methods=['DELETE'],
+                 view_func=routes.internal.creature_del)
 # Routes /internal/creature/{creatureid}/cd/*
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
                  methods=['PUT'],
@@ -801,6 +807,7 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature_effects)
+# Routes /internal/creatures/*
 app.add_url_rule('/internal/creatures',
                  methods=['GET'],
                  view_func=routes.internal.creatures_get)

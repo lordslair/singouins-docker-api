@@ -11,6 +11,40 @@ from variables          import API_INTERNAL_TOKEN
 # Routes /internal
 #
 # /internal/creature/* subpath
+def creature_add():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+
+    raceid     = request.json.get('raceid')
+    gender     = request.json.get('gender')
+    rarity     = request.json.get('rarity')
+    instanceid = request.json.get('instanceid')
+    x          = request.json.get('x')
+    y          = request.json.get('y')
+    m          = request.json.get('m')
+    r          = request.json.get('r')
+    g          = request.json.get('g')
+    v          = request.json.get('v')
+    p          = request.json.get('p')
+    b          = request.json.get('b')
+
+    (code, success, msg, payload) = internal_creature_add(raceid,gender,rarity,
+                                                          instanceid,
+                                                          x,y,
+                                                          m,r,g,v,p,b)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+def creature_del(creatureid):
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    (code, success, msg, payload) = internal_creature_del(creatureid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 def creature_cd_add(creatureid,skillmetaid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
@@ -183,6 +217,7 @@ def creature_wallet():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+# /internal/creatures/* subpath
 def creatures_get():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
