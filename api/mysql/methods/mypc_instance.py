@@ -92,11 +92,18 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
                         None)
             # Everything went well, creation DONE
             # We put the info in queue for Discord
-            qmsg = {"ciphered": False,
-                    "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({creature.instance})',
-                    "embed": None,
-                    "scope": f'Korp-{pc.korp}'}
-            yqueue_put('discord', qmsg)
+            if pc.korp is not None:
+                qmsg = {"ciphered": False,
+                        "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({creature.instance})',
+                        "embed": None,
+                        "scope": f'Korp-{pc.korp}'}
+                yqueue_put('discord', qmsg)
+            if pc.squad is not None:
+                qmsg = {"ciphered": False,
+                        "payload": f':map: **[{creature.id}] {creature.name}** opened an Instance ({creature.instance})',
+                        "embed": None,
+                        "scope": f'Squad-{pc.squad}'}
+                yqueue_put('discord', qmsg)
             return (201,
                     True,
                     f'Instance creation successed (creatureid:{creature.id})',
