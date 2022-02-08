@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 from ..session           import Session
-from ..models            import PJ
+from ..models            import Creature
 
 from ..utils.redis.instances import (add_instance,
                                      del_instance,
@@ -81,7 +81,7 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
             # Everything went well so far
             try:
                 # Assign the PC into the instance
-                pc          = session.query(PJ).filter(PJ.id == creature.id).one_or_none()
+                pc          = session.query(Creature).filter(Creature.id == creature.id).one_or_none()
                 pc.instance = instance['id']
                 session.commit()
             except Exception as e:
@@ -215,11 +215,11 @@ def mypc_instance_leave(username,creatureid,instanceid):
 
     # Check if PC is the last inside the instance
     try:
-        pcs = session.query(PJ)\
-                     .filter(PJ.instance == instance['id'])\
+        pcs = session.query(Creature)\
+                     .filter(Creature.instance == instance['id'])\
                      .all()
-        pc = session.query(PJ)\
-                     .filter(PJ.id == creature.id)\
+        pc = session.query(Creature)\
+                     .filter(Creature.id == creature.id)\
                      .one_or_none()
     except Exception as e:
         return (200,
@@ -345,10 +345,10 @@ def mypc_instance_join(username,creatureid,instanceid):
                     f"[Redis] Instance not public (creatureid:{creature.id},instanceid:{instance['id']},public:i{nstance['public']})",
                     None)
 
-    # We add the PC into the instance
+    # We add the Creature into the instance
     try:
-        pc = session.query(PJ)\
-                     .filter(PJ.id == creature.id)\
+        pc = session.query(Creature)\
+                     .filter(Creature.id == creature.id)\
                      .one_or_none()
         pc.instance       = instance['id'] # We set the PC instance
         creature.instance = instance['id'] # Only for the returned payload
