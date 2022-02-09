@@ -1,10 +1,9 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import *
+from ..models           import CreatureSlots,Cosmetic,Item
 
 from .fn_creature       import fn_creature_get
-from .fn_user           import fn_user_get
 from .fn_global         import clog
 
 #
@@ -12,9 +11,8 @@ from .fn_global         import clog
 #
 
 # API: /pc/<int:pcid>/item
-def pc_items_get(username,pcid):
+def pc_items_get(pcid):
     pc      = fn_creature_get(None,pcid)[3]
-    user    = fn_user_get(username)
     session = Session()
 
     if pc.account is None:

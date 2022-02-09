@@ -364,7 +364,7 @@ def api_mypc_mp_addressbook(pcid):
 @app.route('/pc/<int:pcid>/item', methods=['GET'])
 @jwt_required
 def api_pc_item_get(pcid):
-    (code, success, msg, payload) = pc_items_get(get_jwt_identity(),pcid)
+    (code, success, msg, payload) = pc_items_get(pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
@@ -535,7 +535,7 @@ def mypc_event(pcid):
 @app.route('/pc/<int:creatureid>/event', methods=['GET'])
 @jwt_required
 def pc_event(creatureid):
-    (code, success, msg, payload) = get_pc_event(creatureid)
+    (code, success, msg, payload) = pc_events_get(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

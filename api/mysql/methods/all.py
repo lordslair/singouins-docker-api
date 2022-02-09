@@ -65,26 +65,3 @@ def get_mypc_event(username,pcid):
             session.close()
 
     else: return (409, False, 'Token/username mismatch', None)
-
-def get_pc_event(creatureid):
-    (code, success, msg, creature) = fn_creature_get(None,creatureid)
-    session                        = Session()
-
-    if creature is None: return (200, True, 'Creature does not exist (creatureid:{})'.format(creatureid), None)
-
-    try:
-        log   = session.query(Log)\
-                       .filter(Log.src == creature.id)\
-                       .order_by(Log.date.desc())\
-                       .limit(50)\
-                       .all()
-    except Exception as e:
-        # Something went wrong during commit
-        return (200,
-                False,
-                '[SQL] Event query failed (creatureid:{})'.format(creature.id),
-                None)
-    else:
-        return (200, True, 'Events successfully retrieved (creatureid:{})'.format(creature.id), log)
-    finally:
-        session.close()
