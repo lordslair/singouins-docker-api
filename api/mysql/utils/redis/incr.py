@@ -4,8 +4,6 @@ from .connector import r
 
 def many(key,increment):
 
-    key    = f'highscores:{pc.id}:{path}'
-
     try:
         r.incr(key, amount=increment)
     except Exception as e:
