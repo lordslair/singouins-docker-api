@@ -9,4 +9,4 @@ AUTH_PAYLOAD       = {'username': 'user@exemple.com', 'password': 'plop'}
 CREATURE_ID        = 1
 MAP_ID             = 1
 METAS              = ['armor','weapon']
-PJ_NAME            = 'PJTest'
+PC_NAME            = 'PJTest'
