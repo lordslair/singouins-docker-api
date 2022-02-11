@@ -51,7 +51,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                 account = fn_user_get(username).id,
                 hp      = 100 + race.min_m,
                 hp_max  = 100 + race.min_m,
-                instance = 1,           # Gruikfix for now, could be '0' for worldmap ?
+                instance = None,        # Gruikfix for now
                 x       = randint(2,4), # TODO: replace with rand(empty coords)
                 y       = randint(2,5)) # TODO: replace with rand(empty coords)
 
