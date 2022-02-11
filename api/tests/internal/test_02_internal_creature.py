@@ -70,6 +70,30 @@ def test_singouins_internal_creatures():
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
 
+def test_singouins_internal_creature_pop():
+    url       = f'{API_URL}/internal/creature' # PUT
+    payload   = {"raceid": 11,
+                 "gender": True,
+                 "rarity": "Boss",
+                 "instanceid": 0,
+                 "x": 3,
+                 "y": 3,
+                 "m": 121,
+                 "r": 122,
+                 "g": 123,
+                 "v": 124,
+                 "p": 125,
+                 "b": 126}
+    response  = requests.put(url, headers=HEADERS, json = payload)
+
+    creatureid = json.loads(response.text)['payload']['id']
+
+    assert creatureid > 0
+    assert response.status_code                 == 201
+    assert json.loads(response.text)['success'] == True
+
+    url       = f'{API_URL}/internal/creature/{creatureid}' # DELETE
+    response  = requests.delete(url, headers=HEADERS, json = payload)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
