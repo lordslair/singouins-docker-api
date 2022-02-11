@@ -45,3 +45,5 @@ def test_singouins_auth_refresh():
 
     assert response.status_code == 200
     assert refreshed['access_token']
+
+# url       = f'{API_URL}/auth/confirm/{token}' # POST # NOTDONE # TOOCOMPLICATED
