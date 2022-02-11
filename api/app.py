@@ -234,11 +234,6 @@ def api_mypc_get_all():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>', methods=['GET'])
-@jwt_required
-def mypc_details(pcid):
-    return jsonify({"msg": "Not yet implemented"}), 200
-
 @app.route('/mypc/<int:pcid>', methods=['DELETE'])
 @jwt_required
 def api_mypc_del(pcid):
