@@ -8,13 +8,13 @@ from variables import (AUTH_PAYLOAD,
                        METAS)
 
 def test_singouins_meta():
-    url      = f'{API_URL}/auth/login'
+    url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
     for meta in METAS:
-        url      = f'{API_URL}/meta/item/{meta}'
+        url      = f'{API_URL}/meta/item/{meta}' # GET
         response = requests.get(url, headers=headers)
 
         assert response.status_code == 200
