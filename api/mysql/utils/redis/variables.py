@@ -16,8 +16,8 @@ REDIS_PORT    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT']
 REDIS_DB_NAME = os.environ['SEP_REDIS_DB']
 
 # Metafiles location for Redis init
-META_FILES = {'armors':  'data/metas/armors.json',
-              'effects': 'data/metas/effects.json',
-              'races':   'data/metas/races.json',
-              'skills':  'data/metas/skills.json',
-              'weapons': 'data/metas/weapons.json'}
+META_FILES = {'armor':  'data/metas/armors.json',
+              'effect': 'data/metas/effects.json',
+              'race':   'data/metas/races.json',
+              'skill':  'data/metas/skills.json',
+              'weapon': 'data/metas/weapons.json'}

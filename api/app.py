@@ -538,10 +538,11 @@ def pc_event(creatureid):
 # Routes /meta
 #
 
-@app.route('/meta/item/<string:itemtype>', methods=['GET'])
+@app.route('/meta/item/<string:metatype>', methods=['GET'])
 @jwt_required
-def meta_item(itemtype):
-    (code, success, msg, payload) = get_meta_item(itemtype)
+def meta_item(metatype):
+    # We use the same sub as the internal route. Same result is expected
+    (code, success, msg, payload) = internal_meta_get_one(metatype)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

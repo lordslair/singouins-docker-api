@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from ..utils.redis.metas import *
+from ..utils.redis.metas import get_meta
 
 #
 # Queries /internal/meta/*
