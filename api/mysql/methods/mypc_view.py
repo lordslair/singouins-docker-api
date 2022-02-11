@@ -1,11 +1,13 @@
 # -*- coding: utf8 -*-
 
+import dataclasses
+
 from ..session           import Session
-from ..models            import *
-from ..utils.redis.stats import *
+from ..models            import Creature
+
+from ..utils.redis.stats import get_stats
 
 from .fn_creature        import (fn_creature_get,
-                                 fn_creatures_clean,
                                  fn_creature_stats)
 from .fn_user            import fn_user_get
 
@@ -13,7 +15,7 @@ from .fn_user            import fn_user_get
 # Queries /mypc/{pcid}/view/*
 #
 
-# API: /mypc/<int:pcid>/view
+# API: GET /mypc/<int:pcid>/view
 def mypc_view(username,pcid):
     pc      = fn_creature_get(None,pcid)[3]
     user    = fn_user_get(username)
@@ -57,20 +59,30 @@ def mypc_view(username,pcid):
             maxy  = pc.y + range
             miny  = pc.y - range
 
-            view  = session.query(PJ).filter(PJ.instance == pc.instance)\
-                                            .filter(PJ.x.between(minx,maxx))\
-                                            .filter(PJ.y.between(miny,maxy))\
-                                            .all()
+            view  = session.query(Creature)\
+                           .filter(Creature.instance == pc.instance)\
+                           .filter(Creature.x.between(minx,maxx))\
+                           .filter(Creature.y.between(miny,maxy))\
+                           .all()
 
-            # We clean the creatures in view, and get a list
-            creatures = fn_creatures_clean(view)
+            view_final = []
+            for creature in view:
+                # Lets convert to a dataclass then a dict
+                creature       = dataclasses.asdict(creature)
+                # We define the default diplomacy title
+                creature['diplo'] = 'neutral'
+                # We try to define the diplomacy based on tests
+                if creature['race'] >= 11:
+                    creature['diplo'] = 'enemy'
+
+                view_final.append(creature)
         else:
-            import traceback
             # PC is in a squad
             # We query the Squad members in the same instance
-            squad = session.query(PJ).\
-                            filter(PJ.squad == pc.squad).\
-                            filter(PJ.squad_rank != 'Pending').all()
+            squad = session.query(Creature)\
+                           .filter(Creature.squad == pc.squad)\
+                           .filter(Creature.squad_rank != 'Pending')\
+                           .all()
             if not squad:
                 return (200,
                         False,
@@ -79,17 +91,28 @@ def mypc_view(username,pcid):
 
             views = [] # We initialize the result array
             for pc in squad:
+                # We check if we have the data in redis
+                stats = get_stats(pc)
+                if stats is None:
+                    # We try to compute fresh stats
+                    stats = fn_creature_stats(pc)
+                    if stats is None:
+                        return (200,
+                                True,
+                                f'Stats query failed (pcid:{pc.id})',
+                                None)
                 try:
-                    range = 4 + round(pc.p / 50)
+                    range = 4 + round(stats['base']['p'] / 50)
                     maxx  = pc.x + range
                     minx  = pc.x - range
                     maxy  = pc.y + range
                     miny  = pc.y - range
 
-                    view  = session.query(PJ).filter(PJ.instance == pc.instance)\
-                                             .filter(PJ.x.between(minx,maxx))\
-                                             .filter(PJ.y.between(miny,maxy))\
-                                             .all()
+                    view  = session.query(Creature)\
+                                   .filter(Creature.instance == pc.instance)\
+                                   .filter(Creature.x.between(minx,maxx))\
+                                   .filter(Creature.y.between(miny,maxy))\
+                                   .all()
 
                     if len(views) == 0:
                         # We push the first results in the array
@@ -104,28 +127,34 @@ def mypc_view(username,pcid):
                             f'[SQL] Squad view query failed (pcid:{pc.id},squadid:{pc.squad}) [{e}]',
                             None)
                 else:
-                    # We clean the creatures in view, and get a list
-                    creatures = fn_creatures_clean(views)
+                    view_final = []
+                    for creature in views:
+                        # Lets convert to a dataclass then a dict
+                        creature = dataclasses.asdict(creature)
+                        # We define the default diplomacy title
+                        creature['diplo'] = 'neutral'
+                        # We try to define the diplomacy based on tests
+                        if creature['race'] >= 11:
+                            creature['diplo'] = 'enemy'
+                        if creature['squad'] == pc.squad:
+                            creature['diplo'] = 'squad'
+
+                        view_final.append(creature)
     except Exception as e:
         return (200,
                 False,
                 f'[SQL] View query failed (username:{username},pcid:{pcid}) [{e}]',
                 None)
     else:
-        for creature in creatures:
-            # We define the default diplomacy title
-            creature['diplo'] = 'neutral'
-            # We try to define the diplomacy based on tests
-            if creature['race'] >= 11:
-                creature['diplo'] = 'enemy'
-            if creature['squad'] == pc.squad:
-                creature['diplo'] = 'squad'
-            else:
-                pass
-
-        return (200,
-                True,
-                f'View successfully retrieved (range:{range},x:{pc.x},y:{pc.y})',
-                creatures)
+        if view_final:
+            return (200,
+                    True,
+                    f'View query successed (range:{range},x:{pc.x},y:{pc.y})',
+                    view_final)
+        else:
+            return (200,
+                    False,
+                    f'View query failed (pcid:{pcid})',
+                    None)
     finally:
         session.close()

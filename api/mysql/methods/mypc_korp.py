@@ -314,7 +314,7 @@ def mypc_korp_invite(username,leaderid,korpid,targetid):
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp'}
         yqueue_put('broadcast', qmsg)
-        return (201,
+        return (200,
                 True,
                 f'PC Invite successed (slots:{len(members)}/{maxmembers})',
                 fn_creature_clean(pc))
@@ -393,7 +393,7 @@ def mypc_korp_kick(username,leaderid,korpid,targetid):
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp'}
         yqueue_put('broadcast', qmsg)
-        return (201,
+        return (200,
                 True,
                 f'PC Kick successed (slots:{len(members)}/{maxmembers})',
                 fn_creatures_clean(members))
@@ -452,7 +452,7 @@ def mypc_korp_accept(username,pcid,korpid):
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp'}
         yqueue_put('broadcast', qmsg)
-        return (201,
+        return (200,
                 True,
                 f'PC korp accept successed (pcid:{pc.id},korpid:{korpid})',
                 None)
@@ -512,7 +512,7 @@ def mypc_korp_leave(username,pcid,korpid):
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp'}
         yqueue_put('broadcast', qmsg)
-        return (201,
+        return (200,
                 True,
                 f'PC korp leave successed (pcid:{pc.id},korpid:{korpid})',
                 None)
@@ -572,7 +572,7 @@ def mypc_korp_decline(username,pcid,korpid):
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp'}
         yqueue_put('broadcast', qmsg)
-        return (201,
+        return (200,
                 True,
                 'PC successfully left (pcid:{pc.id},korpid:{korpid})',
                 None)

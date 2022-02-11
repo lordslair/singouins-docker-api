@@ -2,15 +2,21 @@
 
 import dataclasses      # Needed for WS JSON broadcast
 
-from ..session           import Session
-from ..models            import *
-from ..utils.redis       import incr
-from ..utils.redis.pa    import *
-from ..utils.redis.queue import *
+from datetime            import datetime
 
-from .fn_creature       import fn_creature_get
-from .fn_user           import fn_user_get
-from .fn_global         import clog
+from ..session           import Session
+from ..models            import (CreatureSlots,
+                                Item,
+                                Wallet)
+from ..utils.redis       import incr
+from ..utils.redis.metas import get_meta
+from ..utils.redis.pa    import get_pa, set_pa
+from ..utils.redis.queue import yqueue_put
+from ..utils.redis.stats import get_stats
+
+from .fn_creature        import (fn_creature_get,
+                                fn_creature_stats)
+from .fn_user            import fn_user_get
 
 #
 # Queries /mypc/{pcid}/inventory/*
@@ -23,13 +29,21 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
     session     = Session()
     bluepa      = get_pa(pcid)[3]['blue']['pa']
 
-    if pc and pc.account != user.id:
-        return (409, False, 'Token/username mismatch', None)
-
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
     if bluepa < 1:
         return (200,
                 False,
-                'Not enough PA (pcid:{},bluepa:{})'.format(pcid,bluepa),
+                f'Not enough PA (pcid:{pcid},bluepa:{bluepa})',
                 None)
 
     item = session.query(Item)\
@@ -40,7 +54,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
         # Item not found
         return (200,
                 False,
-                'Item not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'Item not found (pcid:{pcid},itemid:{itemid})',
                 None)
 
     if   item.rarity == 'Broken':
@@ -76,17 +90,16 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
 
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] Wallet update failed (pcid:{})'.format(pc.id),
+                f'[SQL] Item dismantle failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
         set_pa(pcid,0,1) # We consume the blue PA (1)
         incr.many(f'highscores:{pc.id}:action:dismantle:items', 1)
         return (200,
                 True,
-                'Item dismantle successed (pcid:{},itemid:{})'.format(pc.id,item.id),
+                f'Item dismantle successed (pcid:{pc.id},itemid:{item.id})',
                 {"shards": {
                     "Broken":    shards[0],
                     "Common":    shards[1],
@@ -102,39 +115,57 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
 def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
+    stats       = fn_creature_stats(pc)
     session     = Session()
     redpa       = get_pa(pcid)[3]['red']['pa']
+    metaWeapons = get_meta('weapons')
+    metaArmors  = get_meta('armors')
     equipment   = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
 
-    if pc and pc.account != user.id:
-        return (409, False, 'Token/username mismatch', None)
 
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
     if equipment is None:
         return (200,
                 False,
                 f'Equipment not found (pcid:{pc.id})',
                 None)
-
-    stats = get_stats(pc)
-    if stats is None:
-        return (200,
-                False,
-                f'Stats not found (pcid:{pc.id})',
-                None)
-
     if itemid <= 0:
         # Weird weaponid
         return (200,
                 False,
                 f'Itemid incorrect (pcid:{pc.id},itemid:{itemid})',
                 None)
+    if stats is None:
+        return (200,
+                False,
+                f'Stats not found (pcid:{pc.id})',
+                None)
+    if metaWeapons is None or metaArmors is None:
+        return (200,
+                False,
+                f'Metas not found (pcid:{pc.id})',
+                None)
 
     if   type == 'weapon':
-         item     = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
-         itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+         item     = session.query(Item)\
+                           .filter(Item.id == itemid, Item.bearer == pc.id)\
+                           .one_or_none()
+         itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaWeapons))[0]) # GruikFix
     elif type == 'armor':
-         item     = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
-         itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
+         item     = session.query(Item)\
+                           .filter(Item.id == itemid, Item.bearer == pc.id)\
+                           .one_or_none()
+         itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaArmors))[0]) # Gruikfix
 
     if item is None:
         return (200,
@@ -147,7 +178,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 f'ItemMeta not found (pcid:{pc.id},itemid:{itemid})',
                 None)
 
-    sizex,sizey = itemmeta.size.split("x")
+    sizex,sizey = itemmeta['size'].split("x")
     costpa      = round(int(sizex) * int(sizey) / 2)
     if redpa < costpa:
         return (200,
@@ -156,35 +187,35 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 None)
 
     # Pre-requisite checks
-    if itemmeta.min_m > stats['base']['m']:
+    if itemmeta['min_m'] > stats['base']['m']:
         return (200,
                 False,
-                f"M prequisites failed (m_min:{itemmeta.min_m},m:{stats['base']['m']})",
+                f"M prequisites failed (m_min:{itemmeta['min_m']},m:{stats['base']['m']})",
                 None)
-    elif itemmeta.min_r > stats['base']['r']:
+    elif itemmeta['min_r'] > stats['base']['r']:
         return (200,
                 False,
-                f"R prequisites failed (r_min:{itemmeta.min_r},r:{stats['base']['r']})",
+                f"R prequisites failed (r_min:{itemmeta['min_r']},r:{stats['base']['r']})",
                 None)
-    elif itemmeta.min_g > stats['base']['g']:
+    elif itemmeta['min_g'] > stats['base']['g']:
         return (200,
                 False,
-                f"G prequisites failed (g_min:{itemmeta.min_g},g:{stats['base']['g']})",
+                f"G prequisites failed (g_min:{itemmeta['min_g']},g:{stats['base']['g']})",
                 None)
-    elif itemmeta.min_v > stats['base']['v']:
+    elif itemmeta['min_v'] > stats['base']['v']:
         return (200,
                 False,
-                f"V prequisites failed (v_min:{itemmeta.min_v},v:{stats['base']['v']})",
+                f"V prequisites failed (v_min:{itemmeta['min_v']},v:{stats['base']['v']})",
                 None)
-    elif itemmeta.min_p > stats['base']['p']:
+    elif itemmeta['min_p'] > stats['base']['p']:
         return (200,
                 False,
-                f"P prequisites failed (p_min:{itemmeta.min_p},p:{stats['base']['p']})",
+                f"P prequisites failed (p_min:{itemmeta['min_p']},p:{stats['base']['p']})",
                 None)
-    elif itemmeta.min_b > stats['base']['b']:
+    elif itemmeta['min_b'] > stats['base']['b']:
         return (200,
                 False,
-                f"B prequisites failed (b_min:{itemmeta.min_b},b:{stats['base']['b']})",
+                f"B prequisites failed (b_min:{itemmeta['min_b']},b:{stats['base']['b']})",
                 None)
 
     # The item to equip exists, is owned by the PC, and we retrieved his equipment from DB
@@ -201,19 +232,20 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         else:
             return (200,
                     False,
-                    f'Item does not fit in holster (itemid:{item.id},size:{itemmeta.size})',
+                    f"Item does not fit in holster (itemid:{item.id},size:{itemmeta['size']})",
                     None)
     elif slotname == 'righthand':
-        equipped     = session.query(Item).filter(Item.id == equipment.righthand, Item.bearer == pc.id).one_or_none()
+        equipped     = session.query(Item)\
+                              .filter(Item.id == equipment.righthand, Item.bearer == pc.id)\
+                              .one_or_none()
         if equipped:
             # Something is already in RH
-            equippedmeta = session.query(MetaWeapon).filter(MetaWeapon.id == equipped.metaid).one_or_none()
             # We equip a 1H weapon
             if int(sizex) * int(sizey) <= 6:
-                if equippedmeta.onehanded is True:
+                if metaWeapons[equipped.metaid-1]['onehanded'] is True:
                     # A 1H weapons is in RH : we replace
                     equipment.righthand  = item.id
-                if equippedmeta.onehanded is False:
+                if metaWeapons[equipped.metaid-1]['onehanded'] is False:
                     # A 2H weapons is in RH & LH : we replace RH and clean LH
                     equipment.righthand  = item.id
                     equipment.lefthand   = None
@@ -239,7 +271,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         else:
             return (200,
                     False,
-                    f'Item does not fit in left hand (itemid:{item.id},size:{itemmeta.size})',
+                    f"Item does not fit in left hand (itemid:{item.id},size:{itemmeta['size']})",
                     None)
 
     equipment.date = datetime.now() # We update the date in DB
@@ -254,7 +286,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         session.rollback()
         return (200,
                 False,
-                f'[SQL] Equipment update failed (pcid:{pc.id},itemid:{itemid})',
+                f'[SQL] Equipment update failed (pcid:{pc.id},itemid:{itemid}) [{e}]',
                 None)
     else:
         equipment = session.query(CreatureSlots)\
@@ -292,13 +324,22 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
     session     = Session()
     equipment   = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
 
-    if pc and pc.account != user.id:
-        return (409, False, 'Token/username mismatch', None)
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
 
     if equipment is None:
         return (200,
                 False,
-                'Equipment not found (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'Equipment not found (pcid:{pc.id},itemid:{itemid})',
                 None)
 
     if   slotname == 'head':
@@ -347,7 +388,7 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
         # Something went wrong during commit
         return (200,
                 False,
-                '[SQL] Unequip failed (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'[SQL] Unequip failed (pcid:{pc.id},itemid:{itemid}) [{e}]',
                 None)
     else:
         equipment = session.query(CreatureSlots)\
@@ -369,7 +410,7 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
 
         return (200,
                 True,
-                'Unequipped successful (pcid:{},itemid:{})'.format(pcid,itemid),
+                f'Unequip successed (pcid:{pc.id},itemid:{itemid})',
                 {"red": get_pa(pcid)[3]['red'],
                  "blue": get_pa(pcid)[3]['blue'],
                  "equipment": equipment})
@@ -382,36 +423,47 @@ def mypc_inventory_item_offset(username,pcid,itemid,offsetx,offsety):
     user        = fn_user_get(username)
     session     = Session()
 
-    if pc and pc.account == user.id:
-        item  = session.query(Item).filter(Item.id == itemid, Item.bearer == pc.id).one_or_none()
-        if item is None:
-            return (200,
-                    False,
-                    'Item not found (pcid:{},itemid:{})'.format(pc.id,itemid),
-                    None)
+    # Pre-flight checks
+    if pc is None:
+        return (200,
+                False,
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
+
+    try:
+        item  = session.query(Item)\
+                       .filter(Item.id == itemid, Item.bearer == pc.id)\
+                       .one_or_none()
 
         item.offsetx = offsetx
         item.offsety = offsety
         item.date    = datetime.now() # We update the date in DB
-
-        try:
-            session.commit()
-        except Exception as e:
-            # Something went wrong during commit
-            return (200,
-                    False,
-                    '[SQL] Item update failed (pcid:{},itemid:{})'.format(pc.id,item.id),
-                    None)
-        else:
-            weapon   = session.query(Item).\
-                               filter(Item.bearer == pc.id).filter(Item.metatype == 'weapon').all()
-            armor    = session.query(Item).\
-                               filter(Item.bearer == pc.id).filter(Item.metatype == 'armor').all()
-            equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).all()
-            return (200,
-                    True,
-                    'Item update successed (itemid:{})'.format(item.id),
-                    {"weapon": weapon, "armor": armor, "equipment": equipment})
-        finally:
-            session.close()
-    else: return (409, False, 'Token/username mismatch', None)
+        session.commit()
+    except Exception as e:
+        return (200,
+                False,
+                f'[SQL] Item update failed (pcid:{pc.id},itemid:{itemid}) [{e}]',
+                None)
+    else:
+        weapon   = session.query(Item)\
+                          .filter(Item.bearer == pc.id)\
+                          .filter(Item.metatype == 'weapon')\
+                          .all()
+        armor    = session.query(Item)\
+                           .filter(Item.bearer == pc.id)\
+                           .filter(Item.metatype == 'armor')\
+                           .all()
+        equipment = session.query(CreatureSlots)\
+                           .filter(CreatureSlots.id == pc.id)\
+                           .all()
+        return (200,
+                True,
+                f'Item update successed (itemid:{item.id})',
+                {"weapon": weapon, "armor": armor, "equipment": equipment})
+    finally:
+        session.close()

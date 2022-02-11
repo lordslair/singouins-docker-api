@@ -1,29 +1,34 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import *
+from ..models           import (Cosmetic,
+                                CreatureSlots,
+                                Item,
+                                Wallet)
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get
-from .fn_global         import clog
 
 #
 # Queries /mypc/{pcid}/item/*
 #
 
 def mypc_items_get(username,pcid):
-    (code, success, msg, pc) = fn_creature_get(None,pcid)
-    user                     = fn_user_get(username)
-    session                  = Session()
+    pc      = fn_creature_get(None,pcid)[3]
+    user    = fn_user_get(username)
+    session = Session()
 
-    if pc.account is None:
+    # Pre-flight checks
+    if pc is None:
         return (200,
                 False,
-                f'NPCs do not have items (pcid:{pc.id})',
+                f'PC not found (pcid:{pcid})',
                 None)
-
-    if pc and pc.account != user.id:
-        return (409, False, 'Token/username mismatch', None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pcid},username:{username})',
+                None)
 
     try:
         weapon    = session.query(Item)\
