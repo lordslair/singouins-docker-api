@@ -3,21 +3,19 @@
 import json
 import requests
 
-from variables import (API_INTERNAL_TOKEN,
-                       API_URL,
+from variables import (API_URL,
+                       HEADERS,
                        SQUAD_ID)
 
 def test_singouins_internal_squad():
-    url       = API_URL + '/internal/squad'
+    url       = f'{API_URL}/internal/squad'
     payload   = {"squadid": SQUAD_ID}
-    headers   = json.loads('{"Authorization": "Bearer '+ API_INTERNAL_TOKEN + '"}')
-    response  = requests.post(url, headers=headers, json = payload)
+    response  = requests.post(url, headers=HEADERS, json = payload)
 
     assert response.status_code == 200
 
 def test_singouins_internal_squads():
-    url       = API_URL + '/internal/squads'
-    headers   = json.loads('{"Authorization": "Bearer '+ API_INTERNAL_TOKEN + '"}')
-    response  = requests.get(url, headers=headers)
+    url       = f'{API_URL}/internal/squads'
+    response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code == 200
