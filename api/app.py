@@ -767,7 +767,7 @@ app.add_url_rule('/internal/up',                 methods=['GET'],  view_func=rou
 app.add_url_rule('/internal/creature',
                  methods=['PUT'],
                  view_func=routes.internal.creature_add)
-app.add_url_rule('/internal/creature',
+app.add_url_rule('/internal/creature/<int:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature_del)
 # Routes /internal/creature/{creatureid}/cd/*
