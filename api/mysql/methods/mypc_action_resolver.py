@@ -5,7 +5,7 @@ import requests
 from flask                   import jsonify
 
 from ..session               import Session
-from ..models                import *
+from ..models                import Creature
 
 from ..utils.redis.effects   import *
 from ..utils.redis.cds       import *
@@ -13,7 +13,7 @@ from ..utils.redis.statuses  import *
 from ..utils.redis.pa        import *
 from ..utils.redis.instances import get_instance
 
-from .fn_creature            import *
+from .fn_creature            import fn_creature_get
 from .fn_user                import fn_user_get
 
 from variables               import (RESOLVER_HOST,
@@ -49,7 +49,7 @@ def mypc_action_resolver_move(username,creatureid,path):
                 None)
 
     try:
-        view  = session.query(PJ).filter(PJ.instance == creature.instance).all()
+        view  = session.query(Creature).filter(Creature.instance == creature.instance).all()
     except Exception as e:
         return (200,
                 False,

@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import PJ, Korp
+from ..models           import Creature, Korp
 
 #
 # Queries /internal/korp/*
@@ -47,13 +47,13 @@ def internal_korp_get_one(korpid):
         korp    = session.query(Korp)\
                          .filter(Korp.id == korpid)\
                          .one_or_none()
-        members = session.query(PJ)\
-                         .filter(PJ.korp == korpid)\
-                         .filter(PJ.korp_rank != 'Pending')\
+        members = session.query(Creature)\
+                         .filter(Creature.korp == korpid)\
+                         .filter(Creature.korp_rank != 'Pending')\
                          .all()
-        pending = session.query(PJ)\
-                         .filter(PJ.korp == korpid)\
-                         .filter(PJ.korp_rank == 'Pending')\
+        pending = session.query(Creature)\
+                         .filter(Creature.korp == korpid)\
+                         .filter(Creature.korp_rank == 'Pending')\
                          .all()
     except Exception as e:
         return (200,

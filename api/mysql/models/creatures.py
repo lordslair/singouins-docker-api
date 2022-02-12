@@ -93,6 +93,8 @@ class Creature(Base):
     x:           int
     y:           int
     xp:          int
+    hp:          int # Deprecated: remove it later
+    hp_max:      int # Deprecated: remove it later
     instance:    int
     squad:       int
     squad_rank:  str
@@ -111,6 +113,8 @@ class Creature(Base):
     x            = Column(Integer, nullable=False, server_default='0')
     y            = Column(Integer, nullable=False, server_default='0')
     xp           = Column(Integer, nullable=False, server_default='0')
+    hp           = Column(Integer, nullable=False) # Deprecated: remove it later
+    hp_max       = Column(Integer, nullable=False) # Deprecated: remove it later
     instance     = Column(Integer, nullable=True)
     squad        = Column(Integer, nullable=True)
     squad_rank   = Column(Enum('Leader','Member','Pending'), nullable=True)

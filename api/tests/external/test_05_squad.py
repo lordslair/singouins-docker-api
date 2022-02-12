@@ -53,13 +53,33 @@ def test_singouins_squad_invite():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
     squadid  = json.loads(response.text)['payload'][0]['squad']
-    targetid = CREATURE_ID
 
+    # We create a PJTestSquadInvite
+    url      = f'{API_URL}/mypc' # POST
+    payload_c   = {'name': 'PJTestSquadInvite',
+                   'gender': True,
+                   'race': '2',
+                   'class': '3',
+                   'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
+                   'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
+    response = requests.post(url, json = payload_c, headers=headers)
+    url      = f'{API_URL}/mypc' # GET
+    response = requests.get(url, headers=headers)
+    targetid = json.loads(response.text)['payload'][1]['id']
+
+    # We invite PJTestSquadInvite
     url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}' # POST
     response = requests.post(url, headers=headers)
 
-    assert json.loads(response.text)['success'] == False
-    assert 'already in a squad' in json.loads(response.text)['msg']
+    assert json.loads(response.text)['success'] == True
+    assert 'PC successfully invited' in json.loads(response.text)['msg']
+    assert response.status_code == 200
+
+    # We cleanup the PJTestSquadInvite
+    url      = f'{API_URL}/mypc/{targetid}' # DELETE
+    response = requests.delete(url, headers=headers)
+
+    assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
 
 def test_singouins_squad_kick():

@@ -14,13 +14,15 @@ def test_singouins_pc_delete():
 
     url      = f'{API_URL}/mypc' # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
+    pclist   = json.loads(response.text)['payload']
 
-    url      = f'{API_URL}/mypc/{pcid}' # DELETE
-    response = requests.delete(url, headers=headers)
+    for pc in pclist:
+        pcid     = pc['id']
+        url      = f'{API_URL}/mypc/{pcid}' # DELETE
+        response = requests.delete(url, headers=headers)
 
-    assert json.loads(response.text)['success'] == True
-    assert response.status_code == 200
+        assert json.loads(response.text)['success'] == True
+        assert response.status_code == 200
 
 def test_singouins_auth_delete():
     url      = f'{API_URL}/auth/login' # POST

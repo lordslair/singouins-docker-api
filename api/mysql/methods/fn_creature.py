@@ -16,9 +16,9 @@ def fn_creature_get(pcname,pcid):
 
     try:
         if pcid:
-            pc = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+            pc = session.query(Creature).filter(Creature.id == pcid).one_or_none()
         elif pcname:
-            pc = session.query(PJ).filter(PJ.name == pcname).one_or_none()
+            pc = session.query(Creature).filter(Creature.name == pcname).one_or_none()
         else:
             return (200,
                     False,
@@ -48,7 +48,7 @@ def fn_creature_get(pcname,pcid):
 def fn_creature_tag(pc,tg):
     session = Session()
     try:
-        tg             = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
+        tg             = session.query(Creature).filter(Creature.id == tg.id).one_or_none()
         tg.targeted_by = pc.id
         session.commit()
     except Exception as e:
@@ -68,7 +68,7 @@ def fn_creature_tag(pc,tg):
 def fn_creature_wound(pc,tg,dmg):
     session = Session()
     try:
-        tg      = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
+        tg      = session.query(Creature).filter(Creature.id == tg.id).one_or_none()
         tg.hp   = tg.hp - dmg    # We update Health Points
         tg.date = datetime.now() # We update date
         session.commit()
@@ -87,7 +87,7 @@ def fn_creature_kill(pc,tg,action):
     tgname  = tg.name
 
     try:
-        tg      = session.query(PJ).filter(PJ.id == tg.id).one_or_none()
+        tg      = session.query(Creature).filter(Creature.id == tg.id).one_or_none()
         session.delete(tg)
         session.commit()
     except Exception as e:
@@ -131,9 +131,9 @@ def fn_creature_gain_xp(pc,tg):
             pc.date = datetime.now() # We update date
         else:
             # We add PX to the killer squad
-            squadlist = session.query(PJ)\
-                               .filter(PJ.squad == pc.squad)\
-                               .filter(PJ.squad_rank != 'Pending').all()
+            squadlist = session.query(Creature)\
+                               .filter(Creature.squad == pc.squad)\
+                               .filter(Creature.squad_rank != 'Pending').all()
             for pcsquad in squadlist:
                 pcsquad.xp  += round(tg.level/len(squadlist)) # We add XP
                 pcsquad.date = datetime.now()                 # We update date
@@ -190,9 +190,9 @@ def fn_creature_gain_loot(pc,tg):
                      itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
         else:
             # We add loot to the killer squad
-            squadlist = session.query(PJ)\
-                               .filter(PJ.squad == pc.squad)\
-                               .filter(PJ.squad_rank != 'Pending').all()
+            squadlist = session.query(Creature)\
+                               .filter(Creature.squad == pc.squad)\
+                               .filter(Creature.squad_rank != 'Pending').all()
             for pcsquad in squadlist:
                 # Loots are generated
                 loots            = get_loots(tg)
@@ -251,38 +251,6 @@ def fn_creature_gain_loot(pc,tg):
         return (True, None)
     finally:
         session.close()
-
-def fn_creatures_clean(creatures):
-    # REMINDER: We expect a list
-    list  = []
-    for creature in creatures:
-        dict = fn_creature_clean(creature)
-        list.append(dict)
-    return list
-
-def fn_creature_clean(creature):
-    # REMINDER: We expect an dataclass
-    # If needed we convert the date
-    if isinstance(creature.date, datetime):
-        creature.date = creature.date.strftime('%Y-%m-%d %H:%M:%S')
-
-    # We load the Creature dataclass into a python dict
-    dict          = dataclasses.asdict(creature)
-    # We remove MRVGPB caracs
-    del dict['m']
-    del dict['r']
-    del dict['v']
-    del dict['g']
-    del dict['p']
-    del dict['b']
-    # We remove HP, ARM, and XP too
-    del dict['hp']
-    del dict['hp_max']
-    del dict['arm_b']
-    del dict['arm_p']
-    del dict['xp']
-
-    return dict
 
 def fn_creature_stats(pc):
     session      = Session()

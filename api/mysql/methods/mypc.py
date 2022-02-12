@@ -45,15 +45,15 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                     f'MetaRace not found (race:{pcrace})',
                     None)
 
-        pc = PJ(name    = pcname,
-                race    = race.id,
-                gender  = pcgender,
-                account = fn_user_get(username).id,
-                hp      = 100 + race.min_m,
-                hp_max  = 100 + race.min_m,
-                instance = None,        # Gruikfix for now
-                x       = randint(2,4), # TODO: replace with rand(empty coords)
-                y       = randint(2,5)) # TODO: replace with rand(empty coords)
+        pc = Creature(name    = pcname,
+                      race    = race.id,
+                      gender  = pcgender,
+                      account = fn_user_get(username).id,
+                      hp      = 100 + race.min_m,
+                      hp_max  = 100 + race.min_m,
+                      instance = None,        # Gruikfix for now
+                      x       = randint(2,4), # TODO: replace with rand(empty coords)
+                      y       = randint(2,5)) # TODO: replace with rand(empty coords)
 
         session.add(pc)
 
@@ -179,7 +179,7 @@ def mypc_get_all(username):
 
     try:
         userid = fn_user_get(username).id
-        pcs    = session.query(PJ).filter(PJ.account == userid).all()
+        pcs    = session.query(Creature).filter(Creature.account == userid).all()
     except Exception as e:
         # Something went wrong during query
         return (200,
@@ -206,8 +206,8 @@ def mypc_get_one(username,pcid):
 
     try:
         userid = fn_user_get(username).id
-        pcs    = session.query(PJ)\
-                        .filter(PJ.account == userid, PJ.id == pcid)\
+        pcs    = session.query(Creature)\
+                        .filter(Creature.account == userid, Creature.id == pcid)\
                         .one_or_none()
     except Exception as e:
         # Something went wrong during query
@@ -243,7 +243,7 @@ def mypc_del(username,pcid):
     try:
         userid    = fn_user_get(username).id
 
-        pc        = session.query(PJ).filter(PJ.account == userid, PJ.id == pcid).one_or_none()
+        pc        = session.query(Creature).filter(Creature.account == userid, Creature.id == pcid).one_or_none()
         equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
         wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
         stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()

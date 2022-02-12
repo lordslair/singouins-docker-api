@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import PJ,Wallet,Item,MetaWeapon
+from ..models           import Wallet
 
 def fn_wallet_ammo_get(pc,item,itemmeta):
     session = Session()

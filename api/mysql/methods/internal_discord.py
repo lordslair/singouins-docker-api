@@ -4,7 +4,7 @@ from datetime           import datetime
 
 from ..session          import Session
 from ..models.users     import User
-from ..models.creatures import PJ
+from ..models.creatures import Creature
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import (fn_user_get,
@@ -74,8 +74,8 @@ def internal_discord_creatures(discordname):
 
     session = Session()
     try:
-        pcs = session.query(PJ)\
-                     .filter(PJ.account == user.id)\
+        pcs = session.query(Creature)\
+                     .filter(Creature.account == user.id)\
                      .all()
     except Exception as e:
         return (200,

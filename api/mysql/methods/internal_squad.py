@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 from ..session          import Session
-from ..models           import PJ, Squad
+from ..models           import Creature, Squad
 
 #
 # Queries /internal/squad/*
@@ -41,13 +41,13 @@ def internal_squad_get_one(squadid):
         squad = session.query(Squad)\
                        .filter(Squad.id == squadid)\
                        .one_or_none()
-        members = session.query(PJ)\
-                         .filter(PJ.squad == squadid)\
-                         .filter(PJ.squad_rank != 'Pending')\
+        members = session.query(Creature)\
+                         .filter(Creature.squad == squadid)\
+                         .filter(Creature.squad_rank != 'Pending')\
                          .all()
-        pending = session.query(PJ)\
-                         .filter(PJ.squad == squadid)\
-                         .filter(PJ.squad_rank == 'Pending')\
+        pending = session.query(Creature)\
+                         .filter(Creature.squad == squadid)\
+                         .filter(Creature.squad_rank == 'Pending')\
                          .all()
     except Exception as e:
         return (200,

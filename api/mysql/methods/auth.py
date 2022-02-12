@@ -7,7 +7,7 @@ from random             import choice
 import string
 
 from ..session          import Session
-from ..models           import *
+from ..models           import User
 
 #
 # Queries /auth/*

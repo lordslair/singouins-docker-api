@@ -1,12 +1,12 @@
 # -*- coding: utf8 -*-
 
-from ..session           import Session
-from ..models            import *
-from ..utils.redis.queue import *
+import dataclasses
 
-from .fn_creature        import (fn_creature_get,
-                                 fn_creature_clean,
-                                 fn_creatures_clean)
+from ..session           import Session
+from ..models            import Creature,Korp
+from ..utils.redis.queue import yqueue_put
+
+from .fn_creature        import fn_creature_get
 from .fn_user            import fn_user_get
 
 #
@@ -36,18 +36,25 @@ def mypc_korp_details(username,pcid,korpid):
                 f'Korp request outside of your scope (pcid:{pc.id},korpid:{korpid})',
                 None)
 
+    # Let's get the korp from DB
     try:
         korp = session.query(Korp)\
                       .filter(Korp.id == pc.korp)\
-                      .filter(PJ.id == pc.id)
+                      .filter(Creature.id == pc.id)
 
-        pc_is_member  = korp.filter(PJ.korp_rank != 'Pending').one_or_none()
-        pc_is_pending = korp.filter(PJ.korp_rank == 'Pending').one_or_none()
+        pc_is_member  = korp.filter(Creature.korp_rank != 'Pending').one_or_none()
+        pc_is_pending = korp.filter(Creature.korp_rank == 'Pending').one_or_none()
 
         if pc_is_member:
             korp    = korp.session.query(Korp).filter(Korp.id == pc.korp).one_or_none()
-            members = session.query(PJ).filter(PJ.korp == korp.id).filter(PJ.korp_rank != 'Pending').all()
-            pending = session.query(PJ).filter(PJ.korp == korp.id).filter(PJ.korp_rank == 'Pending').all()
+            members = session.query(Creature)\
+                             .filter(Creature.korp == korp.id)\
+                             .filter(Creature.korp_rank != 'Pending')\
+                             .all()
+            pending = session.query(Creature)\
+                             .filter(Creature.korp == korp.id)\
+                             .filter(Creature.korp_rank == 'Pending')\
+                             .all()
         elif pc_is_pending:
             korp   = korp.session.query(Korp).filter(Korp.id == pc.korp).one_or_none()
 
@@ -71,10 +78,11 @@ def mypc_korp_details(username,pcid,korpid):
                     True,
                     f'PC is pending in a korp (pcid:{pcid},korpid:{korpid})',
                     {"korp": korp})
-        else: return (200,
-                      False,
-                      f'PC is not in a korp (pcid:{pcid},korpid:{korpid})',
-                      None)
+        else:
+            return (200,
+                    False,
+                    f'PC is not in a korp (pcid:{pcid},korpid:{korpid})',
+                    None)
     finally:
         session.close()
 
@@ -129,14 +137,17 @@ def mypc_korp_create(username,pcid,korpname):
                 None)
 
     # Korp created, let's assign the team creator in the korp
-    pc           = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-    korp         = session.query(Korp).filter(Korp.leader == pc.id).one_or_none()
+    pc           = session.query(Creature)\
+                          .filter(Creature.id == pcid)\
+                          .one_or_none()
+    korp         = session.query(Korp)\
+                          .filter(Korp.leader == pc.id)\
+                          .one_or_none()
     pc.korp      = korp.id
     pc.korp_rank = 'Leader'
 
     try:
         session.commit()
-        members       = session.query(PJ).filter(PJ.korp == pc.korp).all()
     except Exception as e:
         session.rollback()
         return (200,
@@ -144,22 +155,35 @@ def mypc_korp_create(username,pcid,korpname):
                 f'[SQL] Korp leader assignation failed (pcid:{pc.id},korpid:{korp.id}) [{e}]',
                 None)
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": f':information_source: **[{pc.id}] {pc.name}** created this Korp',
-                "embed": None,
-                "scope": f'Korp-{pc.korp}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
-                "payload": fn_creatures_clean(members),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
-        return (201,
-                True,
-                f'Korp successfully created (pcid:{pc.id},korpid:{korp.id})',
-                korp)
+        try:
+            korp_members    = []
+            members         = session.query(Creature)\
+                                     .filter(Creature.korp == pc.korp)\
+                                     .all()
+            for creature in members:
+                # Lets convert to a dataclass then a dict
+                creature.date  = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+                creature       = dataclasses.asdict(creature)
+                korp_members.append(creature)
+        except Exception as e:
+            print(e)
+        else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** created this Korp',
+                    "embed": None,
+                    "scope": f'Korp-{pc.korp}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": korp_members,
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp'}
+            yqueue_put('broadcast', qmsg)
+            return (201,
+                    True,
+                    f'Korp successfully created (pcid:{pc.id},korpid:{korp.id})',
+                    korp)
     finally:
         session.close()
 
@@ -199,7 +223,7 @@ def mypc_korp_delete(username,leaderid,korpid):
                 f'Korp not found (pcid:{leader.id},korpid:{korpid})',
                 None)
 
-    count = session.query(PJ).filter(PJ.korp == korp.id).count()
+    count = session.query(Creature).filter(Creature.korp == korp.id).count()
     if count > 1:
         return (200,
                 False,
@@ -210,7 +234,9 @@ def mypc_korp_delete(username,leaderid,korpid):
         # We delete the Korp
         session.delete(korp)
         # We empty Korp fields for the Leader
-        leader           = session.query(PJ).filter(PJ.id == leaderid).one_or_none()
+        leader           = session.query(Creature)\
+                                  .filter(Creature.id == leaderid)\
+                                  .one_or_none()
         leader.korp      = None
         leader.korp_rank = None
         session.commit()
@@ -281,7 +307,9 @@ def mypc_korp_invite(username,leaderid,korpid,targetid):
                 f'PC invited is already in a korp (pcid:{target.id},korpid:{target.korp})',
                 None)
     # Korp population check
-    members    = session.query(PJ).filter(PJ.korp == leader.korp).all()
+    members    = session.query(Creature)\
+                        .filter(Creature.korp == leader.korp)\
+                        .all()
     maxmembers = 100
     if len(members) == maxmembers:
         return (200,
@@ -290,11 +318,12 @@ def mypc_korp_invite(username,leaderid,korpid,targetid):
                 None)
 
     try:
-        pc           = session.query(PJ).filter(PJ.id == target.id).one_or_none()
+        pc           = session.query(Creature)\
+                              .filter(Creature.id == target.id)\
+                              .one_or_none()
         pc.korp      = leader.korp
         pc.korp_rank = 'Pending'
         session.commit()
-        members      = session.query(PJ).filter(PJ.korp == leader.korp).all()
     except Exception as e:
         session.rollback()
         return (200,
@@ -302,22 +331,35 @@ def mypc_korp_invite(username,leaderid,korpid,targetid):
                 f'[SQL] PC Invite failed (targetid:{targetid}) [{e}]',
                 None)
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this korp',
-                "embed": None,
-                "scope": f'Korp-{leader.korp}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
-                "payload": fn_creatures_clean(members),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
-        return (200,
-                True,
-                f'PC Invite successed (slots:{len(members)}/{maxmembers})',
-                fn_creature_clean(pc))
+        try:
+            korp_members    = []
+            members         = session.query(Creature)\
+                                     .filter(Creature.korp == pc.korp)\
+                                     .all()
+            for creature in members:
+                # Lets convert to a dataclass then a dict
+                creature.date  = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+                creature       = dataclasses.asdict(creature)
+                korp_members.append(creature)
+        except Exception as e:
+            print(e)
+        else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this korp',
+                    "embed": None,
+                    "scope": f'Korp-{leader.korp}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": korp_members,
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp'}
+            yqueue_put('broadcast', qmsg)
+            return (200,
+                    True,
+                    f'PC Invite successed (slots:{len(members)}/{maxmembers})',
+                    korp_members)
     finally:
         session.close()
 
@@ -369,11 +411,12 @@ def mypc_korp_kick(username,leaderid,korpid,targetid):
     maxmembers = 100
 
     try:
-        pc           = session.query(PJ).filter(PJ.id == target.id).one_or_none()
+        pc           = session.query(Creature)\
+                              .filter(Creature.id == target.id)\
+                              .one_or_none()
         pc.korp      = None
         pc.korp_rank = None
         session.commit()
-        members      = session.query(PJ).filter(PJ.korp == leader.korp).all()
     except Exception as e:
         session.rollback()
         return (200,
@@ -381,22 +424,35 @@ def mypc_korp_kick(username,leaderid,korpid,targetid):
                 f'[SQL] PC Kick failed (pcid:{target.id},korpid:{target.korp}) [{e}]',
                 None)
     else:
-        # We put the info in queue for ws Discord
-        qmsg = {"ciphered": False,
-                "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this korp',
-                "embed": None,
-                "scope": f'Korp-{leader.korp}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
-                "payload": fn_creatures_clean(members),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
-        return (200,
-                True,
-                f'PC Kick successed (slots:{len(members)}/{maxmembers})',
-                fn_creatures_clean(members))
+        try:
+            korp_members    = []
+            members         = session.query(Creature)\
+                                     .filter(Creature.korp == pc.korp)\
+                                     .all()
+            for creature in members:
+                # Lets convert to a dataclass then a dict
+                creature.date  = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+                creature       = dataclasses.asdict(creature)
+                korp_members.append(creature)
+        except Exception as e:
+            print(e)
+        else:
+            # We put the info in queue for ws Discord
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this korp',
+                    "embed": None,
+                    "scope": f'Korp-{leader.korp}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": korp_members,
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp'}
+            yqueue_put('broadcast', qmsg)
+            return (200,
+                    True,
+                    f'PC Kick successed (slots:{len(members)}/{maxmembers})',
+                    korp_members)
     finally:
         session.close()
 
@@ -429,10 +485,11 @@ def mypc_korp_accept(username,pcid,korpid):
                 None)
 
     try:
-        pc            = session.query(PJ).filter(PJ.id == pcid).one_or_none()
-        pc.korp_rank  = 'Member'
+        pc           = session.query(Creature)\
+                              .filter(Creature.id == pcid)\
+                              .one_or_none()
+        pc.korp_rank = 'Member'
         session.commit()
-        members       = session.query(PJ).filter(PJ.korp == pc.korp).all()
     except Exception as e:
         session.rollback()
         return (200,
@@ -440,22 +497,35 @@ def mypc_korp_accept(username,pcid,korpid):
                 f'[SQL] PC korp accept failed (pcid:{pc.id},korpid:{korpid}) [{e}]',
                 None)
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this korp',
-                "embed": None,
-                "scope": f'Korp-{pc.korp}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
-                "payload": fn_creatures_clean(members),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
-        return (200,
-                True,
-                f'PC korp accept successed (pcid:{pc.id},korpid:{korpid})',
-                None)
+        try:
+            korp_members    = []
+            members         = session.query(Creature)\
+                                     .filter(Creature.korp == pc.korp)\
+                                     .all()
+            for creature in members:
+                # Lets convert to a dataclass then a dict
+                creature.date  = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+                creature       = dataclasses.asdict(creature)
+                korp_members.append(creature)
+        except Exception as e:
+            print(e)
+        else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this korp',
+                    "embed": None,
+                    "scope": f'Korp-{pc.korp}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": korp_members,
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp'}
+            yqueue_put('broadcast', qmsg)
+            return (200,
+                    True,
+                    f'PC korp accept successed (pcid:{pc.id},korpid:{korpid})',
+                    None)
     finally:
         session.close()
 
@@ -488,11 +558,12 @@ def mypc_korp_leave(username,pcid,korpid):
                 None)
 
     try:
-        pc           = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+        pc           = session.query(Creature)\
+                              .filter(Creature.id == pcid)\
+                              .one_or_none()
         pc.korp      = None
         pc.korp_rank = None
         session.commit()
-        members      = session.query(PJ).filter(PJ.korp == pc.korp).all()
     except Exception as e:
         session.rollback()
         return (200,
@@ -500,22 +571,35 @@ def mypc_korp_leave(username,pcid,korpid):
                 f'[SQL] PC korp leave failed (pcid:{pc.id},korpid:{korpid}) [{e}]',
                 None)
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
-                "embed": None,
-                "scope": f'Korp-{korpid}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
-                "payload": fn_creatures_clean(members),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
-        return (200,
-                True,
-                f'PC korp leave successed (pcid:{pc.id},korpid:{korpid})',
-                None)
+        try:
+            korp_members    = []
+            members         = session.query(Creature)\
+                                     .filter(Creature.korp == pc.korp)\
+                                     .all()
+            for creature in members:
+                # Lets convert to a dataclass then a dict
+                creature.date  = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+                creature       = dataclasses.asdict(creature)
+                korp_members.append(creature)
+        except Exception as e:
+            print(e)
+        else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
+                    "embed": None,
+                    "scope": f'Korp-{korpid}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": korp_members,
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp'}
+            yqueue_put('broadcast', qmsg)
+            return (200,
+                    True,
+                    f'PC korp leave successed (pcid:{pc.id},korpid:{korpid})',
+                    None)
     finally:
         session.close()
 
@@ -548,11 +632,12 @@ def mypc_korp_decline(username,pcid,korpid):
                 None)
 
     try:
-        pc           = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+        pc           = session.query(Creature)\
+                              .filter(Creature.id == pcid)\
+                              .one_or_none()
         pc.korp      = None
         pc.korp_rank = None
         session.commit()
-        members      = session.query(PJ).filter(PJ.korp == pc.korp).all()
     except Exception as e:
         session.rollback()
         return (200,
@@ -560,21 +645,34 @@ def mypc_korp_decline(username,pcid,korpid):
                 f'[SQL] PC korp leave failed (pcid:{pc.id},korpid:{korpid}) [{e}]',
                 None)
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": f':information_source: **[{pc.id}] {pc.name}** left this korp',
-                "embed": None,
-                "scope": f'Korp-{korpid}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
-                "payload": fn_creatures_clean(members),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
-        return (200,
-                True,
-                'PC successfully left (pcid:{pc.id},korpid:{korpid})',
-                None)
+        try:
+            korp_members    = []
+            members         = session.query(Creature)\
+                                     .filter(Creature.korp == pc.korp)\
+                                     .all()
+            for creature in members:
+                # Lets convert to a dataclass then a dict
+                creature.date  = creature.date.strftime('%Y-%m-%d %H:%M:%S')
+                creature       = dataclasses.asdict(creature)
+                korp_members.append(creature)
+        except Exception as e:
+            print(e)
+        else:
+            # We put the info in queue for ws
+            qmsg = {"ciphered": False,
+                    "payload": f':information_source: **[{pc.id}] {pc.name}** left this korp',
+                    "embed": None,
+                    "scope": f'Korp-{korpid}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            # We put the info in queue for ws Front
+            qmsg = {"ciphered": False,
+                    "payload": korp_members,
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp'}
+            yqueue_put('broadcast', qmsg)
+            return (200,
+                    True,
+                    f'PC successfully left (pcid:{pc.id},korpid:{korpid})',
+                    None)
     finally:
         session.close()

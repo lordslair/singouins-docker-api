@@ -43,20 +43,20 @@ def mypc_action_move(username,pcid,path):
             if bluepa >= 3:
                 # Enough PA to move ONLY on blue 🔵 PA
                 bluepa     -= 3
-                pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                pc   = session.query(Creature).filter(Creature.id == pcid).one_or_none()
                 pc.x = x
                 pc.y = y
             elif 0 < bluepa < 3 and redpa >= 1:
                 # Enough PA to move on blue 🔵 + red 🔴 PA
                 redpa      -= (3 - bluepa)
                 bluepa      = 0
-                pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                pc   = session.query(Creature).filter(Creature.id == pcid).one_or_none()
                 pc.x = x
                 pc.y = y
             elif bluepa == 0 and redpa >= 3:
                 # Enough PA to move ONLY on red 🔴 PA
                 redpa     -= 3
-                pc   = session.query(PJ).filter(PJ.id == pcid).one_or_none()
+                pc   = session.query(Creature).filter(Creature.id == pcid).one_or_none()
                 pc.x = x
                 pc.y = y
 
