@@ -812,7 +812,10 @@ app.add_url_rule('/internal/discord/associate', methods=['POST'], view_func=rout
 app.add_url_rule('/internal/discord/creature',  methods=['POST'], view_func=routes.internal.discord_creature)
 app.add_url_rule('/internal/discord/creatures', methods=['POST'], view_func=routes.internal.discord_creatures)
 app.add_url_rule('/internal/discord/user',      methods=['POST'], view_func=routes.internal.discord_user)
-
+# Routes /internal/instance/*
+app.add_url_rule('/internal/instance/queue',
+                 methods=['GET'],
+                 view_func=routes.internal.instance_queue_get)
 
 if __name__ == '__main__':
     app.run()

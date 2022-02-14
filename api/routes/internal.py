@@ -282,6 +282,17 @@ def discord_user():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+# /internal/instance/* subpath
+def instance_queue_get():
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+
+    incr.one('queries:internal:instance:queue')
+    (code, success, msg, payload) = internal_instance_queue_get()
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+
 # /internal/* subpath
 def korp():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
