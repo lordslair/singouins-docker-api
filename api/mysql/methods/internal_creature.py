@@ -15,6 +15,12 @@ from ..utils.redis.pa       import *
 from .fn_creature           import fn_creature_get,fn_creature_stats
 from .fn_user               import fn_user_get_from_discord
 
+# Loading the Meta for later use
+try:
+    metaRaces   = get_meta('race')
+except Exception as e:
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+
 #
 # Queries /internal/creature/*
 #
@@ -86,7 +92,6 @@ def internal_creature_add(raceid,gender,rarity,
                 None)
 
     # Pre-flight checks
-    metaRaces = get_meta('races')
     if metaRaces is None:
         return (200,
                 False,

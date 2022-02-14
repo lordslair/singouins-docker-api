@@ -83,8 +83,8 @@ def test_singouins_mypc_instance_join():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestInstanceJoin',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)

@@ -1,15 +1,19 @@
 # -*- coding: utf8 -*-
 
-from random             import randint
+from random              import randint
 
-from ..session          import Session
-from ..models           import *
-from ..utils.redis      import *
+from ..session           import Session
+from ..models            import (Creature,
+                                 Item)
 
-from .fn_creature       import *
-from .fn_user           import fn_user_get
-from .fn_wallet         import fn_wallet_ammo_get,fn_wallet_ammo_set
-from .fn_global         import clog
+from ..utils.redis.metas import get_meta
+from ..utils.redis.pa    import get_pa,set_pa
+from ..utils.redis       import incr
+
+from .fn_creature        import *
+from .fn_user            import fn_user_get
+from .fn_wallet          import fn_wallet_ammo_get,fn_wallet_ammo_set
+from .fn_global          import clog
 
 # To accessing dict keys like an attribute
 # Might refactor and use dataclasses instead
@@ -17,6 +21,13 @@ class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
+
+# Loading the Meta for later use
+try:
+    metaWeapons = get_meta('weapon')
+    metaArmors  = get_meta('armor')
+except Exception as e:
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
 
 #
 # Queries /mypc/{pcid}/action/*
@@ -133,7 +144,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         try:
             # Retrieving weapon stats
             item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
-            itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+            # We grab the weapon wanted from metaWeapons
+            metaWeapon = dict(list(filter(lambda x:x["id"] == item.metaid,metaWeapons))[0]) # Gruikfix
         except Exception as e:
             return (200,
                     False,
@@ -142,7 +154,6 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         else:
             # Make it persistent after session.close()
             session.expunge(item)
-            session.expunge(itemmeta)
             # Check if item exists/is owned by PC
             if item is None:
                 return (200,
@@ -163,7 +174,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
                 f'ItemMeta not found (pcid:{pc.id},weaponid:{weaponid})',
                 None)
 
-    if itemmeta.ranged is False:
+    if metaWeapon['ranged'] is False:
         # Checking distance for contact weapons
         if abs(pc.x - tg.x) > 1 or abs(pc.y - tg.y) > 1:
             # Target is not on a adjacent tile
@@ -180,7 +191,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
         rpath = 'contact' # Used for Redis HighScore path
     else:
         # Checking distance for ranged weapons
-        if abs(pc.x - tg.x) > itemmeta.rng or abs(pc.y - tg.y) > itemmeta.rng:
+        if abs(pc.x - tg.x) > metaWeapon['rng'] or abs(pc.y - tg.y) > metaWeapon['rng']:
             # Target is not in range
             return (200,
                     False,
@@ -295,37 +306,54 @@ def mypc_action_reload(username,pcid,weaponid):
     session     = Session()
     redpa       = get_pa(pcid)[3]['red']['pa']
 
-    if pc and pc.account != user.id:
-        return (409, False, 'Token/username mismatch', None)
-
     # Pre-flight checks
-    item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
-    if item is None:
+    if pc is None:
         return (200,
                 False,
-                'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'PC not found (pcid:{pcid})',
+                None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pc.id},username:{username})',
                 None)
 
-    itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+    # Retrieving weapon stats
+    try:
+        item     = session.query(Item)\
+                          .filter(Item.id == weaponid, Item.bearer == pc.id)\
+                          .one_or_none()
+    except Exception as e:
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Query failed (pcid:{pc.id},weaponid:{weaponid}) [{e}]',
+                None)
+    else:
+        if item is None:
+            return (200,
+                    False,
+                    f'Item not found (pcid:{pc.id},weaponid:{weaponid})',
+                    None)
+
+    itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaWeapons))[0]) # Gruikfix
     if itemmeta is None:
         return (200,
                 False,
-                'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'ItemMeta not found (pcid:{pcid},weaponid:{item.id})',
                 None)
-    session.expunge(itemmeta)
-    if itemmeta.pas_reload is None:
+    if itemmeta['pas_reload'] is None:
         return (200,
                 False,
-                'Item is not reloadable (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'Item is not reloadable (pcid:{pc.id},weaponid:{item.id})',
                 None)
-
-    if item.ammo == itemmeta.max_ammo:
+    if item.ammo == itemmeta['max_ammo']:
         return (200,
                 False,
-                'Item is already loaded (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'Item is already loaded (pcid:{pc.id},weaponid:{item.id})',
                 None)
 
-    if redpa < itemmeta.pas_reload:
+    if redpa < itemmeta['pas_reload']:
         # Not enough PA to reload
         return (200,
                 False,
@@ -335,10 +363,10 @@ def mypc_action_reload(username,pcid,weaponid):
                  "action": None})
     else:
         # Enough PA to reload, we consume the red PAs
-        set_pa(pc.id,itemmeta.pas_reload,0)
+        set_pa(pc.id,itemmeta['pas_reload'],0)
 
-    walletammo = fn_wallet_ammo_get(pc,item,itemmeta)
-    neededammo = itemmeta.max_ammo - item.ammo
+    walletammo = fn_wallet_ammo_get(pc,item,itemmeta['caliber'])
+    neededammo = itemmeta['max_ammo'] - item.ammo
     if walletammo < neededammo:
         # Not enough ammo to reload
         return (200,
@@ -348,56 +376,80 @@ def mypc_action_reload(username,pcid,weaponid):
     else:
         # Enough ammo to reload, we remove the ammo from wallet
         # The '* -1' is to negate the number as the fn_set() is doing an addition
-        fn_wallet_ammo_set(pc,itemmeta.caliber,neededammo * -1)
+        fn_wallet_ammo_set(pc,itemmeta['caliber'],neededammo * -1)
 
     try:
-        item       = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+        item       = session.query(Item)\
+                            .filter(Item.id == weaponid, Item.bearer == pc.id)\
+                            .one_or_none()
         item.ammo += neededammo
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
+        session.rollback()
         return (200,
                 False,
-                '[SQL] Weapon reload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
+                f'[SQL] Weapon reload failed (pcid:{pc.id},weaponid:{item.id}) [{e}]',
                 None)
     else:
-        incr_hs(pc,'action:reload',1) # Redis HighScore
+        incr.one(f'highscores:{pc.id}:action:reload')
         return (200,
                 True,
-                'Weapon reload success (pcid:{},weaponid:{})'.format(pc.id,item.id),
+                f'Weapon reload successed (pcid:{pc.id},weaponid:{item.id})',
                 get_pa(pcid)[3])
     finally:
         session.close()
 
-# API: /mypc/<int:pcid>/action/unload/<int:weaponid>
+# API: POST /mypc/<int:pcid>/action/unload/<int:weaponid>
 def mypc_action_unload(username,pcid,weaponid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     session     = Session()
 
-    if pc and pc.account != user.id:
-        return (409, False, 'Token/username mismatch', None)
-
-    # Retrieving weapon stats
-    item     = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
-    itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
-    session.expunge(itemmeta)
-
     # Pre-flight checks
-    if item is None:
+    if pc is None:
         return (200,
                 False,
-                'Item not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'PC not found (pcid:{pcid})',
                 None)
+    if pc.account != user.id:
+        return (409,
+                False,
+                f'Token/username mismatch (pcid:{pc.id},username:{username})',
+                None)
+
+    # Retrieving weapon stats
+    try:
+        item     = session.query(Item)\
+                          .filter(Item.id == weaponid, Item.bearer == pc.id)\
+                          .one_or_none()
+    except Exception as e:
+        session.rollback()
+        return (200,
+                False,
+                f'[SQL] Query failed (pcid:{pc.id},weaponid:{weaponid}) [{e}]',
+                None)
+    else:
+        if item is None:
+            return (200,
+                    False,
+                    f'Item not found (pcid:{pc.id},weaponid:{weaponid})',
+                    None)
+        if item.ammo == 0:
+            return (200,
+                    False,
+                    f'Item is already empty (pcid:{pc.id},weaponid:{weaponid})',
+                    None)
+
+    itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaWeapons))[0]) # Gruikfix
     if itemmeta is None:
         return (200,
                 False,
-                'ItemMeta not found (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'ItemMeta not found (pcid:{pc.id},weaponid:{item.id})',
                 None)
-    if item.ammo == 0:
+    if itemmeta['pas_reload'] is None:
         return (200,
                 False,
-                'Item is already empty (pcid:{},weaponid:{})'.format(pcid,weaponid),
+                f'Item is not reloadable (pcid:{pc.id},weaponid:{item.id})',
                 None)
 
     if get_pa(pcid)[3]['blue']['pa'] < 2:
@@ -412,29 +464,31 @@ def mypc_action_unload(username,pcid,weaponid):
         # Enough PA to unload, we consume the red PAs
         set_pa(pc.id,0,2)
 
-    ret = fn_wallet_ammo_set(pc,itemmeta.caliber,item.ammo)
+    ret = fn_wallet_ammo_set(pc,itemmeta['caliber'],item.ammo)
     if ret is None:
         return (200,
                 True,
-                'Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,item.id),
+                f'Weapon unload failed (pcid:{pcid},weaponid:{item.id})',
                 get_pa(pcid)[3])
 
     try:
-        item       = session.query(Item).filter(Item.id == weaponid, Item.bearer == pc.id).one_or_none()
+        item       = session.query(Item)\
+                            .filter(Item.id == weaponid, Item.bearer == pc.id)\
+                            .one_or_none()
         item.ammo  = 0
         session.commit()
     except Exception as e:
-        # Something went wrong during commit
+        session.rollback()
         return (200,
                 False,
-                '[SQL] Weapon unload failed (pcid:{},weaponid:{})'.format(pc.id,weaponid),
+                f'[SQL] Weapon unload failed (pcid:{pc.id},weaponid:{weaponid}) [{e}]',
                 None)
     else:
-        incr_hs(pc,'action:unload',1) # Redis HighScore
+        incr.one(f'highscores:{pc.id}:action:unload')
         clog(pc.id,None,'Unloaded a weapon')
         return (200,
                 True,
-                'Weapon unload success (pcid:{},weaponid:{})'.format(pc.id,weaponid),
+                f'Weapon unload successed (pcid:{pc.id},weaponid:{weaponid})',
                 get_pa(pcid)[3])
     finally:
         session.close()

@@ -4,15 +4,16 @@ import json
 import re
 
 from .connector import r
+from .metas     import get_meta
 
 redpaduration  = 3600
 bluepaduration = 3600
 
 # Get the Meta stored in REDIS
 try:
-    metaSkills = json.loads(r.get('system:meta:skills'))
+    metaSkills = get_meta('skill')
 except Exception as e:
-    print(f'[Redis] metaSkills fetching failed [{e}]')
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
 
 #
 # Queries: cds:*

@@ -5,15 +5,16 @@ import re
 import time
 
 from .connector import r
+from .metas     import get_meta
 
 redpaduration  = 3600
 bluepaduration = 3600
 
 # Get the Meta stored in REDIS
 try:
-    metaEffects = json.loads(r.get('system:meta:effects'))
+    metaEffects = get_meta('effect')
 except Exception as e:
-    print(f'[Redis] metaEffects fetching failed [{e}]')
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
 
 #
 # Queries: effects:*

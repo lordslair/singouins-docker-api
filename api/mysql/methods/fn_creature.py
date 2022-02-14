@@ -5,11 +5,25 @@ import dataclasses
 from datetime            import datetime
 
 from ..session           import Session
-from ..models            import *
+from ..models            import (Creature,
+                                 CreatureSlots,
+                                 CreatureStats,
+                                 Item,
+                                 Wallet)
+
 from ..utils.loot        import *
-from ..utils.redis.stats import *
+from ..utils.redis.metas import get_meta
+from ..utils.redis.stats import (get_hp,
+                                 set_hp,
+                                 set_stats)
 
 from .fn_global          import clog
+
+# Loading the Meta for later use
+try:
+    metaWeapons = get_meta('weapon')
+except Exception as e:
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
 
 def fn_creature_get(pcname,pcid):
     session = Session()
@@ -182,12 +196,12 @@ def fn_creature_gain_loot(pc,tg):
                 incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
 
                 if   item.metatype == 'weapon':
-                     itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
+                     itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaWeapons))[0]) # Gruikfix
                      # item.ammo is by default None, we initialize it here
-                     if itemmeta.ranged == True:
+                     if itemmeta['ranged'] == True:
                          item.ammo = 0
                 elif item.metatype == 'armor':
-                     itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
+                     itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaArmors))[0]) # Gruikfix
         else:
             # We add loot to the killer squad
             squadlist = session.query(Creature)\
@@ -224,18 +238,18 @@ def fn_creature_gain_loot(pc,tg):
                     incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
 
                     if   item.metatype == 'weapon':
-                         itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == item.metaid).one_or_none()
-                         # item.ammo is by default None, we initialize it here
-                         if itemmeta.ranged == True:
-                             item.ammo = 0
+                        itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaWeapons))[0]) # Gruikfix
+                        # item.ammo is by default None, we initialize it here
+                        if itemmeta['ranged'] == True:
+                            item.ammo = 0
                     elif item.metatype == 'armor':
-                         itemmeta = session.query(MetaArmor).filter(MetaArmor.id == item.metaid).one_or_none()
+                        itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaArmors))[0]) # Gruikfix
 
                     # We put the info in queue for ws Discord
                     qmsg = {"ciphered": False,
                             "payload": {"color_int": color_int[item.rarity],
                                         "path": f'/resources/sprites/{item.metatype}s/{item.metaid}.png',
-                                        "title": f'{itemmeta.name}',
+                                        "title": f"{itemmeta['name']}",
                                         "item": f'Looted by [{pcsquad.id}] {pcsquad.name}',
                                         "footer": f'NB: This item is [{item.bound_type}]'},
                             "embed": True,
@@ -281,28 +295,20 @@ def fn_creature_stats(pc):
             legs      = session.query(Item).filter(Item.id == equipment.legs).one_or_none()
 
             armormetas = []
-            if feet:
-                feetmeta      = session.query(MetaArmor).filter(MetaArmor.id == feet.metaid).one_or_none()
-                armormetas.append(feetmeta)
-            if hands:
-                handsmeta     = session.query(MetaArmor).filter(MetaArmor.id == hands.metaid).one_or_none()
-                armormetas.append(handsmeta)
-            if head:
-                headmeta      = session.query(MetaArmor).filter(MetaArmor.id == head.metaid).one_or_none()
-                armormetas.append(headmeta)
-            if shoulders:
-                shouldersmeta = session.query(MetaArmor).filter(MetaArmor.id == shoulders.metaid).one_or_none()
-                armormetas.append(shouldersmeta)
-            if torso:
-                torsometa     = session.query(MetaArmor).filter(MetaArmor.id == torso.metaid).one_or_none()
-                armormetas.append(torsometa)
-            if legs:
-                legsmeta      = session.query(MetaArmor).filter(MetaArmor.id == legs.metaid).one_or_none()
-                armormetas.append(legsmeta)
+            armors     = [feet,
+                          hands,
+                          head,
+                          shoulders,
+                          torso,
+                          legs]
 
-            holster   = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.holster).one_or_none()
-            lefthand  = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.lefthand).one_or_none()
-            righthand = session.query(MetaWeapon).filter(MetaWeapon.id == equipment.righthand).one_or_none()
+            for armor in armors:
+                if armor is not None:
+                    metaWeapon = dict(list(filter(lambda x:x["id"] == armor.metaid,metaWeapons))[0]) # Gruikfix
+                    armormetas.append(metaWeapon)
+
+            # We grab the weapon wanted from metaWeapons
+            # TODO
 
         # We need to query Creature base stats
         cs        = session.query(CreatureStats)\
@@ -310,12 +316,12 @@ def fn_creature_stats(pc):
                            .one_or_none()
 
     except Exception as e:
-        pass
+        print(e)
     else:
         for meta in armormetas:
             if meta:
-                stats_items['def']['armor']['b'] += meta.arm_b
-                stats_items['def']['armor']['p'] += meta.arm_p
+                stats_items['def']['armor']['b'] += meta['arm_b']
+                stats_items['def']['armor']['p'] += meta['arm_p']
 
         if cs:
             # We got Creature base stats

@@ -153,7 +153,7 @@ def test_singouins_inventory_item_dismantle():
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
     weapon     = json.loads(response.text)['payload']['weapon']
-    itemid     = weapon[0]['id']
+    itemid     = weapon[1]['id']
 
     url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/dismantle' # POST
     response   = requests.post(url, headers=headers)

@@ -77,8 +77,8 @@ def test_singouins_korp_kick():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestKorpKick',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -122,8 +122,8 @@ def test_singouins_korp_accept():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestKorpAccept',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -167,8 +167,8 @@ def test_singouins_korp_decline():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestKorpDecline',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -212,8 +212,8 @@ def test_singouins_korp_leave():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestKorpLeave',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)

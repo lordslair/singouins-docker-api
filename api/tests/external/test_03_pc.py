@@ -14,8 +14,8 @@ def test_singouins_pc_create():
     headers  = {"Authorization": f"Bearer {token}"}
     payload     = {'name': PC_NAME,
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
 

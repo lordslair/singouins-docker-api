@@ -58,8 +58,8 @@ def test_singouins_squad_invite():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestSquadInvite',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -97,8 +97,8 @@ def test_singouins_squad_kick():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestSquadKick',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -144,8 +144,8 @@ def test_singouins_squad_accept():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestSquadAccept',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -191,8 +191,8 @@ def test_singouins_squad_decline():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestSquadDecline',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)
@@ -238,8 +238,8 @@ def test_singouins_squad_leave():
     url      = f'{API_URL}/mypc' # POST
     payload_c   = {'name': 'PJTestSquadLeave',
                    'gender': True,
-                   'race': '2',
-                   'class': '3',
+                   'race': 2,
+                   'class': 3,
                    'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
                    'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
     response = requests.post(url, json = payload_c, headers=headers)

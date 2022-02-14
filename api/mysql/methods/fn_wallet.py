@@ -3,7 +3,7 @@
 from ..session          import Session
 from ..models           import Wallet
 
-def fn_wallet_ammo_get(pc,item,itemmeta):
+def fn_wallet_ammo_get(pc,item,caliber):
     session = Session()
 
     try:
@@ -15,21 +15,21 @@ def fn_wallet_ammo_get(pc,item,itemmeta):
         if wallet is None:
             return False
 
-        if   itemmeta.caliber == '.22':
+        if   caliber == '.22':
             return wallet.cal22
-        elif itemmeta.caliber == '.223':
+        elif caliber == '.223':
             return wallet.cal223
-        elif itemmeta.caliber == '.311':
+        elif caliber == '.311':
             return wallet.cal311
-        elif itemmeta.caliber == '.50':
+        elif caliber == '.50':
             return wallet.cal50
-        elif itemmeta.caliber == '.55':
+        elif caliber == '.55':
             return wallet.cal55
-        elif itemmeta.caliber == 'shell':
+        elif caliber == 'shell':
             return wallet.shell
-        elif itemmeta.caliber == 'bolt':
+        elif caliber == 'bolt':
             return wallet.bolt
-        elif itemmeta.caliber == 'arrow':
+        elif caliber == 'arrow':
             return wallet.arrow
         else:
             return 0

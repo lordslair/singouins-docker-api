@@ -6,15 +6,30 @@ from datetime              import datetime
 from random                import randint
 
 from ..session             import Session
-from ..models              import *
+from ..models              import (Cosmetic,
+                                   Creature,
+                                   CreatureSkills,
+                                   CreatureSlots,
+                                   CreatureStats,
+                                   Item,
+                                   Wallet)
+
 from ..utils.redis.cds     import *
 from ..utils.redis.effects import *
+from ..utils.redis.metas   import get_meta
 from ..utils.redis.stats   import *
 
 from .fn_creature          import (fn_creature_get,
                                    fn_creature_stats)
 from .fn_user              import fn_user_get
 from .fn_global            import clog
+
+# Loading the Meta for later use
+try:
+    metaWeapons = get_meta('weapon')
+    metaRaces   = get_meta('race')
+except Exception as e:
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
 
 #
 # Queries /mypc/*
@@ -38,19 +53,20 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                 f'PC already exists (username:{username},pcname:{pcname})',
                 None)
     else:
-        race = session.query(MetaRace).filter(MetaRace.id == pcrace).one_or_none()
-        if race is None:
+        # We grab the race wanted from metaRaces
+        metaRace = dict(list(filter(lambda x:x["id"] == pcrace,metaRaces))[0]) # Gruikfix
+        if metaRace is None:
             return (200,
                     False,
                     f'MetaRace not found (race:{pcrace})',
                     None)
 
         pc = Creature(name    = pcname,
-                      race    = race.id,
+                      race    = metaRace['id'],
                       gender  = pcgender,
                       account = fn_user_get(username).id,
-                      hp      = 100 + race.min_m,
-                      hp_max  = 100 + race.min_m,
+                      hp      = 100 + metaRace['min_m'], # TODO: To remove
+                      hp_max  = 100 + metaRace['min_m'], # TODO: To remove
                       instance = None,        # Gruikfix for now
                       x       = randint(2,4), # TODO: replace with rand(empty coords)
                       y       = randint(2,5)) # TODO: replace with rand(empty coords)
@@ -80,12 +96,12 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                 wallet    = Wallet(id = pc.id)
 
                 stats     = CreatureStats(id = pc.id,
-                                          m_race = race.min_m,
-                                          r_race = race.min_r,
-                                          g_race = race.min_g,
-                                          v_race = race.min_v,
-                                          p_race = race.min_p,
-                                          b_race = race.min_b)
+                                          m_race = metaRace['min_m'],
+                                          r_race = metaRace['min_r'],
+                                          g_race = metaRace['min_g'],
+                                          v_race = metaRace['min_v'],
+                                          p_race = metaRace['min_p'],
+                                          b_race = metaRace['min_b'])
 
                 session.add(equipment)
                 session.add(wallet)
@@ -106,7 +122,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                     session.rollback()
                     return (200,
                             False,
-                            f'[SQL] PC Slots/Wallet/HS/Stats creation failed [{e}]',
+                            f'[SQL] PC Cosmetics/Slots/Wallet/Stats creation failed [{e}]',
                             None)
                 else:
                     # Money is added
@@ -130,10 +146,11 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                             session.add(rh)
 
                             if rh.metatype == 'weapon':
-                                 itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == rh.metaid).one_or_none()
-                                 # item.ammo is by default None, we initialize it here
-                                 if itemmeta.ranged == True:
-                                     rh.ammo = itemmeta.max_ammo
+                                # We grab the weapon wanted from metaWeapons
+                                metaWeapon = dict(list(filter(lambda x:x["id"] == rh.metaid,metaWeapons))[0]) # Gruikfix
+                                # item.ammo is by default None, we initialize it here
+                                if metaWeapon['ranged'] == True:
+                                    rh.ammo = metaWeapon['max_ammo']
 
                         if pcequipment['lefthand'] is not None:
                             lh   = Item(metatype   = pcequipment['lefthand']['metatype'],
@@ -151,10 +168,11 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                             session.add(lh)
 
                             if lh.metatype == 'weapon':
-                                 itemmeta = session.query(MetaWeapon).filter(MetaWeapon.id == lh.metaid).one_or_none()
-                                 # item.ammo is by default None, we initialize it here
-                                 if itemmeta.ranged == True:
-                                     lh.ammo = itemmeta.max_ammo
+                                # We grab the weapon wanted from metaWeapons
+                                metaWeapon = dict(list(filter(lambda x:x["id"] == lh.metaid,metaWeapons))[0]) # Gruikfix
+                                # item.ammo is by default None, we initialize it here
+                                if metaWeapon['ranged'] == True:
+                                    lh.ammo = metaWeapon['max_ammo']
 
                     try:
                         session.commit()
@@ -298,6 +316,12 @@ def mypc_get_stats(pc):
                 True,
                 f'Stats computation successed (pcid:{pc.id})',
                 stats)
+    else:
+        # Data computation failed
+        return (200,
+                False,
+                f'Stats computation failed (pcid:{pc.id})',
+                None)
 
 # API: GET /mypc/<int:pcid>/skills
 def mypc_get_skills(username,pcid):

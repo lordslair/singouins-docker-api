@@ -18,6 +18,13 @@ from .fn_creature        import (fn_creature_get,
                                 fn_creature_stats)
 from .fn_user            import fn_user_get
 
+# Loading the Meta for later use
+try:
+    metaWeapons = get_meta('weapon')
+    metaArmors  = get_meta('armor')
+except Exception as e:
+    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+
 #
 # Queries /mypc/{pcid}/inventory/*
 #
@@ -118,8 +125,6 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     stats       = fn_creature_stats(pc)
     session     = Session()
     redpa       = get_pa(pcid)[3]['red']['pa']
-    metaWeapons = get_meta('weapons')
-    metaArmors  = get_meta('armors')
     equipment   = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
 
 
