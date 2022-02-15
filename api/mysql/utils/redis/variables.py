@@ -20,4 +20,5 @@ META_FILES = {'armor':  'data/metas/armors.json',
               'effect': 'data/metas/effects.json',
               'race':   'data/metas/races.json',
               'skill':  'data/metas/skills.json',
+              'status': 'data/metas/statuses.json',
               'weapon': 'data/metas/weapons.json'}

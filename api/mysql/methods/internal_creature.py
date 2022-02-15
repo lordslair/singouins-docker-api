@@ -713,7 +713,7 @@ def internal_creature_stats(creatureid):
                 f'Stats query failed (creatureid:{creature.id})',
                 None)
 
-# API: POST /internal/creature/statuses
+# API: POST /internal/creature/{creatureid}/statuses
 def internal_creature_statuses(creatureid):
     # Input checks
     if not isinstance(creatureid, int):
@@ -730,19 +730,142 @@ def internal_creature_statuses(creatureid):
                 f'Creature unknown (creatureid:{creatureid})',
                 None)
 
-    # Statuese fetching
+    # Statuses fetching
     statuses  = get_statuses(creature)
     if isinstance(statuses, list):
         return (200,
                 True,
-                f'Statuses found (creatureid:{creatureid})',
+                f'Statuses found (creatureid:{creature.id})',
                 {"statuses": statuses,
                  "creature": creature})
     else:
         return (200,
                 False,
-                f'Statuses query failed (creatureid:{creatureid})',
+                f'Statuses query failed (creatureid:{creature.id})',
                 None)
+
+# API: PUT /internal/creature/{creatureid}/status/{statusmetaid}
+def internal_creature_status_add(creatureid,duration,statusmetaid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(duration, int):
+        return (200,
+                False,
+                f'Bad Duration format (duration:{duration})',
+                None)
+    if not isinstance(statusmetaid, int):
+        return (200,
+                False,
+                f'Bad SkillMeta id format (statusmetaid:{statusmetaid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # Effect add
+    status       = add_status(creature,duration,statusmetaid)
+    statuses     = get_statuses(creature)
+    if status:
+        return (200,
+                True,
+                f'Status add successed (creatureid:{creature.id})',
+                {"statuses": statuses,
+                 "creature": creature})
+    else:
+        return (200,
+                False,
+                f'Status add failed (creatureid:{creature.id})',
+                None)
+
+# API: DELETE /internal/creature/{creatureid}/status/{statusmetaid}
+def internal_creature_status_del(creatureid,statusmetaid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(statusmetaid, int):
+        return (200,
+                False,
+                f'Bad SkillMeta id format (statusmetaid:{statusmetaid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # Status delete
+    status  = del_status(creature,statusmetaid)
+    if status > 0:
+        return (200,
+                True,
+                f'Status del successed (statusmetaid:{statusmetaid})',
+                None)
+    elif status == 0:
+        return (200,
+                False,
+                f'Status not found (statusmetaid:{statusmetaid})',
+                None)
+    else:
+        return (200,
+                False,
+                f'Status del failed (statusmetaid:{statusmetaid})',
+                None)
+
+# API: GET /internal/creature/{creatureid}/status/{statusmetaid}
+def internal_creature_status_get(creatureid,statusmetaid):
+    # Input checks
+    if not isinstance(creatureid, int):
+        return (200,
+                False,
+                f'Bad Creature id format (creatureid:{creatureid})',
+                None)
+    if not isinstance(statusmetaid, int):
+        return (200,
+                False,
+                f'Bad SkillMeta id format (statusmetaid:{statusmetaid})',
+                None)
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+
+    # Status get
+    status  = get_status(creature,statusmetaid)
+    if status is False:
+        return (200,
+                False,
+                f'Status not found (statusmetaid:{statusmetaid})',
+                None)
+    elif status:
+        return (200,
+                True,
+                f'Status get successed (statusmetaid:{statusmetaid})',
+                status)
+    else:
+        return (200,
+                False,
+                f'Status get failed (statusmetaid:{statusmetaid})',
+                None)
+
 
 # API: POST /internal/creature/wallet
 def internal_creature_wallet(creatureid):

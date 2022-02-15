@@ -803,6 +803,19 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature_effects)
+# Routes /internal/creature/{creatureid}/status/*
+app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature_status_add)
+app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
+                 methods=['DELETE'],
+                 view_func=routes.internal.creature_status_del)
+app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
+                 methods=['GET'],
+                 view_func=routes.internal.creature_status_get)
+app.add_url_rule('/internal/creature/<int:creatureid>/statuses',
+                 methods=['GET'],
+                 view_func=routes.internal.creature_statuses)
 # Routes /internal/creatures/*
 app.add_url_rule('/internal/creatures',
                  methods=['GET'],

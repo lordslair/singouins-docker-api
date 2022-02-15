@@ -358,27 +358,108 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatsResponse'
       security:
         - internal_token: []
-  /internal/creature/statuses:
-    post:
+  /internal/creature/{creatureid}/status/{statusmetaid}:
+    put:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature Stats request
+      summary: Internal Creature ADD Status request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: statusmetaid
+          schema:
+            type: integer
+          required: true
       requestBody:
         description: ''
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InternalCreature'
+              type: object
+              properties:
+                duration:
+                  type: integer
+                  nullable: false
       responses:
         '200':
-          description: OK - Statuses found
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreatureStatusesResponse'
-        '400':
-          description: KO - Malformed JSON
+      security:
+        - internal_token: []
+    delete:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature DEL Status request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: statusmetaid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature GET Status request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: statusmetaid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureStatusResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/statuses:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Statuses request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureStatusesResponse'
       security:
         - internal_token: []
   /internal/creature/wallet:
@@ -1820,6 +1901,18 @@ components:
         success:
           type: boolean
           nullable: false
+    InternalCreatureStatusResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          $ref: '#/components/schemas/StatusObject'
+        success:
+          type: boolean
+          nullable: false
     InternalCreatureStatusesResponse:
       type: object
       properties:
@@ -1834,7 +1927,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/StatusObject'
-            pc:
+            creature:
               $ref: '#/components/schemas/PcObject'
         success:
           type: boolean
@@ -1850,9 +1943,9 @@ components:
           type: object
           nullable: true
           properties:
-            pc:
+            creature:
               $ref: '#/components/schemas/PcObject'
-            stats:
+            wallet:
               $ref: '#/components/schemas/WalletObject'
         success:
           type: boolean
@@ -2288,16 +2381,25 @@ components:
         duration_left:
           type: integer
           nullable: false
-        timestamp_end:
+        id:
           type: integer
           nullable: false
-        timestamp_start:
+        name:
+          type: object
+          nullable: false
+          properties:
+            en:
+              type: string
+              nullable: false
+            fr:
+              type: string
+              nullable: false
+        source:
           type: integer
           nullable: false
         type:
           type: string
           nullable: false
-
     UserObject:
       type: object
       nullable: true
