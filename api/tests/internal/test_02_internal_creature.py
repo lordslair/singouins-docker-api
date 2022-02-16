@@ -47,14 +47,6 @@ def test_singouins_internal_creature_stats():
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_internal_creature_statuses():
-    url       = f'{API_URL}/internal/creature/statuses'
-    payload   = {"creatureid": CREATURE_ID}
-    response  = requests.post(url, headers=HEADERS, json = payload)
-
-    assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
-
 def test_singouins_internal_creature_wallet():
     url       = f'{API_URL}/internal/creature/wallet'
     payload   = {"creatureid": CREATURE_ID}
