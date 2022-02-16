@@ -32,8 +32,8 @@ def add_effect(creature,duration,effectmetaid,source):
     mypattern = f"effects:{creature.instance}:{creature.id}:{effect['id']}:{effectid}"
 
     try:
-        r.set(f'{mypattern}:duration_base',duration)
-        r.set(f'{mypattern}:source',source.id)
+        r.set(f'{mypattern}:duration_base',ttl,        ttl)
+        r.set(f'{mypattern}:source'       ,source.id,  ttl)
     except Exception as e:
         print(f'[Redis] add_effect({mypattern}) failed [{e}]')
         return False
