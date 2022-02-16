@@ -53,13 +53,32 @@ def test_singouins_korp_invite():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
     korpid   = json.loads(response.text)['payload'][0]['korp']
-    targetid = CREATURE_ID
 
+    # We create a PJTestKorpKick
+    url      = f'{API_URL}/mypc' # POST
+    payload_c   = {'name': 'PJTestKorpInvite',
+                   'gender': True,
+                   'race': 2,
+                   'class': 3,
+                   'cosmetic': {'metaid': 8, 'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}},
+                   'equipment': {'righthand': {'metaid': 34, 'metatype': 'weapon'}, 'lefthand': {'metaid': 11, 'metatype': 'weapon'}}}
+    response = requests.post(url, json = payload_c, headers=headers)
+    url      = f'{API_URL}/mypc' # GET
+    response = requests.get(url, headers=headers)
+    targetid = json.loads(response.text)['payload'][1]['id']
+
+    # We invite PJTestKorpInvite
     url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}' # POST
     response = requests.post(url, headers=headers)
 
-    assert json.loads(response.text)['success'] == False
-    assert 'already in a korp' in json.loads(response.text)['msg']
+    assert json.loads(response.text)['success'] == True
+    assert response.status_code == 200
+
+    # We cleanup the PJTestKorpKick
+    url      = f'{API_URL}/mypc/{targetid}' # DELETE
+    response = requests.delete(url, headers=headers)
+
+    assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
 
 def test_singouins_korp_kick():
