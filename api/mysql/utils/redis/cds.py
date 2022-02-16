@@ -94,31 +94,51 @@ def get_cds(creature):
 
 def get_instance_cds(creature):
     mypattern = f'cds:{creature.instance}'
-    path      = f'{mypattern}:*:*:source'
+    path      = f'{mypattern}:*:*'
     #                         │ └────────> Wildcard for {creatureid}
     #                         └──────────> Wildcard for {skillmetaid}
     cds       = []
 
     try:
-        for key in r.scan_iter(path):
+        # We get the list of keys for all the instance statuses
+        keys               = r.keys(path)
+        sorted_keys        = sorted(keys)
+        # We MULTI the query to have all the values
+        multi              = r.mget(sorted_keys)
+        # We initialize indexes used during iterations
+        index_multi        = 0
+        index_pipeline     = 0
+        # We regex to have only the :source keys
+        regex              = re.compile(".*source")
+        sorted_keys_source = list(filter(regex.match, sorted_keys))
+        # We create a pipeline to query the keys TTL
+        p = r.pipeline()
+        for key in sorted_keys_source:
+            p.ttl(key)
+        pipeline = p.execute()
+
+        # We loop over the effect keys to build the data
+        for key in sorted_keys_source:
             m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────────> Regex for {skillmetaid}
             #                            └──────────────> Regex for {creatureid}
             if m:
-                creatureid  = int(m.group(1))
                 skillmetaid = int(m.group(2))
-                skill       = metaSkills[skillmetaid - 1]
-                fullkey     = f'{mypattern}:{creatureid}:{skillmetaid}'
-                cd          = {"bearer":        creatureid,
-                               "duration_base": int(r.get(f'{fullkey}:duration_base')),
-                               "duration_left": int(r.ttl(f'{fullkey}:duration_base')),
-                               "id":            skillmetaid,
-                               "name":          skill['name'],
-                               "source":        int(r.get(f'{fullkey}:source')),
-                               "type":          'cd'}
-            cds.append(cd)
+                skillmeta    = metaSkills[skillmetaid - 1]
+                status       = {"bearer":        creature.id,
+                                "duration_base": int(multi[index_multi]),
+                                "duration_left": int(pipeline[index_pipeline]),
+                                "id":            skillmeta['id'],
+                                "name":          skillmeta['name'],
+                                "source":        int(multi[index_multi+1]),
+                                "type":          'cd'}
+                # We update the index for next iteration
+                index_multi    += 2
+                index_pipeline += 1
+                # We add the status into statuses list
+                cds.append(cd)
     except Exception as e:
-        print(f'[Redis] get_cds({path}) failed [{e}]')
+        print(f'[Redis:get_instance_cds()] Query {path} failed [{e}]')
         return cds
     else:
         return cds
