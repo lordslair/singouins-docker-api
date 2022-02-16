@@ -118,7 +118,7 @@ def get_instance_statuses(creature):
             p.ttl(key)
         pipeline = p.execute()
 
-        # We loop over the effect keys to build the data
+        # We loop over the status keys to build the data
         for key in sorted_keys_source:
             m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────────> Regex for {statusmetaid}

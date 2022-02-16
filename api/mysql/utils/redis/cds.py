@@ -87,7 +87,7 @@ def get_cds(creature):
                                "type":          'cd'}
             cds.append(cd)
     except Exception as e:
-        print(f'[Redis] get_cds({path}) failed [{e}]')
+        print(f'[Redis:get_cds()] Query {path} failed [{e}]')
         return cds
     else:
         return cds
@@ -117,15 +117,15 @@ def get_instance_cds(creature):
             p.ttl(key)
         pipeline = p.execute()
 
-        # We loop over the effect keys to build the data
+        # We loop over the cds keys to build the data
         for key in sorted_keys_source:
             m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────────> Regex for {skillmetaid}
             #                            └──────────────> Regex for {creatureid}
             if m:
-                skillmetaid = int(m.group(2))
+                skillmetaid  = int(m.group(2))
                 skillmeta    = metaSkills[skillmetaid - 1]
-                status       = {"bearer":        creature.id,
+                cd           = {"bearer":        creature.id,
                                 "duration_base": int(multi[index_multi]),
                                 "duration_left": int(pipeline[index_pipeline]),
                                 "id":            skillmeta['id'],
@@ -135,7 +135,7 @@ def get_instance_cds(creature):
                 # We update the index for next iteration
                 index_multi    += 2
                 index_pipeline += 1
-                # We add the status into statuses list
+                # We add the cd into cds list
                 cds.append(cd)
     except Exception as e:
         print(f'[Redis:get_instance_cds()] Query {path} failed [{e}]')

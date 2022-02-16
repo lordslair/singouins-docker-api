@@ -65,7 +65,7 @@ def get_effect(creature,effectid):
                                 "duration_left":   int(r.get(f'{fullkey}:duration_base')),
                                 "id":              effectid,
                                 "name":            metaEffects[effectmetaid - 1]['name'],
-                                "source":          r.get(f'{fullkey}:source'),
+                                "source":          int(r.get(f'{fullkey}:source')),
                                 "type":            'effect'}
     except Exception as e:
         print(f'[Redis] get_effect({path}) failed [{e}]')
@@ -106,7 +106,7 @@ def get_effects(creature):
                                 "type":            'effect'}
                 effects.append(effect)
     except Exception as e:
-        print(f'[Redis] get_effects({path}) failed [{e}]')
+        print(f'[Redis:get_effects()] Query {path} failed [{e}]')
         return effects
     else:
         return effects
