@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
 import re
 import time
 
@@ -54,7 +53,7 @@ def get_effect(creature,effectid):
 
     try:
         for key in keys:
-            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────> Regex for {effectid}
             #                            └──────────> Regex for {effectmetaid}
             if m:
@@ -62,11 +61,11 @@ def get_effect(creature,effectid):
                 effectmetaid = int(m.group(1))
                 fullkey      = f'{mypattern}:{effectmetaid}:{effectid}'
                 effect       = {"bearer":          creature.id,
-                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
-                                "duration_left":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base')),
+                                "duration_left":   int(r.get(f'{fullkey}:duration_base')),
                                 "id":              effectid,
                                 "name":            metaEffects[effectmetaid - 1]['name'],
-                                "source":          r.get(f'{fullkey}:source').decode("utf-8"),
+                                "source":          r.get(f'{fullkey}:source'),
                                 "type":            'effect'}
     except Exception as e:
         print(f'[Redis] get_effect({path}) failed [{e}]')
@@ -91,7 +90,7 @@ def get_effects(creature):
 
     try:
         for key in keys:
-            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────> Regex for {effectid}
             #                            └──────────> Regex for {effectmetaid}
             if m:
@@ -99,11 +98,11 @@ def get_effects(creature):
                 effectid     = int(m.group(2))
                 fullkey      = f'{mypattern}:{effectmetaid}:{effectid}'
                 effect       = {"bearer":          creature.id,
-                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
-                                "duration_left":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base')),
+                                "duration_left":   int(r.get(f'{fullkey}:duration_base')),
                                 "id":              effectid,
                                 "name":            metaEffects[effectmetaid - 1]['name'],
-                                "source":          r.get(f'{fullkey}:source').decode("utf-8"),
+                                "source":          r.get(f'{fullkey}:source'),
                                 "type":            'effect'}
                 effects.append(effect)
     except Exception as e:
@@ -114,20 +113,15 @@ def get_effects(creature):
 
 def get_instance_effects(creature):
     mypattern = f'effects:{creature.instance}'
+    path      = f'{mypattern}:*:*:*:source'
+    #                         │ │ └──> Wildcard for {effectid}
+    #                         │ └────> Wildcard for {effectmetaid}
+    #                         └──────> Wildcard for {creatureid}
     effects   = []
 
     try:
-        path = f'{mypattern}:*:*:*:source'
-        #                    │ │ └──> Wildcard for {effectid}
-        #                    │ └────> Wildcard for {effectmetaid}
-        #                    └──────> Wildcard for {creatureid}
-        keys = r.scan_iter(path)
-    except Exception as e:
-        print(f'[Redis] scan_iter({path}) failed [{e}]')
-
-    try:
-        for key in keys:
-            m = re.match(f"{mypattern}:(\d+):(\d+):(\d+)", key.decode("utf-8"))
+        for key in r.scan_iter(path):
+            m = re.match(f"{mypattern}:(\d+):(\d+):(\d+)", key)
             #                            │     │     └────> Regex for {effectid}
             #                            │     └──────────> Regex for {effectmetaid}
             #                            └────────────────> Regex for {creatureid}
@@ -137,11 +131,11 @@ def get_instance_effects(creature):
                 effectid     = int(m.group(3))
                 fullkey      = f'{mypattern}:{creatureid}:{effectmetaid}:{effectid}'
                 effect       = {"bearer":          creatureid,
-                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
-                                "duration_left":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base')),
+                                "duration_left":   int(r.get(f'{fullkey}:duration_base')),
                                 "id":              effectid,
                                 "name":            metaEffects[effectmetaid - 1]['name'],
-                                "source":          r.get(f'{fullkey}:source').decode("utf-8"),
+                                "source":          r.get(f'{fullkey}:source'),
                                 "type":            'effect'}
                 effects.append(effect)
     except Exception as e:

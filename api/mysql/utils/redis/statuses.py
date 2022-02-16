@@ -48,11 +48,11 @@ def get_status(creature,statusmetaid):
     try:
         statusmeta = dict(list(filter(lambda x:x["id"]==statusmetaid,metaStatuses))[0])
         status = {"bearer":        creature.id,
-                  "duration_base": int(r.get(f'{mypattern}:duration_base').decode("utf-8")),
+                  "duration_base": int(r.get(f'{mypattern}:duration_base')),
                   "duration_left": int(r.ttl(f'{mypattern}:duration_base')),
                   "id":            statusmeta['id'],
                   "name":          statusmeta['name'],
-                  "source":        int(r.get(f'{mypattern}:source').decode("utf-8")),
+                  "source":        int(r.get(f'{mypattern}:source')),
                   "type":          'status'}
     except Exception as e:
         print(f'[Redis] get_status({mypattern}) failed [{e}]')
@@ -74,17 +74,17 @@ def get_statuses(creature):
 
     try:
         for key in keys:
-            m = re.match(f"{mypattern}:(\d+)", key.decode("utf-8"))
+            m = re.match(f"{mypattern}:(\d+)", key)
             if m:
                 statusmetaid = int(m.group(1))
                 statusmeta   = dict(list(filter(lambda x:x["id"]==statusmetaid,metaStatuses))[0])
                 fullkey      = mypattern + ':' + f'{statusmetaid}'
                 status       = {"bearer":          creature.id,
-                                "duration_base":   int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_base":   int(r.get(f'{fullkey}:duration_base')),
                                 "duration_left":   int(r.ttl(f'{fullkey}:duration_base')),
                                 "id":              statusmeta['id'],
                                 "name":            statusmeta['name'],
-                                "source":          int(r.get(f'{fullkey}:source').decode("utf-8")),
+                                "source":          int(r.get(f'{fullkey}:source')),
                                 "type":            'status'}
                 statuses.append(status)
     except Exception as e:
@@ -95,19 +95,14 @@ def get_statuses(creature):
 
 def get_instance_statuses(creature):
     mypattern = f'statuses:{creature.instance}'
+    path      = f'{mypattern}:*:*:source'
+    #                         │ └────────> Wildcard for {creatureid}
+    #                         └──────────> Wildcard for {statusmetaid}
     statuses  = []
 
     try:
-        path = f'{mypattern}:*:*:source'
-            #                │ └────────> Wildcard for {creatureid}
-            #                └──────────> Wildcard for {statusmetaid}
-        keys = r.scan_iter(path)
-    except Exception as e:
-        print(f'[Redis] scan_iter({path}) failed [{e}]')
-
-    try:
-        for key in keys:
-            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+        for key in r.scan_iter(path):
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────────> Regex for {statusmetaid}
             #                            └──────────────> Regex for {creatureid}
             if m:
@@ -116,11 +111,11 @@ def get_instance_statuses(creature):
                 statusmeta   = dict(list(filter(lambda x:x["id"]==statusmetaid,metaStatuses))[0])
                 fullkey      = f'{mypattern}:{creatureid}:{statusmetaid}'
                 status       = {"bearer":        creatureid,
-                                "duration_base": int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                                "duration_base": int(r.get(f'{fullkey}:duration_base')),
                                 "duration_left": int(r.ttl(f'{fullkey}:duration_base')),
                                 "id":            statusmeta['id'],
                                 "name":          statusmeta['name'],
-                                "source":        int(r.get(f'{fullkey}:source').decode("utf-8")),
+                                "source":        int(r.get(f'{fullkey}:source')),
                                 "type":          'status'}
             statuses.append(status)
     except Exception as e:

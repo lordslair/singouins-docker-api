@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
 import re
 
 from .connector import r
@@ -47,11 +46,11 @@ def get_cd(creature,skillmetaid):
 
     try:
         cd = {"bearer":        creature.id,
-              "duration_base": int(r.get(f'{mypattern}:duration_base').decode("utf-8")),
+              "duration_base": int(r.get(f'{mypattern}:duration_base')),
               "duration_left": int(r.ttl(f'{mypattern}:duration_base')),
               "id":            skillmetaid,
               "name":          metaSkills[skillmetaid - 1]['name'],
-              "source":        int(r.get(f'{mypattern}:source').decode("utf-8")),
+              "source":        int(r.get(f'{mypattern}:source')),
               "type":          'cd'}
     except Exception as e:
         print(f'[Redis] get_cd({mypattern}) failed [{e}]')
@@ -73,18 +72,18 @@ def get_cds(creature):
 
     try:
         for key in keys:
-            m = re.match(f"{mypattern}:(\d+)", key.decode("utf-8"))
+            m = re.match(f"{mypattern}:(\d+)", key)
             #                            └────> Regex for {skillmetaid}
             if m:
                 skillmetaid = int(m.group(1))
                 skill       = metaSkills[skillmetaid - 1]
                 fullkey     = f'{mypattern}:{skillmetaid}'
                 cd          = {"bearer":        creature.id,
-                               "duration_base": int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                               "duration_base": int(r.get(f'{fullkey}:duration_base')),
                                "duration_left": int(r.ttl(f'{fullkey}:duration_base')),
                                "id":            skillmetaid,
                                "name":          skill['name'],
-                               "source":        int(r.get(f'{fullkey}:source').decode("utf-8")),
+                               "source":        int(r.get(f'{fullkey}:source')),
                                "type":          'cd'}
             cds.append(cd)
     except Exception as e:
@@ -95,19 +94,14 @@ def get_cds(creature):
 
 def get_instance_cds(creature):
     mypattern = f'cds:{creature.instance}'
+    path      = f'{mypattern}:*:*:source'
+    #                         │ └────────> Wildcard for {creatureid}
+    #                         └──────────> Wildcard for {skillmetaid}
     cds       = []
 
     try:
-        path = f'{mypattern}:*:*:source'
-            #                │ └────────> Wildcard for {creatureid}
-            #                └──────────> Wildcard for {skillmetaid}
-        keys = r.scan_iter(path)
-    except Exception as e:
-        print(f'[Redis] scan_iter({path}) failed [{e}]')
-
-    try:
-        for key in keys:
-            m = re.match(f"{mypattern}:(\d+):(\d+)", key.decode("utf-8"))
+        for key in r.scan_iter(path):
+            m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────────> Regex for {skillmetaid}
             #                            └──────────────> Regex for {creatureid}
             if m:
@@ -116,11 +110,11 @@ def get_instance_cds(creature):
                 skill       = metaSkills[skillmetaid - 1]
                 fullkey     = f'{mypattern}:{creatureid}:{skillmetaid}'
                 cd          = {"bearer":        creatureid,
-                               "duration_base": int(r.get(f'{fullkey}:duration_base').decode("utf-8")),
+                               "duration_base": int(r.get(f'{fullkey}:duration_base')),
                                "duration_left": int(r.ttl(f'{fullkey}:duration_base')),
                                "id":            skillmetaid,
                                "name":          skill['name'],
-                               "source":        int(r.get(f'{fullkey}:source').decode("utf-8")),
+                               "source":        int(r.get(f'{fullkey}:source')),
                                "type":          'cd'}
             cds.append(cd)
     except Exception as e:

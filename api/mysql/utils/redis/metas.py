@@ -13,7 +13,7 @@ def get_meta(metatype):
 
     try:
         if r.exists(f'{mypattern}:{metatype}'):
-            meta = json.loads(r.get(f'{mypattern}:{metatype}').decode("utf-8"))
+            meta = json.loads(r.get(f'{mypattern}:{metatype}'))
         else:
             return False
     except Exception as e:

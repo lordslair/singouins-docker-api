@@ -10,16 +10,16 @@ def get_instance(instanceid):
     mypattern = f'instances:{instanceid}'
 
     try:
-        instance = {"creator":  int(r.get(f'{mypattern}:creator').decode("utf-8")),
-                    "fast":     bool(r.get(f'{mypattern}:fast').decode("utf-8")),
-                    "hardcore": bool(r.get(f'{mypattern}:hardcore').decode("utf-8")),
+        instance = {"creator":  int(r.get(f'{mypattern}:creator')),
+                    "fast":     bool(r.get(f'{mypattern}:fast')),
+                    "hardcore": bool(r.get(f'{mypattern}:hardcore')),
                     "id":       instanceid,
-                    "map":      int(r.get(f'{mypattern}:map').decode("utf-8")),
-                    "public":   bool(r.get(f'{mypattern}:public').decode("utf-8")),
-                    "tick":     int(r.get(f'{mypattern}:tick').decode("utf-8"))}
+                    "map":      int(r.get(f'{mypattern}:map')),
+                    "public":   bool(r.get(f'{mypattern}:public')),
+                    "tick":     int(r.get(f'{mypattern}:tick'))}
     except Exception as e:
         print(f'[Redis] get_instance({mypattern}) failed [{e}]')
-        return False
+        return None
     else:
         return instance
 
@@ -35,7 +35,7 @@ def add_instance(creature,fast,hardcore,mapid,public):
         # If this instance is the first created
         lastinstanceid = 0
     else:
-        lastkey        = sorted(keys)[-1].decode("utf-8")
+        lastkey        = sorted(keys)[-1]
         lastinstanceid = int(lastkey.split(":")[1])
 
     mypattern      = f'instances:{lastinstanceid + 1}'

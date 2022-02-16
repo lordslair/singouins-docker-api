@@ -23,11 +23,11 @@ def get_map(mapid):
             return False
 
     try:
-        map = {"data": json.loads(r.get(f'{mypattern}:data').decode("utf-8")),
+        map = {"data": json.loads(r.get(f'{mypattern}:data')),
                "id":   mapid,
-               "mode": r.get(f'{mypattern}:mode').decode("utf-8"),
-               "size": r.get(f'{mypattern}:size').decode("utf-8"),
-               "type": r.get(f'{mypattern}:type').decode("utf-8")}
+               "mode": r.get(f'{mypattern}:mode'),
+               "size": r.get(f'{mypattern}:size'),
+               "type": r.get(f'{mypattern}:type')}
     except Exception as e:
         print(f'[Redis] get_map({mypattern}) failed [{e}]')
         return False
