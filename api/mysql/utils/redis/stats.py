@@ -41,7 +41,7 @@ def get_hp(pc):
 
     try:
         if r.exists(key):
-            hp = int(r.get(key).decode())
+            hp = int(r.get(key))
         else:
             hp = None
     except Exception as e:
