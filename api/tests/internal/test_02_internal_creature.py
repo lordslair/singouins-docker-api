@@ -17,7 +17,7 @@ def test_singouins_internal_creature_equipment():
 
 def test_singouins_internal_creature_pa_get():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa'
-    response  = requests.post(url, headers=HEADERS)
+    response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True

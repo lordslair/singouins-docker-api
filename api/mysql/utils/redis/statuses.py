@@ -62,7 +62,7 @@ def get_status(creature,statusmetaid):
             return status
 
 def get_statuses(creature):
-    mypattern = f'statuses:{creature.instance}'
+    mypattern = f'statuses:{creature.instance}:{creature.id}'
     path      = f'{mypattern}:*'
     #                         └────> Wildcard for {statusmetaid}
     statuses  = []

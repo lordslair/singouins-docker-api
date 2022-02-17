@@ -803,7 +803,7 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effects',
 # Routes /internal/creature/{creatureid}/pa/*
 app.add_url_rule('/internal/creature/<int:creatureid>/pa',
                  methods=['GET'],
-                 view_func=routes.internal.creature_pa)
+                 view_func=routes.internal.creature_pa_get)
 app.add_url_rule('/internal/creature/<int:creatureid>/pa/consume/<int:redpa>/<int:bluepa>',
                  methods=['PUT'],
                  view_func=routes.internal.creature_pa_consume)

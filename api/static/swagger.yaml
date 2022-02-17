@@ -304,6 +304,23 @@ paths:
           name: creatureid
           schema:
             type: integer
+            nullable: false
+          required: true
+        - in: path
+          name: redpa
+          schema:
+            type: integer
+            nullable: false
+            minimum: 0
+            maximum: 16
+          required: true
+        - in: path
+          name: bluepa
+          schema:
+            type: integer
+            nullable: false
+            minimum: 0
+            maximum: 16
           required: true
       responses:
         '200':

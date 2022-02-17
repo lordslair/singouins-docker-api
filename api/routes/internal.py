@@ -139,7 +139,7 @@ def creature_equipment():
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def creature_pa_get():
+def creature_pa_get(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
@@ -157,13 +157,9 @@ def creature_pa_consume(creatureid,redpa,bluepa):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-def creature_pa_reset():
+def creature_pa_reset(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-
-    creatureid = request.json.get('creatureid')
 
     incr.one('queries:internal:creature:pa:reset')
     (code, success, msg, payload) = internal_creature_pa_reset(creatureid)
