@@ -4,7 +4,7 @@ from flask              import Flask, jsonify, request
 from flask_jwt_extended import (JWTManager,
                                 jwt_required,
                                 create_access_token,
-                                create_refresh_token, jwt_refresh_token_required,
+                                create_refresh_token,
                                 get_jwt_identity)
 from flask_bcrypt       import check_password_hash
 from flask_cors         import CORS
@@ -84,7 +84,7 @@ def auth_login():
 
 # Auth route to refresh the token
 @app.route('/auth/refresh', methods=['POST'])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def auth_refresh():
     current_user = get_jwt_identity()
     ret = {
@@ -140,7 +140,7 @@ def auth_confirm(token):
 
 # Auth route to delete the user
 @app.route('/auth/delete', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def auth_delete():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
@@ -187,7 +187,7 @@ def auth_forgotpassword():
 
 # Info route when authenticated
 @app.route('/auth/infos', methods=['GET'])
-@jwt_required
+@jwt_required()
 def auth_infos():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
@@ -198,7 +198,7 @@ def auth_infos():
 #
 
 @app.route('/pc/<int:pcid>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_pc_get(pcid):
     (code, success, msg, payload) = fn_creature_get(None,pcid)
     if isinstance(code, int):
@@ -209,7 +209,7 @@ def api_pc_get(pcid):
 #
 
 @app.route('/mypc', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_create():
     current_user = get_jwt_identity()
     pcclass      = request.json.get('class',     None)
@@ -227,7 +227,7 @@ def api_mypc_create():
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_get_all():
     current_user = get_jwt_identity()
     (code, success, msg, payload) = mypc_get_all(current_user)
@@ -235,7 +235,7 @@ def api_mypc_get_all():
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def api_mypc_del(pcid):
     current_user = get_jwt_identity()
     (code, success, msg, payload) = mypc_del(current_user,pcid)
@@ -247,7 +247,7 @@ def api_mypc_del(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/pa', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_pa(pcid):
     (code, success, msg, payload) = get_pa(pcid)
     if isinstance(code, int):
@@ -258,7 +258,7 @@ def api_mypc_pa(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/stats', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_stats_get(pcid):
     pc = fn_creature_get(None,pcid)[3]
     (code, success, msg, payload) = mypc_get_stats(pc)
@@ -270,7 +270,7 @@ def api_mypc_stats_get(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/cds', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_cds_get(pcid):
     (code, success, msg, payload) = mypc_get_cds(get_jwt_identity(),pcid)
     if isinstance(code, int):
@@ -281,7 +281,7 @@ def api_mypc_cds_get(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/effects', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_effects_get(pcid):
     (code, success, msg, payload) = mypc_get_effects(get_jwt_identity(),pcid)
     if isinstance(code, int):
@@ -292,7 +292,7 @@ def api_mypc_effects_get(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/skills', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_skills_get(pcid):
     (code, success, msg, payload) = mypc_get_skills(get_jwt_identity(),pcid)
     if isinstance(code, int):
@@ -303,7 +303,7 @@ def api_mypc_skills_get(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/view', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_view(pcid):
     (code, success, msg, payload) = mypc_view(get_jwt_identity(),pcid)
     if isinstance(code, int):
@@ -314,7 +314,7 @@ def api_mypc_view(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/mp', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_mp_add(pcid):
     (code, success, msg, payload) = mypc_mp_add(get_jwt_identity(),
                                     request.json.get('src',     None),
@@ -325,28 +325,28 @@ def api_mypc_mp_add(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_mp_get(pcid,mpid):
     (code, success, msg, payload) = mypc_mp_get(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/<int:mpid>', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def api_mypc_mp_del(pcid,mpid):
     (code, success, msg, payload) = mypc_mp_del(get_jwt_identity(),pcid,mpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_mps_get(pcid):
     (code, success, msg, payload) = mypc_mps_get(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/mp/addressbook', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_mp_addressbook(pcid):
     (code, success, msg, payload) = mypc_mp_addressbook(get_jwt_identity(),pcid)
     if isinstance(code, int):
@@ -357,14 +357,14 @@ def api_mypc_mp_addressbook(pcid):
 #
 
 @app.route('/pc/<int:pcid>/item', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_pc_item_get(pcid):
     (code, success, msg, payload) = pc_items_get(pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_item_get(pcid):
     (code, success, msg, payload) = mypc_items_get(get_jwt_identity(),pcid)
     if isinstance(code, int):
@@ -375,35 +375,35 @@ def api_mypc_item_get(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_inventory_item_set_offset(pcid,itemid,offsetx,offsety):
     (code, success, msg, payload) = mypc_inventory_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def api_mypc_inventory_item_del_offset(pcid,itemid):
     (code, success, msg, payload) = mypc_inventory_item_offset(get_jwt_identity(),pcid,itemid,None,None)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_inventory_item_equip(pcid,type,slotname,itemid):
     (code, success, msg, payload) = mypc_inventory_item_equip(get_jwt_identity(),pcid,type,slotname,itemid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_inventory_item_unequip(pcid,type,slotname,itemid):
     (code, success, msg, payload) = mypc_inventory_item_unequip(get_jwt_identity(),pcid,type,slotname,itemid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_inventory_item_dismantle(pcid,itemid):
     (code, success, msg, payload) = mypc_inventory_item_dismantle(get_jwt_identity(),pcid,itemid)
     if isinstance(code, int):
@@ -414,14 +414,14 @@ def api_mypc_inventory_item_dismantle(pcid,itemid):
 #
 
 @app.route('/mypc/<int:pcid>/trade/item/<int:itemid>/give/<int:targetid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_trade_item_give(pcid,itemid,targetid):
     (code, success, msg, payload) = mypc_trade_item_give(get_jwt_identity(),pcid,itemid,targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/trade/wallet/<string:currtype>/give/<int:targetid>/<int:amount>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_trade_wallet_give(pcid,currtype,targetid,amount):
     (code, success, msg, payload) = mypc_trade_wallet_give(get_jwt_identity(),pcid,currtype,targetid,amount)
     if isinstance(code, int):
@@ -432,7 +432,7 @@ def api_mypc_trade_wallet_give(pcid,currtype,targetid,amount):
 #
 
 @app.route('/mypc/<int:pcid>/instance', methods=['PUT'])
-@jwt_required
+@jwt_required()
 def api_mypc_instance_create(pcid):
     (code, success, msg, payload) = mypc_instance_create(
                                         get_jwt_identity(),
@@ -445,21 +445,21 @@ def api_mypc_instance_create(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/instance/<int:instanceid>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_instance_get(pcid,instanceid):
     (code, success, msg, payload) = mypc_instance_get(get_jwt_identity(),pcid,instanceid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/instance/<int:instanceid>/join', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_instance_join(pcid,instanceid):
     (code, success, msg, payload) = mypc_instance_join(get_jwt_identity(),pcid,instanceid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/instance/<int:instanceid>/leave', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_instance_leave(pcid,instanceid):
     (code, success, msg, payload) = mypc_instance_leave(get_jwt_identity(),pcid,instanceid)
     if isinstance(code, int):
@@ -470,7 +470,7 @@ def api_mypc_instance_leave(pcid,instanceid):
 #
 
 @app.route('/mypc/<int:pcid>/action/resolver/move', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_action_resolver_move(pcid):
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
@@ -485,7 +485,7 @@ def api_mypc_action_resolver_move(pcid):
 #
 
 @app.route('/mypc/<int:pcid>/action/move', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_action_move(pcid):
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
@@ -496,21 +496,21 @@ def api_mypc_action_move(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_action_attack(pcid,weaponid,targetid):
     (code, success, msg, payload) = mypc_action_attack(get_jwt_identity(),pcid,weaponid,targetid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/action/reload/<int:weaponid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_action_reload(pcid,weaponid):
     (code, success, msg, payload) = mypc_action_reload(get_jwt_identity(),pcid,weaponid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/action/unload/<int:weaponid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_action_unload(pcid,weaponid):
     (code, success, msg, payload) = mypc_action_unload(get_jwt_identity(),pcid,weaponid)
     if isinstance(code, int):
@@ -521,14 +521,14 @@ def api_mypc_action_unload(pcid,weaponid):
 #
 
 @app.route('/mypc/<int:pcid>/event', methods=['GET'])
-@jwt_required
+@jwt_required()
 def mypc_event(pcid):
     (code, success, msg, payload) = get_mypc_event(get_jwt_identity(),pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/pc/<int:creatureid>/event', methods=['GET'])
-@jwt_required
+@jwt_required()
 def pc_event(creatureid):
     (code, success, msg, payload) = pc_events_get(creatureid)
     if isinstance(code, int):
@@ -539,7 +539,7 @@ def pc_event(creatureid):
 #
 
 @app.route('/meta/item/<string:metatype>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def meta_item(metatype):
     # We use the same sub as the internal route. Same result is expected
     (code, success, msg, payload) = internal_meta_get_one(metatype)
@@ -551,14 +551,14 @@ def meta_item(metatype):
 #
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_details(pcid,korpid):
     (code, success, msg, payload) = mypc_korp_details(get_jwt_identity(),pcid,korpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_create(pcid):
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
@@ -570,14 +570,14 @@ def api_mypc_korp_create(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_delete(pcid,korpid):
     (code, success, msg, payload) = mypc_korp_delete(get_jwt_identity(),pcid,korpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>/invite/<int:targetid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_invite(pcid,korpid,targetid):
     (code, success, msg, payload) = mypc_korp_invite(get_jwt_identity(),
                                     pcid,
@@ -587,7 +587,7 @@ def api_mypc_korp_invite(pcid,korpid,targetid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>/kick/<int:targetid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_kick(pcid,korpid,targetid):
     (code, success, msg, payload) = mypc_korp_kick(get_jwt_identity(),
                                     pcid,
@@ -597,21 +597,21 @@ def api_mypc_korp_kick(pcid,korpid,targetid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>/accept', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_accept(pcid,korpid):
     (code, success, msg, payload) = mypc_korp_accept(get_jwt_identity(),pcid,korpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>/leave', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_leave(pcid,korpid):
     (code, success, msg, payload) = mypc_korp_leave(get_jwt_identity(),pcid,korpid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/korp/<int:korpid>/decline', methods=['POST'])
-@jwt_required
+@jwt_required()
 def api_mypc_korp_decline(pcid,korpid):
     (code, success, msg, payload) = mypc_korp_decline(get_jwt_identity(),pcid,korpid)
     if isinstance(code, int):
@@ -622,14 +622,14 @@ def api_mypc_korp_decline(pcid,korpid):
 #
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def squad_details(pcid,squadid):
     (code, success, msg, payload) = get_squad(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad', methods=['POST'])
-@jwt_required
+@jwt_required()
 def squad_create(pcid):
     # Unicity test commented before release:alpha. Meditation needed
     #if not request.is_json:
@@ -641,14 +641,14 @@ def squad_create(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def squad_delete(pcid,squadid):
     (code, success, msg, payload) = del_squad(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def squad_invite(pcid,squadid,targetid):
     (code, success, msg, payload) = invite_squad_member(get_jwt_identity(),
                                     pcid,
@@ -658,7 +658,7 @@ def squad_invite(pcid,squadid,targetid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>', methods=['POST'])
-@jwt_required
+@jwt_required()
 def squad_kick(pcid,squadid,targetid):
     (code, success, msg, payload) = kick_squad_member(get_jwt_identity(),
                                     pcid,
@@ -668,21 +668,21 @@ def squad_kick(pcid,squadid,targetid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/accept', methods=['POST'])
-@jwt_required
+@jwt_required()
 def squad_accept(pcid,squadid):
     (code, success, msg, payload) = accept_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/leave', methods=['POST'])
-@jwt_required
+@jwt_required()
 def squad_leave(pcid,squadid):
     (code, success, msg, payload) = leave_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 @app.route('/mypc/<int:pcid>/squad/<int:squadid>/decline', methods=['POST'])
-@jwt_required
+@jwt_required()
 def squad_decline(pcid,squadid):
     (code, success, msg, payload) = decline_squad_member(get_jwt_identity(),pcid,squadid)
     if isinstance(code, int):
@@ -693,7 +693,7 @@ def squad_decline(pcid,squadid):
 #
 
 @app.route('/map/<int:mapid>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def public_map(mapid):
     (code, success, msg, payload) = mypc_map_get(mapid)
     if isinstance(code, int):
