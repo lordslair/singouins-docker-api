@@ -15,31 +15,29 @@ charset-normalizer==2.0.12
 click==7.1.2
     # via flask
 dataclasses==0.6
-    # via -r ./requirements.in
+    # via -r requirements.in
 flask==1.1.4
     # via
-    #   -r ./requirements.in
+    #   -r requirements.in
     #   flask-bcrypt
     #   flask-cors
     #   flask-jwt-extended
     #   flask-swagger-ui
     #   prometheus-flask-exporter
 flask-bcrypt==0.7.1
-    # via -r ./requirements.in
+    # via -r requirements.in
 flask-cors==3.0.10
-    # via -r ./requirements.in
-flask-jwt-extended==3.25.1
-    # via -r ./requirements.in
+    # via -r requirements.in
+flask-jwt-extended==4.3.1
+    # via -r requirements.in
 flask-swagger-ui==3.36.0
-    # via -r ./requirements.in
+    # via -r requirements.in
 greenlet==1.1.2
     # via sqlalchemy
 gunicorn==20.1.0
-    # via -r ./requirements.in
+    # via -r requirements.in
 idna==3.3
     # via requests
-importlib-metadata==4.11.1
-    # via sqlalchemy
 itsdangerous==1.1.0
     # via flask
 jinja2==2.11.3
@@ -47,7 +45,7 @@ jinja2==2.11.3
 logging-gelf==0.0.26
     # via logging-ldp
 logging-ldp==0.0.6
-    # via -r ./requirements.in
+    # via -r requirements.in
 markupsafe==2.0.1
     # via jinja2
 marshmallow==3.14.1
@@ -55,28 +53,25 @@ marshmallow==3.14.1
 prometheus-client==0.13.1
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.18.7
-    # via -r ./requirements.in
+    # via -r requirements.in
 pycparser==2.21
     # via cffi
-pyjwt==1.7.1
+pyjwt==2.3.0
     # via flask-jwt-extended
 pymysql==1.0.2
-    # via -r ./requirements.in
+    # via -r requirements.in
 redis==3.5.3
     # via yarqueue
 requests==2.27.1
-    # via -r ./requirements.in
+    # via -r requirements.in
 six==1.16.0
     # via
     #   bcrypt
     #   flask-cors
-    #   flask-jwt-extended
 sqlalchemy==1.4.31
-    # via -r ./requirements.in
+    # via -r requirements.in
 strenum==0.4.7
     # via yarqueue
-typing-extensions==4.1.1
-    # via importlib-metadata
 urllib3==1.26.8
     # via requests
 werkzeug==1.0.1
@@ -84,9 +79,7 @@ werkzeug==1.0.1
     #   flask
     #   flask-jwt-extended
 yarqueue==0.4.1
-    # via -r ./requirements.in
-zipp==3.7.0
-    # via importlib-metadata
+    # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
