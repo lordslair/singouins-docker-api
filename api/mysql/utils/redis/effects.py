@@ -78,31 +78,44 @@ def get_effect(creature,effectid):
 
 def get_effects(creature):
     mypattern = f'effects:{creature.instance}:{creature.id}'
+    path      = f'{mypattern}:*:*'
+    #                         │ └──> Wildcard for {effectid}
+    #                         └────> Wildcard for {effectmetaid}
     effects   = []
 
     try:
-        path = f'{mypattern}:*:*:source'
-        #                    │ └──> Wildcard for {effectid}
-        #                    └────> Wildcard for {effectmetaid}
-        keys = r.scan_iter(path)
-    except Exception as e:
-        print(f'[Redis] scan_iter({path}) failed [{e}]')
+        # We get the list of keys for all the instance effects
+        keys               = r.keys(path)
+        sorted_keys        = sorted(keys)
+        # We MULTI the query to have all the values
+        multi              = r.mget(sorted_keys)
+        # We initialize indexes used during iterations
+        index_multi        = 0
+        index_pipeline     = 0
+        # We regex to have only the :source keys
+        regex              = re.compile(".*source")
+        sorted_keys_source = list(filter(regex.match, sorted_keys))
+        # We create a pipeline to query the keys TTL
+        p = r.pipeline()
+        for key in sorted_keys_source:
+            p.ttl(key)
+        pipeline = p.execute()
 
-    try:
-        for key in keys:
+        for key in sorted_keys_source:
             m = re.match(f"{mypattern}:(\d+):(\d+)", key)
             #                            │     └────> Regex for {effectid}
             #                            └──────────> Regex for {effectmetaid}
             if m:
                 effectmetaid = int(m.group(1))
                 effectid     = int(m.group(2))
+                effectmeta   = dict(list(filter(lambda x:x["id"]==effectmetaid,metaEffects))[0])
                 fullkey      = f'{mypattern}:{effectmetaid}:{effectid}'
                 effect       = {"bearer":          creature.id,
-                                "duration_base":   int(r.get(f'{fullkey}:duration_base')),
-                                "duration_left":   int(r.get(f'{fullkey}:duration_base')),
+                                "duration_base":   int(multi[index_multi]),
+                                "duration_left":   int(pipeline[index_pipeline]),
                                 "id":              effectid,
-                                "name":            metaEffects[effectmetaid - 1]['name'],
-                                "source":          r.get(f'{fullkey}:source'),
+                                "name":            effectmeta['name'],
+                                "source":          int(multi[index_multi+1]),
                                 "type":            'effect'}
                 effects.append(effect)
     except Exception as e:
