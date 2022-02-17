@@ -590,8 +590,8 @@ def internal_creature_equipment(creatureid):
     finally:
         session.close()
 
-# API: POST /internal/creature/pa
-def internal_creature_pa(creatureid):
+# API: GET /internal/creature/{creatureid}/pa
+def internal_creature_pa_get(creatureid):
     # Input checks
     if not isinstance(creatureid, int):
         return (200,
@@ -627,7 +627,51 @@ def internal_creature_pa(creatureid):
                     f'PAs not found (creatureid:{creature.id})',
                     None)
 
-# API: POST /internal/creature/pa/reset
+# API: PUT /internal/creature/{creatureid}/pa/consume/{redpa}/{bluepa}
+def internal_creature_pa_consume(creatureid,redpa,bluepa):
+    # Input checks
+    # creatureid: sent by API so type is clean
+    # redpa     : sent by API so type is clean
+    # blupa     : sent by API so type is clean
+
+    # Pre-flight checks
+    creature    = fn_creature_get(None,creatureid)[3]
+    if creature is None:
+        return (200,
+                False,
+                f'Creature unknown (creatureid:{creatureid})',
+                None)
+    if redpa > 16 or bluepa > 8:
+        return (200,
+                False,
+                f'Cannot consume more than max PA (creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
+                None)
+    if redpa < 0 or bluepa < 0:
+        return (200,
+                False,
+                f'Cannot consume PA < 0(creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
+                None)
+    if redpa >= get_pa(creature.id)[3]['red']['pa'] or bluepa >= get_pa(creature.id)[3]['blue']['pa']:
+        return (200,
+                False,
+                f'Cannot consume that amount of PA (creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
+                None)
+
+    try:
+        set_pa(creature.id,redpa,bluepa)
+    except Exception as e:
+        return (200,
+                False,
+                f'[Redis:set_pa()] Query failed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa}) [{e}]',
+                None)
+    else:
+        return (200,
+                True,
+                f'Query successed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa})',
+                {"pa": get_pa(creature.id)[3],
+                 "creature": creature})
+
+# API: PUT /internal/creature/pa/reset
 def internal_creature_pa_reset(creatureid):
     # Input checks
     if not isinstance(creatureid, int):

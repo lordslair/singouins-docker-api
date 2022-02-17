@@ -274,18 +274,17 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureEquipmentResponse'
       security:
         - internal_token: []
-  /internal/creature/pa:
-    post:
+  /internal/creature/{creatureid}/pa:
+    get:
       tags:
         - '/internal : Internal requests'
       summary: Internal Creature PA request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: OK
@@ -295,18 +294,37 @@ paths:
                 $ref: '#/components/schemas/InternalCreaturePaResponse'
       security:
         - internal_token: []
-  /internal/creature/pa/reset:
-    post:
+  /internal/creature/{creatureid}/pa/consume/{redpa}/{bluepa}:
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature PA request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreaturePaResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/pa/reset:
+    put:
       tags:
         - '/internal : Internal requests'
       summary: Internal Creature PA reset request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: OK

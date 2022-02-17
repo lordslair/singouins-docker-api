@@ -784,8 +784,6 @@ app.add_url_rule('/internal/creature/<int:creatureid>/cds',
                  methods=['GET'],
                  view_func=routes.internal.creature_cds)
 app.add_url_rule('/internal/creature/equipment', methods=['POST'], view_func=routes.internal.creature_equipment)
-app.add_url_rule('/internal/creature/pa',        methods=['POST'], view_func=routes.internal.creature_pa)
-app.add_url_rule('/internal/creature/pa/reset',  methods=['POST'], view_func=routes.internal.creature_pa_reset)
 app.add_url_rule('/internal/creature/profile',   methods=['POST'], view_func=routes.internal.creature_profile)
 app.add_url_rule('/internal/creature/stats',     methods=['POST'], view_func=routes.internal.creature_stats)
 app.add_url_rule('/internal/creature/wallet',    methods=['POST'], view_func=routes.internal.creature_wallet)
@@ -802,6 +800,16 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature_effects)
+# Routes /internal/creature/{creatureid}/pa/*
+app.add_url_rule('/internal/creature/<int:creatureid>/pa',
+                 methods=['GET'],
+                 view_func=routes.internal.creature_pa)
+app.add_url_rule('/internal/creature/<int:creatureid>/pa/consume/<int:redpa>/<int:bluepa>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature_pa_consume)
+app.add_url_rule('/internal/creature/<int:creatureid>/pa/reset',
+                 methods=['POST'],
+                 view_func=routes.internal.creature_pa_reset)
 # Routes /internal/creature/{creatureid}/status/*
 app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
                  methods=['PUT'],

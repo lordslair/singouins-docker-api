@@ -15,18 +15,23 @@ def test_singouins_internal_creature_equipment():
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_internal_creature_pa():
-    url       = f'{API_URL}/internal/creature/pa'
-    payload   = {"creatureid": CREATURE_ID}
-    response  = requests.post(url, headers=HEADERS, json = payload)
+def test_singouins_internal_creature_pa_get():
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa'
+    response  = requests.post(url, headers=HEADERS)
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] == True
+
+def test_singouins_internal_creature_pa_consume():
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa/consume/1/1'
+    response  = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
 
 def test_singouins_internal_creature_pa_reset():
-    url       = f'{API_URL}/internal/creature/pa/reset'
-    payload   = {"creatureid": CREATURE_ID}
-    response  = requests.post(url, headers=HEADERS, json = payload)
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa/reset'
+    response  = requests.post(url, headers=HEADERS)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
