@@ -22,7 +22,7 @@ except Exception as e:
 def add_effect(creature,duration,effectmetaid,source):
     # Pre-flight checks
     try:
-        effect = metaEffects[effectmetaid - 1]
+        effect = dict(list(filter(lambda x:x["id"]==effectmetaid,metaEffects))[0])
     except Exception as e:
         print(f'[Redis] effect not found (effectmetaid:{effectmetaid})')
         return False
