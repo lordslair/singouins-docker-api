@@ -480,6 +480,16 @@ def api_mypc_action_resolver_move(pcid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
+@app.route('/mypc/<int:pcid>/action/resolver/skill/<int:skillmetaid>', methods=['PUT'])
+@jwt_required()
+def api_mypc_action_resolver_skill(pcid,skillmetaid):
+
+    (code, success, msg, payload) = mypc_action_resolver_skill(get_jwt_identity(),
+                                                               pcid,
+                                                               skillmetaid)
+    if isinstance(code, int):
+        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 #
 #
 #
