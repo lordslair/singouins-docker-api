@@ -14,6 +14,9 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+# Import Redis and initialize
+import                      nosql
+
 from mysql.methods          import *
 from mysql.utils.redis.pa   import *
 
