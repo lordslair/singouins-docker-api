@@ -49,47 +49,27 @@ def mypc_action_resolver_move(username,creatureid,path):
                 None)
 
     try:
-        view  = session.query(Creature).filter(Creature.instance == creature.instance).all()
+        map       = get_instance(creature.instance)['map']
+        creatures = fn_creatures_in_instance(creature.instance)
+        effects   = get_instance_effects(creature)
+        statuses  = get_instance_statuses(creature)
+        cds       = get_instance_cds(creature)
+        pas       = get_pa(creature.id)[3]
     except Exception as e:
         return (200,
                 False,
-                f'[SQL] View query failed (username:{username},creatureid:{creature.id}) [{e}]',
+                f'Information query failed [{e}]',
                 None)
-
-    try:
-        instance = get_instance(creature.instance)
-    except Exception as e:
-        return (200,
-                False,
-                f'[Redis get_instance()] Instance query failed (creatureid:{creature.id},instanceid:{creature.instance}) [{e}]',
-                None)
-    else:
-        if instance == False:
-            return (200,
-                    False,
-                    f'[Redis get_instance()] Instance query failed (creatureid:{creature.id},instanceid:{creature.instance})',
-                    None)
-
-    creatures   = []
-    for creature_in_instance in view:
-        # Creatures fetching
-        # If needed we convert the date
-        if isinstance(creature_in_instance.date, datetime):
-            creature_in_instance.date = creature_in_instance.date.strftime('%Y-%m-%d %H:%M:%S')
-        # We load the Creature dataclass into a python dict
-        dict        = dataclasses.asdict(creature_in_instance)
-        # We populate the creature dict in creatures array
-        creatures.append(dict)
 
     # Supposedly got all infos
     payload = { "context": {
-                    "map": instance['map'],
+                    "map": map,
                     "instance": creature.instance,
                     "creatures": creatures,
-                    "effects": get_instance_effects(creature),
-                    "status": [],
-                    "cd": get_instance_cds(creature),
-                    "pa": get_pa(creature.id)[3]
+                    "effects": effects,
+                    "status": statuses,
+                    "cd": cds,
+                    "pa": pas
                   },
                   "fightEvent": {
                      "name":"RegularMovesFightClass",
