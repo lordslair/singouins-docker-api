@@ -6,6 +6,9 @@ RUN adduser -h /code -u 1000 -D -H api
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
+ENV LOGURU_COLORIZE='true'
+ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
+
 COPY                 requirements.txt /requirements.txt
 COPY --chown=api:api /api             /code
 
