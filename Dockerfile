@@ -9,11 +9,14 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV LOGURU_COLORIZE='true'
 ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
 
+ENV PYTHONUNBUFFERED='True'
+ENV PYTHONIOENCODING='UTF-8'
+
 COPY                 requirements.txt /requirements.txt
 COPY --chown=api:api /api             /code
 
 RUN apk update --no-cache \
-    && apk add --no-cache python3 py3-pip \
+    && apk add --no-cache python3 \
     && apk add --no-cache --virtual .build-deps \
                                     gcc \
                                     g++ \
@@ -23,7 +26,8 @@ RUN apk update --no-cache \
                                     tzdata \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && cd /code \
-    && su api -c "pip install --user -U -r /requirements.txt" \
+    && su api -c "python3 -m ensurepip --upgrade \
+                  && /code/.local/bin/pip3 install --user -U -r /requirements.txt" \
     && apk del .build-deps \
     && rm /requirements.txt
 
