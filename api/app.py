@@ -52,6 +52,18 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
 jwt = JWTManager(app)
 
+#
+# Routes /check (k8s livenessProbe)
+#
+@app.route('/check', methods=['GET'])
+def check():
+    return jsonify({"msg": f'UP and running',
+                    "success": True,
+                    "payload": None}), 200
+
+#
+# Routes /auth
+#
 # Auth route to send the JWT Token
 @app.route('/auth/login', methods=['POST'])
 def auth_login():
