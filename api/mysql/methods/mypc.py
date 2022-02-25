@@ -1,8 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
-
-from datetime              import datetime
 from random                import randint
 
 from ..session             import Session
@@ -14,22 +11,18 @@ from ..models              import (Cosmetic,
                                    Item,
                                    Wallet)
 
-from ..utils.redis.cds     import *
-from ..utils.redis.effects import *
-from ..utils.redis.metas   import get_meta
-from ..utils.redis.stats   import *
-
-from .fn_creature          import (fn_creature_get,
-                                   fn_creature_stats)
+from .fn_creature          import *
 from .fn_user              import fn_user_get
 from .fn_global            import clog
 
 # Loading the Meta for later use
 try:
-    metaWeapons = get_meta('weapon')
-    metaRaces   = get_meta('race')
+    metaRaces   = metas.get_meta('race')
+    metaWeapons = metas.get_meta('weapon')
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 #
 # Queries /mypc/*
@@ -142,7 +135,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                                         rarity     = 'Common',
                                         offsetx    = 0,
                                         offsety    = 0,
-                                        date       = datetime.now())
+                                        date       = datetime.datetime.now())
                             session.add(rh)
 
                             if rh.metatype == 'weapon':
@@ -164,7 +157,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                                     rarity     = 'Common',
                                     offsetx    = 4,
                                     offsety    = 0,
-                                    date       = datetime.now())
+                                    date       = datetime.datetime.now())
                             session.add(lh)
 
                             if lh.metatype == 'weapon':
@@ -300,22 +293,22 @@ def mypc_del(username,pcid):
 def mypc_get_stats(pc):
 
     # We check if we have the data in redis
-    stats = get_stats(pc)
-    if stats:
+    creature_stats = stats.get_stats(pc)
+    if creature_stats:
         # Data was in Redis, so we return it
         return (200,
                 True,
                 f'Stats Redis query successed (pcid:{pc.id})',
-                stats)
+                creature_stats)
 
     # Data was not in Redis, so we compute it
-    stats = fn_creature_stats(pc)
-    if stats:
+    creature_stats = fn_creature_stats(pc)
+    if creature_stats:
         # Data was computed, so we return it
         return (200,
                 True,
                 f'Stats computation successed (pcid:{pc.id})',
-                stats)
+                creature_stats)
     else:
         # Data computation failed
         return (200,
@@ -386,7 +379,7 @@ def mypc_get_cds(username,pcid):
                 None)
 
     try:
-        cds = get_cds(pc)
+        creature_cds = cds.get_cds(pc)
     except Exception as e:
         # Something went wrong during query
         return (200,
@@ -397,7 +390,7 @@ def mypc_get_cds(username,pcid):
         return (200,
                 True,
                 f'CDs found (pcid:{pc.id})',
-                cds)
+                creature_cds)
     finally:
         session.close()
 
@@ -419,7 +412,7 @@ def mypc_get_effects(username,pcid):
                 None)
 
     try:
-        effects = get_effects(pc)
+        creature_effects = effects.get_effects(pc)
     except Exception as e:
         return (200,
                 False,
@@ -429,4 +422,4 @@ def mypc_get_effects(username,pcid):
         return (200,
                 True,
                 f'Effects found (pcid:{pc.id})',
-                effects)
+                creature_effects)

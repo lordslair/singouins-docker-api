@@ -4,9 +4,8 @@ import dataclasses
 
 from ..session           import Session
 from ..models            import Creature,Squad
-from ..utils.redis.queue import yqueue_put
 
-from .fn_creature        import fn_creature_get
+from .fn_creature        import *
 from .fn_user            import fn_user_get
 
 #
@@ -156,13 +155,13 @@ def add_squad(username,pcid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** created this squad',
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": squad_members,
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     f'Squad successfully created (pcid:{pc.id},squadid:{squad.id})',
@@ -237,13 +236,13 @@ def del_squad(username,leaderid,squadid):
                 "payload": f':information_source: **[{pc.id}] {pc.name}** deleted this squad',
                 "embed": None,
                 "scope": f'Squad-{squadid}'}
-        yqueue_put('yarqueue:discord', qmsg)
+        queue.yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": None,
                 "route": 'mypc/{id1}/squad',
                 "scope": 'squad'}
-        yqueue_put('broadcast', qmsg)
+        queue.yqueue_put('broadcast', qmsg)
 
         return (200,
                 True,
@@ -339,13 +338,13 @@ def invite_squad_member(username,leaderid,squadid,targetid):
                     "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this squad',
                     "embed": None,
                     "scope": f'Squad-{leader.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": squad_members,
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC successfully invited (slots:{len(squad_members)+1}/{maxmembers})',
@@ -430,13 +429,13 @@ def kick_squad_member(username,leaderid,squadid,targetid):
                     "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this squad',
                     "embed": None,
                     "scope": f'Squad-{leader.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": squad_members,
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC successfully kicked (slots:{len(squad_members)}/{maxmembers})',
@@ -502,13 +501,13 @@ def accept_squad_member(username,pcid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this squad',
                     "embed": None,
                     "scope": f'Squad-{pc.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": squad_members,
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     'PC successfully accepted squad invite (pcid:{pc.id},squadid:{squadid})',
@@ -575,13 +574,13 @@ def decline_squad_member(username,pcid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
                     "embed": None,
                     "scope": f'Squad-{squadid}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": squad_members,
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC successfully declined squad invite (pcid:{pc.id},squadid:{squadid})',
@@ -649,13 +648,13 @@ def leave_squad_member(username,pcid,squadid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** left this squad',
                     "embed": None,
                     "scope": f'Squad-{squadid}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": None,
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC successfully left (pcid:{pc.id},squadid:{squadid})',

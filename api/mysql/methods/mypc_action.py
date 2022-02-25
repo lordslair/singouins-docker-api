@@ -6,10 +6,6 @@ from ..session           import Session
 from ..models            import (Creature,
                                  Item)
 
-from ..utils.redis.metas import get_meta
-from ..utils.redis.pa    import get_pa,set_pa
-from ..utils.redis       import incr
-
 from .fn_creature        import *
 from .fn_user            import fn_user_get
 from .fn_wallet          import fn_wallet_ammo_get,fn_wallet_ammo_set
@@ -24,10 +20,12 @@ class AttrDict(dict):
 
 # Loading the Meta for later use
 try:
-    metaWeapons = get_meta('weapon')
-    metaArmors  = get_meta('armor')
+    metaWeapons = metas.get_meta('weapon')
+    metaArmors  = metas.get_meta('armor')
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 #
 # Queries /mypc/{pcid}/action/*
@@ -44,9 +42,9 @@ def mypc_action_move(username,pcid,path):
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
 
-    pa         = get_pa(pcid)[3]
-    bluepa     = pa['blue']['pa']
-    redpa      = pa['red']['pa']
+    creature_pa = pa.get_pa(pcid)[3]
+    bluepa      = creature_pa['blue']['pa']
+    redpa       = creature_pa['red']['pa']
 
     for coords in path:
         x,y        = map(int, coords.strip('()').split(','))
@@ -80,8 +78,8 @@ def mypc_action_move(username,pcid,path):
                 f'[SQL] Coords update failed (pcid:{pcid},path:{path})',
                 None)
     else:
-        set_pa(pcid,0,8 - bluepa) # We consume the blue 🔵 PA
-        set_pa(pcid,16 - redpa,0)  # We consume the red  🔴 PA
+        pa.set_pa(pcid,0,8 - bluepa) # We consume the blue 🔵 PA
+        pa.set_pa(pcid,16 - redpa,0)  # We consume the red  🔴 PA
         # We put the info in queue for ws
         qciphered = False
         qpayload  = {"id": pc.id, "x": x, "y": y}
@@ -94,7 +92,7 @@ def mypc_action_move(username,pcid,path):
         incr_hs(pc,'action:move', 1) # Redis HighScore
 
         clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
-        return (200, True, 'PC successfully moved', get_pa(pcid)[3])
+        return (200, True, 'PC successfully moved', pa.get_pa(pcid)[3])
     finally:
         session.close()
 
@@ -103,7 +101,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     tg          = fn_creature_get(None,targetid)[3]
-    pa          = get_pa(pcid)[3]
+    creature_pa = pa.get_pa(pcid)[3]
 
     action = {"failed": True,
               "hit": False,
@@ -225,18 +223,18 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
 
     # At this point, we consider that the attack can happen, and manage the PA
     # Check it PC has enough PA
-    if pa['red']['pa'] < itemmeta.pas_use:
+    if creature_pa['red']['pa'] < itemmeta.pas_use:
         # Not enough PA to attack
         return (200,
                 False,
                 'Not enough PA to attack',
-                {"red": pa['red'],
-                 "blue": pa['blue'],
+                {"red": creature_pa['red'],
+                 "blue": creature_pa['blue'],
                  "action": None})
     else:
         # Enough PA to attack, we consume the red PAs
         incr_hs(pc,'action:attack',1) # Redis HighScore
-        set_pa(pcid,itemmeta.pas_use,0)
+        pa.set_pa(pcid,itemmeta.pas_use,0)
 
     if pc.capacity > tg.avoid:
         # Successfull attack
@@ -295,8 +293,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     return (200,
             True,
             'Target successfully attacked',
-            {"red": get_pa(pcid)[3]['red'],
-             "blue": pa['blue'],
+            {"red": pa.get_pa(pcid)[3]['red'],
+             "blue": pa.get_pa(pcid)[3]['blue'],
              "action": action})
 
 # API: /mypc/<int:pcid>/action/reload/<int:weaponid>
@@ -304,7 +302,7 @@ def mypc_action_reload(username,pcid,weaponid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     session     = Session()
-    redpa       = get_pa(pcid)[3]['red']['pa']
+    redpa       = pa.get_pa(pcid)[3]['red']['pa']
 
     # Pre-flight checks
     if pc is None:
@@ -358,12 +356,12 @@ def mypc_action_reload(username,pcid,weaponid):
         return (200,
                 False,
                 'Not enough PA to reload',
-                {"red": get_pa(pcid)[3]['red'],
-                 "blue": get_pa(pcid)[3]['blue'],
+                {"red": pa.get_pa(pcid)[3]['red'],
+                 "blue": pa.get_pa(pcid)[3]['blue'],
                  "action": None})
     else:
         # Enough PA to reload, we consume the red PAs
-        set_pa(pc.id,itemmeta['pas_reload'],0)
+        pa.set_pa(pc.id,itemmeta['pas_reload'],0)
 
     walletammo = fn_wallet_ammo_get(pc,item,itemmeta['caliber'])
     neededammo = itemmeta['max_ammo'] - item.ammo
@@ -395,7 +393,7 @@ def mypc_action_reload(username,pcid,weaponid):
         return (200,
                 True,
                 f'Weapon reload successed (pcid:{pc.id},weaponid:{item.id})',
-                get_pa(pcid)[3])
+                pa.get_pa(pcid)[3])
     finally:
         session.close()
 
@@ -452,24 +450,24 @@ def mypc_action_unload(username,pcid,weaponid):
                 f'Item is not reloadable (pcid:{pc.id},weaponid:{item.id})',
                 None)
 
-    if get_pa(pcid)[3]['blue']['pa'] < 2:
+    if pa.get_pa(pcid)[3]['blue']['pa'] < 2:
         # Not enough PA to unload
         return (200,
                 False,
                 'Not enough PA to unload',
-                {"red": get_pa(pcid)[3]['red'],
-                 "blue": get_pa(pcid)[3]['blue'],
+                {"red": pa.get_pa(pcid)[3]['red'],
+                 "blue": pa.get_pa(pcid)[3]['blue'],
                  "action": None})
     else:
         # Enough PA to unload, we consume the red PAs
-        set_pa(pc.id,0,2)
+        pa.set_pa(pc.id,0,2)
 
     ret = fn_wallet_ammo_set(pc,itemmeta['caliber'],item.ammo)
     if ret is None:
         return (200,
                 True,
                 f'Weapon unload failed (pcid:{pcid},weaponid:{item.id})',
-                get_pa(pcid)[3])
+                pa.get_pa(pcid)[3])
 
     try:
         item       = session.query(Item)\
@@ -489,6 +487,6 @@ def mypc_action_unload(username,pcid,weaponid):
         return (200,
                 True,
                 f'Weapon unload successed (pcid:{pc.id},weaponid:{weaponid})',
-                get_pa(pcid)[3])
+                pa.get_pa(pcid)[3])
     finally:
         session.close()

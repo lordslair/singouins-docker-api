@@ -3,13 +3,7 @@
 from ..session           import Session
 from ..models            import Creature
 
-from ..utils.redis.instances import (add_instance,
-                                     del_instance,
-                                     get_instance)
-from ..utils.redis.maps      import get_map
-from ..utils.redis.queue     import yqueue_put
-
-from .fn_creature        import fn_creature_get
+from .fn_creature        import *
 from .fn_user            import fn_user_get
 
 #
@@ -61,7 +55,7 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
 
     # Check if map related to mapid exists
     try:
-        map = get_map(mapid)
+        map = maps.get_map(mapid)
     except Exception as e:
         return (200,
                 False,
@@ -70,7 +64,7 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
 
     # Create the new instance
     try:
-        instance = add_instance(creature,fast,hardcore,mapid,public)
+        instance = instances.add_instance(creature,fast,hardcore,mapid,public)
     except Exception as e:
         return (200,
                 False,
@@ -98,7 +92,7 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
                         "embed": None,
                         "scope": f'Korp-{pc.korp}'}
                 try:
-                    yqueue_put('yarqueue:discord', qmsg)
+                    queue.yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             if pc.squad is not None:
@@ -107,12 +101,12 @@ def mypc_instance_create(username,creatureid,hardcore,fast,mapid,public):
                         "embed": None,
                         "scope": f'Squad-{pc.squad}'}
                 try:
-                    yqueue_put('yarqueue:discord', qmsg)
+                    queue.yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             # We put the info in queue for IA to populate the instance
             try:
-                yqueue_put('yarqueue:instances', {"action": 'create', "instance": instance})
+                queue.yqueue_put('yarqueue:instances', {"action": 'create', "instance": instance})
             except:
                 pass
             # Finally everything is done
@@ -158,7 +152,7 @@ def mypc_instance_get(username,creatureid,instanceid):
 
     # Check if the instance exists
     try:
-        instance = get_instance(instanceid)
+        instance = instances.get_instance(instanceid)
     except Exception as e:
         return (200,
                 False,
@@ -206,7 +200,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
 
     # Check if the instance exists
     try:
-        instance = get_instance(instanceid)
+        instance = instances.get_instance(instanceid)
     except Exception as e:
         return (200,
                 False,
@@ -239,7 +233,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
         # SQL modifications
         try:
             # Start with Redis deletion
-            count = del_instance(instanceid)
+            count = instances.del_instance(instanceid)
             if count is None or count == 0:
                 # Delete keys failes, or keys not found
                 return (200,
@@ -265,7 +259,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
                         "embed": None,
                         "scope": f'Korp-{pc.korp}'}
                 try:
-                    yqueue_put('yarqueue:discord', qmsg)
+                    queue.yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             if pc.squad is not None:
@@ -274,12 +268,12 @@ def mypc_instance_leave(username,creatureid,instanceid):
                         "embed": None,
                         "scope": f'Squad-{pc.squad}'}
                 try:
-                    yqueue_put('yarqueue:discord', qmsg)
+                    queue.yqueue_put('yarqueue:discord', qmsg)
                 except:
                     pass
             # We put the info in queue for IA to clean the instance
             try:
-                yqueue_put('yarqueue:instances', {"action": 'delete', "instance": instance})
+                queue.yqueue_put('yarqueue:instances', {"action": 'delete', "instance": instance})
             except:
                 pass
             # Finally everything is done
@@ -308,7 +302,7 @@ def mypc_instance_leave(username,creatureid,instanceid):
                     "payload": f':map: **[{creature.id}] {creature.name}** left an Instance',
                     "embed": None,
                     "scope": f'Korp-{creature.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             return (200,
                     True,
                     f'Instance leave successed (instanceid:{instanceid})',
@@ -346,7 +340,7 @@ def mypc_instance_join(username,creatureid,instanceid):
 
     # Check if the instance exists
     try:
-        instance = get_instance(instanceid)
+        instance = instances.get_instance(instanceid)
     except Exception as e:
         return (200,
                 False,

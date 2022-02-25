@@ -1,6 +1,10 @@
 # -*- coding: utf8 -*-
 
+import json
+import re
 import redis
+
+from loguru    import logger
 
 from variables import (REDIS_PORT,
                        REDIS_HOST,

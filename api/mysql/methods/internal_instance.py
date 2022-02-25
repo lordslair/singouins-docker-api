@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from ..utils.redis.queue    import yqueue_get
+from nosql import * # Custom internal module for Redis queries
 
 #
 # Queries /internal/creature/*
@@ -9,7 +9,7 @@ from ..utils.redis.queue    import yqueue_get
 def internal_instance_queue_get():
 
     try:
-        msgs = yqueue_get('yarqueue:instances')
+        msgs = queue.yqueue_get('yarqueue:instances')
     except Exception as e:
         return (200,
                 False,

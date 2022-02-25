@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from .connector import r
+from .connector import *
 
 def many(key,increment):
 

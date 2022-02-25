@@ -1,9 +1,8 @@
 # -*- coding: utf8 -*-
 
 from datetime             import datetime
-from loguru               import logger
 
-from .connector            import r
+from .connector            import *
 from .variables            import META_FILES
 
 def initialize_redis():

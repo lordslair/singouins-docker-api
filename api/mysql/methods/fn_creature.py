@@ -2,28 +2,25 @@
 
 import dataclasses
 
-from datetime            import datetime
-
 from ..session           import Session
 from ..models            import (Creature,
                                  CreatureSlots,
                                  CreatureStats,
                                  Item,
                                  Wallet)
+from nosql               import * # Custom internal module for Redis queries
 
 from ..utils.loot        import *
-from ..utils.redis.metas import get_meta
-from ..utils.redis.stats import (get_hp,
-                                 set_hp,
-                                 set_stats)
 
 from .fn_global          import clog
 
 # Loading the Meta for later use
 try:
-    metaWeapons = get_meta('weapon')
+    metaWeapons = metas.get_meta('weapon')
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 def fn_creature_get(pcname,pcid):
     session = Session()
@@ -34,30 +31,24 @@ def fn_creature_get(pcname,pcid):
         elif pcname:
             pc = session.query(Creature).filter(Creature.name == pcname).one_or_none()
         else:
-            return (200,
-                    False,
-                    f'Wrong pcid/pcname (pcid:{pcid},pcname:{pcname})',
-                    None)
+            message = f'Wrong pcid/pcname (pcid:{pcid},pcname:{pcname})'
+            logger.warning(message)
+            return (200, False, message, None)
     except Exception as e:
-        return (200,
-                False,
-                f'[SQL] PC query failed (pcid:{pcid},pcname:{pcname}) [{e}]',
-                None)
+        message = f'[SQL] PC query failed (pcid:{pcid},pcname:{pcname}) [{e}]'
+        logger.error(message)
+        return (200, False, message, None)
     else:
         if pc:
-            return (200,
-                    True,
-                    f'PC successfully found (pcid:{pcid},pcname:{pcname})',
-                    pc)
+            message = f'PC successfully found (pcid:{pcid},pcname:{pcname})'
+            logger.trace(message)
+            return (200, True, message, pc)
         else:
-            return (200,
-                    False,
-                    f'PC does not exist (pcid:{pcid},pcname:{pcname})',
-                    None)
+            message = f'PC does not exist (pcid:{pcid},pcname:{pcname})'
+            logger.trace(message)
+            return (200, False, message, None)
     finally:
         session.close()
-
-
 
 def fn_creature_tag(pc,tg):
     session = Session()
@@ -316,7 +307,7 @@ def fn_creature_stats(pc):
                            .one_or_none()
 
     except Exception as e:
-        print(e)
+        logger.error(f'Stats queries KO (pcid:{pcid}) [{e}]')
     else:
         for meta in armormetas:
             if meta:
@@ -342,15 +333,15 @@ def fn_creature_stats(pc):
 
         # About HP
         hpmax = 100 + base_m + round(pc.level/2)
-        hp    = get_hp(pc)
+        hp    = stats.get_hp(pc)
         if hp:
             pass # Meaning key was already populated
         else:
-            set_hp(pc,hpmax)
+            stats.set_hp(pc,hpmax)
             hp = hpmax
 
         # We push data in final dict
-        stats  = {"base":{
+        creature_stats  = {"base":{
                             "m": 0 + base_m,
                             "r": 0 + base_r,
                             "g": 0 + base_g,
@@ -370,9 +361,9 @@ def fn_creature_stats(pc):
                             "parry": round(((base_g-100)/50) * ((base_m-100)/50))}}
 
         # Data was not in Redis, so we push it
-        set_stats(pc,stats)
+        stats.set_stats(pc,creature_stats)
 
         # To avoid errors, we return the freshly computed value
-        return (stats)
+        return (creature_stats)
     finally:
         session.close()
