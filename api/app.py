@@ -18,7 +18,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import                      nosql
 
 from mysql.methods          import *
-from mysql.utils.redis.pa   import *
 
 from variables              import (SEP_SECRET_KEY,
                                     API_URL, DISCORD_URL,
@@ -264,7 +263,7 @@ def api_mypc_del(pcid):
 @app.route('/mypc/<int:pcid>/pa', methods=['GET'])
 @jwt_required()
 def api_mypc_pa(pcid):
-    (code, success, msg, payload) = get_pa(pcid)
+    (code, success, msg, payload) = pa.get_pa(pcid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

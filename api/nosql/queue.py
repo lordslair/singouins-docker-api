@@ -1,9 +1,8 @@
 # -*- coding: utf8 -*-
 
-import json
 import yarqueue
 
-from .connector import r
+from .connector import *
 
 #
 # Queries: Queues

@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from ..utils.redis.maps      import get_map
+from nosql import * # Custom internal module for Redis queries
 
 #
 # Queries /map/*
@@ -16,7 +16,7 @@ def mypc_map_get(mapid):
                 None)
 
     try:
-        map = get_map(mapid)
+        map = maps.get_map(mapid)
     except Exception as e:
         return (200,
                 False,

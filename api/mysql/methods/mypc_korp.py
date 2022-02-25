@@ -4,9 +4,8 @@ import dataclasses
 
 from ..session           import Session
 from ..models            import Creature,Korp
-from ..utils.redis.queue import yqueue_put
 
-from .fn_creature        import fn_creature_get
+from .fn_creature        import *
 from .fn_user            import fn_user_get
 
 #
@@ -173,13 +172,13 @@ def mypc_korp_create(username,pcid,korpname):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** created this Korp',
                     "embed": None,
                     "scope": f'Korp-{pc.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": korp_members,
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (201,
                     True,
                     f'Korp successfully created (pcid:{pc.id},korpid:{korp.id})',
@@ -252,13 +251,13 @@ def mypc_korp_delete(username,leaderid,korpid):
                 "payload": f':information_source: **[{leader.id}] {leader.name}** deleted this korp',
                 "embed": None,
                 "scope": f'Korp-{korp.id}'}
-        yqueue_put('yarqueue:discord', qmsg)
+        queue.yqueue_put('yarqueue:discord', qmsg)
         # We put the info in queue for ws Front
         qmsg = {"ciphered": False,
                 "payload": None,
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
+        queue.yqueue_put('broadcast', qmsg)
 
         return (200,
                 True,
@@ -349,13 +348,13 @@ def mypc_korp_invite(username,leaderid,korpid,targetid):
                     "payload": f':information_source: **[{leader.id}] {leader.name}** invited **[{target.id}] {target.name}** in this korp',
                     "embed": None,
                     "scope": f'Korp-{leader.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": korp_members,
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC Invite successed (slots:{len(members)}/{maxmembers})',
@@ -442,13 +441,13 @@ def mypc_korp_kick(username,leaderid,korpid,targetid):
                     "payload": f':information_source: **[{leader.id}] {leader.name}** kicked **[{target.id}] {target.name}** from this korp',
                     "embed": None,
                     "scope": f'Korp-{leader.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": korp_members,
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC Kick successed (slots:{len(members)}/{maxmembers})',
@@ -515,13 +514,13 @@ def mypc_korp_accept(username,pcid,korpid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** accepted this korp',
                     "embed": None,
                     "scope": f'Korp-{pc.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": korp_members,
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC korp accept successed (pcid:{pc.id},korpid:{korpid})',
@@ -589,13 +588,13 @@ def mypc_korp_leave(username,pcid,korpid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** declined the invite',
                     "embed": None,
                     "scope": f'Korp-{korpid}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": korp_members,
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC korp leave successed (pcid:{pc.id},korpid:{korpid})',
@@ -663,13 +662,13 @@ def mypc_korp_decline(username,pcid,korpid):
                     "payload": f':information_source: **[{pc.id}] {pc.name}** left this korp',
                     "embed": None,
                     "scope": f'Korp-{korpid}'}
-            yqueue_put('yarqueue:discord', qmsg)
+            queue.yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
                     "payload": korp_members,
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
-            yqueue_put('broadcast', qmsg)
+            queue.yqueue_put('broadcast', qmsg)
             return (200,
                     True,
                     f'PC successfully left (pcid:{pc.id},korpid:{korpid})',

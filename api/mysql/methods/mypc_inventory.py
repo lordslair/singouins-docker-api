@@ -2,28 +2,22 @@
 
 import dataclasses      # Needed for WS JSON broadcast
 
-from datetime            import datetime
-
 from ..session           import Session
 from ..models            import (CreatureSlots,
                                 Item,
                                 Wallet)
-from ..utils.redis       import incr
-from ..utils.redis.metas import get_meta
-from ..utils.redis.pa    import get_pa, set_pa
-from ..utils.redis.queue import yqueue_put
-from ..utils.redis.stats import get_stats
 
-from .fn_creature        import (fn_creature_get,
-                                fn_creature_stats)
+from .fn_creature        import *
 from .fn_user            import fn_user_get
 
 # Loading the Meta for later use
 try:
-    metaWeapons = get_meta('weapon')
-    metaArmors  = get_meta('armor')
+    metaWeapons = metas.get_meta('weapon')
+    metaArmors  = metas.get_meta('armor')
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 #
 # Queries /mypc/{pcid}/inventory/*
@@ -102,7 +96,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
                 f'[SQL] Item dismantle failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
-        set_pa(pcid,0,1) # We consume the blue PA (1)
+        pa.set_pa(pcid,0,1) # We consume the blue PA (1)
         incr.many(f'highscores:{pc.id}:action:dismantle:items', 1)
         return (200,
                 True,
@@ -120,12 +114,12 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
 
 # API: /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>
 def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
-    pc          = fn_creature_get(None,pcid)[3]
-    user        = fn_user_get(username)
-    stats       = fn_creature_stats(pc)
-    session     = Session()
-    redpa       = get_pa(pcid)[3]['red']['pa']
-    equipment   = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
+    pc             = fn_creature_get(None,pcid)[3]
+    user           = fn_user_get(username)
+    creature_stats = fn_creature_stats(pc)
+    session        = Session()
+    redpa          = pa.get_pa(pcid)[3]['red']['pa']
+    equipment      = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
 
 
     # Pre-flight checks
@@ -150,7 +144,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 False,
                 f'Itemid incorrect (pcid:{pc.id},itemid:{itemid})',
                 None)
-    if stats is None:
+    if creature_stats is None:
         return (200,
                 False,
                 f'Stats not found (pcid:{pc.id})',
@@ -192,35 +186,35 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 None)
 
     # Pre-requisite checks
-    if itemmeta['min_m'] > stats['base']['m']:
+    if itemmeta['min_m'] > creature_stats['base']['m']:
         return (200,
                 False,
-                f"M prequisites failed (m_min:{itemmeta['min_m']},m:{stats['base']['m']})",
+                f"M prequisites failed (m_min:{itemmeta['min_m']},m:{creature_stats['base']['m']})",
                 None)
-    elif itemmeta['min_r'] > stats['base']['r']:
+    elif itemmeta['min_r'] > creature_stats['base']['r']:
         return (200,
                 False,
-                f"R prequisites failed (r_min:{itemmeta['min_r']},r:{stats['base']['r']})",
+                f"R prequisites failed (r_min:{itemmeta['min_r']},r:{creature_stats['base']['r']})",
                 None)
-    elif itemmeta['min_g'] > stats['base']['g']:
+    elif itemmeta['min_g'] > creature_stats['base']['g']:
         return (200,
                 False,
-                f"G prequisites failed (g_min:{itemmeta['min_g']},g:{stats['base']['g']})",
+                f"G prequisites failed (g_min:{itemmeta['min_g']},g:{creature_stats['base']['g']})",
                 None)
-    elif itemmeta['min_v'] > stats['base']['v']:
+    elif itemmeta['min_v'] > creature_stats['base']['v']:
         return (200,
                 False,
-                f"V prequisites failed (v_min:{itemmeta['min_v']},v:{stats['base']['v']})",
+                f"V prequisites failed (v_min:{itemmeta['min_v']},v:{creature_stats['base']['v']})",
                 None)
-    elif itemmeta['min_p'] > stats['base']['p']:
+    elif itemmeta['min_p'] > creature_stats['base']['p']:
         return (200,
                 False,
-                f"P prequisites failed (p_min:{itemmeta['min_p']},p:{stats['base']['p']})",
+                f"P prequisites failed (p_min:{itemmeta['min_p']},p:{creature_stats['base']['p']})",
                 None)
-    elif itemmeta['min_b'] > stats['base']['b']:
+    elif itemmeta['min_b'] > creature_stats['base']['b']:
         return (200,
                 False,
-                f"B prequisites failed (b_min:{itemmeta['min_b']},b:{stats['base']['b']})",
+                f"B prequisites failed (b_min:{itemmeta['min_b']},b:{creature_stats['base']['b']})",
                 None)
 
     # The item to equip exists, is owned by the PC, and we retrieved his equipment from DB
@@ -279,11 +273,11 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                     f"Item does not fit in left hand (itemid:{item.id},size:{itemmeta['size']})",
                     None)
 
-    equipment.date = datetime.now() # We update the date in DB
+    equipment.date = datetime.datetime.now() # We update the date in DB
     item.bound     = True           # In case the item was not bound to PC. Now it is
     item.offsetx   = None           # Now the item is not in inventory anymore
     item.offsety   = None           # Now the item is not in inventory anymore
-    item.date      = datetime.now() # We update the date in DB
+    item.date      = datetime.datetime.now() # We update the date in DB
 
     try:
         session.commit()
@@ -309,15 +303,15 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 "payload": qpayload,
                 "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
                 "scope": qscope}
-        yqueue_put('broadcast', qmsg)
+        queue.yqueue_put('broadcast', qmsg)
 
-        set_pa(pc.id,costpa,0) # We consume the red PA (costpa) right now
+        pa.set_pa(pc.id,costpa,0) # We consume the red PA (costpa) right now
 
         return (200,
                 True,
                 f'Equipment successfully updated (pcid:{pc.id},itemid:{itemid})',
-                {"red": get_pa(pcid)[3]['red'],
-                 "blue": get_pa(pcid)[3]['blue'],
+                {"red": pa.get_pa(pcid)[3]['red'],
+                 "blue": pa.get_pa(pcid)[3]['blue'],
                  "equipment": equipment})
     finally:
         session.close()
@@ -385,7 +379,7 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
             else:
                 equipment.lefthand = None
 
-    equipment.date = datetime.now()
+    equipment.date = datetime.datetime.now()
 
     try:
         session.commit()
@@ -411,13 +405,13 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
                 "payload": qpayload,
                 "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
                 "scope": qscope}
-        yqueue_put('broadcast', qmsg)
+        queue.yqueue_put('broadcast', qmsg)
 
         return (200,
                 True,
                 f'Unequip successed (pcid:{pc.id},itemid:{itemid})',
-                {"red": get_pa(pcid)[3]['red'],
-                 "blue": get_pa(pcid)[3]['blue'],
+                {"red": pa.get_pa(pcid)[3]['red'],
+                 "blue": pa.get_pa(pcid)[3]['blue'],
                  "equipment": equipment})
     finally:
         session.close()
@@ -447,7 +441,7 @@ def mypc_inventory_item_offset(username,pcid,itemid,offsetx,offsety):
 
         item.offsetx = offsetx
         item.offsety = offsety
-        item.date    = datetime.now() # We update the date in DB
+        item.date    = datetime.datetime.now() # We update the date in DB
         session.commit()
     except Exception as e:
         return (200,

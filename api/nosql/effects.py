@@ -1,19 +1,20 @@
 # -*- coding: utf8 -*-
 
-import re
 import time
 
-from .connector import r
-from .metas     import get_meta
+from .connector import *
 
 redpaduration  = 3600
 bluepaduration = 3600
 
-# Get the Meta stored in REDIS
+# Loading the Meta for later use
 try:
-    metaEffects = get_meta('effect')
+    if r.exists('system:meta:effect'):
+        metaEffects = json.loads(r.get('system:meta:effect'))
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 #
 # Queries: effects:*

@@ -1,12 +1,10 @@
 # -*- coding: utf8 -*-
 
-from datetime           import datetime
-
 from ..session          import Session
 from ..models.users     import User
 from ..models.creatures import Creature
 
-from .fn_creature       import fn_creature_get
+from .fn_creature       import *
 from .fn_user           import (fn_user_get,
                                 fn_user_get_from_discord)
 

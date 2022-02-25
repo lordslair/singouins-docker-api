@@ -5,10 +5,7 @@ import dataclasses
 from ..session           import Session
 from ..models            import Creature
 
-from ..utils.redis.stats import get_stats
-
-from .fn_creature        import (fn_creature_get,
-                                 fn_creature_stats)
+from .fn_creature        import *
 from .fn_user            import fn_user_get
 
 #
@@ -43,17 +40,17 @@ def mypc_view(username,pcid):
             # PC is solo / not in a squad
 
             # We check if we have the data in redis
-            stats = get_stats(pc)
-            if stats is None:
+            creature_stats = stats.get_stats(pc)
+            if creature_stats is None:
                 # We try to compute fresh stats
-                stats = fn_creature_stats(pc)
-                if stats is None:
+                creature_stats = fn_creature_stats(pc)
+                if creature_stats is None:
                     return (200,
                             True,
                             f'Stats query failed (pcid:{pc.id})',
                             None)
 
-            range = 4 + round(stats['base']['p'] / 50)
+            range = 4 + round(creature_stats['base']['p'] / 50)
             maxx  = pc.x + range
             minx  = pc.x - range
             maxy  = pc.y + range
@@ -92,17 +89,17 @@ def mypc_view(username,pcid):
             views = [] # We initialize the result array
             for pc in squad:
                 # We check if we have the data in redis
-                stats = get_stats(pc)
-                if stats is None:
+                creature_stats = stats.get_stats(pc)
+                if creature_stats is None:
                     # We try to compute fresh stats
-                    stats = fn_creature_stats(pc)
-                    if stats is None:
+                    creature_stats = fn_creature_stats(pc)
+                    if creature_stats is None:
                         return (200,
                                 True,
                                 f'Stats query failed (pcid:{pc.id})',
                                 None)
                 try:
-                    range = 4 + round(stats['base']['p'] / 50)
+                    range = 4 + round(creature_stats['base']['p'] / 50)
                     maxx  = pc.x + range
                     minx  = pc.x - range
                     maxy  = pc.y + range

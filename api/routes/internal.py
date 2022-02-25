@@ -3,7 +3,7 @@
 from flask              import Flask, jsonify, request
 
 from mysql.methods      import *
-from mysql.utils.redis  import incr
+from nosql              import *
 
 from variables          import API_INTERNAL_TOKEN
 

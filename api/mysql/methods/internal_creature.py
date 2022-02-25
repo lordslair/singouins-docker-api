@@ -1,25 +1,20 @@
 # -*- coding: utf8 -*-
 
 import dataclasses
-import datetime
 
 from ..session              import Session
 from ..models               import CreatureSlots,Item,Creature,Wallet
 
-from ..utils.redis.effects  import *
-from ..utils.redis.cds      import *
-from ..utils.redis.metas    import get_meta
-from ..utils.redis.statuses import *
-from ..utils.redis.pa       import *
-
-from .fn_creature           import fn_creature_get,fn_creature_stats
+from .fn_creature           import *
 from .fn_user               import fn_user_get_from_discord
 
 # Loading the Meta for later use
 try:
-    metaRaces   = get_meta('race')
+    metaRaces = metas.get_meta('race')
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 #
 # Queries /internal/creature/*
@@ -608,18 +603,18 @@ def internal_creature_pa_get(creatureid):
                 None)
 
     try:
-        pa = get_pa(creature.id)[3]
+        creature_pa = pa.get_pa(creature.id)[3]
     except Exception as e:
         return (200,
                 False,
                 f'[Redis] PA query failed (creatureid:{creature.id}) [{e}]',
                 None)
     else:
-        if pa:
+        if creature_pa:
             return (200,
                     True,
                     f'PAs found (creatureid:{creature.id})',
-                    {"pa": pa,
+                    {"pa": creature_pa,
                      "creature": creature})
         else:
             return (200,
@@ -651,14 +646,14 @@ def internal_creature_pa_consume(creatureid,redpa,bluepa):
                 False,
                 f'Cannot consume PA < 0(creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
                 None)
-    if redpa >= get_pa(creature.id)[3]['red']['pa'] or bluepa >= get_pa(creature.id)[3]['blue']['pa']:
+    if redpa >= pa.get_pa(creature.id)[3]['red']['pa'] or bluepa >= pa.get_pa(creature.id)[3]['blue']['pa']:
         return (200,
                 False,
                 f'Cannot consume that amount of PA (creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
                 None)
 
     try:
-        set_pa(creature.id,redpa,bluepa)
+        pa.set_pa(creature.id,redpa,bluepa)
     except Exception as e:
         return (200,
                 False,
@@ -668,7 +663,7 @@ def internal_creature_pa_consume(creatureid,redpa,bluepa):
         return (200,
                 True,
                 f'Query successed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa})',
-                {"pa": get_pa(creature.id)[3],
+                {"pa": pa.get_pa(creature.id)[3],
                  "creature": creature})
 
 # API: PUT /internal/creature/pa/reset

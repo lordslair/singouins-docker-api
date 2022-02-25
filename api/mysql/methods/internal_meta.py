@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from ..utils.redis.metas import get_meta
+from nosql import * # Custom internal module for Redis queries
 
 #
 # Queries /internal/meta/*
@@ -16,7 +16,7 @@ def internal_meta_get_one(metatype):
                 None)
 
     try:
-        meta = get_meta(metatype)
+        meta = metas.get_meta(metatype)
     except Exception as e:
         return (200,
                 False,

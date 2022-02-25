@@ -1,8 +1,6 @@
 # -*- coding: utf8 -*-
 
-import json
-
-from .connector import r
+from .connector import *
 
 #
 # Queries: system:meta:*

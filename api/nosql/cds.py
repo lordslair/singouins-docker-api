@@ -1,18 +1,18 @@
 # -*- coding: utf8 -*-
 
-import re
-
-from .connector import r
-from .metas     import get_meta
+from .connector import *
 
 redpaduration  = 3600
 bluepaduration = 3600
 
-# Get the Meta stored in REDIS
+# Loading the Meta for later use
 try:
-    metaSkills = get_meta('skill')
+    if r.exists('system:meta:skill'):
+        metaSkills = json.loads(r.get('system:meta:skill'))
 except Exception as e:
-    print(f'[Redis:get_meta()] meta fetching failed [{e}]')
+    logger.error(f'Meta fectching: KO [{e}]')
+else:
+    logger.trace(f'Meta fectching: OK')
 
 #
 # Queries: cds:*

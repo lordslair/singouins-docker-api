@@ -6,13 +6,7 @@ import requests
 from ..session               import Session
 from ..models                import Creature
 
-from ..utils.redis.effects   import get_instance_effects
-from ..utils.redis.cds       import get_instance_cds,get_cd
-from ..utils.redis.statuses  import get_instance_statuses
-from ..utils.redis.pa        import *
-from ..utils.redis.instances import get_instance
-
-from .fn_creature            import fn_creature_get
+from .fn_creature            import *
 from .fn_creatures           import fn_creatures_in_instance
 from .fn_user                import fn_user_get
 
@@ -49,12 +43,12 @@ def mypc_action_resolver_move(username,creatureid,path):
                 None)
 
     try:
-        map       = get_instance(creature.instance)['map']
-        creatures = fn_creatures_in_instance(creature.instance)
-        effects   = get_instance_effects(creature)
-        statuses  = get_instance_statuses(creature)
-        cds       = get_instance_cds(creature)
-        pas       = get_pa(creature.id)[3]
+        map                = instances.get_instance(creature.instance)['map']
+        creatures          = fn_creatures_in_instance(creature.instance)
+        creatures_effects  = effects.get_instance_effects(creature)
+        creatures_statuses = statuses.get_instance_statuses(creature)
+        creatures_cds      = cds.get_instance_cds(creature)
+        pas                = pa.get_pa(creature.id)[3]
     except Exception as e:
         return (200,
                 False,
@@ -66,9 +60,9 @@ def mypc_action_resolver_move(username,creatureid,path):
                     "map": map,
                     "instance": creature.instance,
                     "creatures": creatures,
-                    "effects": effects,
-                    "status": statuses,
-                    "cd": cds,
+                    "effects": creatures_effects,
+                    "status": creatures_statuses,
+                    "cd": creatures_cds,
                     "pa": pas
                   },
                   "fightEvent": {
@@ -131,7 +125,7 @@ def mypc_action_resolver_skill(username,creatureid,skillmetaid):
                 None)
 
     try:
-        cd  = get_cd(creature,skillmetaid)
+        cd  = cds.get_cd(creature,skillmetaid)
     except Exception as e:
         return (200,
                 False,
@@ -146,12 +140,12 @@ def mypc_action_resolver_skill(username,creatureid,skillmetaid):
                     cd)
 
     try:
-        map       = get_instance(creature.instance)['map']
-        creatures = fn_creatures_in_instance(creature.instance)
-        effects   = get_instance_effects(creature)
-        statuses  = get_instance_statuses(creature)
-        cds       = get_instance_cds(creature)
-        pas       = get_pa(creature.id)[3]
+        map                = instances.get_instance(creature.instance)['map']
+        creatures          = fn_creatures_in_instance(creature.instance)
+        creatures_effects  = effects.get_instance_effects(creature)
+        creatures_statuses = statuses.get_instance_statuses(creature)
+        creatures_cds      = cds.get_instance_cds(creature)
+        pas                = pa.get_pa(creature.id)[3]
     except Exception as e:
         return (200,
                 False,
@@ -164,9 +158,9 @@ def mypc_action_resolver_skill(username,creatureid,skillmetaid):
                     "map": map,
                     "instance": creature.instance,
                     "creatures": creatures,
-                    "effects": effects,
-                    "status": statuses,
-                    "cd": cds,
+                    "effects": creatures_effects,
+                    "status": creatures_statuses,
+                    "cd": creatures_cds,
                     "pa": pas
                   },
                   "fightEvent": {
