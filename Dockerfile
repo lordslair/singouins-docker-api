@@ -39,4 +39,4 @@ USER api
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
 
-ENTRYPOINT ["/usr/bin/python3 app.py"]
+ENTRYPOINT ["/usr/bin/python3", "app.py"]
