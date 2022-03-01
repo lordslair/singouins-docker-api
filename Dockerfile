@@ -6,6 +6,10 @@ RUN adduser -h /code -u 1000 -D -H api
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
+ARG LOGURU_DATE="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+ARG LOGURU_LEVEL="<level>level={level: <8}</level> | "
+ARG LOGURU_MSG="<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+ENV LOGURU_FORMAT=$LOGURU_DATE$LOGURU_LEVEL$LOGURU_MSG
 ENV LOGURU_COLORIZE='true'
 ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
 
@@ -35,4 +39,4 @@ USER api
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
 
-ENTRYPOINT ["/code/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/python3 app.py"]

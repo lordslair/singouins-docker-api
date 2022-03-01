@@ -39,3 +39,12 @@ API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
 # Resolver variables
 RESOLVER_HOST    = os.environ['SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST']
 RESOLVER_PORT    = os.environ['SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT']
+
+# Gunicorn variables
+GUNICORN_CHDIR   = os.environ.get("GUNICORN_CHDIR", '/code')
+GUNICORN_HOST    = os.environ.get("GUNICORN_HOST", "0.0.0.0")
+GUNICORN_PORT    = os.environ.get("GUNICORN_PORT", 5000)
+GUNICORN_BIND    = f'{GUNICORN_HOST}:{GUNICORN_PORT}'
+GUNICORN_WORKERS = os.environ.get("GUNICORN_WORKERS", 1)
+GUNICORN_THREADS = os.environ.get("GUNICORN_THREADS", 2)
+GUNICORN_RELOAD  = os.environ.get("GUNICORN_RELOAD", True)

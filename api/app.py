@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 from flask              import Flask, jsonify, request
@@ -19,11 +20,10 @@ import                      nosql
 
 from mysql.methods          import *
 
-from variables              import (SEP_SECRET_KEY,
-                                    API_URL, DISCORD_URL,
-                                    LDP_HOST, LDP_TOKEN)
+from variables              import *
 from utils.mail             import send
 from utils.token            import generate_confirmation_token
+from utils.gunilog          import *
 
 # Imports of endpoint functions
 import                      routes.internal
@@ -862,4 +862,31 @@ app.add_url_rule('/internal/instance/queue',
                  view_func=routes.internal.instance_queue_get)
 
 if __name__ == '__main__':
-    app.run()
+    intercept_handler = InterceptHandler()
+    logging.root.setLevel(LOG_LEVEL)
+
+    seen = set()
+    for name in [
+        *logging.root.manager.loggerDict.keys(),
+        "gunicorn",
+        "gunicorn.access",
+        "gunicorn.error",
+    ]:
+        if name not in seen:
+            seen.add(name.split(".")[0])
+            logging.getLogger(name).handlers = [intercept_handler]
+
+    logger.configure(handlers=[{"sink": sys.stdout}])
+
+    options = {
+        "bind":         GUNICORN_BIND,
+        "workers":      GUNICORN_WORKERS,
+        "threads":      GUNICORN_THREADS,
+        "accesslog":    "-",
+        "errorlog":     "-",
+        "logger_class": StubbedGunicornLogger,
+        "reload":       GUNICORN_RELOAD,
+        "chdir":        GUNICORN_CHDIR
+    }
+
+    StandaloneApplication(app, options).run()
