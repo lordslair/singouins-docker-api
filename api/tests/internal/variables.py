@@ -2,8 +2,8 @@
 
 import os
 
-API_PORT           = os.environ['GUNICORN_PORT']
-API_URL            = f'http://127.0.0.1:{API_PORT}'
+GUNICORN_PORT      = os.environ.get("GUNICORN_PORT", 5000)
+API_URL            = f'http://127.0.0.1:{GUNICORN_PORT}'
 API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
 HEADERS            = {"Authorization": f"Bearer {API_INTERNAL_TOKEN}"}
 

@@ -44,16 +44,10 @@ itsdangerous==1.1.0
     # via flask
 jinja2==2.11.3
     # via flask
-logging-gelf==0.0.26
-    # via logging-ldp
-logging-ldp==0.0.6
-    # via -r requirements.in
 loguru==0.6.0
     # via -r requirements.in
 markupsafe==2.0.1
     # via jinja2
-marshmallow==3.14.1
-    # via logging-gelf
 prometheus-client==0.13.1
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.18.7
