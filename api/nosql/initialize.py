@@ -3,7 +3,7 @@
 from datetime             import datetime
 
 from .connector            import *
-from .variables            import META_FILES
+from .variables            import MAP_FILES,META_FILES
 
 def initialize_redis():
     try:
@@ -24,5 +24,20 @@ def initialize_redis():
         logger.error(f'Redis init: KO [{e}]')
     else:
         logger.info(f'Redis init: OK system:meta:*')
+
+    try:
+        for map,file in MAP_FILES.items():
+            with open(file) as f:
+                content = f.read()
+                data = json.loads(content)
+                logger.debug(f'Redis init: creating system:map:{map}')
+                r.set(f'system:map:{map}:data', content)
+                r.set(f'system:map:{map}:type', 'Instance')
+                r.set(f'system:map:{map}:mode', 'Normal')
+                r.set(f'system:map:{map}:size', f"{data['height']}x{data['width']}")
+    except Exception as e:
+        logger.error(f'Redis init: KO [{e}]')
+    else:
+        logger.info(f'Redis init: OK system:map:*')
     finally:
         logger.info('Redis init: end')

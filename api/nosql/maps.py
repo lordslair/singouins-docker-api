@@ -7,17 +7,19 @@ from .connector import *
 #
 
 def get_map(mapid):
-    mypattern = f'system:maps:{mapid}'
+    mypattern = f'system:map:{mapid}'
 
     # We check that the map keys exists
     try:
-        keys = r.keys(f'{mypattern}:data')
+        keys = r.exists(f'{mypattern}:data')
     except Exception as e:
-        print(f'[Redis] get_map({mypattern}) failed [{e}]')
+        logger.error(f'Query KO [{e}]')
         return False
     else:
-        # The map does not exist
-        if len(keys) == 0:
+        if keys:
+            pass
+        else:
+            logger.debug(f'Query returned empty for {mypattern}:data')
             return False
 
     try:
@@ -27,7 +29,7 @@ def get_map(mapid):
                "size": r.get(f'{mypattern}:size'),
                "type": r.get(f'{mypattern}:type')}
     except Exception as e:
-        print(f'[Redis] get_map({mypattern}) failed [{e}]')
+        logger.error(f'Query KO [{e}]')
         return False
     else:
         return map

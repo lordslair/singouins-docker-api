@@ -22,3 +22,6 @@ META_FILES = {'armor':  'data/metas/armors.json',
               'skill':  'data/metas/skills.json',
               'status': 'data/metas/statuses.json',
               'weapon': 'data/metas/weapons.json'}
+# Mapfiles location for Redis init
+MAP_FILES = {'1': 'data/maps/1.json',
+             '2': 'data/maps/2.json'}
