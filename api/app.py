@@ -28,6 +28,7 @@ import                      routes.internal.up
 
 import                      routes.external.auth
 import                      routes.external.log
+import                      routes.external.map
 
 from variables              import *
 from utils.gunilog          import *
@@ -592,14 +593,9 @@ def squad_decline(pcid,squadid):
 #
 # Routes /map
 #
-
-@app.route('/map/<int:mapid>', methods=['GET'])
-@jwt_required()
-def public_map(mapid):
-    (code, success, msg, payload) = mypc_map_get(mapid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
+app.add_url_rule('/map/<int:mapid>',
+                 methods=['GET'],
+                 view_func=routes.external.map.map_get)
 #
 # Routes /log
 #
