@@ -273,11 +273,11 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                     f"Item does not fit in left hand (itemid:{item.id},size:{itemmeta['size']})",
                     None)
 
-    equipment.date = datetime.datetime.now() # We update the date in DB
+    equipment.date = datetime.now() # We update the date in DB
     item.bound     = True           # In case the item was not bound to PC. Now it is
     item.offsetx   = None           # Now the item is not in inventory anymore
     item.offsety   = None           # Now the item is not in inventory anymore
-    item.date      = datetime.datetime.now() # We update the date in DB
+    item.date      = datetime.now() # We update the date in DB
 
     try:
         session.commit()
@@ -386,7 +386,7 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
             else:
                 equipment.lefthand = None
 
-    equipment.date = datetime.datetime.now()
+    equipment.date = datetime.now()
 
     try:
         session.commit()
@@ -448,7 +448,7 @@ def mypc_inventory_item_offset(username,pcid,itemid,offsetx,offsety):
 
         item.offsetx = offsetx
         item.offsety = offsety
-        item.date    = datetime.datetime.now() # We update the date in DB
+        item.date    = datetime.now() # We update the date in DB
         session.commit()
     except Exception as e:
         return (200,

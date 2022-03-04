@@ -134,7 +134,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                                         rarity     = 'Common',
                                         offsetx    = 0,
                                         offsety    = 0,
-                                        date       = datetime.datetime.now())
+                                        date       = datetime.now())
                             session.add(rh)
 
                             if rh.metatype == 'weapon':
@@ -156,7 +156,7 @@ def mypc_create(username,pcname,pcrace,pcclass,pcequipment,pccosmetic,pcgender):
                                     rarity     = 'Common',
                                     offsetx    = 4,
                                     offsety    = 0,
-                                    date       = datetime.datetime.now())
+                                    date       = datetime.now())
                             session.add(lh)
 
                             if lh.metatype == 'weapon':
