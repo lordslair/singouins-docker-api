@@ -13,8 +13,8 @@ from nosql              import *
 #
 # API: GET /pc/{pcid}
 @jwt_required()
-def pc_get_one(pcid):
-    (code, success, msg, payload) = fn_creature_get(None,pcid)
+def pc_get_one(creatureid):
+    (code, success, msg, payload) = fn_creature_get(None,creatureid)
     if isinstance(code, int):
         return jsonify({"success": success,
                         "msg": msg,
