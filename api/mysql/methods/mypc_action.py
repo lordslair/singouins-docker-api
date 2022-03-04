@@ -482,7 +482,7 @@ def mypc_action_unload(username,pcid,weaponid):
     else:
         incr.one(f'highscores:{pc.id}:action:unload')
         # We create the Creature Event
-        events.set_event(creature.id,
+        events.set_event(pc.id,
                          None,
                          'action',
                          'Unloaded a weapon',

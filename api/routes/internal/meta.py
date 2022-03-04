@@ -2,7 +2,6 @@
 
 from flask              import Flask, jsonify, request
 
-from mysql.methods      import internal_meta_get_one
 from nosql              import *
 
 from variables          import API_INTERNAL_TOKEN
