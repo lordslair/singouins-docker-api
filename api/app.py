@@ -29,6 +29,7 @@ import                      routes.internal.up
 import                      routes.external.auth
 import                      routes.external.log
 import                      routes.external.map
+import                      routes.external.pc
 
 from variables              import *
 from utils.gunilog          import *
@@ -89,13 +90,17 @@ app.add_url_rule('/auth/register',
 # Routes: /pc
 #
 
-@app.route('/pc/<int:pcid>', methods=['GET'])
-@jwt_required()
-def api_pc_get(pcid):
-    (code, success, msg, payload) = fn_creature_get(None,pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/pc/<int:creatureid>',
+                 methods=['GET'],
+                 view_func=routes.external.pc.pc_get_one)
 
+app.add_url_rule('/pc/<int:creatureid>/item',
+                 methods=['GET'],
+                 view_func=routes.external.pc.pc_item_get_all)
+
+app.add_url_rule('/pc/<int:creatureid>/event',
+                 methods=['GET'],
+                 view_func=routes.external.pc.pc_event_get_all)
 #
 # Routes: /mypc
 #
@@ -248,12 +253,7 @@ def api_mypc_mp_addressbook(pcid):
 # Routes /item
 #
 
-@app.route('/pc/<int:pcid>/item', methods=['GET'])
-@jwt_required()
-def api_pc_item_get(pcid):
-    (code, success, msg, payload) = pc_items_get(pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
 
 @app.route('/mypc/<int:pcid>/item', methods=['GET'])
 @jwt_required()
@@ -426,13 +426,6 @@ def api_mypc_action_unload(pcid,weaponid):
 @jwt_required()
 def mypc_event(pcid):
     (code, success, msg, payload) = get_mypc_event(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/pc/<int:creatureid>/event', methods=['GET'])
-@jwt_required()
-def pc_event(creatureid):
-    (code, success, msg, payload) = pc_events_get(creatureid)
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 

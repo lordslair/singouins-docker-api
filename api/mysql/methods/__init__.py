@@ -20,5 +20,3 @@ from .mypc_mp           import *
 from .mypc_trade        import *
 from .mypc_squad        import *
 from .mypc_view         import *
-from .pc_event          import *
-from .pc_item           import *

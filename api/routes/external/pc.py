@@ -1,28 +1,44 @@
 # -*- coding: utf8 -*-
 
-from ..session          import Session
-from ..models           import CreatureSlots,Cosmetic,Item
+from flask              import Flask, jsonify, request
+from flask_jwt_extended import jwt_required
 
-from .fn_creature       import fn_creature_get
-from .fn_global         import clog
+from mysql.methods      import fn_creature_get
+from mysql.models       import Cosmetic,CreatureSlots,Item,Log
+from mysql.session      import Session
+from nosql              import *
 
 #
-# Queries /pc/{pcid}/item/{itemid}/*
+# Routes /map
 #
+# API: GET /pc/{pcid}
+@jwt_required()
+def pc_get_one(pcid):
+    (code, success, msg, payload) = fn_creature_get(None,pcid)
+    if isinstance(code, int):
+        return jsonify({"success": success,
+                        "msg": msg,
+                        "payload": payload}), code
 
-# API: /pc/<int:pcid>/item
-def pc_items_get(pcid):
-    pc      = fn_creature_get(None,pcid)[3]
-    session = Session()
+# API: GET /pc/{pcid}/item
+@jwt_required()
+def pc_item_get_all(creatureid):
+    creature = fn_creature_get(None,creatureid)[3]
+    session  = Session()
 
-    if pc.account is None:
-        return (200,
-                False,
-                f'NPCs do not have items (pcid:{pc.id})',
-                None)
+    # Pre-flight checks
+    if creature is None:
+        return jsonify({"success": False,
+                        "msg": f'Creature not found (creatureid:{creatureid})',
+                        "payload": None}), 200
+
+    if creature.account is None:
+        return jsonify({"success": False,
+                        "msg": f'NPC Creature do not have items (creatureid:{creature.id})',
+                        "payload": None}), 200
 
     try:
-        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).all()
+        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == creature.id).all()
 
         feet      = session.query(Item).filter(Item.id == equipment[0].feet).one_or_none()
         hands     = session.query(Item).filter(Item.id == equipment[0].hands).one_or_none()
@@ -36,14 +52,14 @@ def pc_items_get(pcid):
 
         # We publicly anounce the cosmetics owned by a PC
         cosmetic  = session.query(Cosmetic)\
-                           .filter(Cosmetic.bearer == pc.id)\
+                           .filter(Cosmetic.bearer == creature.id)\
                            .all()
     except Exception as e:
-        # Something went wrong during query
-        return (200,
-                False,
-                f'[SQL] Equipment query failed (pcid:{pc.id})',
-                None)
+        msg = f'[SQL] Equipment Query KO (creatureid:{creature.id}) [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
     else:
         feetmetaid      = feet.metaid      if feet      is not None else None
         handsmetaid     = hands.metaid     if hands     is not None else None
@@ -87,10 +103,41 @@ def pc_items_get(pcid):
                 "shoulders": {"metaid": shouldersmetaid,"metatype": shouldersmetatype},
                 "torso": {"metaid": torsometaid,"metatype": torsometatype},
                 "legs": {"metaid": legsmetaid,"metatype": legsmetatype}}
-        return (200,
-                True,
-                f'Equipment query successed (pcid:{pc.id})',
-                {"equipment": metas,
-                 "cosmetic": cosmetic})
+
+        return jsonify({"success": True,
+                        "msg": f'Equipment Query OK (creatureid:{creature.id})',
+                        "payload": {"equipment": metas,
+                                    "cosmetic": cosmetic}}), 200
+    finally:
+        session.close()
+
+# API: GET /pc/{pcid}/event
+@jwt_required()
+def pc_event_get_all(creatureid):
+    creature = fn_creature_get(None,creatureid)[3]
+    session  = Session()
+
+    # Pre-flight checks
+    if creature is None:
+        return jsonify({"success": False,
+                        "msg": f'Creature not found (creatureid:{creatureid})',
+                        "payload": None}), 200
+
+    try:
+        log   = session.query(Log)\
+                       .filter(Log.src == creature.id)\
+                       .order_by(Log.date.desc())\
+                       .limit(50)\
+                       .all()
+    except Exception as e:
+        msg = f'Event Query KO (creatureid:{creature.id}) [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+    else:
+        return jsonify({"success": True,
+                        "msg": f'Event Query OK (creatureid:{creature.id})',
+                        "payload": log}), 200
     finally:
         session.close()
