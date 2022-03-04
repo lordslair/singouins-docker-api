@@ -88,6 +88,12 @@ def mypc_action_resolver_move(username,creatureid,path):
                 f'[Resolver] Request failed (creatureid:{creature.id}) [{e}]',
                 None)
     else:
+        # We create the Creature Event
+        events.set_event(creature.id,
+                         None,
+                         'action',
+                         'Moved',
+                         30*86400)
         return (200,
                 True,
                 f'[Resolver] Request answered (creatureid:{creature.id})',
@@ -183,6 +189,12 @@ def mypc_action_resolver_skill(username,creatureid,skillmetaid):
                 f'[Resolver] Request failed (creatureid:{creature.id},skillmetaid:{skillmetaid}) [{e}]',
                 None)
     else:
+        # We create the Creature Event
+        events.set_event(creature.id,
+                         None,
+                         'skill',
+                         'Used a Skill',
+                         30*86400)
         return (200,
                 True,
                 f'[Resolver] Request answered (creatureid:{creature.id},skillmetaid:{skillmetaid})',

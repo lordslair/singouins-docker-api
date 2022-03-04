@@ -150,6 +150,12 @@ def add_squad(username,pcid):
         except Exception as e:
             print(e)
         else:
+            # We create the Creature Event
+            events.set_event(pc.id,
+                             None,
+                             'social',
+                             'Created a Squad',
+                             90*86400)
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": f':information_source: **[{pc.id}] {pc.name}** created this squad',
@@ -231,6 +237,12 @@ def del_squad(username,leaderid,squadid):
                 f'[SQL] Squad deletion failed (squadid:{squad.id}) [{e}]',
                 None)
     else:
+        # We create the Creature Event
+        events.set_event(pc.id,
+                         None,
+                         'social',
+                         'Deleted a Squad',
+                         90*86400)
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
                 "payload": f':information_source: **[{pc.id}] {pc.name}** deleted this squad',

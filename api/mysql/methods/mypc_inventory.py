@@ -307,6 +307,13 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
 
         pa.set_pa(pc.id,costpa,0) # We consume the red PA (costpa) right now
 
+        # We create the Creature Event
+        events.set_event(pc.id,
+                         None,
+                         'item',
+                         'Equipped something',
+                         30*86400)
+
         return (200,
                 True,
                 f'Equipment successfully updated (pcid:{pc.id},itemid:{itemid})',
