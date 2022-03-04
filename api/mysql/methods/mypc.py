@@ -13,7 +13,6 @@ from ..models              import (Cosmetic,
 
 from .fn_creature          import *
 from .fn_user              import fn_user_get
-from .fn_global            import clog
 
 # Loading the Meta for later use
 try:

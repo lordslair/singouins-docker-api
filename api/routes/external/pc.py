@@ -4,12 +4,12 @@ from flask              import Flask, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from mysql.methods      import fn_creature_get
-from mysql.models       import Cosmetic,CreatureSlots,Item,Log
+from mysql.models       import Cosmetic,CreatureSlots,Item
 from mysql.session      import Session
 from nosql              import *
 
 #
-# Routes /map
+# Routes /pc
 #
 # API: GET /pc/{pcid}
 @jwt_required()
@@ -124,11 +124,7 @@ def pc_event_get_all(creatureid):
                         "payload": None}), 200
 
     try:
-        log   = session.query(Log)\
-                       .filter(Log.src == creature.id)\
-                       .order_by(Log.date.desc())\
-                       .limit(50)\
-                       .all()
+        creature_events = events.get_events(creature)
     except Exception as e:
         msg = f'Event Query KO (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -138,6 +134,6 @@ def pc_event_get_all(creatureid):
     else:
         return jsonify({"success": True,
                         "msg": f'Event Query OK (creatureid:{creature.id})',
-                        "payload": log}), 200
+                        "payload": creature_events}), 200
     finally:
         session.close()

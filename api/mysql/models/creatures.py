@@ -129,22 +129,6 @@ class CreatureSlots(Base):
     date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 @dataclass
-class Log(Base):
-    __tablename__ = 'creaturesLog'
-
-    id:        int
-    src:       int
-    dst:       int
-    action:    str
-    date:      str
-
-    id         = Column(Integer, primary_key=True)
-    src        = Column(Integer, nullable=False)
-    dst        = Column(Integer, nullable=True)
-    action     = Column(Text   , nullable=False)
-    date       = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
-
-@dataclass
 class CreatureStats(Base):
     __tablename__ = 'creaturesStats'
 

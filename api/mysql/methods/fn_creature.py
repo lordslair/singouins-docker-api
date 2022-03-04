@@ -12,8 +12,6 @@ from nosql               import * # Custom internal module for Redis queries
 
 from ..utils.loot        import *
 
-from .fn_global          import clog
-
 # Loading the Meta for later use
 try:
     metaWeapons = metas.get_meta('weapon')
@@ -67,7 +65,6 @@ def fn_creature_tag(pc,tg):
                 f'Targeted_by update successed (pcid:{pc.id},tgid:{tg.id})',
                 None)
     finally:
-        clog(tg.id,None,f'Targeted by {pc.name}')
         session.close()
 
 def fn_creature_wound(pc,tg,dmg):
@@ -80,7 +77,7 @@ def fn_creature_wound(pc,tg,dmg):
     except Exception as e:
         return (200, False, 'HP update failed', None)
     else:
-        clog(tg.id,None,'Suffered minor injuries')
+        pass
     finally:
         session.close()
 
@@ -118,8 +115,6 @@ def fn_creature_kill(pc,tg,action):
                 "scope": f'Squad-{pc.squad}'}
         yqueue_put('yarqueue:discord', qmsg)
 
-        clog(pc.id,tgid,f'Killed {tgname}')
-        clog(tgid,None,'Died')
         return (200,
                 True,
                 f'PC Kill successed (tgid:{tgid},tgname:{tgname})',
@@ -147,7 +142,6 @@ def fn_creature_gain_xp(pc,tg):
         return (False,
                 f'[SQL] XP update failed (pcid:{pc.id},tgid:{tg.id})')
     else:
-        clog(pc.id,None,'Gained Experience')
         return (True, None)
     finally:
         session.close()
@@ -252,7 +246,6 @@ def fn_creature_gain_loot(pc,tg):
         return (False,
                 f'[SQL] Loot update failed (pcid:{pc.id})')
     else:
-        clog(pc.id,None,'Gained Loot')
         return (True, None)
     finally:
         session.close()

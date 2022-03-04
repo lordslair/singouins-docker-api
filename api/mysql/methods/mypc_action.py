@@ -9,7 +9,6 @@ from ..models            import (Creature,
 from .fn_creature        import *
 from .fn_user            import fn_user_get
 from .fn_wallet          import fn_wallet_ammo_get,fn_wallet_ammo_set
-from .fn_global          import clog
 
 # To accessing dict keys like an attribute
 # Might refactor and use dataclasses instead
@@ -91,7 +90,6 @@ def mypc_action_move(username,pcid,path):
         yqueue_put('broadcast', qmsg)
         incr_hs(pc,'action:move', 1) # Redis HighScore
 
-        clog(pc.id,None,'Moved from ({},{}) to ({},{})'.format(oldx,oldy,x,y))
         return (200, True, 'PC successfully moved', pa.get_pa(pcid)[3])
     finally:
         session.close()
@@ -483,7 +481,12 @@ def mypc_action_unload(username,pcid,weaponid):
                 None)
     else:
         incr.one(f'highscores:{pc.id}:action:unload')
-        clog(pc.id,None,'Unloaded a weapon')
+        # We create the Creature Event
+        events.set_event(creature.id,
+                         None,
+                         'action',
+                         'Unloaded a weapon',
+                         30*86400)
         return (200,
                 True,
                 f'Weapon unload successed (pcid:{pc.id},weaponid:{weaponid})',

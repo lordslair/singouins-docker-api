@@ -30,6 +30,7 @@ import                      routes.external.auth
 import                      routes.external.log
 import                      routes.external.map
 import                      routes.external.meta
+import                      routes.external.mypc.events
 import                      routes.external.pc
 
 from variables              import *
@@ -427,13 +428,9 @@ def api_mypc_action_unload(pcid,weaponid):
 #
 # Routes: /events
 #
-
-@app.route('/mypc/<int:pcid>/event', methods=['GET'])
-@jwt_required()
-def mypc_event(pcid):
-    (code, success, msg, payload) = get_mypc_event(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:creatureid>/event',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.events.mypc_event_get_all)
 
 #
 # Routes /korp

@@ -5,7 +5,6 @@ from ..models           import *
 
 from .fn_creature       import fn_creature_get
 from .fn_user           import fn_user_get
-from .fn_global         import clog
 
 #
 # Queries /mypc/{pcid}/trade/*
