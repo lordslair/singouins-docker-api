@@ -1,22 +1,18 @@
 # -*- coding: utf8 -*-
 
 from flask              import Flask, jsonify, request
+from flask_jwt_extended import jwt_required
 
 from mysql.methods      import internal_meta_get_one
 from nosql              import *
 
-from variables          import API_INTERNAL_TOKEN
-
 #
-# Routes /internal
+# Routes /meta
 #
-# API: GET /internal/meta
-def internal_meta_get_one(metatype):
+# API: GET /meta/item/{metatype}
+@jwt_required()
+def external_meta_get_one(metatype):
     # Pre-flight checks
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"success": False,
-                        "msg": 'Token not authorized',
-                        "payload": None}), 403
     if not isinstance(metatype, str):
         return jsonify({"success": False,
                         "msg": f'Meta type Malformed (metatype:{metatype}) [Should be a String]',

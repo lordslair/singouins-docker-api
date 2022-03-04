@@ -29,6 +29,7 @@ import                      routes.internal.up
 import                      routes.external.auth
 import                      routes.external.log
 import                      routes.external.map
+import                      routes.external.meta
 import                      routes.external.pc
 
 from variables              import *
@@ -87,9 +88,14 @@ app.add_url_rule('/auth/register',
                  methods=['POST'],
                  view_func=routes.external.auth.auth_register)
 #
+# Routes /meta
+#
+app.add_url_rule('/meta/item/<string:metatype>',
+                 methods=['GET'],
+                 view_func=routes.external.meta.external_meta_get_one)
+#
 # Routes: /pc
 #
-
 app.add_url_rule('/pc/<int:creatureid>',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_get_one)
@@ -430,18 +436,6 @@ def mypc_event(pcid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
-# Routes /meta
-#
-
-@app.route('/meta/item/<string:metatype>', methods=['GET'])
-@jwt_required()
-def meta_item(metatype):
-    # We use the same sub as the internal route. Same result is expected
-    (code, success, msg, payload) = internal_meta_get_one(metatype)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-#
 # Routes /korp
 #
 
@@ -608,7 +602,7 @@ app.add_url_rule('/internal/korps',
 #
 app.add_url_rule('/internal/meta/<string:metatype>',
                  methods=['GET'],
-                 view_func=routes.internal.meta.meta_get_one)
+                 view_func=routes.internal.meta.internal_meta_get_one)
 #
 app.add_url_rule('/internal/squad',
                  methods=['POST'],

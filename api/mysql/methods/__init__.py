@@ -4,7 +4,6 @@ from .auth              import *
 from .internal_creature import *
 from .internal_discord  import *
 from .internal_instance import *
-from .internal_meta     import *
 from .internal_korp     import *
 from .internal_squad    import *
 from .mypc              import *
