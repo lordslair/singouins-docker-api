@@ -43,13 +43,13 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"https://<URL>/NDT-772/resources/sprites/lpc-twosided-dirt.png",
+         "source":"https://storage.gra.cloud.ovh.net/v1/AUTH_ab51802c7f0f40af80958de376167e80/NDT-772/resources/sprites/lpc-twosided-dirt.png",
          "width": 160,
          "height": 192
         },
         {
          "firstgid":31,
-         "source":"https://<URL>/NDT-772/resources/sprites/lpc-sandrock-alt-colors.png",
+         "source":"https://storage.gra.cloud.ovh.net/v1/AUTH_ab51802c7f0f40af80958de376167e80/NDT-772/resources/sprites/lpc-sandrock-alt-colors.png",
          "width": 288,
          "height": 384
         }],
