@@ -7,7 +7,7 @@ from variables import (AUTH_PAYLOAD,
                        API_URL,
                        PC_NAME)
 
-def test_singouins_pc_create():
+def test_singouins_mypc_create():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -25,7 +25,7 @@ def test_singouins_pc_create():
     assert response.status_code == 201
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_pc_infos():
+def test_singouins_mypc_infos():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -39,7 +39,7 @@ def test_singouins_pc_infos():
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_pc_view():
+def test_singouins_mypc_view():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -58,7 +58,7 @@ def test_singouins_pc_view():
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_pc_stats():
+def test_singouins_mypc_stats():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -77,7 +77,7 @@ def test_singouins_pc_stats():
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_pc_effects():
+def test_singouins_mypc_effects():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -96,7 +96,7 @@ def test_singouins_pc_effects():
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_pc_cds():
+def test_singouins_mypc_cds():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -115,7 +115,7 @@ def test_singouins_pc_cds():
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_pc_skills():
+def test_singouins_mypc_skills():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
