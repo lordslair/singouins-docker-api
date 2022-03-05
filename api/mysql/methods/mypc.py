@@ -5,7 +5,6 @@ from random                import randint
 from ..session             import Session
 from ..models              import (Cosmetic,
                                    Creature,
-                                   CreatureSkills,
                                    CreatureSlots,
                                    CreatureStats,
                                    Item,
@@ -314,50 +313,6 @@ def mypc_get_stats(pc):
                 False,
                 f'Stats computation failed (pcid:{pc.id})',
                 None)
-
-# API: GET /mypc/<int:pcid>/skills
-def mypc_get_skills(username,pcid):
-    pc          = fn_creature_get(None,pcid)[3]
-    user        = fn_user_get(username)
-    session     = Session()
-
-    # Pre-flight checks
-    if pc is None:
-        return (200,
-                False,
-                f'PC not found (pcid:{pcid})',
-                None)
-    if pc.account != user.id:
-        return (409,
-                False,
-                f'Token/username mismatch (pcid:{pcid},username:{username})',
-                None)
-
-    try:
-        skills = session.query(CreatureSkills)\
-                           .filter(CreatureSkills.id == pc.id)\
-                           .one_or_none()
-
-    except Exception as e:
-        # Something went wrong during query
-        return (200,
-                False,
-                f'[SQL] CreatureSkills query failed (pcid:{pc.id}) [{e}]',
-                None)
-    else:
-        if skills:
-            skills.skills = json.loads(skills.skills) # GruikFix, ugly
-            return (200,
-                    True,
-                    f'Skills found (pcid:{pc.id})',
-                    skills)
-        else:
-            return (200,
-                    True,
-                    f'Skills not found (pcid:{pc.id})',
-                    None)
-    finally:
-        session.close()
 
 # API: GET /mypc/<int:pcid>/cds
 def mypc_get_cds(username,pcid):

@@ -219,15 +219,3 @@ class Korp(Base):
     leader   = Column(Integer, nullable=False)
     created  = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
-
-@dataclass
-class CreatureSkills(Base):
-    __tablename__ = 'creaturesSkills'
-
-    id:      int
-    skills:  str
-    date:    str
-
-    id       = Column(Integer, primary_key=True)
-    skills   = Column(Text   , nullable=True)    # Here it will be a JSON
-    date     = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), server_onupdate=func.now())
