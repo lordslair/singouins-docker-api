@@ -125,13 +125,9 @@ app.add_url_rule('/mypc/<int:pcid>',
 #
 # Routes: /pa
 #
-
-@app.route('/mypc/<int:pcid>/pa', methods=['GET'])
-@jwt_required()
-def api_mypc_pa(pcid):
-    (code, success, msg, payload) = pa.get_pa(pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/pa',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.pa.pa_get)
 
 #
 # Routes: /stats
