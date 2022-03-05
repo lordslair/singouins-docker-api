@@ -882,21 +882,6 @@ paths:
         '200':
           description: OK
   /mypc/{pcid}:
-    get:
-      tags:
-        - '/mypc: PC Requests (on your own PC)'
-      summary: Get PC informations
-      security:
-        - access_token: []
-      parameters:
-        - in: path
-          name: pcid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
     delete:
       tags:
         - '/mypc: PC Requests (on your own PC)'

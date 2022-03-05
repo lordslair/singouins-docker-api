@@ -6,7 +6,6 @@ from .internal_discord  import *
 from .internal_instance import *
 from .internal_korp     import *
 from .internal_squad    import *
-from .mypc              import *
 from .mypc_action       import *
 from .mypc_action_resolver import *
 from .mypc_korp         import *

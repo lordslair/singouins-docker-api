@@ -30,6 +30,7 @@ import                      routes.external.auth
 import                      routes.external.log
 import                      routes.external.map
 import                      routes.external.meta
+import                      routes.external.mypc
 import                      routes.external.mypc.events
 import                      routes.external.pc
 
@@ -111,40 +112,15 @@ app.add_url_rule('/pc/<int:creatureid>/event',
 #
 # Routes: /mypc
 #
-
-@app.route('/mypc', methods=['POST'])
-@jwt_required()
-def api_mypc_create():
-    current_user = get_jwt_identity()
-    pcclass      = request.json.get('class',     None)
-    pccosmetic   = request.json.get('cosmetic',  None)
-    pcequipment  = request.json.get('equipment', None)
-    pcgender     = request.json.get('gender',    None)
-    pcname       = request.json.get('name',      None)
-    pcrace       = request.json.get('race',      None)
-
-    (code, success, msg, payload) = mypc_create(current_user,
-                                                pcname,pcrace,pcclass,
-                                                pcequipment,pccosmetic,
-                                                pcgender)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc', methods=['GET'])
-@jwt_required()
-def api_mypc_get_all():
-    current_user = get_jwt_identity()
-    (code, success, msg, payload) = mypc_get_all(current_user)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>', methods=['DELETE'])
-@jwt_required()
-def api_mypc_del(pcid):
-    current_user = get_jwt_identity()
-    (code, success, msg, payload) = mypc_del(current_user,pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.mypc_add)
+app.add_url_rule('/mypc',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.mypc_get_all)
+app.add_url_rule('/mypc/<int:pcid>',
+                 methods=['DELETE'],
+                 view_func=routes.external.mypc.mypc_del)
 
 #
 # Routes: /pa
