@@ -136,37 +136,23 @@ def api_mypc_pa(pcid):
 #
 # Routes: /stats
 #
-
-@app.route('/mypc/<int:pcid>/stats', methods=['GET'])
-@jwt_required()
-def api_mypc_stats_get(pcid):
-    pc = fn_creature_get(None,pcid)[3]
-    (code, success, msg, payload) = mypc_get_stats(pc)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/stats',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.stats.stats_get)
 
 #
 # Routes: /cds
 #
-
-@app.route('/mypc/<int:pcid>/cds', methods=['GET'])
-@jwt_required()
-def api_mypc_cds_get(pcid):
-    (code, success, msg, payload) = mypc_get_cds(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/cds',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.cds.cds_get)
 
 #
 # Routes: /effects
 #
-
-@app.route('/mypc/<int:pcid>/effects', methods=['GET'])
-@jwt_required()
-def api_mypc_effects_get(pcid):
-    (code, success, msg, payload) = mypc_get_effects(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
+app.add_url_rule('/mypc/<int:pcid>/effects',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.effects.effects_get)
 
 #
 # Routes: /view
