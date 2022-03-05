@@ -913,7 +913,7 @@ paths:
           required: true
       responses:
         '200':
-          description: OK - Skills found
+          description: OK - CDs found
   /mypc/{pcid}/view:
     get:
       tags:
