@@ -11,29 +11,29 @@ from nosql              import *
 #
 # API: GET /mypc/{pcid}/pa
 @jwt_required()
-def pa_get(creatureid):
-    creature = fn_creature_get(None,creatureid)[3]
+def pa_get(pcid):
+    pc       = fn_creature_get(None,pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
+    if pc is None:
         return jsonify({"success": False,
-                        "msg": f'Creature not found (creatureid:{creatureid})',
+                        "msg": f'Creature not found (pcid:{pcid})',
                         "payload": None}), 200
-    if creature.account != user.id:
+    if pc.account != user.id:
         return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (creatureid:{creature.id},username:{username})',
+                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
                         "payload": None}), 409
 
     try:
-        payload = pa.get_pa(pcid)[3]
+        payload = get_pa(pcid)[3]
     except Exception as e:
-        msg = f'PA Query KO (creatureid:{creature.id}) [{e}]'
+        msg = f'PA Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
     else:
         return jsonify({"success": True,
-                        "msg": f'PA Query OK (creatureid:{creature.id})',
+                        "msg": f'PA Query OK (pcid:{pc.id})',
                         "payload": payload}), 200

@@ -31,7 +31,11 @@ import                      routes.external.log
 import                      routes.external.map
 import                      routes.external.meta
 import                      routes.external.mypc
+import                      routes.external.mypc.cds
+import                      routes.external.mypc.effects
 import                      routes.external.mypc.events
+import                      routes.external.mypc.pa
+import                      routes.external.mypc.stats
 import                      routes.external.pc
 
 from variables              import *
@@ -376,7 +380,7 @@ def api_mypc_action_unload(pcid,weaponid):
 #
 # Routes: /events
 #
-app.add_url_rule('/mypc/<int:creatureid>/event',
+app.add_url_rule('/mypc/<int:pcid>/event',
                  methods=['GET'],
                  view_func=routes.external.mypc.events.mypc_event_get_all)
 
