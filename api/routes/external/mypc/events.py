@@ -4,7 +4,6 @@ from flask              import Flask, jsonify, request
 from flask_jwt_extended import jwt_required,get_jwt_identity
 
 from mysql.methods      import fn_creature_get,fn_user_get
-from mysql.session      import Session
 from nosql              import *
 
 #
@@ -15,7 +14,6 @@ from nosql              import *
 def mypc_event_get_all(creatureid):
     creature = fn_creature_get(None,creatureid)[3]
     user     = fn_user_get(get_jwt_identity())
-    session  = Session()
 
     # Pre-flight checks
     if creature is None:
@@ -39,5 +37,3 @@ def mypc_event_get_all(creatureid):
         return jsonify({"success": True,
                         "msg": f'Event Query OK (creatureid:{creature.id})',
                         "payload": creature_events}), 200
-    finally:
-        session.close()
