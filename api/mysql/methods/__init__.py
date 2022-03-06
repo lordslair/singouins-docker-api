@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+from .fn_inventory      import *
+
 from .auth              import *
 from .internal_creature import *
 from .internal_discord  import *

@@ -1,10 +1,12 @@
 # -*- coding: utf8 -*-
 
-from flask              import Flask, jsonify, request
-from flask_jwt_extended import jwt_required,get_jwt_identity
+from flask                      import Flask, jsonify, request
+from flask_jwt_extended         import jwt_required,get_jwt_identity
 
-from mysql.methods      import fn_creature_get,fn_user_get
-from nosql              import *
+from mysql.methods.fn_creature  import fn_creature_get
+from mysql.methods.fn_user      import fn_user_get
+
+from nosql                      import *
 
 #
 # Routes /mypc/{pcid}/pa

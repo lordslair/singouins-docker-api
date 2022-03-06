@@ -1,20 +1,21 @@
 # -*- coding: utf8 -*-
 
-from flask              import Flask, jsonify, request
-from flask_bcrypt       import check_password_hash
-from flask_jwt_extended import (jwt_required,
-                                create_access_token,
-                                create_refresh_token,
-                                get_jwt_identity)
+from flask                 import Flask, jsonify, request
+from flask_bcrypt          import check_password_hash
+from flask_jwt_extended    import (jwt_required,
+                                   create_access_token,
+                                   create_refresh_token,
+                                   get_jwt_identity)
 
-from nosql              import *
-from mysql.methods      import *
-from utils.mail         import send
-from utils.token        import (confirm_token,
-                                generate_confirmation_token)
+from nosql                 import *
+from mysql.methods.auth    import *
+from mysql.methods.fn_user import *
+from utils.mail            import send
+from utils.token           import (confirm_token,
+                                   generate_confirmation_token)
 
-from variables          import (API_URL,
-                                DISCORD_URL)
+from variables             import (API_URL,
+                                   DISCORD_URL)
 
 #
 # Routes /auth
