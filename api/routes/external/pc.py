@@ -1,12 +1,13 @@
 # -*- coding: utf8 -*-
 
-from flask              import Flask, jsonify, request
-from flask_jwt_extended import jwt_required
+from flask                      import Flask, jsonify, request
+from flask_jwt_extended         import jwt_required
 
-from mysql.methods      import fn_creature_get
-from mysql.models       import Cosmetic,CreatureSlots,Item
-from mysql.session      import Session
-from nosql              import *
+from mysql.methods.fn_creature  import fn_creature_get
+from mysql.methods.fn_inventory import *
+from mysql.methods.fn_user      import fn_user_get
+
+from nosql                      import *
 
 #
 # Routes /pc
@@ -24,7 +25,6 @@ def pc_get_one(creatureid):
 @jwt_required()
 def pc_item_get_all(creatureid):
     creature = fn_creature_get(None,creatureid)[3]
-    session  = Session()
 
     # Pre-flight checks
     if creature is None:
@@ -38,22 +38,20 @@ def pc_item_get_all(creatureid):
                         "payload": None}), 200
 
     try:
-        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == creature.id).all()
+        equipment = fn_slots_get_all(creature)
 
-        feet      = session.query(Item).filter(Item.id == equipment[0].feet).one_or_none()
-        hands     = session.query(Item).filter(Item.id == equipment[0].hands).one_or_none()
-        head      = session.query(Item).filter(Item.id == equipment[0].head).one_or_none()
-        holster   = session.query(Item).filter(Item.id == equipment[0].holster).one_or_none()
-        lefthand  = session.query(Item).filter(Item.id == equipment[0].lefthand).one_or_none()
-        righthand = session.query(Item).filter(Item.id == equipment[0].righthand).one_or_none()
-        shoulders = session.query(Item).filter(Item.id == equipment[0].shoulders).one_or_none()
-        torso     = session.query(Item).filter(Item.id == equipment[0].torso).one_or_none()
-        legs      = session.query(Item).filter(Item.id == equipment[0].legs).one_or_none()
+        feet      = fn_item_get_one(equipment[0].feet)
+        hands     = fn_item_get_one(equipment[0].hands)
+        head      = fn_item_get_one(equipment[0].head)
+        holster   = fn_item_get_one(equipment[0].holster)
+        lefthand  = fn_item_get_one(equipment[0].lefthand)
+        righthand = fn_item_get_one(equipment[0].righthand)
+        shoulders = fn_item_get_one(equipment[0].shoulders)
+        torso     = fn_item_get_one(equipment[0].torso)
+        legs      = fn_item_get_one(equipment[0].legs)
 
         # We publicly anounce the cosmetics owned by a PC
-        cosmetic  = session.query(Cosmetic)\
-                           .filter(Cosmetic.bearer == creature.id)\
-                           .all()
+        cosmetic  = fn_cosmetics_get_all(creature)
     except Exception as e:
         msg = f'[SQL] Equipment Query KO (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -108,14 +106,11 @@ def pc_item_get_all(creatureid):
                         "msg": f'Equipment Query OK (creatureid:{creature.id})',
                         "payload": {"equipment": metas,
                                     "cosmetic": cosmetic}}), 200
-    finally:
-        session.close()
 
 # API: GET /pc/{pcid}/event
 @jwt_required()
 def pc_event_get_all(creatureid):
     creature = fn_creature_get(None,creatureid)[3]
-    session  = Session()
 
     # Pre-flight checks
     if creature is None:
@@ -135,5 +130,3 @@ def pc_event_get_all(creatureid):
         return jsonify({"success": True,
                         "msg": f'Event Query OK (creatureid:{creature.id})',
                         "payload": creature_events}), 200
-    finally:
-        session.close()

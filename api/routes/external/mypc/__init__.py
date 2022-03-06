@@ -2,16 +2,10 @@
 
 from flask                      import Flask, jsonify, request
 from flask_jwt_extended         import jwt_required,get_jwt_identity
-from random                     import randint
 
-from mysql.methods              import fn_creature_get,fn_user_get
-from mysql.models               import (Cosmetic,
-                                        Creature,
-                                        CreatureSlots,
-                                        CreatureStats,
-                                        Item,
-                                        Wallet)
-from mysql.session              import Session
+from mysql.methods.fn_creature  import *
+from mysql.methods.fn_inventory import *
+from mysql.methods.fn_user      import *
 from nosql                      import *
 
 # Loading the Meta for later use
@@ -29,7 +23,6 @@ else:
 # API: POST /mypc
 @jwt_required()
 def mypc_add():
-        session  = Session()
         username = get_jwt_identity()
 
         pcclass      = request.json.get('class',     None)
@@ -57,145 +50,83 @@ def mypc_add():
                 return jsonify({"success": False,
                                 "msg": f'MetaRace not found (race:{pcrace})',
                                 "payload": None}), 200
-
-            pc = Creature(name    = pcname,
-                          race    = metaRace['id'],
-                          gender  = pcgender,
-                          account = fn_user_get(username).id,
-                          hp      = 100 + metaRace['min_m'], # TODO: To remove
-                          hp_max  = 100 + metaRace['min_m'], # TODO: To remove
-                          instance = None,        # Gruikfix for now
-                          x       = randint(2,4), # TODO: replace with rand(empty coords)
-                          y       = randint(2,5)) # TODO: replace with rand(empty coords)
-
-            session.add(pc)
-
             try:
-                session.commit()
+                pc = fn_creature_add(pcname,
+                                     pcrace,
+                                     pcgender,
+                                     fn_user_get(username).id)
             except Exception as e:
-                session.rollback()
                 msg = f'[SQL] PC creation KO (username:{username},pcname:{pcname}) [{e}]'
                 logger.error(msg)
                 return jsonify({"success": False,
                                 "msg": msg,
                                 "payload": None}), 200
             else:
-                    cosmetic = Cosmetic(metaid = pccosmetic['metaid'],
-                                        bearer = pc.id,
-                                        bound = 1,
-                                        bound_type = 'BoP',
-                                        state = 99,
-                                        rarity = 'Epic',
-                                        data = str(pccosmetic['data']))
+                if pc is None:
+                    return jsonify({"success": False,
+                                    "msg": f'PC creation KO (username:{username},pcname:{pcname}) [{e}]',
+                                    "payload": None}), 200
 
-                    pc        = fn_creature_get(pcname,None)[3]
-                    equipment = CreatureSlots(id = pc.id)
-                    wallet    = Wallet(id = pc.id)
-
-                    stats     = CreatureStats(id = pc.id,
-                                              m_race = metaRace['min_m'],
-                                              r_race = metaRace['min_r'],
-                                              g_race = metaRace['min_g'],
-                                              v_race = metaRace['min_v'],
-                                              p_race = metaRace['min_p'],
-                                              b_race = metaRace['min_b'])
-
-                    session.add(equipment)
-                    session.add(wallet)
-                    session.add(stats)
-                    session.add(cosmetic)
-
-                    if pcclass == '1': stats.m_class = 10
-                    if pcclass == '2': stats.r_class = 10
-                    if pcclass == '3': stats.g_class = 10
-                    if pcclass == '4': stats.v_class = 10
-                    if pcclass == '5': stats.p_class = 10
-                    if pcclass == '6': stats.b_class = 10
-
-                    try:
-                        session.commit()
-                    except Exception as e:
-                        session.rollback()
-                        msg = f'[SQL] PC Cosmetics/Slots/Wallet/Stats creation KO [{e}]'
-                        logger.error(msg)
-                        return jsonify({"success": False,
-                                        "msg": msg,
-                                        "payload": None}), 200
-                    else:
-                        # Money is added
-                        wallet.currency = 250
-
-                        if pcequipment:
+                try:
+                    if fn_cosmetic_add(pc,pccosmetic):
+                        logger.debug('PC Cosmetic OK')
+                    if fn_slots_add(pc):
+                        logger.debug('PC Slots OK')
+                    if fn_wallet_add(pc):
+                        logger.debug('PC Wallet OK')
+                    if fn_creature_stats_add(pc,metaRace,pcclass):
+                        logger.debug('PC Stats OK')
+                except Exception as e:
+                    msg = f'PC Cosmetics/Slots/Wallet/Stats creation KO [{e}]'
+                    logger.error(msg)
+                    return jsonify({"success": False,
+                                    "msg": msg,
+                                    "payload": None}), 200
+                else:
+                    if pcequipment:
+                        try:
                             # Items are added
                             if pcequipment['righthand'] is not None:
-                                rh   = Item(metatype   = pcequipment['righthand']['metatype'],
-                                            metaid     = pcequipment['righthand']['metaid'],
-                                            bearer     = pc.id,
-                                            bound      = True,
-                                            bound_type = 'BoP',
-                                            modded     = False,
-                                            mods       = None,
-                                            state      = 100,
-                                            rarity     = 'Common',
-                                            offsetx    = 0,
-                                            offsety    = 0,
-                                            date       = datetime.now())
-                                session.add(rh)
-
-                                if rh.metatype == 'weapon':
-                                    # We grab the weapon wanted from metaWeapons
-                                    metaWeapon = dict(list(filter(lambda x:x["id"] == rh.metaid,metaWeapons))[0]) # Gruikfix
-                                    # item.ammo is by default None, we initialize it here
-                                    if metaWeapon['ranged'] == True:
-                                        rh.ammo = metaWeapon['max_ammo']
+                                rh_caracs = {"metatype"  : pcequipment['righthand']['metatype'],
+                                             "metaid"    : pcequipment['righthand']['metaid'],
+                                             "bound"     : True,
+                                             "bound_type": 'BoP',
+                                             "modded"    : False,
+                                             "mods"      : None,
+                                             "state"     : 100,
+                                             "rarity"    : 'Common'}
+                                rh = fn_item_add(pc,rh_caracs)
 
                             if pcequipment['lefthand'] is not None:
-                                lh   = Item(metatype   = pcequipment['lefthand']['metatype'],
-                                        metaid     = pcequipment['lefthand']['metaid'],
-                                        bearer     = pc.id,
-                                        bound      = True,
-                                        bound_type = 'BoP',
-                                        modded     = False,
-                                        mods       = None,
-                                        state      = 100,
-                                        rarity     = 'Common',
-                                        offsetx    = 4,
-                                        offsety    = 0,
-                                        date       = datetime.now())
-                                session.add(lh)
-
-                                if lh.metatype == 'weapon':
-                                    # We grab the weapon wanted from metaWeapons
-                                    metaWeapon = dict(list(filter(lambda x:x["id"] == lh.metaid,metaWeapons))[0]) # Gruikfix
-                                    # item.ammo is by default None, we initialize it here
-                                    if metaWeapon['ranged'] == True:
-                                        lh.ammo = metaWeapon['max_ammo']
-
-                        try:
-                            session.commit()
+                                lh_caracs = {"metatype"  : pcequipment['lefthand']['metatype'],
+                                             "metaid"    : pcequipment['lefthand']['metaid'],
+                                             "bound"     : True,
+                                             "bound_type": 'BoP',
+                                             "modded"    : False,
+                                             "mods"      : None,
+                                             "state"     : 100,
+                                             "rarity"    : 'Common'}
+                                lh = fn_item_add(pc,lh_caracs)
                         except Exception as e:
-                            session.rollback()
-                            msg = f'[SQL] PC Wallet/Inventory creation KO [{e}]'
+                            msg = f'PC Weapons creation KO [{e}]'
                             logger.error(msg)
                             return jsonify({"success": False,
                                             "msg": msg,
                                             "payload": None}), 200
                         else:
+                            logger.debug(pc)
                             return jsonify({"success": True,
                                             "msg": f'PC creation OK (pcid:{pc.id})',
                                             "payload": pc}), 201
-            finally:
-                session.close()
 
 # API: GET /mypc
 @jwt_required()
 def mypc_get_all():
-    session  = Session()
     username = get_jwt_identity()
 
     try:
         userid = fn_user_get(username).id
-        pcs    = session.query(Creature).filter(Creature.account == userid).all()
+        pcs    = fn_creature_get_all(userid)
     except Exception as e:
         msg = f'[SQL] PCs query KO (username:{username}) [{e}]'
         logger.error(msg)
@@ -211,46 +142,37 @@ def mypc_get_all():
             return jsonify({"success": False,
                             "msg": f'No PC found for this user (username:{username})',
                             "payload": None}), 200
-    finally:
-        session.close()
 
 # API: DELETE /mypc/<int:pcid>
 @jwt_required()
 def mypc_del(pcid):
-    session  = Session()
     username = get_jwt_identity()
+    creature = fn_creature_get(None,pcid)[3]
 
-    if not fn_creature_get(None,pcid)[3]:
+    if not creature:
         return jsonify({"success": False,
-                        "msg": f'PC does not exist (pcid:{pcid})',
+                        "msg": f'PC does not exist (creatureid:{creature})',
                         "payload": None}), 200
 
     try:
-        userid    = fn_user_get(username).id
+        # We start do delete PC elements
+        if fn_cosmetic_del(creature):
+            logger.trace('PC Cosmetics delete OK')
+        if fn_slots_del(creature):
+            logger.trace('PC Slots delete OK')
+        if fn_wallet_del(creature):
+            logger.trace('PC Wallet delete OK')
 
-        pc        = session.query(Creature).filter(Creature.account == userid, Creature.id == pcid).one_or_none()
-        equipment = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
-        wallet    = session.query(Wallet).filter(Wallet.id == pc.id).one_or_none()
-        stats     = session.query(CreatureStats).filter(CreatureStats.id == pc.id).one_or_none()
-        cosmetics = session.query(Cosmetic).filter(Cosmetic.bearer == pc.id).one_or_none()
+        if fn_creature_stats_del(creature):
+            logger.trace('PC Stats delete OK')
 
-        if pc: session.delete(pc)
-        if equipment: session.delete(equipment)
-        if wallet: session.delete(wallet)
-        if stats: session.delete(stats)
-        if cosmetics: session.delete(cosmetics)
+        # Now we can delete tue PC itself
+        if fn_creature_del(creature):
+            logger.trace('PC delete OK')
 
-        items = session.query(Item).filter(Item.bearer == pc.id).all()
-        if items:
-            for item in items:
-                # To archive the item without deleting it
-                item.bearer  = None
-                item.offsetx = None
-                item.offsety = None
-
-        session.commit()
+        # TODO: For now we do NOT delete items on PC deletion
     except Exception as e:
-        msg = f'[SQL] PC delete KO (username:{username},pcid:{pcid}) [{e}]'
+        msg = f'PC delete KO (username:{username},pcid:{pcid}) [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
@@ -259,5 +181,3 @@ def mypc_del(pcid):
         return jsonify({"success": True,
                         "msg": f'PC delete OK (username:{username},pcid:{pcid})',
                         "payload": None}), 200
-    finally:
-        session.close()

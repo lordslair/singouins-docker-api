@@ -2,6 +2,8 @@
 
 import dataclasses
 
+from random              import randint
+
 from ..session           import Session
 from ..models            import (Creature,
                                  CreatureSlots,
@@ -15,10 +17,66 @@ from ..utils.loot        import *
 # Loading the Meta for later use
 try:
     metaWeapons = metas.get_meta('weapon')
+    metaRaces   = metas.get_meta('race')
 except Exception as e:
     logger.error(f'Meta fectching: KO [{e}]')
 else:
     logger.trace(f'Meta fectching: OK')
+
+def fn_creature_add(name,race,gender,accountid):
+    session = Session()
+
+    try:
+        # We grab the race wanted from metaRaces
+        metaRace = dict(list(filter(lambda x:x["id"] == race,metaRaces))[0]) # Gruikfix
+        if metaRace is None:
+            logger.error(f'MetaRace not found (race:{pcrace})')
+            return None
+
+        pc = Creature(name     = name,
+                      race     = metaRace['id'],
+                      gender   = gender,
+                      account  = accountid,
+                      hp       = 100 + metaRace['min_m'], # TODO: To remove
+                      hp_max   = 100 + metaRace['min_m'], # TODO: To remove
+                      instance = None,        # Gruikfix for now
+                      x        = randint(2,4), # TODO: replace with rand(empty coords)
+                      y        = randint(2,5)) # TODO: replace with rand(empty coords)
+
+        session.add(pc)
+        session.commit()
+        session.refresh(pc)
+    except Exception as e:
+        session.rollback()
+        msg = f'[SQL] PC creation KO (username:{username},pcname:{pcname}) [{e}]'
+        logger.error(msg)
+    else:
+        if pc:
+            return pc
+        else:
+            return None
+    finally:
+        session.close()
+
+def fn_creature_del(creature_todel):
+    session = Session()
+
+    try:
+        creature = session.query(Creature)\
+                          .filter(Creature.id == creature_todel.id)\
+                          .one_or_none()
+
+        if creature: session.delete(creature)
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Creature Query KO [{e}]')
+        return None
+    else:
+        return True
+    finally:
+        session.close()
 
 def fn_creature_get(pcname,pcid):
     session = Session()
@@ -45,6 +103,27 @@ def fn_creature_get(pcname,pcid):
             message = f'PC does not exist (pcid:{pcid},pcname:{pcname})'
             logger.trace(message)
             return (200, False, message, None)
+    finally:
+        session.close()
+
+def fn_creature_get_all(userid):
+    session = Session()
+
+    try:
+        pcs    = session.query(Creature)\
+                        .filter(Creature.account == userid)\
+                        .all()
+    except Exception as e:
+        message = f'[SQL] PC query failed (userid:{userid}) [{e}]'
+        logger.error(message)
+        return None
+    else:
+        if pcs:
+            message = f'[SQL] PC successfully found (userid:{userid})'
+            logger.trace(message)
+            return pcs
+        else:
+            return None
     finally:
         session.close()
 
@@ -358,5 +437,59 @@ def fn_creature_stats(pc):
 
         # To avoid errors, we return the freshly computed value
         return (creature_stats)
+    finally:
+        session.close()
+
+def fn_creature_stats_add(creature,metaRace,pcclass):
+    session = Session()
+
+    try:
+        stats = CreatureStats(id     = creature.id,
+                              m_race = metaRace['min_m'],
+                              r_race = metaRace['min_r'],
+                              g_race = metaRace['min_g'],
+                              v_race = metaRace['min_v'],
+                              p_race = metaRace['min_p'],
+                              b_race = metaRace['min_b'])
+
+        if pcclass == '1': stats.m_class = 10
+        if pcclass == '2': stats.r_class = 10
+        if pcclass == '3': stats.g_class = 10
+        if pcclass == '4': stats.v_class = 10
+        if pcclass == '5': stats.p_class = 10
+        if pcclass == '6': stats.b_class = 10
+
+        session.add(stats)
+        session.commit()
+        session.refresh(stats)
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Stats Query KO [{e}]')
+        return None
+    else:
+        if stats:
+            return stats
+        else:
+            return None
+    finally:
+        session.close()
+
+def fn_creature_stats_del(creature):
+    session = Session()
+
+    try:
+        stats = session.query(CreatureStats)\
+                       .filter(CreatureStats.id == creature.id)\
+                       .one_or_none()
+
+        if stats: session.delete(stats)
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Stats Query KO [{e}]')
+        return None
+    else:
+        return True
     finally:
         session.close()
