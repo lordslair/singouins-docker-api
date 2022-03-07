@@ -34,6 +34,7 @@ import                      routes.external.mypc
 import                      routes.external.mypc.cds
 import                      routes.external.mypc.effects
 import                      routes.external.mypc.events
+import                      routes.external.mypc.item
 import                      routes.external.mypc.pa
 import                      routes.external.mypc.stats
 import                      routes.external.pc
@@ -211,15 +212,9 @@ def api_mypc_mp_addressbook(pcid):
 #
 # Routes /item
 #
-
-
-
-@app.route('/mypc/<int:pcid>/item', methods=['GET'])
-@jwt_required()
-def api_mypc_item_get(pcid):
-    (code, success, msg, payload) = mypc_items_get(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/item',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.item.item_get)
 
 #
 # Routes /inventory/item

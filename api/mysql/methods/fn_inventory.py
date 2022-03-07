@@ -14,6 +14,10 @@ except Exception as e:
 else:
     logger.trace(f'Meta fectching: OK')
 
+#
+# Cosmetics
+#
+
 def fn_cosmetic_add(pc,pccosmetic):
     session = Session()
 
@@ -76,20 +80,9 @@ def fn_cosmetics_get_all(creature):
     finally:
         session.close()
 
-def fn_slots_get_all(creature):
-    session = Session()
-
-    try:
-        result = session.query(CreatureSlots)\
-                        .filter(CreatureSlots.id == creature.id)\
-                        .all()
-    except Exception as e:
-        logger.error(f'Slots Query KO [{e}]')
-        return None
-    else:
-        return result
-    finally:
-        session.close()
+#
+# Item
+#
 
 def fn_item_get_one(itemid):
     session = Session()
@@ -100,6 +93,21 @@ def fn_item_get_one(itemid):
        result = session.query(Item)\
                        .filter(Item.id == itemid)\
                        .one_or_none()
+    except Exception as e:
+        logger.error(f'Item Query KO [{e}]')
+        return None
+    else:
+        return result
+    finally:
+        session.close()
+
+def fn_item_get_all(creature):
+    session = Session()
+
+    try:
+       result = session.query(Item)\
+                       .filter(Item.bearer == creature.id)\
+                       .all()
     except Exception as e:
         logger.error(f'Item Query KO [{e}]')
         return None
@@ -146,6 +154,10 @@ def fn_item_add(pc,item_caracs):
     finally:
         session.close()
 
+#
+# Slots
+#
+
 def fn_slots_add(creature):
     session = Session()
 
@@ -164,6 +176,21 @@ def fn_slots_add(creature):
             return slots
         else:
             return None
+    finally:
+        session.close()
+
+def fn_slots_get_all(creature):
+    session = Session()
+
+    try:
+        result = session.query(CreatureSlots)\
+                        .filter(CreatureSlots.id == creature.id)\
+                        .all()
+    except Exception as e:
+        logger.error(f'Slots Query KO [{e}]')
+        return None
+    else:
+        return result
     finally:
         session.close()
 
@@ -186,6 +213,10 @@ def fn_slots_del(creature):
         return True
     finally:
         session.close()
+
+#
+# Wallet
+#
 
 def fn_wallet_add(creature):
     session = Session()
@@ -228,5 +259,24 @@ def fn_wallet_del(creature):
         return None
     else:
         return True
+    finally:
+        session.close()
+
+def fn_wallet_get(creature):
+    session = Session()
+
+    try:
+        wallet = session.query(Wallet)\
+                        .filter(Wallet.id == creature.id)\
+                        .one_or_none()
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Wallet Query KO [{e}]')
+        return None
+    else:
+        if wallet:
+            return wallet
+        else:
+            return None
     finally:
         session.close()
