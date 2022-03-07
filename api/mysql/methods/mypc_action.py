@@ -1,14 +1,16 @@
 # -*- coding: utf8 -*-
 
-from random              import randint
+from random                  import randint
 
-from ..session           import Session
-from ..models            import (Creature,
-                                 Item)
+from ..session               import Session
+from ..models                import (Creature,
+                                     Item)
 
-from .fn_creature        import *
-from .fn_user            import fn_user_get
-from .fn_wallet          import fn_wallet_ammo_get,fn_wallet_ammo_set
+from .fn_creature            import *
+from .fn_user                import fn_user_get
+from .fn_wallet              import fn_wallet_ammo_get,fn_wallet_ammo_set
+
+from nosql.models.RedisPa    import *
 
 # To accessing dict keys like an attribute
 # Might refactor and use dataclasses instead
@@ -41,7 +43,7 @@ def mypc_action_move(username,pcid,path):
     if pc and pc.account != user.id:
         return (409, False, 'Token/username mismatch', None)
 
-    creature_pa = pa.get_pa(pcid)[3]
+    creature_pa = RedisPa.get(pc)
     bluepa      = creature_pa['blue']['pa']
     redpa       = creature_pa['red']['pa']
 
@@ -77,8 +79,8 @@ def mypc_action_move(username,pcid,path):
                 f'[SQL] Coords update failed (pcid:{pcid},path:{path})',
                 None)
     else:
-        pa.set_pa(pcid,0,8 - bluepa) # We consume the blue 🔵 PA
-        pa.set_pa(pcid,16 - redpa,0)  # We consume the red  🔴 PA
+        RedisPa.set(pc,0,8 - bluepa) # We consume the blue 🔵 PA
+        RedisPa.set(pc,16 - redpa,0)  # We consume the red  🔴 PA
         # We put the info in queue for ws
         qciphered = False
         qpayload  = {"id": pc.id, "x": x, "y": y}
@@ -90,7 +92,7 @@ def mypc_action_move(username,pcid,path):
         yqueue_put('broadcast', qmsg)
         incr_hs(pc,'action:move', 1) # Redis HighScore
 
-        return (200, True, 'PC successfully moved', pa.get_pa(pcid)[3])
+        return (200, True, 'PC successfully moved', RedisPa.get(pc))
     finally:
         session.close()
 
@@ -99,7 +101,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     tg          = fn_creature_get(None,targetid)[3]
-    creature_pa = pa.get_pa(pcid)[3]
+    creature_pa = RedisPa.get(pc)
 
     action = {"failed": True,
               "hit": False,
@@ -232,7 +234,7 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     else:
         # Enough PA to attack, we consume the red PAs
         incr_hs(pc,'action:attack',1) # Redis HighScore
-        pa.set_pa(pcid,itemmeta.pas_use,0)
+        RedisPa.set(pc,itemmeta.pas_use,0)
 
     if pc.capacity > tg.avoid:
         # Successfull attack
@@ -291,8 +293,8 @@ def mypc_action_attack(username,pcid,weaponid,targetid):
     return (200,
             True,
             'Target successfully attacked',
-            {"red": pa.get_pa(pcid)[3]['red'],
-             "blue": pa.get_pa(pcid)[3]['blue'],
+            {"red": RedisPa.get(pc)['red'],
+             "blue": RedisPa.get(pc)['blue'],
              "action": action})
 
 # API: /mypc/<int:pcid>/action/reload/<int:weaponid>
@@ -300,7 +302,7 @@ def mypc_action_reload(username,pcid,weaponid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     session     = Session()
-    redpa       = pa.get_pa(pcid)[3]['red']['pa']
+    redpa       = RedisPa.get(pc)['red']['pa']
 
     # Pre-flight checks
     if pc is None:
@@ -354,12 +356,12 @@ def mypc_action_reload(username,pcid,weaponid):
         return (200,
                 False,
                 'Not enough PA to reload',
-                {"red": pa.get_pa(pcid)[3]['red'],
-                 "blue": pa.get_pa(pcid)[3]['blue'],
+                {"red": RedisPa.get(pc)['red'],
+                 "blue": RedisPa.get(pc)['blue'],
                  "action": None})
     else:
         # Enough PA to reload, we consume the red PAs
-        pa.set_pa(pc.id,itemmeta['pas_reload'],0)
+        RedisPa.set(pc,itemmeta['pas_reload'],0)
 
     walletammo = fn_wallet_ammo_get(pc,item,itemmeta['caliber'])
     neededammo = itemmeta['max_ammo'] - item.ammo
@@ -391,7 +393,7 @@ def mypc_action_reload(username,pcid,weaponid):
         return (200,
                 True,
                 f'Weapon reload successed (pcid:{pc.id},weaponid:{item.id})',
-                pa.get_pa(pcid)[3])
+                RedisPa.get(pc))
     finally:
         session.close()
 
@@ -448,24 +450,24 @@ def mypc_action_unload(username,pcid,weaponid):
                 f'Item is not reloadable (pcid:{pc.id},weaponid:{item.id})',
                 None)
 
-    if pa.get_pa(pcid)[3]['blue']['pa'] < 2:
+    if RedisPa.get(pc)['blue']['pa'] < 2:
         # Not enough PA to unload
         return (200,
                 False,
                 'Not enough PA to unload',
-                {"red": pa.get_pa(pcid)[3]['red'],
-                 "blue": pa.get_pa(pcid)[3]['blue'],
+                {"red": RedisPa.get(pc)['red'],
+                 "blue": RedisPa.get(pc)['blue'],
                  "action": None})
     else:
         # Enough PA to unload, we consume the red PAs
-        pa.set_pa(pc.id,0,2)
+        RedisPa.set(pc,0,2)
 
     ret = fn_wallet_ammo_set(pc,itemmeta['caliber'],item.ammo)
     if ret is None:
         return (200,
                 True,
                 f'Weapon unload failed (pcid:{pcid},weaponid:{item.id})',
-                pa.get_pa(pcid)[3])
+                RedisPa.get(pc))
 
     try:
         item       = session.query(Item)\
@@ -490,6 +492,6 @@ def mypc_action_unload(username,pcid,weaponid):
         return (200,
                 True,
                 f'Weapon unload successed (pcid:{pc.id},weaponid:{weaponid})',
-                pa.get_pa(pcid)[3])
+                RedisPa.get(pc))
     finally:
         session.close()

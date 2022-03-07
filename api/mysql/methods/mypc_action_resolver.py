@@ -10,6 +10,8 @@ from .fn_creature            import *
 from .fn_creatures           import fn_creatures_in_instance
 from .fn_user                import fn_user_get
 
+from nosql.models.RedisPa    import *
+
 from variables               import (RESOLVER_HOST,
                                     RESOLVER_PORT)
 
@@ -48,7 +50,7 @@ def mypc_action_resolver_move(username,creatureid,path):
         creatures_effects  = effects.get_instance_effects(creature)
         creatures_statuses = statuses.get_instance_statuses(creature)
         creatures_cds      = cds.get_instance_cds(creature)
-        pas                = pa.get_pa(creature.id)[3]
+        pas                = RedisPa.get(creature)
     except Exception as e:
         return (200,
                 False,
@@ -151,7 +153,7 @@ def mypc_action_resolver_skill(username,creatureid,skillmetaid):
         creatures_effects  = effects.get_instance_effects(creature)
         creatures_statuses = statuses.get_instance_statuses(creature)
         creatures_cds      = cds.get_instance_cds(creature)
-        pas                = pa.get_pa(creature.id)[3]
+        pas                = RedisPa.get(creature)
     except Exception as e:
         return (200,
                 False,

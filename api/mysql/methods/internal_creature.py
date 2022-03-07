@@ -2,11 +2,13 @@
 
 import dataclasses
 
-from ..session              import Session
-from ..models               import CreatureSlots,Item,Creature,Wallet
+from ..session               import Session
+from ..models                import CreatureSlots,Item,Creature,Wallet
 
-from .fn_creature           import *
-from .fn_user               import fn_user_get_from_discord
+from .fn_creature            import *
+from .fn_user                import fn_user_get_from_discord
+
+from nosql.models.RedisPa    import *
 
 # Loading the Meta for later use
 try:
@@ -603,7 +605,7 @@ def internal_creature_pa_get(creatureid):
                 None)
 
     try:
-        creature_pa = pa.get_pa(creature.id)[3]
+        creature_pa = RedisPa.get(creature)
     except Exception as e:
         return (200,
                 False,
@@ -646,24 +648,24 @@ def internal_creature_pa_consume(creatureid,redpa,bluepa):
                 False,
                 f'Cannot consume PA < 0(creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
                 None)
-    if redpa >= pa.get_pa(creature.id)[3]['red']['pa'] or bluepa >= pa.get_pa(creature.id)[3]['blue']['pa']:
+    if redpa >= RedisPa.get(creature)['red']['pa'] or bluepa >= RedisPa.get(creature)['blue']['pa']:
         return (200,
                 False,
                 f'Cannot consume that amount of PA (creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})',
                 None)
 
     try:
-        pa.set_pa(creature.id,redpa,bluepa)
+        RedisPa.set(creature,redpa,bluepa)
     except Exception as e:
         return (200,
                 False,
-                f'[Redis:set_pa()] Query failed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa}) [{e}]',
+                f'[Redis] Query failed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa}) [{e}]',
                 None)
     else:
         return (200,
                 True,
                 f'Query successed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa})',
-                {"pa": pa.get_pa(creature.id)[3],
+                {"pa": RedisPa.get(creature),
                  "creature": creature})
 
 # API: PUT /internal/creature/pa/reset
@@ -685,8 +687,7 @@ def internal_creature_pa_reset(creatureid):
 
     # TODO: We only do a reset by laziness, could be better
     try:
-        r.set(f'red:{creature.id}','red',ex=1)
-        r.set(f'blue:{creature.id}','blue',ex=1)
+        RedisPa.reset(creature)
     except Exception as e:
         return (200,
                 False,

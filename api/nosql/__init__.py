@@ -13,7 +13,6 @@ from .incr                      import *
 from .instances                 import *
 from .maps                      import *
 from .metas                     import *
-from .pa                        import *
 from .queue                     import *
 from .stats                     import *
 from .statuses                  import *

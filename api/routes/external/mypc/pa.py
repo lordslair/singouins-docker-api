@@ -6,7 +6,7 @@ from flask_jwt_extended         import jwt_required,get_jwt_identity
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql                      import *
+from nosql.models.RedisPa       import *
 
 #
 # Routes /mypc/{pcid}/pa
@@ -28,7 +28,7 @@ def pa_get(pcid):
                         "payload": None}), 409
 
     try:
-        payload = get_pa(pcid)[3]
+        payload = RedisPa.get(pc)
     except Exception as e:
         msg = f'PA Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)

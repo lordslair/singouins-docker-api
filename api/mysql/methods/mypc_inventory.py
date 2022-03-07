@@ -1,14 +1,16 @@
 # -*- coding: utf8 -*-
 
-import dataclasses      # Needed for WS JSON broadcast
+import dataclasses           # Needed for WS JSON broadcast
 
-from ..session           import Session
-from ..models            import (CreatureSlots,
-                                Item,
-                                Wallet)
+from ..session               import Session
+from ..models                import (CreatureSlots,
+                                    Item,
+                                    Wallet)
 
-from .fn_creature        import *
-from .fn_user            import fn_user_get
+from .fn_creature            import *
+from .fn_user                import fn_user_get
+
+from nosql.models.RedisPa    import *
 
 # Loading the Meta for later use
 try:
@@ -28,7 +30,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)
     session     = Session()
-    bluepa      = get_pa(pcid)[3]['blue']['pa']
+    bluepa      = RedisPa.get(pc)['blue']['pa']
 
     # Pre-flight checks
     if pc is None:
@@ -96,7 +98,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
                 f'[SQL] Item dismantle failed (pcid:{pc.id}) [{e}]',
                 None)
     else:
-        pa.set_pa(pcid,0,1) # We consume the blue PA (1)
+        RedisPa.set(pc,0,1) # We consume the blue PA (1)
         incr.many(f'highscores:{pc.id}:action:dismantle:items', 1)
         return (200,
                 True,
@@ -118,7 +120,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     user           = fn_user_get(username)
     creature_stats = fn_creature_stats(pc)
     session        = Session()
-    redpa          = pa.get_pa(pcid)[3]['red']['pa']
+    redpa          = RedisPa.get(pc)['red']['pa']
     equipment      = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()
 
 
@@ -305,7 +307,7 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
                 "scope": qscope}
         queue.yqueue_put('broadcast', qmsg)
 
-        pa.set_pa(pc.id,costpa,0) # We consume the red PA (costpa) right now
+        RedisPa.set(pc,costpa,0) # We consume the red PA (costpa) right now
 
         # We create the Creature Event
         events.set_event(pc.id,
@@ -317,8 +319,8 @@ def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
         return (200,
                 True,
                 f'Equipment successfully updated (pcid:{pc.id},itemid:{itemid})',
-                {"red": pa.get_pa(pcid)[3]['red'],
-                 "blue": pa.get_pa(pcid)[3]['blue'],
+                {"red": RedisPa.get(pc)['red'],
+                 "blue": RedisPa.get(pc)['blue'],
                  "equipment": equipment})
     finally:
         session.close()
@@ -417,8 +419,8 @@ def mypc_inventory_item_unequip(username,pcid,type,slotname,itemid):
         return (200,
                 True,
                 f'Unequip successed (pcid:{pc.id},itemid:{itemid})',
-                {"red": pa.get_pa(pcid)[3]['red'],
-                 "blue": pa.get_pa(pcid)[3]['blue'],
+                {"red": RedisPa.get(pc)['red'],
+                 "blue": RedisPa.get(pc)['blue'],
                  "equipment": equipment})
     finally:
         session.close()
