@@ -37,6 +37,7 @@ import                      routes.external.mypc.events
 import                      routes.external.mypc.item
 import                      routes.external.mypc.pa
 import                      routes.external.mypc.stats
+import                      routes.external.mypc.view
 import                      routes.external.pc
 
 from variables              import *
@@ -158,13 +159,10 @@ app.add_url_rule('/mypc/<int:pcid>/effects',
 #
 # Routes: /view
 #
-
+app.add_url_rule('/mypc/<int:pcid>/view',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.view.view_get)
 @app.route('/mypc/<int:pcid>/view', methods=['GET'])
-@jwt_required()
-def api_mypc_view(pcid):
-    (code, success, msg, payload) = mypc_view(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
 # Routes: /mp

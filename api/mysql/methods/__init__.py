@@ -17,4 +17,3 @@ from .mypc_map          import *
 from .mypc_mp           import *
 from .mypc_trade        import *
 from .mypc_squad        import *
-from .mypc_view         import *
