@@ -32,7 +32,7 @@ else:
 # Queries /mypc/{pcid}/action/*
 #
 
-# API: /mypc/<int:pcid>/action/move/<int:itemid>/give/<int:targetid>
+# API: /mypc/<int:pcid>/action/move
 def mypc_action_move(username,pcid,path):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(username)

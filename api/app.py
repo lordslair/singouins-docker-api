@@ -254,24 +254,6 @@ def api_mypc_inventory_item_dismantle(pcid,itemid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
-# Routes: /trade
-#
-
-@app.route('/mypc/<int:pcid>/trade/item/<int:itemid>/give/<int:targetid>', methods=['POST'])
-@jwt_required()
-def api_mypc_trade_item_give(pcid,itemid,targetid):
-    (code, success, msg, payload) = mypc_trade_item_give(get_jwt_identity(),pcid,itemid,targetid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/trade/wallet/<string:currtype>/give/<int:targetid>/<int:amount>', methods=['POST'])
-@jwt_required()
-def api_mypc_trade_wallet_give(pcid,currtype,targetid,amount):
-    (code, success, msg, payload) = mypc_trade_wallet_give(get_jwt_identity(),pcid,currtype,targetid,amount)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-#
 # Routes: /instance
 #
 
