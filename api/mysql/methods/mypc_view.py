@@ -2,11 +2,13 @@
 
 import dataclasses
 
-from ..session           import Session
-from ..models            import Creature
+from ..session               import Session
+from ..models                import Creature
 
-from .fn_creature        import *
-from .fn_user            import fn_user_get
+from .fn_creature            import *
+from .fn_user                import fn_user_get
+
+from nosql.models.RedisStats import *
 
 #
 # Queries /mypc/{pcid}/view/*
@@ -40,14 +42,22 @@ def mypc_view(username,pcid):
             # PC is solo / not in a squad
 
             # We check if we have the data in redis
-            creature_stats = stats.get_stats(pc)
-            if creature_stats is None:
-                # We try to compute fresh stats
-                creature_stats = fn_creature_stats(pc)
-                if creature_stats is None:
+            cached_stats = RedisStats(pc).as_dict()
+            if cached_stats:
+                # Data was in Redis, so we return it
+                creature_stats = cached_stats
+            else:
+                # Data was not in Redis, so we compute it
+                generated_stats = RedisStats(pc).refresh().dict
+                if generated_stats:
+                    # Data was computed, so we return it
+                    creature_stats = generated_stats
+                else:
+                    msg = f'Stats computation KO (pcid:{pc.id})'
+                    logger.error(msg)
                     return (200,
-                            True,
-                            f'Stats query failed (pcid:{pc.id})',
+                            False,
+                            msg,
                             None)
 
             range = 4 + round(creature_stats['base']['p'] / 50)
@@ -89,14 +99,22 @@ def mypc_view(username,pcid):
             views = [] # We initialize the result array
             for pc in squad:
                 # We check if we have the data in redis
-                creature_stats = stats.get_stats(pc)
-                if creature_stats is None:
-                    # We try to compute fresh stats
-                    creature_stats = fn_creature_stats(pc)
-                    if creature_stats is None:
+                cached_stats = RedisStats(pc).as_dict()
+                if cached_stats:
+                    # Data was in Redis, so we return it
+                    creature_stats = cached_stats
+                else:
+                    # Data was not in Redis, so we compute it
+                    generated_stats = RedisStats(pc).refresh().dict
+                    if generated_stats:
+                        # Data was computed, so we return it
+                        creature_stats = generated_stats
+                    else:
+                        msg = f'Stats computation KO (pcid:{pc.id})'
+                        logger.error(msg)
                         return (200,
-                                True,
-                                f'Stats query failed (pcid:{pc.id})',
+                                False,
+                                msg,
                                 None)
                 try:
                     range = 4 + round(creature_stats['base']['p'] / 50)

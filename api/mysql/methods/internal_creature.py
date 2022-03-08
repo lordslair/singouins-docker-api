@@ -9,6 +9,7 @@ from .fn_creature            import *
 from .fn_user                import fn_user_get_from_discord
 
 from nosql.models.RedisPa    import *
+from nosql.models.RedisStats import *
 
 # Loading the Meta for later use
 try:
@@ -739,19 +740,22 @@ def internal_creature_stats(creatureid):
                 None)
 
     # We force stats re-compute
-    stats = fn_creature_stats(creature)
-    if stats:
+    try:
+        generated_stats = RedisStats(creature).refresh().dict
+    except Exception as e:
+        msg = f'Stats computation KO (creatureid:{creature.id}) [{e}]'
+        logger.error(msg)
+        return (200,
+                False,
+                msg,
+                None)
+    else:
         # Data was computed, so we return it
         return (200,
                 True,
-                f'Stats computation successed (creatureid:{creature.id})',
-                {"stats": stats,
+                f'Stats query OK (creatureid:{creature.id})',
+                {"stats": generated_stats,
                  "creature": creature})
-    else:
-        return (200,
-                False,
-                f'Stats query failed (creatureid:{creature.id})',
-                None)
 
 # API: POST /internal/creature/{creatureid}/statuses
 def internal_creature_statuses(creatureid):

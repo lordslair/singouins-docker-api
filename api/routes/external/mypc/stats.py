@@ -3,10 +3,11 @@
 from flask                      import Flask, jsonify, request
 from flask_jwt_extended         import jwt_required,get_jwt_identity
 
-from mysql.methods.fn_creature  import fn_creature_get,fn_creature_stats
+from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql                      import *
+from nosql.models.RedisPa       import *
+from nosql.models.RedisStats    import *
 
 #
 # Routes /mypc/{pcid}/stats
@@ -29,13 +30,13 @@ def stats_get(pcid):
 
     try:
         # We check if we have the data in redis
-        cached_stats = stats.get_stats(pc)
+        cached_stats = RedisStats(pc).as_dict()
         if cached_stats:
             # Data was in Redis, so we return it
             pc_stats = cached_stats
         else:
             # Data was not in Redis, so we compute it
-            generated_stats = fn_creature_stats(pc)
+            generated_stats = RedisStats(pc).refresh().dict
             if generated_stats:
                 # Data was computed, so we return it
                 pc_stats = generated_stats

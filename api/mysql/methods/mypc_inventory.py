@@ -11,6 +11,7 @@ from .fn_creature            import *
 from .fn_user                import fn_user_get
 
 from nosql.models.RedisPa    import *
+from nosql.models.RedisStats import *
 
 # Loading the Meta for later use
 try:
@@ -118,7 +119,7 @@ def mypc_inventory_item_dismantle(username,pcid,itemid):
 def mypc_inventory_item_equip(username,pcid,type,slotname,itemid):
     pc             = fn_creature_get(None,pcid)[3]
     user           = fn_user_get(username)
-    creature_stats = fn_creature_stats(pc)
+    creature_stats = RedisStats(pc).refresh().dict
     session        = Session()
     redpa          = RedisPa.get(pc)['red']['pa']
     equipment      = session.query(CreatureSlots).filter(CreatureSlots.id == pc.id).one_or_none()

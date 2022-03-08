@@ -329,117 +329,6 @@ def fn_creature_gain_loot(pc,tg):
     finally:
         session.close()
 
-def fn_creature_stats(pc):
-    session      = Session()
-    stats_items  = {"off":{
-                            "capcom": 0,
-                            "capsho": 0},
-                    "def":{
-                            "armor": {
-                                        "p": 0,
-                                        "b": 0},
-                            "hpmax": 0,
-                            "hp": 0,
-                            "dodge": 0,
-                            "parry": 0}}
-
-    try:
-        equipment = session.query(CreatureSlots)\
-                           .filter(CreatureSlots.id == pc.id)\
-                           .one_or_none()
-
-        # Equipement Slots are items.id, not meta.id - need to double query it
-        if equipment:
-            feet      = session.query(Item).filter(Item.id == equipment.feet).one_or_none()
-            hands     = session.query(Item).filter(Item.id == equipment.hands).one_or_none()
-            head      = session.query(Item).filter(Item.id == equipment.head).one_or_none()
-            shoulders = session.query(Item).filter(Item.id == equipment.shoulders).one_or_none()
-            torso     = session.query(Item).filter(Item.id == equipment.torso).one_or_none()
-            legs      = session.query(Item).filter(Item.id == equipment.legs).one_or_none()
-
-            armormetas = []
-            armors     = [feet,
-                          hands,
-                          head,
-                          shoulders,
-                          torso,
-                          legs]
-
-            for armor in armors:
-                if armor is not None:
-                    metaWeapon = dict(list(filter(lambda x:x["id"] == armor.metaid,metaWeapons))[0]) # Gruikfix
-                    armormetas.append(metaWeapon)
-
-            # We grab the weapon wanted from metaWeapons
-            # TODO
-
-        # We need to query Creature base stats
-        cs        = session.query(CreatureStats)\
-                           .filter(CreatureStats.id == pc.id)\
-                           .one_or_none()
-
-    except Exception as e:
-        logger.error(f'Stats queries KO (pcid:{pcid}) [{e}]')
-    else:
-        for meta in armormetas:
-            if meta:
-                stats_items['def']['armor']['b'] += meta['arm_b']
-                stats_items['def']['armor']['p'] += meta['arm_p']
-
-        if cs:
-            # We got Creature base stats
-            base_m = cs.m_race + cs.m_class + cs.m_skill + cs.m_point
-            base_r = cs.r_race + cs.r_class + cs.r_skill + cs.r_point
-            base_g = cs.g_race + cs.g_class + cs.g_skill + cs.g_point
-            base_v = cs.v_race + cs.v_class + cs.v_skill + cs.v_point
-            base_p = cs.p_race + cs.p_class + cs.p_skill + cs.p_point
-            base_b = cs.b_race + cs.b_class + cs.b_skill + cs.b_point
-        else:
-            # Something is probably wrong
-            base_m = 0
-            base_r = 0
-            base_g = 0
-            base_v = 0
-            base_p = 0
-            base_b = 0
-
-        # About HP
-        hpmax = 100 + base_m + round(pc.level/2)
-        hp    = stats.get_hp(pc)
-        if hp:
-            pass # Meaning key was already populated
-        else:
-            stats.set_hp(pc,hpmax)
-            hp = hpmax
-
-        # We push data in final dict
-        creature_stats  = {"base":{
-                            "m": 0 + base_m,
-                            "r": 0 + base_r,
-                            "g": 0 + base_g,
-                            "v": 0 + base_v,
-                            "p": 0 + base_p,
-                            "b": 0 + base_b},
-                  "off":{
-                            "capcom": round((base_g + round((base_m + base_r)/2))/2),
-                            "capsho": round((base_v + round((base_b + base_r)/2))/2)},
-                  "def":{
-                            "armor": {
-                                        "p": 0 + stats_items['def']['armor']['p'],
-                                        "b": 0 + stats_items['def']['armor']['b']},
-                            "hpmax": hpmax,
-                            "hp": hp,
-                            "dodge": base_r,
-                            "parry": round(((base_g-100)/50) * ((base_m-100)/50))}}
-
-        # Data was not in Redis, so we push it
-        stats.set_stats(pc,creature_stats)
-
-        # To avoid errors, we return the freshly computed value
-        return (creature_stats)
-    finally:
-        session.close()
-
 def fn_creature_stats_add(creature,metaRace,pcclass):
     session = Session()
 
@@ -491,5 +380,20 @@ def fn_creature_stats_del(creature):
         return None
     else:
         return True
+    finally:
+        session.close()
+
+def fn_creature_stats_get(creature):
+    session = Session()
+
+    try:
+        stats = session.query(CreatureStats)\
+                       .filter(CreatureStats.id == creature.id)\
+                       .one_or_none()
+    except Exception as e:
+        logger.error(f'Stats Query KO [{e}]')
+        return None
+    else:
+        return stats
     finally:
         session.close()
