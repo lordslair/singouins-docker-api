@@ -83,6 +83,26 @@ def fn_cosmetics_get_all(creature):
 #
 # Item
 #
+def fn_item_ammo_set(itemid,ammo):
+    session = Session()
+
+    try:
+       item = session.query(Item)\
+                       .filter(Item.id == itemid)\
+                       .one_or_none()
+       item.ammo = ammo
+       session.commit()
+       session.refresh(item)
+    except Exception as e:
+        logger.error(f'Item Query KO [{e}]')
+        return None
+    else:
+        if item:
+            return item
+        else:
+            return None
+    finally:
+        session.close()
 
 def fn_item_get_one(itemid):
     session = Session()

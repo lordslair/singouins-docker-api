@@ -31,6 +31,7 @@ import                      routes.external.log
 import                      routes.external.map
 import                      routes.external.meta
 import                      routes.external.mypc
+import                      routes.external.mypc.action
 import                      routes.external.mypc.cds
 import                      routes.external.mypc.effects
 import                      routes.external.mypc.events
@@ -314,19 +315,12 @@ def api_mypc_action_attack(pcid,weaponid,targetid):
     if isinstance(code, int):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
-@app.route('/mypc/<int:pcid>/action/reload/<int:weaponid>', methods=['POST'])
-@jwt_required()
-def api_mypc_action_reload(pcid,weaponid):
-    (code, success, msg, payload) = mypc_action_reload(get_jwt_identity(),pcid,weaponid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/action/unload/<int:weaponid>', methods=['POST'])
-@jwt_required()
-def api_mypc_action_unload(pcid,weaponid):
-    (code, success, msg, payload) = mypc_action_unload(get_jwt_identity(),pcid,weaponid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/action/reload/<int:weaponid>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.action.action_weapon_reload)
+app.add_url_rule('/mypc/<int:pcid>/action/unload/<int:weaponid>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.action.action_weapon_unload)
 
 #
 # Routes: /events

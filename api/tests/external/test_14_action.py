@@ -28,7 +28,8 @@ def test_singouins_action_unload():
 
     assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
-    assert 'Weapon unload success' in json.loads(response.text)['msg']
+    assert 'Weapon unload OK' in json.loads(response.text)['msg']
+    assert json.loads(response.text)['payload']['weapon']['ammo'] == 0
 
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
@@ -58,7 +59,8 @@ def test_singouins_action_reload():
 
     assert json.loads(response.text)['success'] == True
     assert response.status_code == 200
-    assert 'Weapon reload success' in json.loads(response.text)['msg']
+    assert 'Weapon reload OK' in json.loads(response.text)['msg']
+    assert json.loads(response.text)['payload']['weapon']['ammo'] == 6
 
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
