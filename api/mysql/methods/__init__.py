@@ -9,5 +9,4 @@ from .mypc_action_resolver import *
 from .mypc_korp         import *
 from .mypc_inventory    import *
 from .mypc_instance     import *
-from .mypc_mp           import *
 from .mypc_squad        import *
