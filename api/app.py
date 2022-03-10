@@ -36,6 +36,7 @@ import                      routes.external.mypc.action_resolver
 import                      routes.external.mypc.cds
 import                      routes.external.mypc.effects
 import                      routes.external.mypc.events
+import                      routes.external.mypc.instance
 import                      routes.external.mypc.item
 import                      routes.external.mypc.mp
 import                      routes.external.mypc.pa
@@ -234,41 +235,18 @@ def api_mypc_inventory_item_dismantle(pcid,itemid):
 #
 # Routes: /instance
 #
-
-@app.route('/mypc/<int:pcid>/instance', methods=['PUT'])
-@jwt_required()
-def api_mypc_instance_create(pcid):
-    (code, success, msg, payload) = mypc_instance_create(
-                                        get_jwt_identity(),
-                                        pcid,
-                                        request.json.get('hardcore', None),
-                                        request.json.get('fast',     None),
-                                        request.json.get('mapid',    None),
-                                        request.json.get('public',   None))
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/instance/<int:instanceid>', methods=['GET'])
-@jwt_required()
-def api_mypc_instance_get(pcid,instanceid):
-    (code, success, msg, payload) = mypc_instance_get(get_jwt_identity(),pcid,instanceid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/instance/<int:instanceid>/join', methods=['POST'])
-@jwt_required()
-def api_mypc_instance_join(pcid,instanceid):
-    (code, success, msg, payload) = mypc_instance_join(get_jwt_identity(),pcid,instanceid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/instance/<int:instanceid>/leave', methods=['POST'])
-@jwt_required()
-def api_mypc_instance_leave(pcid,instanceid):
-    (code, success, msg, payload) = mypc_instance_leave(get_jwt_identity(),pcid,instanceid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
+app.add_url_rule('/mypc/<int:pcid>/instance',
+                 methods=['PUT'],
+                 view_func=routes.external.mypc.instance.instance_add)
+app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.instance.instance_get)
+app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>/join',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.instance.instance_join)
+app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>/leave',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.instance.instance_leave)
 #
 # Routes: /action/resolver
 #
