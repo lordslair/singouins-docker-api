@@ -146,20 +146,6 @@ def fn_creature_tag(pc,tg):
     finally:
         session.close()
 
-def fn_creature_wound(pc,tg,dmg):
-    session = Session()
-    try:
-        tg      = session.query(Creature).filter(Creature.id == tg.id).one_or_none()
-        tg.hp   = tg.hp - dmg    # We update Health Points
-        tg.date = datetime.now() # We update date
-        session.commit()
-    except Exception as e:
-        return (200, False, 'HP update failed', None)
-    else:
-        pass
-    finally:
-        session.close()
-
 def fn_creature_kill(pc,tg,action):
     session = Session()
 
