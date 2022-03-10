@@ -35,6 +35,7 @@ API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
 # Resolver variables
 RESOLVER_HOST    = os.environ['SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST']
 RESOLVER_PORT    = os.environ['SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT']
+RESOLVER_URL     = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
 
 # Gunicorn variables
 GUNICORN_CHDIR   = os.environ.get("GUNICORN_CHDIR", '/code')

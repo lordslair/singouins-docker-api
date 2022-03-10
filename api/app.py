@@ -32,6 +32,7 @@ import                      routes.external.map
 import                      routes.external.meta
 import                      routes.external.mypc
 import                      routes.external.mypc.action
+import                      routes.external.mypc.action_resolver
 import                      routes.external.mypc.cds
 import                      routes.external.mypc.effects
 import                      routes.external.mypc.events
@@ -269,29 +270,14 @@ def api_mypc_instance_leave(pcid,instanceid):
         return jsonify({"msg": msg, "success": success, "payload": payload}), code
 
 #
-# Routes: /action
+# Routes: /action/resolver
 #
-
-@app.route('/mypc/<int:pcid>/action/resolver/move', methods=['POST'])
-@jwt_required()
-def api_mypc_action_resolver_move(pcid):
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request"}), 400
-
-    path = request.json.get('path', None)
-    (code, success, msg, payload) = mypc_action_resolver_move(get_jwt_identity(),pcid,path)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/action/resolver/skill/<int:skillmetaid>', methods=['PUT'])
-@jwt_required()
-def api_mypc_action_resolver_skill(pcid,skillmetaid):
-
-    (code, success, msg, payload) = mypc_action_resolver_skill(get_jwt_identity(),
-                                                               pcid,
-                                                               skillmetaid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/action/resolver/move',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.action_resolver.action_resolver_move)
+app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<int:skillmetaid>',
+                 methods=['PUT'],
+                 view_func=routes.external.mypc.action_resolver.action_resolver_skill)
 
 #
 # Routes: /action
