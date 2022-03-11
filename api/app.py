@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-from flask              import Flask, jsonify, request
-from flask_jwt_extended import (JWTManager,
-                                jwt_required,
-                                get_jwt_identity)
-from flask_cors         import CORS
-from flask_swagger_ui   import get_swaggerui_blueprint
+from flask                         import Flask, jsonify, request
+from flask_jwt_extended            import (JWTManager,
+                                           jwt_required,
+                                           get_jwt_identity)
+from flask_cors                    import CORS
+from flask_swagger_ui              import get_swaggerui_blueprint
 
-from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_flask_exporter     import PrometheusMetrics
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Import Redis and initialize
-import                      nosql
+from nosql.initialize              import initialize_redis
+from mysql.initialize              import initialize_db
 
-from mysql.methods          import *
+from variables                     import *
+from utils.gunilog                 import *
 
 # Imports of endpoint functions
 import                      routes.internal.creature
@@ -43,9 +44,6 @@ import                      routes.external.mypc.pa
 import                      routes.external.mypc.stats
 import                      routes.external.mypc.view
 import                      routes.external.pc
-
-from variables              import *
-from utils.gunilog          import *
 
 app = Flask(__name__)
 CORS(app)                        # We wrap around all the app the CORS
