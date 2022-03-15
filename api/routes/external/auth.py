@@ -8,7 +8,6 @@ from flask_jwt_extended    import (jwt_required,
                                    get_jwt_identity)
 
 from nosql                 import *
-from mysql.methods.auth    import *
 from mysql.methods.fn_user import *
 from utils.mail            import send
 from utils.token           import (confirm_token,
@@ -70,7 +69,7 @@ def auth_register():
     if not mail:
         return jsonify({"msg": "Missing mail parameter"}), 400
 
-    code = add_user(mail,password)
+    code = fn_user_add(mail,password)
     if code == 201:
         subject = '[🐒&🐖] Bienvenue chez le Singouins !'
         token   = generate_confirmation_token(mail)
@@ -115,7 +114,7 @@ def auth_delete():
     if username != current_user:
         return jsonify({"msg": "Token/username mismatch"}), 400
 
-    code = del_user(username)
+    code = fn_user_del(username)
     if code == 200:
         return jsonify({"msg": "User successfully deleted"}), code
     if code == 404:
@@ -129,7 +128,7 @@ def auth_forgotpassword():
         return jsonify({"msg": "Missing JSON in request"}), 400
 
     mail            = request.json.get('mail', None)
-    (code,password) = forgot_password(mail)
+    (code,password) = fn_forgot_password(mail)
 
     if code == 200:
         subject = '[🐒&🐖] Mot de passe oublié'
