@@ -11,26 +11,26 @@ from .connector import *
 def yqueue_put(yqueue_name,msg):
     # Opening Queue
     try:
-        yqueue      = yarqueue.Queue(name=yqueue_name, redis=r)
-    except:
-        print(f'Connection to yarqueue:{yqueue_name} [✗]')
+        yqueue = yarqueue.Queue(name=yqueue_name, redis=r)
+    except Exception as e:
+        logger.error(f'Queue Connection KO (queue:{yqueue_name}) [{e}]')
     else:
         pass
 
     # Put data in Queue
     try:
         yqueue.put(json.dumps(msg))
-    except:
-        print(f'yarqueue:{yqueue_name} <{msg}> [✗]')
+    except Exception as e:
+        logger.error(f'Queue Query KO (queue:{yqueue_name},msg:<{msg}>) [{e}]')
     else:
         pass
 
 def yqueue_get(yqueue_name):
     # Opening Queue
     try:
-        yqueue = yarqueue.Queue(name=yqueue_name, redis=r)
-    except:
-        print(f'Connection to yarqueue:{yqueue_name} [✗]')
+        yqueue = yarqueue.Queue(name=yqueue_name, redis=r_no_decode)
+    except Exception as e:
+        logger.error(f'Queue Connection KO (queue:{yqueue_name}) [{e}]')
     else:
         pass
 
@@ -39,7 +39,7 @@ def yqueue_get(yqueue_name):
         msgs = []
         for msg in yqueue:
             msgs.append(json.loads(msg))
-    except:
-        print(f'Failed to get messages from yarqueue:{yqueue_name} [✗]')
+    except Exception as e:
+        logger.error(f'Queue Query KO (queue:{yqueue_name}) [{e}]')
     else:
         return msgs
