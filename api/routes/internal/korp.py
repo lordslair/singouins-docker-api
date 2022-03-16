@@ -59,11 +59,6 @@ def internal_korp_get_all():
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if korps:
-            return jsonify({"success": True,
-                            "msg": f'Korps Query OK',
-                            "payload": korps}), 200
-        else:
-            return jsonify({"success": False,
-                            "msg": f'Korps Query KO',
-                            "payload": None}), 200
+        return jsonify({"success": True,
+                        "msg": f'Korps Query OK',
+                        "payload": korps}), 200

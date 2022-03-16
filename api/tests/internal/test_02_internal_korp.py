@@ -12,8 +12,8 @@ def test_singouins_internal_korp():
     payload   = {"korpid": KORP_ID}
     response  = requests.post(url, headers=HEADERS, json = payload)
 
-    assert json.loads(response.text)['success'] == True
-    assert 'Korp Query OK' in json.loads(response.text)['msg']
+    assert json.loads(response.text)['success'] == False
+    assert 'Korp Query KO' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
 def test_singouins_internal_korps():

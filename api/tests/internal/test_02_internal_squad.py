@@ -12,8 +12,8 @@ def test_singouins_internal_squad():
     payload   = {"squadid": SQUAD_ID}
     response  = requests.post(url, headers=HEADERS, json = payload)
 
-    assert json.loads(response.text)['success'] == True
-    assert 'Squad Query OK' in json.loads(response.text)['msg']
+    assert json.loads(response.text)['success'] == False
+    assert 'Squad Query KO' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
 def test_singouins_internal_squads():
@@ -21,5 +21,5 @@ def test_singouins_internal_squads():
     response  = requests.get(url, headers=HEADERS)
 
     assert json.loads(response.text)['success'] == True
-    assert 'Squad Query OK' in json.loads(response.text)['msg']
+    assert 'Squads Query OK' in json.loads(response.text)['msg']
     assert response.status_code == 200

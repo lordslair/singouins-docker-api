@@ -30,9 +30,18 @@ def internal_squad_get_one():
                         "msg": msg,
                         "payload": None}), 200
     else:
-        return jsonify({"success": True,
-                        "msg": f'Squad Query OK (squadid:{squadid})',
-                        "payload": squad}), 200
+        if squad or squad is True:
+            return jsonify({"success": True,
+                            "msg": f'Squad Query OK (squadid:{squadid})',
+                            "payload": squad}), 200
+        elif squad is False:
+            return jsonify({"success": False,
+                            "msg": f'Squad Query KO - Not Found (squadid:{squadid})',
+                            "payload": None}), 200
+        else:
+            return jsonify({"success": False,
+                            "msg": f'Squad Query KO - Failed (squadid:{squadid})',
+                            "payload": None}), 200
 
 # API: GET /internal/squads
 def internal_squad_get_all():

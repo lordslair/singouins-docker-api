@@ -134,7 +134,8 @@ def fn_korp_get_all():
             return korps
         else:
             logger.trace(f'Korps Query KO - Not Found')
-            return False
+            # We force an empty list as return as it could be "normal"
+            return []
     finally:
         session.close()
 
