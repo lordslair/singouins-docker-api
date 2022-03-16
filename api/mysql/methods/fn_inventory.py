@@ -174,6 +174,47 @@ def fn_item_add(pc,item_caracs):
     finally:
         session.close()
 
+def fn_item_del(pc,itemid):
+    session = Session()
+
+    try:
+        item = session.query(Item)\
+                      .filter(Item.id == itemid)\
+                      .one_or_none()
+
+        session.delete(item)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Item Query KO [{e}]')
+        return None
+    else:
+        return True
+    finally:
+        session.close()
+
+def fn_item_offset_set(itemid,offsetx,offsety):
+    session = Session()
+
+    try:
+       item = session.query(Item)\
+                       .filter(Item.id == itemid)\
+                       .one_or_none()
+
+       item.offsetx = offsetx
+       item.offsety = offsety
+       session.commit()
+       session.refresh(item)
+    except Exception as e:
+        logger.error(f'Item Query KO [{e}]')
+        return None
+    else:
+        if item:
+            return item
+        else:
+            return None
+    finally:
+        session.close()
 #
 # Slots
 #
@@ -214,6 +255,21 @@ def fn_slots_get_all(creature):
     finally:
         session.close()
 
+def fn_slots_get_one(creature):
+    session = Session()
+
+    try:
+        result = session.query(CreatureSlots)\
+                        .filter(CreatureSlots.id == creature.id)\
+                        .one_or_none()
+    except Exception as e:
+        logger.error(f'Slots Query KO [{e}]')
+        return None
+    else:
+        return result
+    finally:
+        session.close()
+
 def fn_slots_del(creature):
     session = Session()
 
@@ -231,6 +287,55 @@ def fn_slots_del(creature):
         return None
     else:
         return True
+    finally:
+        session.close()
+
+def fn_slots_set_one(creature,slot,itemid):
+    session = Session()
+
+    try:
+        slots  = session.query(CreatureSlots)\
+                        .filter(CreatureSlots.id == creature.id)\
+                        .one_or_none()
+
+        if itemid is None:
+            # We are probably on an Unequip action
+            if   slot == 'head':      slots.head      = None
+            elif slot == 'shoulders': slots.shoulders = None
+            elif slot == 'torso':     slots.torso     = None
+            elif slot == 'hands':     slots.hands     = None
+            elif slot == 'legs':      slots.legs      = None
+            elif slot == 'feet':      slots.feet      = None
+            elif slot == 'holster':   slots.holster   = None
+            elif slot == 'righthand': slots.righthand = None
+            elif slot == 'lefthand':  slots.lefthand  = None
+        else:
+            # We are probably on an Equip action
+            item   = session.query(Item)\
+                            .filter(Item.id == itemid)\
+                            .one_or_none()
+
+            if   slot == 'head':      slots.head      = item.id
+            elif slot == 'shoulders': slots.shoulders = item.id
+            elif slot == 'torso':     slots.torso     = item.id
+            elif slot == 'hands':     slots.hands     = item.id
+            elif slot == 'legs':      slots.legs      = item.id
+            elif slot == 'feet':      slots.feet      = item.id
+            elif slot == 'holster':   slots.holster   = item.id
+            elif slot == 'righthand': slots.righthand = item.id
+            elif slot == 'lefthand':  slots.lefthand  = item.id
+
+            item.bound     = True           # In case the item was not bound to PC. Now it is
+            item.offsetx   = None           # Now the item is not in inventory anymore
+            item.offsety   = None           # Now the item is not in inventory anymore
+
+        session.commit()
+        session.refresh(slots)
+    except Exception as e:
+        logger.error(f'Slots Query KO [{e}]')
+        return None
+    else:
+        return slots
     finally:
         session.close()
 

@@ -39,6 +39,7 @@ import                      routes.external.mypc.effects
 import                      routes.external.mypc.events
 import                      routes.external.mypc.instance
 import                      routes.external.mypc.item
+import                      routes.external.mypc.inventory
 import                      routes.external.mypc.korp
 import                      routes.external.mypc.mp
 import                      routes.external.mypc.pa
@@ -196,41 +197,21 @@ app.add_url_rule('/mypc/<int:pcid>/item',
 #
 # Routes /inventory/item
 #
-
-@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>', methods=['POST'])
-@jwt_required()
-def api_mypc_inventory_item_set_offset(pcid,itemid,offsetx,offsety):
-    (code, success, msg, payload) = mypc_inventory_item_offset(get_jwt_identity(),pcid,itemid,offsetx,offsety)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset', methods=['DELETE'])
-@jwt_required()
-def api_mypc_inventory_item_del_offset(pcid,itemid):
-    (code, success, msg, payload) = mypc_inventory_item_offset(get_jwt_identity(),pcid,itemid,None,None)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>', methods=['POST'])
-@jwt_required()
-def api_mypc_inventory_item_equip(pcid,type,slotname,itemid):
-    (code, success, msg, payload) = mypc_inventory_item_equip(get_jwt_identity(),pcid,type,slotname,itemid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>', methods=['POST'])
-@jwt_required()
-def api_mypc_inventory_item_unequip(pcid,type,slotname,itemid):
-    (code, success, msg, payload) = mypc_inventory_item_unequip(get_jwt_identity(),pcid,type,slotname,itemid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle', methods=['POST'])
-@jwt_required()
-def api_mypc_inventory_item_dismantle(pcid,itemid):
-    (code, success, msg, payload) = mypc_inventory_item_dismantle(get_jwt_identity(),pcid,itemid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.inventory.inventory_item_dismantle)
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.inventory.inventory_item_equip)
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.inventory.inventory_item_offset)
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset',
+                 methods=['DELETE'],
+                 view_func=routes.external.mypc.inventory.inventory_item_offset)
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.inventory.inventory_item_unequip)
 
 #
 # Routes: /instance

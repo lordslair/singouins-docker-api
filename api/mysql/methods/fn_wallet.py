@@ -1,7 +1,9 @@
 # -*- coding: utf8 -*-
 
-from ..session          import Session
-from ..models           import Wallet
+from loguru                     import logger
+
+from mysql.session              import Session
+from mysql.models               import Wallet
 
 def fn_wallet_ammo_get(pc,item,caliber):
     session = Session()
@@ -66,5 +68,32 @@ def fn_wallet_ammo_set(pc,caliber,ammo):
         return False
     else:
         return True
+    finally:
+        session.close()
+
+def fn_wallet_shards_add(pc,shards):
+    session = Session()
+
+    try:
+        wallet = session.query(Wallet)\
+                        .filter(Wallet.id == pc.id)\
+                        .one_or_none()
+
+        wallet.broken    += shards[0]
+        wallet.common    += shards[1]
+        wallet.uncommon  += shards[2]
+        wallet.rare      += shards[3]
+        wallet.epic      += shards[4]
+        wallet.legendary += shards[5]
+
+        session.commit()
+        session.refresh(wallet)
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]')
+        return False
+    else:
+        logger.trace(f'Wallet/Shards Query OK (pcid:{pc.id})')
+        return wallet
     finally:
         session.close()
