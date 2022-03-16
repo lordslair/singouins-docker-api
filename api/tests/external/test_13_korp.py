@@ -22,6 +22,7 @@ def test_singouins_korp_create():
     response  = requests.post(url, json = payload_k, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp create OK' in json.loads(response.text)['msg']
     assert response.status_code == 201
 
 def test_singouins_korp_get():
@@ -41,6 +42,7 @@ def test_singouins_korp_get():
 
     assert korp_r == 'Leader'
     assert json.loads(response.text)['success'] == True
+    assert 'Korp Query OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
 def test_singouins_korp_invite():
@@ -72,6 +74,7 @@ def test_singouins_korp_invite():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp invite OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestKorpKick
@@ -117,6 +120,7 @@ def test_singouins_korp_kick():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp kick OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestKorpKick
@@ -162,6 +166,7 @@ def test_singouins_korp_accept():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp accept OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestKorpAccept
@@ -207,6 +212,7 @@ def test_singouins_korp_decline():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp decline OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestKorpDecline
@@ -252,6 +258,7 @@ def test_singouins_korp_leave():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp leave OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestKorpLeave
@@ -276,4 +283,5 @@ def test_singouins_korp_delete():
     response = requests.delete(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Korp delete OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
