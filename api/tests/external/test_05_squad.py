@@ -22,6 +22,7 @@ def test_singouins_squad_create():
     response  = requests.post(url, json = payload_s, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Squad create OK' in json.loads(response.text)['msg']
     assert response.status_code == 201
 
 def test_singouins_squad_get():
@@ -41,6 +42,7 @@ def test_singouins_squad_get():
 
     assert squad_r == 'Leader'
     assert json.loads(response.text)['success'] == True
+    assert 'Squad Query OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
 def test_singouins_squad_invite():
@@ -72,7 +74,7 @@ def test_singouins_squad_invite():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully invited' in json.loads(response.text)['msg']
+    assert 'Squad invite OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestSquadInvite
@@ -111,7 +113,7 @@ def test_singouins_squad_kick():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully invited' in json.loads(response.text)['msg']
+    assert 'Squad invite OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We kick PJTestSquadKick
@@ -119,7 +121,7 @@ def test_singouins_squad_kick():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully kicked' in json.loads(response.text)['msg']
+    assert 'Squad kick OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestSquadKick
@@ -158,7 +160,7 @@ def test_singouins_squad_accept():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully invited' in json.loads(response.text)['msg']
+    assert 'Squad invite OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # PJTestSquadAccept accepts the request
@@ -166,7 +168,7 @@ def test_singouins_squad_accept():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully accepted squad invite' in json.loads(response.text)['msg']
+    assert 'Squad accept OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestSquadAccept
@@ -205,7 +207,7 @@ def test_singouins_squad_decline():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully invited' in json.loads(response.text)['msg']
+    assert 'Squad invite OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # PJTestSquadDecline declines the request
@@ -213,7 +215,7 @@ def test_singouins_squad_decline():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully declined squad invite' in json.loads(response.text)['msg']
+    assert 'Squad decline OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestSquadDecline
@@ -252,7 +254,7 @@ def test_singouins_squad_leave():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully invited' in json.loads(response.text)['msg']
+    assert 'Squad invite OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # PJTestSquadLeave leave the request
@@ -260,7 +262,7 @@ def test_singouins_squad_leave():
     response = requests.post(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
-    assert 'PC successfully left' in json.loads(response.text)['msg']
+    assert 'Squad leave OK' in json.loads(response.text)['msg']
     assert response.status_code == 200
 
     # We cleanup the PJTestSquadLeave
@@ -285,4 +287,5 @@ def test_singouins_squad_delete():
     response = requests.delete(url, headers=headers)
 
     assert json.loads(response.text)['success'] == True
+    assert 'Squad delete OK' in json.loads(response.text)['msg']
     assert response.status_code == 200

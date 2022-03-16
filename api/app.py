@@ -42,6 +42,7 @@ import                      routes.external.mypc.item
 import                      routes.external.mypc.korp
 import                      routes.external.mypc.mp
 import                      routes.external.mypc.pa
+import                      routes.external.mypc.squad
 import                      routes.external.mypc.stats
 import                      routes.external.mypc.view
 import                      routes.external.pc
@@ -314,72 +315,30 @@ app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/decline',
 # Routes /squad
 #
 
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['GET'])
-@jwt_required()
-def squad_details(pcid,squadid):
-    (code, success, msg, payload) = get_squad(get_jwt_identity(),pcid,squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad', methods=['POST'])
-@jwt_required()
-def squad_create(pcid):
-    # Unicity test commented before release:alpha. Meditation needed
-    #if not request.is_json:
-    #    return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-    if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
-    (code, success, msg, payload) = add_squad(get_jwt_identity(),pcid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>', methods=['DELETE'])
-@jwt_required()
-def squad_delete(pcid,squadid):
-    (code, success, msg, payload) = del_squad(get_jwt_identity(),pcid,squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>', methods=['POST'])
-@jwt_required()
-def squad_invite(pcid,squadid,targetid):
-    (code, success, msg, payload) = invite_squad_member(get_jwt_identity(),
-                                    pcid,
-                                    squadid,
-                                    targetid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>', methods=['POST'])
-@jwt_required()
-def squad_kick(pcid,squadid,targetid):
-    (code, success, msg, payload) = kick_squad_member(get_jwt_identity(),
-                                    pcid,
-                                    squadid,
-                                    targetid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>/accept', methods=['POST'])
-@jwt_required()
-def squad_accept(pcid,squadid):
-    (code, success, msg, payload) = accept_squad_member(get_jwt_identity(),pcid,squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>/leave', methods=['POST'])
-@jwt_required()
-def squad_leave(pcid,squadid):
-    (code, success, msg, payload) = leave_squad_member(get_jwt_identity(),pcid,squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
-
-@app.route('/mypc/<int:pcid>/squad/<int:squadid>/decline', methods=['POST'])
-@jwt_required()
-def squad_decline(pcid,squadid):
-    (code, success, msg, payload) = decline_squad_member(get_jwt_identity(),pcid,squadid)
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.squad.squad_get_one)
+app.add_url_rule('/mypc/<int:pcid>/squad',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.squad.squad_create)
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>',
+                 methods=['DELETE'],
+                 view_func=routes.external.mypc.squad.squad_delete)
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.squad.squad_invite)
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.squad.squad_kick)
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/accept',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.squad.squad_accept)
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/leave',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.squad.squad_leave)
+app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/decline',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.squad.squad_decline)
 
 #
 # Routes /map
@@ -410,10 +369,10 @@ app.add_url_rule('/internal/meta/<string:metatype>',
 #
 app.add_url_rule('/internal/squad',
                  methods=['POST'],
-                 view_func=routes.internal.squad.squad_get_one)
+                 view_func=routes.internal.squad.internal_squad_get_one)
 app.add_url_rule('/internal/squads',
                  methods=['GET'],
-                 view_func=routes.internal.squad.squad_get_all)
+                 view_func=routes.internal.squad.internal_squad_get_all)
 #
 app.add_url_rule('/internal/up',
                  methods=['GET'],

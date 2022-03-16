@@ -2,6 +2,4 @@
 
 from .internal_creature import *
 from .internal_instance import *
-from .internal_squad    import *
 from .mypc_inventory    import *
-from .mypc_squad        import *
