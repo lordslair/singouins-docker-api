@@ -2,7 +2,6 @@
 
 from flask              import Flask, jsonify, request
 
-from mysql.methods      import *
 from nosql              import *
 
 from variables          import API_INTERNAL_TOKEN
@@ -16,6 +15,18 @@ def queue_get():
         return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
 
     incr.one('queries:internal:instance:queue')
-    (code, success, msg, payload) = internal_instance_queue_get()
-    if isinstance(code, int):
-        return jsonify({"msg": msg, "success": success, "payload": payload}), code
+
+    try:
+        msgs = queue.yqueue_get('yarqueue:instances')
+    except Exception as e:
+        msg = f'Queue Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+    else:
+        msg = f'Queue Query OK'
+        logger.trace(msg)
+        return jsonify({"success": True,
+                        "msg": msg,
+                        "payload": msgs}), 200
