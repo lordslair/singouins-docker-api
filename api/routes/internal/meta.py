@@ -13,13 +13,9 @@ from variables          import API_INTERNAL_TOKEN
 def internal_meta_get_one(metatype):
     # Pre-flight checks
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"success": False,
-                        "msg": 'Token not authorized',
-                        "payload": None}), 403
-    if not isinstance(metatype, str):
-        return jsonify({"success": False,
-                        "msg": f'Meta type Malformed (metatype:{metatype}) [Should be a String]',
-                        "payload": None}), 200
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:
         meta = metas.get_meta(metatype)

@@ -17,9 +17,13 @@ from variables                  import API_INTERNAL_TOKEN
 # API: PUT /internal/creature/{creatureid}/cd/{skillmetaid}
 def creature_cd_add(creatureid,skillmetaid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
     if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+        msg = f'Missing JSON in request'
+        logger.warn(msg)
+        return jsonify({"msg": msg, "success": False, "payload": None}), 400
 
     duration    = request.json.get('duration')
 
@@ -63,7 +67,9 @@ def creature_cd_add(creatureid,skillmetaid):
 # API: DELETE /internal/creature/{creatureid}/cd/{skillmetaid}
 def creature_cd_del(creatureid,skillmetaid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -106,7 +112,9 @@ def creature_cd_del(creatureid,skillmetaid):
 # API: GET /internal/creature/{creatureid}/cd/{skillmetaid}
 def creature_cd_get_one(creatureid,skillmetaid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -148,7 +156,9 @@ def creature_cd_get_one(creatureid,skillmetaid):
 # API: GET /internal/creature/{creatureid}/cds
 def creature_cd_get_all(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]

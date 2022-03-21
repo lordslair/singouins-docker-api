@@ -17,7 +17,9 @@ from variables                  import API_INTERNAL_TOKEN
 # API: GET /internal/creature/{creatureid}/pa
 def creature_pa_get(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -52,7 +54,9 @@ def creature_pa_get(creatureid):
 # API: PUT /internal/creature/{creatureid}/pa/consume/{redpa}/{bluepa}
 def creature_pa_consume(creatureid,redpa,bluepa):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -107,7 +111,9 @@ def creature_pa_consume(creatureid,redpa,bluepa):
 # API: POST /internal/creature/{creatureid}/pa/reset
 def creature_pa_reset(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        return jsonify({"msg": 'Token not authorized', "success": False, "payload": None}), 403
+        msg = f'Token not authorized'
+        logger.warn(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
