@@ -36,10 +36,6 @@ def action_resolver_skill(pcid,skillmetaid):
         return jsonify({"success": False,
                         "msg": f'Creature not in an instance (pcid:{pcid})',
                         "payload": None}), 200
-    if not isinstance(skillmetaid, int):
-        return jsonify({"success": False,
-                        "msg": f'Bad SkillMetaID format (pcid:{pcid},skillmetaid:{skillmetaid}) [Should be INT]',
-                        "payload": None}), 200
 
     try:
         cd  = cds.get_cd(pc,skillmetaid)
@@ -52,8 +48,10 @@ def action_resolver_skill(pcid,skillmetaid):
     else:
         if cd:
             # The skill was already used, and still on CD
+            msg = f'Skill already on CD (pcid:{pc.id},skillmetaid:{skillmetaid})'
+            logger.debug(msg)
             return jsonify({"success": False,
-                            "msg": f'Skill already on CD (pcid:{pc.id},skillmetaid:{skillmetaid})',
+                            "msg": msg,
                             "payload": cd}), 200
 
     try:
@@ -108,8 +106,10 @@ def action_resolver_skill(pcid,skillmetaid):
                          'skill',
                          f'Used a Skill ({skillmetaid})',
                          30*86400)
+        msg = f'Resolver Query OK (pcid:{pc.id})'
+        logger.debug(msg)
         return jsonify({"success": True,
-                        "msg": f'Resolver Query OK (pcid:{pc.id})',
+                        "msg": msg,
                         "payload": {"resolver": json.loads(response.text),
                                     "internal": payload}}), 200
 
@@ -121,9 +121,9 @@ def action_resolver_move(pcid):
 
     # Pre-flight checks
     if not request.is_json:
-        return jsonify({"success": False,
-                        "msg": "Missing JSON in request",
-                        "payload": None}), 400
+        msg = f'Missing JSON in request'
+        logger.warn(msg)
+        return jsonify({"msg": msg, "success": False, "payload": None}), 400
     if pc is None:
         return jsonify({"success": False,
                         "msg": f'Creature not found (pcid:{pcid})',
@@ -180,7 +180,7 @@ def action_resolver_move(pcid):
     try:
         response  = requests.post(f'{RESOLVER_URL}/', json = payload)
     except Exception as e:
-        msg = f'Resolver Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'Resolver Query KO - Failed (pcid:{pc.id}) [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
@@ -192,7 +192,9 @@ def action_resolver_move(pcid):
                          'action',
                          'Moved',
                          30*86400)
+        msg = f'Resolver Query OK (pcid:{pc.id})'
+        logger.debug(msg)
         return jsonify({"success": True,
-                        "msg": f'Resolver Query OK (pcid:{pc.id})',
+                        "msg": msg,
                         "payload": {"resolver": json.loads(response.text),
                                     "internal": payload}}), 200

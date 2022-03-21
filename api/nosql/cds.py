@@ -23,7 +23,8 @@ def add_cd(creature,duration,skillmetaid):
     try:
         skill = metaSkills[skillmetaid - 1]
     except Exception as e:
-        print(f'[Redis] skill not found (skillmetaid:{skillmetaid})')
+        msg = f'CD Query KO - Skill not found (skillmetaid:{skillmetaid}) [{e}]'
+        logger.error(msg)
         return False
 
     ttl       = duration * redpaduration
@@ -33,15 +34,20 @@ def add_cd(creature,duration,skillmetaid):
         r.set(f'{mypattern}:duration_base',ttl,        ttl)
         r.set(f'{mypattern}:source'       ,creature.id,ttl)
     except Exception as e:
-        print(f'[Redis] add_cd({mypattern}) failed [{e}]')
+        msg = f'CD Query KO - Failed [{e}]'
+        logger.error(msg)
         return False
     else:
+        msg = f'CD Query OK ({mypattern})'
+        logger.debug(msg)
         return True
 
 def get_cd(creature,skillmetaid):
     mypattern = f'cds:{creature.instance}:{creature.id}:{skillmetaid}'
 
     if r.get(f'{mypattern}:source') is None:
+        msg = f'CD Query KO - Not Found'
+        logger.warning(msg)
         return False
 
     try:
@@ -53,10 +59,13 @@ def get_cd(creature,skillmetaid):
               "source":        int(r.get(f'{mypattern}:source')),
               "type":          'cd'}
     except Exception as e:
-        print(f'[Redis] get_cd({mypattern}) failed [{e}]')
+        msg = f'CD Query KO - Failed [{e}]'
+        logger.error(msg)
         return None
     else:
         if cd:
+            msg = f'CD Query OK'
+            logger.debug(msg)
             return cd
 
 def get_cds(creature):
@@ -85,6 +94,7 @@ def get_cds(creature):
 
         # We loop over the cds keys to build the data
         for key in sorted_keys_source:
+            logger.trace(f'key:{key}')
             m = re.match(f"{mypattern}:(\d+)", key)
             #                            └────> Regex for {skillmetaid}
             if m:
@@ -102,11 +112,15 @@ def get_cds(creature):
                 index_multi    += 2
                 index_pipeline += 1
                 # We add the cd into cds list
+
                 cds.append(cd)
     except Exception as e:
-        print(f'[Redis:get_cds()] Query {path} failed [{e}]')
-        return cds
+        msg = f'CDs Query KO - Failed ({path}) [{e}]'
+        logger.error(msg)
+        return []
     else:
+        msg = f'CDs Query OK ({path}) (cds:{cds})'
+        logger.debug(msg)
         return cds
 
 def get_instance_cds(creature):
@@ -153,11 +167,15 @@ def get_instance_cds(creature):
                 index_multi    += 2
                 index_pipeline += 1
                 # We add the cd into cds list
+                logger.trace(f'key:{key}')
                 cds.append(cd)
     except Exception as e:
-        print(f'[Redis:get_instance_cds()] Query {path} failed [{e}]')
-        return cds
+        msg = f'CDs Query KO - Failed ({path}) [{e}]'
+        logger.error(msg)
+        return []
     else:
+        msg = f'CDs Query OK ({path}) (cds:{cds})'
+        logger.debug(msg)
         return cds
 
 def del_cd(creature,skillmetaid):
@@ -167,9 +185,13 @@ def del_cd(creature,skillmetaid):
     try:
         for key in r.scan_iter(mypattern):
             r.delete(key)
+            logger.trace(f'key:{key}')
             count += 1
     except Exception as e:
-        print(f'[Redis] del_cd({mypattern}) failed [{e}]')
+        msg = f'CD Query KO - Failed ({mypattern}) [{e}]'
+        logger.error(msg)
         return False
     else:
+        msg = f'CD Query OK ({mypattern})'
+        logger.debug(msg)
         return count
