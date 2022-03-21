@@ -23,7 +23,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreature'
+                $ref: '#/components/schemas/InternalCreatureProfileResponse'
       security:
         - internal_token: []
   /internal/creature/{creatureid}:
@@ -44,6 +44,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature profile request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureProfileResponse'
       security:
         - internal_token: []
   /internal/creature/{creatureid}/cd/{skillmetaid}:
@@ -253,18 +272,17 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureEffectsResponse'
       security:
         - internal_token: []
-  /internal/creature/equipment:
-    post:
+  /internal/creature/{creatureid}/equipment:
+    get:
       tags:
         - '/internal : Internal requests'
       summary: Internal Creature Equipment request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: OK
@@ -351,39 +369,17 @@ paths:
                 $ref: '#/components/schemas/GenericResponse'
       security:
         - internal_token: []
-  /internal/creature/profile:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature profile request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureProfileResponse'
-      security:
-        - internal_token: []
-  /internal/creature/stats:
-    post:
+  /internal/creature/{creatureid}/stats:
+    get:
       tags:
         - '/internal : Internal requests'
       summary: Internal Creature Stats request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: OK
@@ -497,18 +493,17 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatusesResponse'
       security:
         - internal_token: []
-  /internal/creature/wallet:
-    post:
+  /internal/creature/{creatureid}/wallet:
+    get:
       tags:
         - '/internal : Internal requests'
       summary: Internal Creature Wallet request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreature'
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: OK
@@ -1565,13 +1560,6 @@ paths:
 
 components:
   schemas:
-    InternalCreature:
-      type: object
-      properties:
-        creatureid:
-          type: integer
-          minimum: 1
-          nullable: false
     InternalKorp:
       type: object
       properties:
