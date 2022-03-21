@@ -33,3 +33,19 @@ def fn_creatures_in_instance(instanceid):
         return(creatures)
     finally:
         session.close()
+
+def fn_creatures_in_all_instances():
+    session = Session()
+
+    try:
+        creatures = session.query(Creature)\
+                           .filter(Creature.instance > 0)\
+                           .all()
+    except Exception as e:
+        msg = f'Creatures Query KO [{e}]'
+        logger.error(msg)
+        return None
+    else:
+        return creatures
+    finally:
+        session.close()

@@ -23,7 +23,14 @@ except Exception as e:
 else:
     logger.trace(f'Meta fectching: OK')
 
-def fn_creature_add(name,race,gender,accountid):
+def fn_creature_add(name,
+                    race,
+                    gender,
+                    accountid,
+                    rarity = 'Medium',
+                    x = randint(2,4),
+                    y = randint(2,5),
+                    instanceid = None):
     session = Session()
 
     try:
@@ -33,22 +40,27 @@ def fn_creature_add(name,race,gender,accountid):
             logger.error(f'MetaRace not found (race:{pcrace})')
             return None
 
+        if metaRace['id'] > 10:
+            # We want to create a NPC
+            name = metaRace['name']
+
         pc = Creature(name     = name,
                       race     = metaRace['id'],
+                      rarity   = rarity,
                       gender   = gender,
                       account  = accountid,
                       hp       = 100 + metaRace['min_m'], # TODO: To remove
                       hp_max   = 100 + metaRace['min_m'], # TODO: To remove
-                      instance = None,        # Gruikfix for now
-                      x        = randint(2,4), # TODO: replace with rand(empty coords)
-                      y        = randint(2,5)) # TODO: replace with rand(empty coords)
+                      instance = instanceid,
+                      x        = x,
+                      y        = y)
 
         session.add(pc)
         session.commit()
         session.refresh(pc)
     except Exception as e:
         session.rollback()
-        msg = f'[SQL] PC creation KO (username:{username},pcname:{pcname}) [{e}]'
+        msg = f'PC creation KO (pcname:{pcname}) [{e}]'
         logger.error(msg)
     else:
         if pc:

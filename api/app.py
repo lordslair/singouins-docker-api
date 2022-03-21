@@ -20,6 +20,13 @@ from utils.gunilog                 import *
 
 # Imports of endpoint functions
 import                      routes.internal.creature
+import                      routes.internal.creature.cds
+import                      routes.internal.creature.effects
+import                      routes.internal.creature.equipment
+import                      routes.internal.creature.pa
+import                      routes.internal.creature.stats
+import                      routes.internal.creature.statuses
+import                      routes.internal.creature.wallet
 import                      routes.internal.discord
 import                      routes.internal.korp
 import                      routes.internal.instance.queue
@@ -336,97 +343,78 @@ app.add_url_rule('/log',
 #
 # Routes /internal
 #
-# Routes /internal/*
-app.add_url_rule('/internal/korp',
-                 methods=['POST'],
-                 view_func=routes.internal.korp.internal_korp_get_one)
-app.add_url_rule('/internal/korps',
-                 methods=['GET'],
-                 view_func=routes.internal.korp.internal_korp_get_all)
-#
-app.add_url_rule('/internal/meta/<string:metatype>',
-                 methods=['GET'],
-                 view_func=routes.internal.meta.internal_meta_get_one)
-#
-app.add_url_rule('/internal/squad',
-                 methods=['POST'],
-                 view_func=routes.internal.squad.internal_squad_get_one)
-app.add_url_rule('/internal/squads',
-                 methods=['GET'],
-                 view_func=routes.internal.squad.internal_squad_get_all)
-#
-app.add_url_rule('/internal/up',
-                 methods=['GET'],
-                 view_func=routes.internal.up.up_get)
 # Routes /internal/creature/*
 app.add_url_rule('/internal/creature',
                  methods=['PUT'],
                  view_func=routes.internal.creature.creature_add)
-app.add_url_rule('/internal/creature/equipment',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.creature_equipment)
-app.add_url_rule('/internal/creature/profile',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.creature_profile)
-app.add_url_rule('/internal/creature/stats',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.creature_stats)
-app.add_url_rule('/internal/creature/wallet',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.creature_wallet)
 # Routes /internal/creature/{creatureid}
+app.add_url_rule('/internal/creature/<int:creatureid>',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.creature_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
 # Routes /internal/creature/{creatureid}/cd/*
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
                  methods=['PUT'],
-                 view_func=routes.internal.creature.creature_cd_add)
+                 view_func=routes.internal.creature.cds.creature_cd_add)
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
                  methods=['DELETE'],
-                 view_func=routes.internal.creature.creature_cd_del)
+                 view_func=routes.internal.creature.cds.creature_cd_del)
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_cd_get_one)
+                 view_func=routes.internal.creature.cds.creature_cd_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>/cds',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_cd_get_all)
+                 view_func=routes.internal.creature.cds.creature_cd_get_all)
+# Routes /internal/creature/{creatureid}/equipment/*
+app.add_url_rule('/internal/creature/<int:creatureid>/equipment',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.equipment.creature_equipment)
 # Routes /internal/creature/{creatureid}/effect/*
 app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectmetaid>',
                  methods=['PUT'],
-                 view_func=routes.internal.creature.creature_effect_add)
+                 view_func=routes.internal.creature.effects.creature_effect_add)
 app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
                  methods=['DELETE'],
-                 view_func=routes.internal.creature.creature_effect_del)
+                 view_func=routes.internal.creature.effects.creature_effect_del)
 app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_effect_get_one)
+                 view_func=routes.internal.creature.effects.creature_effect_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_effect_get_all)
+                 view_func=routes.internal.creature.effects.creature_effect_get_all)
 # Routes /internal/creature/{creatureid}/pa/*
 app.add_url_rule('/internal/creature/<int:creatureid>/pa',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_pa_get)
+                 view_func=routes.internal.creature.pa.creature_pa_get)
 app.add_url_rule('/internal/creature/<int:creatureid>/pa/consume/<int:redpa>/<int:bluepa>',
                  methods=['PUT'],
-                 view_func=routes.internal.creature.creature_pa_consume)
+                 view_func=routes.internal.creature.pa.creature_pa_consume)
 app.add_url_rule('/internal/creature/<int:creatureid>/pa/reset',
                  methods=['POST'],
-                 view_func=routes.internal.creature.creature_pa_reset)
+                 view_func=routes.internal.creature.pa.creature_pa_reset)
 # Routes /internal/creature/{creatureid}/status/*
 app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
                  methods=['PUT'],
-                 view_func=routes.internal.creature.creature_status_add)
+                 view_func=routes.internal.creature.statuses.creature_status_add)
 app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
                  methods=['DELETE'],
-                 view_func=routes.internal.creature.creature_status_del)
+                 view_func=routes.internal.creature.statuses.creature_status_del)
 app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_status_get_one)
+                 view_func=routes.internal.creature.statuses.creature_status_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>/statuses',
                  methods=['GET'],
-                 view_func=routes.internal.creature.creature_status_get_all)
+                 view_func=routes.internal.creature.statuses.creature_status_get_all)
+# Routes /internal/creature/{creatureid}/stats/*
+app.add_url_rule('/internal/creature/<int:creatureid>/stats',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.stats.creature_stats)
+# Routes /internal/creature/{creatureid}/wallet/*
+app.add_url_rule('/internal/creature/<int:creatureid>/wallet',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.wallet.creature_wallet)
 # Routes /internal/creatures/*
 app.add_url_rule('/internal/creatures',
                  methods=['GET'],
@@ -448,6 +436,28 @@ app.add_url_rule('/internal/discord/user',
 app.add_url_rule('/internal/instance/queue',
                  methods=['GET'],
                  view_func=routes.internal.instance.queue.queue_get)
+# Routes /internal/korp/*
+app.add_url_rule('/internal/korp',
+                 methods=['POST'],
+                 view_func=routes.internal.korp.internal_korp_get_one)
+app.add_url_rule('/internal/korps',
+                 methods=['GET'],
+                 view_func=routes.internal.korp.internal_korp_get_all)
+# Routes /internal/meta/*
+app.add_url_rule('/internal/meta/<string:metatype>',
+                 methods=['GET'],
+                 view_func=routes.internal.meta.internal_meta_get_one)
+# Routes /internal/squad/*
+app.add_url_rule('/internal/squad',
+                 methods=['POST'],
+                 view_func=routes.internal.squad.internal_squad_get_one)
+app.add_url_rule('/internal/squads',
+                 methods=['GET'],
+                 view_func=routes.internal.squad.internal_squad_get_all)
+# Routes /internal/up/*
+app.add_url_rule('/internal/up',
+                 methods=['GET'],
+                 view_func=routes.internal.up.up_get)
 
 if __name__ == '__main__':
     intercept_handler = InterceptHandler()

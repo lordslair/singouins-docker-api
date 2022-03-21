@@ -8,11 +8,13 @@ API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
 HEADERS            = {"Authorization": f"Bearer {API_INTERNAL_TOKEN}"}
 
 # Creature ID variables
-CREATURE_ID   = 1
-EFFECTMETA_ID = 1
-KORP_ID       = 0
-METAS         = ['armor','weapon','race','effect','skill','status']
-SKILLMETA_ID  = 1
+CREATURE_ID     = 1
+EFFECTMETA_ID   = 1
+EFFECTMETA_NAME = 'Effect One'
+KORP_ID         = 0
+METAS           = ['armor','weapon','race','effect','skill','status']
+SKILLMETA_ID    = 1
+SKILLMETA_NAME  = 'Bloodstrike'
 STATUSMETA_ID   = 11
 STATUSMETA_NAME = 'Poisoned'
-SQUAD_ID      = 0
+SQUAD_ID        = 0

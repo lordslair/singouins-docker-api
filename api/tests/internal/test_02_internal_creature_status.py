@@ -33,7 +33,7 @@ def test_singouins_internal_creature_statuses():
 def test_singouins_internal_creature_status_get():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/status/{STATUSMETA_ID}' # GET
     response  = requests.get(url, headers=HEADERS)
-    status    = json.loads(response.text)['payload']
+    status    = json.loads(response.text)['payload']['status']
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
@@ -43,7 +43,8 @@ def test_singouins_internal_creature_status_get():
 def test_singouins_internal_creature_status_del():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/status/{STATUSMETA_ID}' # DELETE
     response  = requests.delete(url, headers=HEADERS)
+    statuses  = json.loads(response.text)['payload']['statuses']
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
-    assert json.loads(response.text)['payload'] is None
+    assert statuses                             == []
