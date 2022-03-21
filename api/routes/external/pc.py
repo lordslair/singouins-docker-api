@@ -7,6 +7,8 @@ from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_inventory import *
 from mysql.methods.fn_user      import fn_user_get
 
+from nosql.models.RedisEvent    import *
+
 from nosql                      import *
 
 #
@@ -119,7 +121,7 @@ def pc_event_get_all(creatureid):
                         "payload": None}), 200
 
     try:
-        creature_events = events.get_events(creature)
+        creature_events = RedisEvent(creature).get()
     except Exception as e:
         msg = f'Event Query KO (creatureid:{creature.id}) [{e}]'
         logger.error(msg)

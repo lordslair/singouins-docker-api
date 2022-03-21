@@ -11,6 +11,7 @@ from mysql.methods.fn_user      import fn_user_get
 
 from nosql                      import * # Custom internal module for Redis queries
 from nosql.models.RedisPa       import *
+from nosql.models.RedisEvent    import *
 
 from variables                  import RESOLVER_URL
 
@@ -101,11 +102,11 @@ def action_resolver_skill(pcid,skillmetaid):
                         "payload": None}), 200
     else:
         # We create the Creature Event
-        events.set_event(pc.id,
-                         None,
-                         'skill',
-                         f'Used a Skill ({skillmetaid})',
-                         30*86400)
+        RedisEvent(pc).add(pc.id,
+                           None,
+                           'skill',
+                           f'Used a Skill ({skillmetaid})',
+                           30*86400)
         msg = f'Resolver Query OK (pcid:{pc.id})'
         logger.debug(msg)
         return jsonify({"success": True,
@@ -187,11 +188,11 @@ def action_resolver_move(pcid):
                         "payload": None}), 200
     else:
         # We create the Creature Event
-        events.set_event(pc.id,
-                         None,
-                         'action',
-                         'Moved',
-                         30*86400)
+        RedisEvent(pc).add(pc.id,
+                           None,
+                           'action',
+                           'Moved',
+                           30*86400)
         msg = f'Resolver Query OK (pcid:{pc.id})'
         logger.debug(msg)
         return jsonify({"success": True,

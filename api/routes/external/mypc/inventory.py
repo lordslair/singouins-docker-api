@@ -11,6 +11,7 @@ from mysql.methods.fn_wallet    import fn_wallet_shards_add
 
 from nosql.models.RedisPa       import *
 from nosql.models.RedisStats    import *
+from nosql.models.RedisEvent    import *
 from nosql                      import *
 
 #
@@ -325,11 +326,11 @@ def inventory_item_equip(pcid,type,slotname,itemid):
         queue.yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
         # We create the Creature Event
-        events.set_event(pc.id,
-                         None,
-                         'item',
-                         'Equipped something',
-                         30*86400)
+        RedisEvent(pc).add(pc.id,
+                           None,
+                           'item',
+                           f'Equipped something',
+                           30*86400)
         # JOB IS DONE
         msg = f'Equip Query OK (pcid:{pc.id},itemid:{itemid})'
         logger.trace(msg)

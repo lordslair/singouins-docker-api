@@ -9,6 +9,7 @@ from mysql.methods.fn_inventory import *
 from mysql.methods.fn_wallet    import *
 
 from nosql.models.RedisPa       import *
+from nosql.models.RedisEvent    import *
 
 #
 # Routes /mypc/{pcid}/mp
@@ -84,11 +85,11 @@ def action_weapon_reload(pcid,weaponid):
         # Wa add HighScore
         incr.one(f'highscores:{pc.id}:action:reload')
         # We create the Creature Event
-        events.set_event(pc.id,
-                         None,
-                         'action',
-                         'Reloaded a weapon',
-                         30*86400)
+        RedisEvent(pc).add(pc.id,
+                           None,
+                           'action',
+                           f'Reloaded a weapon',
+                           30*86400)
     except Exception as e:
         msg = f'Weapon reload KO (pcid:{pc.id},weaponid:{item.id}) [{e}]'
         logger.error(msg)
@@ -161,11 +162,11 @@ def action_weapon_unload(pcid,weaponid):
         # Wa add HighScore
         incr.one(f'highscores:{pc.id}:action:unload')
         # We create the Creature Event
-        events.set_event(pc.id,
-                         None,
-                         'action',
-                         'Unloaded a weapon',
-                         30*86400)
+        RedisEvent(pc).add(pc.id,
+                           None,
+                           'action',
+                           f'Unloaded a weapon',
+                           30*86400)
     except Exception as e:
         msg = f'Weapon unload KO (pcid:{pc.id},weaponid:{weaponid}) [{e}]'
         logger.error(msg)

@@ -6,6 +6,8 @@ from flask_jwt_extended         import jwt_required,get_jwt_identity
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
+from nosql.models.RedisEvent    import *
+
 from nosql                      import *
 
 #
@@ -28,7 +30,7 @@ def mypc_event_get_all(pcid):
                         "payload": None}), 409
 
     try:
-        pc_events = events.get_events(pc)
+        pc_events = RedisEvent(pc).get()
     except Exception as e:
         msg = f'Event Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)

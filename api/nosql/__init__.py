@@ -8,7 +8,6 @@ initialize_redis()
 
 from .cds                       import *
 from .effects                   import *
-from .events                    import *
 from .incr                      import *
 from .instances                 import *
 from .maps                      import *
