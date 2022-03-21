@@ -60,7 +60,7 @@ def action_resolver_skill(pcid,skillmetaid):
         creatures_effects  = effects.get_instance_effects(pc)
         creatures_statuses = statuses.get_instance_statuses(pc)
         creatures_cds      = cds.get_instance_cds(pc)
-        pas                = RedisPa.get(pc)
+        pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
         logger.error(msg)
@@ -144,7 +144,7 @@ def action_resolver_move(pcid):
         creatures_effects  = effects.get_instance_effects(pc)
         creatures_statuses = statuses.get_instance_statuses(pc)
         creatures_cds      = cds.get_instance_cds(pc)
-        pas                = RedisPa.get(pc)
+        pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
         logger.error(msg)

@@ -31,7 +31,7 @@ def inventory_item_dismantle(pcid,itemid):
         return jsonify({"success": False,
                         "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
                         "payload": None}), 409
-    if RedisPa.get(pc)['blue']['pa'] < 1:
+    if RedisPa(pc).get()['blue']['pa'] < 1:
         return jsonify({"success": False,
                         "msg": f'Not enough PA (pcid:{pcid})',
                         "payload": None}), 200
@@ -93,7 +93,7 @@ def inventory_item_dismantle(pcid,itemid):
 
     try:
         # We consume the blue PA (1)
-        RedisPa.set(pc,0,1)
+        RedisPa(pc).set(0,1)
         # We add HighScore
         incr.many(f'highscores:{pc.id}:action:dismantle:items', 1)
     except Exception as e:
@@ -188,8 +188,8 @@ def inventory_item_equip(pcid,type,slotname,itemid):
 
     sizex,sizey = itemmeta['size'].split("x")
     costpa      = round(int(sizex) * int(sizey) / 2)
-    if RedisPa.get(pc)['red']['pa'] < costpa:
-        msg = f"Not enough PA (pcid:{pc.id},redpa:{RedisPa.get(pc)['red']['pa']},cost:{costpa})"
+    if RedisPa(pc).get()['red']['pa'] < costpa:
+        msg = f"Not enough PA (pcid:{pc.id},redpa:{RedisPa(pc).get()['red']['pa']},cost:{costpa})"
         logger.warning(msg)
         return jsonify({"success": False,
                         "msg": msg,
@@ -307,7 +307,7 @@ def inventory_item_equip(pcid,type,slotname,itemid):
     # Here everything should be OK with the equip
     try:
         # We consume the red PA (costpa) right now
-        RedisPa.set(pc,costpa,0)
+        RedisPa(pc).set(costpa,0)
     except Exception as e:
         msg = f'Redis Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
@@ -335,8 +335,8 @@ def inventory_item_equip(pcid,type,slotname,itemid):
         logger.trace(msg)
         return jsonify({"success": True,
                         "msg": msg,
-                        "payload": {"red": RedisPa.get(pc)['red'],
-                                    "blue": RedisPa.get(pc)['blue'],
+                        "payload": {"red": RedisPa(pc).get()['red'],
+                                    "blue": RedisPa(pc).get()['blue'],
                                     "equipment": equipment}}), 200
 
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>
@@ -412,8 +412,8 @@ def inventory_item_unequip(pcid,type,slotname,itemid):
         logger.trace(msg)
         return jsonify({"success": True,
                         "msg": msg,
-                        "payload": {"red": RedisPa.get(pc)['red'],
-                                    "blue": RedisPa.get(pc)['blue'],
+                        "payload": {"red": RedisPa(pc).get()['red'],
+                                    "blue": RedisPa(pc).get()['blue'],
                                     "equipment": equipment}}), 200
 
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>

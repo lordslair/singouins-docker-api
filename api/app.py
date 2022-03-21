@@ -251,7 +251,7 @@ app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<int:skillmetaid>',
 @app.route('/mypc/<int:pcid>/action/move', methods=['POST'])
 @jwt_required()
 def api_mypc_action_move(pcid):
-    return jsonify({"msg": 'DEPRECATED', "success": True, "payload": RedisPa.get(fn_creature_get(None,pcid)[3])}), 200
+    return jsonify({"msg": 'DEPRECATED', "success": True, "payload": RedisPa(fn_creature_get(None,pcid)[3]).get()}), 200
 @app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
 @jwt_required()
 def api_mypc_action_attack(pcid,weaponid,targetid):

@@ -58,12 +58,12 @@ def action_weapon_reload(pcid,weaponid):
                         "msg": f'Item is already loaded (pcid:{pc.id},weaponid:{item.id})',
                         "payload": None}), 200
 
-    if RedisPa.get(pc)['red']['pa'] < itemmeta['pas_reload']:
+    if RedisPa(pc).get()['red']['pa'] < itemmeta['pas_reload']:
         # Not enough PA to reload
         return jsonify({"success": False,
                         "msg": f'Not enough PA to reload (pcid:{pc.id})',
-                        "payload": {"red": RedisPa.get(pc)['red'],
-                                    "blue": RedisPa.get(pc)['blue'],
+                        "payload": {"red": RedisPa(pc).get()['red'],
+                                    "blue": RedisPa(pc).get()['blue'],
                                     "action": None}}), 200
 
     walletammo = fn_wallet_ammo_get(pc,item,itemmeta['caliber'])
@@ -80,7 +80,7 @@ def action_weapon_reload(pcid,weaponid):
         # We remove the ammo from wallet
         fn_wallet_ammo_set(pc,itemmeta['caliber'],neededammo * -1)
         # We consume the PA
-        RedisPa.set(pc,itemmeta['pas_reload'],0)
+        RedisPa(pc).set(itemmeta['pas_reload'],0)
         # Wa add HighScore
         incr.one(f'highscores:{pc.id}:action:reload')
         # We create the Creature Event
@@ -98,8 +98,8 @@ def action_weapon_reload(pcid,weaponid):
     else:
         return jsonify({"success": True,
                         "msg": f'Weapon reload OK (pcid:{pc.id},weaponid:{item.id})',
-                        "payload": {"red": RedisPa.get(pc)['red'],
-                                    "blue": RedisPa.get(pc)['blue'],
+                        "payload": {"red": RedisPa(pc).get()['red'],
+                                    "blue": RedisPa(pc).get()['blue'],
                                     "weapon": fn_item_get_one(weaponid)}}), 200
 
 # API: POST /mypc/{pcid}/action/unload/{weaponid}
@@ -137,12 +137,12 @@ def action_weapon_unload(pcid,weaponid):
                             "msg": f'Item is already empty (pcid:{pc.id},weaponid:{weaponid})',
                             "payload": None}), 200
 
-    if RedisPa.get(pc)['blue']['pa'] < 2:
+    if RedisPa(pc).get()['blue']['pa'] < 2:
         # Not enough PA to unload
         return jsonify({"success": False,
                         "msg": f'Not enough PA to unload (pcid:{pc.id})',
-                        "payload": {"red": RedisPa.get(pc)['red'],
-                                    "blue": RedisPa.get(pc)['blue'],
+                        "payload": {"red": RedisPa(pc).get()['red'],
+                                    "blue": RedisPa(pc).get()['blue'],
                                     "action": None}}), 200
 
     itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaWeapons))[0]) # Gruikfix
@@ -157,7 +157,7 @@ def action_weapon_unload(pcid,weaponid):
         # We remove the ammo from wallet
         fn_wallet_ammo_set(pc,itemmeta['caliber'],item.ammo)
         # We consume the PA
-        RedisPa.set(pc,0,2)
+        RedisPa(pc).set(0,2)
         # Wa add HighScore
         incr.one(f'highscores:{pc.id}:action:unload')
         # We create the Creature Event
@@ -175,6 +175,6 @@ def action_weapon_unload(pcid,weaponid):
     else:
         return jsonify({"success": True,
                         "msg": f'Weapon unload OK (pcid:{pc.id},weaponid:{item.id})',
-                        "payload": {"red": RedisPa.get(pc)['red'],
-                                    "blue": RedisPa.get(pc)['blue'],
+                        "payload": {"red": RedisPa(pc).get()['red'],
+                                    "blue": RedisPa(pc).get()['blue'],
                                     "weapon": fn_item_get_one(weaponid)}}), 200

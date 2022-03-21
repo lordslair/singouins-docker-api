@@ -12,20 +12,22 @@ bluepamax      = 8
 bluemaxttl     = bluepaduration * bluepamax
 
 class RedisPa:
-    def __init__(self):
-        self.all  = {"red": {"pa":     None,
-                             "ttnpa":  None,
-                             "ttl":    None},
-                     "blue": {"pa":    None,
-                              "ttnpa": None,
-                              "ttl":   None}}
+    def __init__(self,creature):
+        RedisPa.all      = {"blue": {"pa":    None,
+                                     "ttnpa": None,
+                                     "ttl":   None},
+                            "red":  {"pa":    None,
+                                     "ttnpa": None,
+                                     "ttl":   None}}
+        RedisPa.creature = creature
+        RedisPa.logh     = f'[creature.id:{RedisPa.creature.id}]'
 
     @classmethod
-    def set(cls,creature,redpa,bluepa):
+    def set(cls,redpa,bluepa):
         try:
             if bluepa > 0:
                 # An action consumed a blue PA, we need to update
-                key    = f'blue:{creature.id}'
+                key    = f'blue:{RedisPa.creature.id}'
                 ttl    = r.ttl(key)
                 newttl = ttl + (bluepa * bluepaduration)
 
@@ -37,7 +39,7 @@ class RedisPa:
                     r.set(key,'',ex=newttl)
             if redpa > 0:
                 # An action consumed a red PA, we need to update
-                key    = f'red:{creature.id}'
+                key    = f'red:{RedisPa.creature.id}'
                 ttl    = r.ttl(key)
                 newttl = ttl + (redpa * redpaduration)
 
@@ -48,44 +50,44 @@ class RedisPa:
                     # Key does not exist anymore (PA count = PA max)
                     r.set(key,'',ex=newttl)
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisPa.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'Method OK')
+            logger.trace(f'{RedisPa.logh} Method OK')
             return True
 
     @classmethod
-    def get(cls,creature):
+    def get(cls):
         try:
-            redkey    = f'red:{creature.id}'
+            redkey    = f'red:{RedisPa.creature.id}'
             redttl    = r.ttl(redkey)
-            red  = {"pa":    int(round(((redmaxttl - abs(redttl))  / redpaduration))),
+            red       = {"pa":    int(round(((redmaxttl - abs(redttl))  / redpaduration))),
                          "ttnpa": r.ttl(redkey) % redpaduration,
                          "ttl":   redttl}
 
-            bluekey   = f'blue:{creature.id}'
+            bluekey   = f'blue:{RedisPa.creature.id}'
             bluettl   = r.ttl(bluekey)
-            blue = {"pa":    int(round(((bluemaxttl - abs(bluettl))  / bluepaduration))),
+            blue      = {"pa":    int(round(((bluemaxttl - abs(bluettl))  / bluepaduration))),
                          "ttnpa": r.ttl(bluekey) % bluepaduration,
                          "ttl":   bluettl}
 
-            all  = {"red":  red,
-                    "blue": blue}
+            all       = {"red":  red,
+                         "blue": blue}
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisPa.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'Method OK')
+            logger.trace(f'{RedisPa.logh} Method OK')
             return all
 
     @classmethod
-    def reset(cls,creature):
+    def reset(cls):
         try:
-            r.set(f'red:{creature.id}', 'red', ex=1)
-            r.set(f'blue:{creature.id}','blue',ex=1)
+            r.set(f'red:{RedisPa.creature.id}', 'red', ex=1)
+            r.set(f'blue:{RedisPa.creature.id}','blue',ex=1)
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisPa.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'Method OK')
+            logger.trace(f'{RedisPa.logh} Method OK')
             return True

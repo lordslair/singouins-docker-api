@@ -28,7 +28,7 @@ def pa_get(pcid):
                         "payload": None}), 409
 
     try:
-        payload = RedisPa.get(pc)
+        payload = RedisPa(pc).get()
     except Exception as e:
         msg = f'PA Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
