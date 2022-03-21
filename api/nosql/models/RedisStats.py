@@ -9,6 +9,7 @@ class RedisStats:
     def __init__(self,creature):
         RedisStats.key      = f'stats:{creature.id}:json'
         RedisStats.creature = creature
+        RedisStats.logh     = f'[creature.id:{RedisStats.creature.id}]'
 
         try:
             if r.exists(RedisStats.key):
@@ -32,7 +33,7 @@ class RedisStats:
                 RedisStats.dodge = stats['def']['dodge']
                 RedisStats.parry = stats['def']['parry']
             else:
-                logger.trace(f'Stats not in Redis cache')
+                logger.trace(f'{RedisStats.logh} Stats not in Redis cache')
 
                 RedisStats.m = None
                 RedisStats.r = None
@@ -51,13 +52,13 @@ class RedisStats:
                 RedisStats.dodge = None
                 RedisStats.parry = None
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisStats.logh} Method KO [{e}]')
 
     @classmethod
     def as_dict(cls):
         try:
             if RedisStats.m is None:
-                logger.trace('RedisStats empty - Need refresh')
+                logger.trace(f'{RedisStats.logh} RedisStats empty - Need refresh')
                 return None
 
             # We push data in final dict
@@ -81,10 +82,10 @@ class RedisStats:
                                         "parry": RedisStats.parry}}
 
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisStats.logh} Method KO  [{e}]')
             return None
         else:
-            logger.trace(f'Method OK')
+            logger.trace(f'{RedisStats.logh} Method OK')
             return RedisStats.dict
 
     @classmethod
@@ -165,10 +166,10 @@ class RedisStats:
 
             r.set(RedisStats.key, json.dumps(RedisStats.dict), ex=300)
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisStats.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'Method OK')
+            logger.trace(f'{RedisStats.logh} Method OK')
             return RedisStats
 
     @classmethod
@@ -177,8 +178,8 @@ class RedisStats:
             if r.exists(RedisStats.key):
                 r.delete(RedisStats.key)
         except Exception as e:
-            logger.error(f'Method KO {e}')
+            logger.error(f'{RedisStats.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'Method OK')
+            logger.trace(f'{RedisStats.logh} Method OK')
             return True

@@ -14,5 +14,4 @@ from .instances                 import *
 from .maps                      import *
 from .metas                     import *
 from .queue                     import *
-from .stats                     import *
 from .statuses                  import *
