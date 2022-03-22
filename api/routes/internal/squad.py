@@ -10,18 +10,12 @@ from variables                  import API_INTERNAL_TOKEN
 #
 # Routes /internal
 #
-# API: POST /internal/squad
-def internal_squad_get_one():
+# API: POST /internal/squad/{squadid}
+def internal_squad_get_one(squadid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
         logger.warn(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
-    if not request.is_json:
-        msg = f'Missing JSON in request'
-        logger.warn(msg)
-        return jsonify({"msg": msg, "success": False, "payload": None}), 400
-
-    squadid      = request.json.get('squadid', None)
 
     incr.one('queries:internal:squad')
 
