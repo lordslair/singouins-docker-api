@@ -30,7 +30,7 @@ def test_singouins_internal_creature_pa_consume():
 
 def test_singouins_internal_creature_pa_reset():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa/reset'
-    response  = requests.post(url, headers=HEADERS)
+    response  = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True

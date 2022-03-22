@@ -65,4 +65,5 @@ def creature_stats(creatureid):
     else:
         return jsonify({"success": True,
                         "msg": f'Stats Query OK (creatureid:{creature.id})',
-                        "payload": creature_stats}), 200
+                        "payload": {"stats":    creature_stats,
+                                    "creature": creature}}), 200

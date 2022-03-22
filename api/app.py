@@ -392,7 +392,7 @@ app.add_url_rule('/internal/creature/<int:creatureid>/pa/consume/<int:redpa>/<in
                  methods=['PUT'],
                  view_func=routes.internal.creature.pa.creature_pa_consume)
 app.add_url_rule('/internal/creature/<int:creatureid>/pa/reset',
-                 methods=['POST'],
+                 methods=['PUT'],
                  view_func=routes.internal.creature.pa.creature_pa_reset)
 # Routes /internal/creature/{creatureid}/status/*
 app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
@@ -420,9 +420,9 @@ app.add_url_rule('/internal/creatures',
                  methods=['GET'],
                  view_func=routes.internal.creature.creature_get_all)
 # Routes /internal/discord/*
-app.add_url_rule('/internal/discord/associate',
+app.add_url_rule('/internal/discord/link',
                  methods=['POST'],
-                 view_func=routes.internal.discord.discord_associate)
+                 view_func=routes.internal.discord.discord_link)
 app.add_url_rule('/internal/discord/creature',
                  methods=['POST'],
                  view_func=routes.internal.discord.discord_creature_get_one)

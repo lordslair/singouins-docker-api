@@ -51,7 +51,8 @@ def creature_wallet(creatureid):
         if wallet:
             return jsonify({"success": True,
                             "msg": f'Wallet Query OK (pcid:{creature.id})',
-                            "payload": wallet}), 200
+                            "payload": {"wallet":   wallet,
+                                        "creature": creature}}), 200
         else:
             return jsonify({"success": True,
                             "msg": f'Wallet Query KO - Not Found (pcid:{creature.id})',

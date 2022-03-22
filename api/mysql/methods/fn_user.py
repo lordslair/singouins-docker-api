@@ -119,3 +119,30 @@ def fn_user_get_from_discord(discordname):
             return False
     finally:
         session.close()
+
+def fn_user_link_from_discord(discordname,usermail):
+    session = Session()
+
+    try:
+        user = session.query(User)\
+                      .filter(User.mail == usermail)\
+                      .one_or_none()
+
+        user.d_name    = discordname
+        user.d_ack     = True
+
+        session.commit()
+        session.refresh(user)
+    except Exception as e:
+        session.rollback()
+        logger.error(f'User Query KO (discordname:{discordname}) [{e}]')
+        return False
+    else:
+        if user:
+            logger.trace(f'User Query OK (discordname:{discordname})')
+            return user
+        else:
+            logger.trace(f'User Query KO - Not Found (discordname:{discordname})')
+            return False
+    finally:
+        session.close()
