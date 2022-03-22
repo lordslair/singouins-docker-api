@@ -8,9 +8,9 @@ from variables import (API_URL,
                        KORP_ID)
 
 def test_singouins_internal_korp():
-    url       = f'{API_URL}/internal/korp'
-    payload   = {"korpid": KORP_ID}
-    response  = requests.post(url, headers=HEADERS, json = payload)
+    korpid    = KORP_ID
+    url       = f'{API_URL}/internal/korp/{korpid}'
+    response  = requests.get(url, headers=HEADERS)
 
     assert json.loads(response.text)['success'] == False
     assert 'Korp Query KO' in json.loads(response.text)['msg']

@@ -8,9 +8,9 @@ from variables import (API_URL,
                        SQUAD_ID)
 
 def test_singouins_internal_squad():
-    url       = f'{API_URL}/internal/squad'
-    payload   = {"squadid": SQUAD_ID}
-    response  = requests.post(url, headers=HEADERS, json = payload)
+    squadid   = SQUAD_ID
+    url       = f'{API_URL}/internal/squad/{squadid}'
+    response  = requests.get(url, headers=HEADERS)
 
     assert json.loads(response.text)['success'] == False
     assert 'Squad Query KO' in json.loads(response.text)['msg']

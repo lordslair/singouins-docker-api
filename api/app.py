@@ -438,7 +438,7 @@ app.add_url_rule('/internal/instance/queue',
                  view_func=routes.internal.instance.queue.queue_get)
 # Routes /internal/korp/*
 app.add_url_rule('/internal/korp/<int:korpid>',
-                 methods=['POST'],
+                 methods=['GET'],
                  view_func=routes.internal.korp.internal_korp_get_one)
 app.add_url_rule('/internal/korps',
                  methods=['GET'],
@@ -449,7 +449,7 @@ app.add_url_rule('/internal/meta/<string:metatype>',
                  view_func=routes.internal.meta.internal_meta_get_one)
 # Routes /internal/squad/*
 app.add_url_rule('/internal/squad/<int:squadid>',
-                 methods=['POST'],
+                 methods=['GET'],
                  view_func=routes.internal.squad.internal_squad_get_one)
 app.add_url_rule('/internal/squads',
                  methods=['GET'],
