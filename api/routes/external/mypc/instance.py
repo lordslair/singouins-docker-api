@@ -98,29 +98,30 @@ def instance_add(pcid):
 
             # Everything went well, creation DONE
             # We put the info in queue for Discord
-            if ret.korp is not None:
+            scopes = []
+            if ret.korp is not None:  scopes.append(f'Korp-{ret.korp}')
+            if ret.squad is not None: scopes.append(f'Squad-{ret.squad}')
+            for scope in scopes:
                 qmsg = {"ciphered": False,
-                        "payload": f':map: **[{ret.id}] {ret.name}** opened an Instance ({ret.instance})',
+                        "payload": f':map: **[{ret.id}] {ret.name}** opened an Instance ({instanceid})',
                         "embed": None,
-                        "scope": f'Korp-{ret.korp}'}
+                        "scope": scope}
                 try:
                     queue.yqueue_put('yarqueue:discord', qmsg)
-                except:
-                    pass
-            if ret.squad is not None:
-                qmsg = {"ciphered": False,
-                        "payload": f':map: **[{ret.id}] {ret.name}** opened an Instance ({ret.instance})',
-                        "embed": None,
-                        "scope": f'Squad-{ret.squad}'}
-                try:
-                    queue.yqueue_put('yarqueue:discord', qmsg)
-                except:
-                    pass
+                except Exception as e:
+                    msg = f'Queue Query KO (Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]'
+                    logger.error(msg)
+                else:
+                    logger.debug(f'Queue Query OK (Queue:yarqueue:discord,qmsg:{qmsg})')
             # We put the info in queue for IA to populate the instance
             try:
-                queue.yqueue_put('yarqueue:instances', {"action": 'create', "instance": instance})
-            except:
-                pass
+                qmsg = {"action": 'create', "instance": instance}
+                queue.yqueue_put('yarqueue:instances', qmsg)
+            except Exception as e:
+                msg = f'Queue Query KO (Queue:yarqueue:instances,qmsg:{qmsg}) [{e}]'
+                logger.error(msg)
+            else:
+                logger.debug(f'Queue Query OK (Queue:yarqueue:instances,qmsg:{qmsg})')
             # Finally everything is done
             return jsonify({"success": True,
                             "msg": f"Instance create OK (creatureid:{ret.id})",
@@ -226,6 +227,23 @@ def instance_join(pcid,instanceid):
                         "msg": msg,
                         "payload": None}), 200
     else:
+        # We put the info in queue for Discord
+        scopes = []
+        if ret.korp is not None:  scopes.append(f'Korp-{ret.korp}')
+        if ret.squad is not None: scopes.append(f'Squad-{ret.squad}')
+        for scope in scopes:
+            qmsg = {"ciphered": False,
+                    "payload": f':map: **[{ret.id}] {ret.name}** joined an Instance ({instanceid})',
+                    "embed": None,
+                    "scope": scope}
+            try:
+                queue.yqueue_put('yarqueue:discord', qmsg)
+            except Exception as e:
+                msg = f'Queue Query KO (Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]'
+                logger.error(msg)
+            else:
+                logger.debug(f'Queue Query OK (Queue:yarqueue:discord,qmsg:{qmsg})')
+
         return jsonify({"success": True,
                         "msg": f"Instance join OK (creatureid:{creature.id},instanceid:{instance['id']})",
                         "payload": ret}), 200
@@ -305,29 +323,30 @@ def instance_leave(pcid,instanceid):
         else:
             # Everything went well, deletion DONE
             # We put the info in queue for Discord
-            if ret.korp is not None:
+            scopes = []
+            if ret.korp is not None:  scopes.append(f'Korp-{ret.korp}')
+            if ret.squad is not None: scopes.append(f'Squad-{ret.squad}')
+            for scope in scopes:
                 qmsg = {"ciphered": False,
                         "payload": f':map: **[{ret.id}] {ret.name}** closed an Instance ({instanceid})',
                         "embed": None,
-                        "scope": f'Korp-{ret.korp}'}
+                        "scope": scope}
                 try:
                     queue.yqueue_put('yarqueue:discord', qmsg)
-                except:
-                    pass
-            if ret.squad is not None:
-                qmsg = {"ciphered": False,
-                        "payload": f':map: **[{ret.id}] {ret.name}** closed an Instance ({instanceid})',
-                        "embed": None,
-                        "scope": f'Squad-{ret.squad}'}
-                try:
-                    queue.yqueue_put('yarqueue:discord', qmsg)
-                except:
-                    pass
+                except Exception as e:
+                    msg = f'Queue Query KO (Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]'
+                    logger.error(msg)
+                else:
+                    logger.debug(f'Queue Query OK (Queue:yarqueue:discord,qmsg:{qmsg})')
             # We put the info in queue for IA to clean the instance
             try:
-                queue.yqueue_put('yarqueue:instances', {"action": 'delete', "instance": instance})
-            except:
-                pass
+                qmsg = {"action": 'delete', "instance": instance}
+                queue.yqueue_put('yarqueue:instances', qmsg)
+            except Exception as e:
+                msg = f'Queue Query KO (Queue:yarqueue:instances,qmsg:{qmsg}) [{e}]'
+                logger.error(msg)
+            else:
+                logger.debug(f'Queue Query OK (Queue:yarqueue:instances,qmsg:{qmsg})')
             # Finally everything is done
             return jsonify({"success": True,
                             "msg": f"Instance leave OK (creatureid:{creature.id},instanceid:{instanceid})",
@@ -348,11 +367,21 @@ def instance_leave(pcid,instanceid):
                             "payload": None}), 200
         else:
             # We put the info in queue for Discord
-            qmsg = {"ciphered": False,
-                    "payload": f':map: **[{ret.id}] {ret.name}** left an Instance',
-                    "embed": None,
-                    "scope": f'Korp-{ret.korp}'}
-            queue.yqueue_put('yarqueue:discord', qmsg)
+            scopes = []
+            if ret.korp is not None:  scopes.append(f'Korp-{ret.korp}')
+            if ret.squad is not None: scopes.append(f'Squad-{ret.squad}')
+            for scope in scopes:
+                qmsg = {"ciphered": False,
+                        "payload": f':map: **[{ret.id}] {ret.name}** left an Instance ({instanceid})',
+                        "embed": None,
+                        "scope": scope}
+                try:
+                    queue.yqueue_put('yarqueue:discord', qmsg)
+                except Exception as e:
+                    msg = f'Queue Query KO (Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]'
+                    logger.error(msg)
+                else:
+                    logger.debug(f'Queue Query OK (Queue:yarqueue:discord,qmsg:{qmsg})')
             return jsonify({"success": True,
                             "msg": f"Instance leave OK (creatureid:{creature.id},instanceid:{instanceid})",
                             "payload": ret}), 200
