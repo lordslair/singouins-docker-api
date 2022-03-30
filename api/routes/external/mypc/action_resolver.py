@@ -91,14 +91,10 @@ def action_resolver_skill(pcid,skillmetaid):
                     "pa": pas
                   },
                   "fightEvent": {
-                    "name": "WarsongActionsFightClass",
-                    "type": 0,
-                    "actor": 1,
-                    "params": {
-                      "type": "target",
-                      "destinationType": "tile",
-                      "destination": None
-                    }
+                    "name": fightEventname,
+                    "type": fightEventtype,
+                    "actor": fightEventactor,
+                    "params": fightEventparams
                   }
               }
 
