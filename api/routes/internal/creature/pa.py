@@ -77,7 +77,7 @@ def creature_pa_consume(creatureid,redpa,bluepa):
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
-    if redpa >= RedisPa(creature).get()['red']['pa'] or bluepa >= RedisPa(creature).get()['blue']['pa']:
+    if redpa > RedisPa(creature).get()['red']['pa'] or bluepa > RedisPa(creature).get()['blue']['pa']:
         msg = f'Cannot consume that amount of PA (creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})'
         logger.warning(msg)
         return jsonify({"success": False,
