@@ -25,6 +25,12 @@ def action_resolver_skill(pcid,skillmetaid):
     user        = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
+    if not request.is_json:
+        msg = f'Missing JSON in request'
+        logger.warn(msg)
+        return jsonify({"msg": msg,
+                        "success": False,
+                        "payload": None}), 400
     if pc is None:
         return jsonify({"success": False,
                         "msg": f'Creature not found (pcid:{pcid})',
@@ -56,6 +62,10 @@ def action_resolver_skill(pcid,skillmetaid):
                             "payload": cd}), 200
 
     try:
+        fightEventname     = request.json.get('name',     None)
+        fightEventtype     = request.json.get('type',     None)
+        fightEventactor    = request.json.get('actor',    None)
+        fightEventparams   = request.json.get('params',   None)
         map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
         creatures_effects  = effects.get_instance_effects(pc)
