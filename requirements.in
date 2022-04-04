@@ -1,6 +1,6 @@
 dataclasses               ~= 0.6
 Flask                     ~= 1.1
-Flask-bcrypt              ~= 0.7
+Flask-bcrypt              ~= 1.0
 Flask-cors                ~= 3.0
 Flask-JWT-Extended        ~= 4.3
 Flask-Swagger-UI          ~= 3.36
