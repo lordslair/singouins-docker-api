@@ -395,3 +395,31 @@ def fn_creature_stats_get(creature):
         return stats
     finally:
         session.close()
+
+def fn_creature_position_set(creatureid,x,y):
+    session = Session()
+
+    try:
+        creature = session.query(Creature)\
+                          .filter(Creature.id == creatureid)\
+                          .one_or_none()
+
+        if creature:
+            creature.x = x
+            creature.y = y
+        else:
+            logger.warning(f'Creature Query KO - Creature Not Found (creatureid:{creatureid})')
+
+        session.commit()
+        session.refresh(creature)
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Creature Query KO [{e}]')
+        return None
+    else:
+        if creature:
+            return creature
+        else:
+            return None
+    finally:
+        session.close()

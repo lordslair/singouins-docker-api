@@ -24,6 +24,7 @@ import                      routes.internal.creature.cds
 import                      routes.internal.creature.effects
 import                      routes.internal.creature.equipment
 import                      routes.internal.creature.pa
+import                      routes.internal.creature.position
 import                      routes.internal.creature.stats
 import                      routes.internal.creature.statuses
 import                      routes.internal.creature.wallet
@@ -394,6 +395,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/pa/consume/<int:redpa>/<in
 app.add_url_rule('/internal/creature/<int:creatureid>/pa/reset',
                  methods=['PUT'],
                  view_func=routes.internal.creature.pa.creature_pa_reset)
+# Routes /internal/creature/{creatureid}/position/*
+app.add_url_rule('/internal/creature/<int:creatureid>/position/<int:x>/<int:y>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.position.creature_position_set)
 # Routes /internal/creature/{creatureid}/status/*
 app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
                  methods=['PUT'],
