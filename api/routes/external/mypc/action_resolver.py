@@ -145,7 +145,10 @@ def action_resolver_move(pcid):
                         "payload": None}), 200
 
     try:
-        path               = request.json.get('path',     None)
+        fightEventname     = request.json.get('name',     None)
+        fightEventtype     = request.json.get('type',     None)
+        fightEventactor    = request.json.get('actor',    None)
+        fightEventparams   = request.json.get('params',   None)
         map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
         creatures_effects  = effects.get_instance_effects(pc)
@@ -170,17 +173,10 @@ def action_resolver_move(pcid):
                     "pa": pas
                   },
                   "fightEvent": {
-                     "name":"RegularMovesFightClass",
-                     "type":3,
-                     "actor":1,
-                     "params":{
-                        "type":"target",
-                        "destinationType":"tile",
-                        "destination":None,
-                        "options":{
-                           "path": path
-                        }
-                     }
+                     "name": fightEventname,
+                     "type": fightEventtype,
+                     "actor": fightEventactor,
+                     "params": fightEventparams
                   }
               }
 
