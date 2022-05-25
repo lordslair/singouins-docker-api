@@ -52,7 +52,7 @@ prometheus-flask-exporter==0.20.1
     # via -r requirements.in
 pycparser==2.21
     # via cffi
-pyjwt==2.3.0
+pyjwt==2.4.0
     # via flask-jwt-extended
 pymysql==1.0.2
     # via -r requirements.in
