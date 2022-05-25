@@ -239,6 +239,9 @@ app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>/leave',
 #
 # Routes: /action/resolver
 #
+app.add_url_rule('/mypc/<int:pcid>/action/resolver/context',
+                 methods=['POST'],
+                 view_func=routes.external.mypc.action_resolver.action_resolver_context)
 app.add_url_rule('/mypc/<int:pcid>/action/resolver/move',
                  methods=['POST'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_move)

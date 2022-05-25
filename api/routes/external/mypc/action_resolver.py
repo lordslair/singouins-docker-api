@@ -201,3 +201,68 @@ def action_resolver_move(pcid):
                         "msg": msg,
                         "payload": {"resolver": json.loads(response.text),
                                     "internal": payload}}), 200
+
+# API: POST /mypc/{pcid}/action/resolver/context
+@jwt_required()
+def action_resolver_context(pcid):
+    pc          = fn_creature_get(None,pcid)[3]
+    user        = fn_user_get(get_jwt_identity())
+
+    # Pre-flight checks
+    if not request.is_json:
+        msg = f'Missing JSON in request'
+        logger.warn(msg)
+        return jsonify({"msg": msg, "success": False, "payload": None}), 400
+    if pc is None:
+        return jsonify({"success": False,
+                        "msg": f'Creature not found (pcid:{pcid})',
+                        "payload": None}), 200
+    if pc.account != user.id:
+        return jsonify({"success": False,
+                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{user.name})',
+                        "payload": None}), 409
+    if pc.instance is None:
+        return jsonify({"success": False,
+                        "msg": f'Creature not in an instance (pcid:{pcid})',
+                        "payload": None}), 200
+
+    try:
+        fightEventname     = request.json.get('name',     None)
+        fightEventtype     = request.json.get('type',     None)
+        fightEventactor    = request.json.get('actor',    None)
+        fightEventparams   = request.json.get('params',   None)
+        map                = instances.get_instance(pc.instance)['map']
+        creatures          = fn_creatures_in_instance(pc.instance)
+        creatures_effects  = effects.get_instance_effects(pc)
+        creatures_statuses = statuses.get_instance_statuses(pc)
+        creatures_cds      = cds.get_instance_cds(pc)
+        pas                = RedisPa(pc).get()
+    except Exception as e:
+        msg = f'ResolverInfo Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    # Supposedly got all infos
+    payload = { "context": {
+                    "map": map,
+                    "instance": pc.instance,
+                    "creatures": creatures,
+                    "effects": creatures_effects,
+                    "status": creatures_statuses,
+                    "cd": creatures_cds,
+                    "pa": pas
+                  },
+                  "fightEvent": {
+                     "name": fightEventname,
+                     "type": fightEventtype,
+                     "actor": fightEventactor,
+                     "params": fightEventparams
+                  }
+              }
+
+    return jsonify({"success": True,
+                    "msg": "Context Query OK",
+                    "payload": {"resolver": None,
+                                "internal": payload}}), 200
