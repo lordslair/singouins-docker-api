@@ -29,4 +29,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: PyTest EXTERNAL routes
       run: |
-        pytest /code/tests/external
+        pytest code/tests/external
