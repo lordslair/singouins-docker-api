@@ -33,7 +33,7 @@ def creature_wallet(creatureid):
                         "payload": None}), 200
     else:
         if not creature:
-            msg = f'Creature Query KO - Not Found (creatureid:{creature.id})'
+            msg = f'Creature Query KO - Not Found (creatureid:{creatureid})'
             logger.warning(msg)
             return jsonify({"success": False,
                             "msg": msg,
