@@ -5,9 +5,14 @@ import redis
 import sys
 import time
 
-r = redis.StrictRedis(host     = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST'],
-                      port     = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT'],
-                      db       = os.environ['SEP_REDIS_DB'],
+# Redis variables
+REDIS_HOST    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
+REDIS_PORT    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
+REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
+
+r = redis.StrictRedis(host     = REDIS_HOST,
+                      port     = REDIS_PORT,
+                      db       = REDIS_DB_NAME,
                       encoding = 'utf-8')
 
 def test_singouins_redis_connection():

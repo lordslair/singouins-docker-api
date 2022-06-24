@@ -14,6 +14,7 @@ from utils.token           import (confirm_token,
                                    generate_confirmation_token)
 
 from variables             import (API_URL,
+                                   DATA_PATH,
                                    DISCORD_URL)
 
 #
@@ -74,7 +75,7 @@ def auth_register():
         subject = '[🐒&🐖] Bienvenue chez le Singouins !'
         token   = generate_confirmation_token(mail)
         url     = API_URL + '/auth/confirm/' + token
-        body    = open("/code/data/registered.html", "r").read()
+        body    = open(f"{DATA_PATH}/registered.html", "r").read()
         if send(mail,
                 subject,
                 body.format(urllogo    = '[INSERT LOGO HERE]',
@@ -134,7 +135,7 @@ def auth_forgotpassword():
         subject = '[🐒&🐖] Mot de passe oublié'
         token   = generate_confirmation_token(mail)
         url     = API_URL + '/auth/confirm/' + token
-        body    = open("/code/data/forgot_password.html", "r").read()
+        body    = open(f"{DATA_PATH}/forgot_password.html", "r").read()
         if send(mail,
                 subject,
                 body.format(urllogo    = '[INSERT LOGO HERE]',
