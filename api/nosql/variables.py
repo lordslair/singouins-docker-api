@@ -11,7 +11,7 @@ bluepamax      = 8
 bluemaxttl     = bluepaduration * bluepamax
 
 # Redis variables
-REDIS_HOST    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", 127.0.0.1)
+REDIS_HOST    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
 REDIS_PORT    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
 REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
 
