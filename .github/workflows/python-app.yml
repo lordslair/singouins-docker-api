@@ -70,7 +70,7 @@ jobs:
         mysql -uroot -h127.0.0.1 -e 'GRANT USAGE ON *.* TO `singuser`@`127.0.0.1`;'
 
         echo "--- Starting app in background"
-        python3 api/app.py &>/dev/null &
+        python3 api/app.py &
         echo "--- Sleep(3)"
         sleep 3
         echo "--- Checking DB creation"
