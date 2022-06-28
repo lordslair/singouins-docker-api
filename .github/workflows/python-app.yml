@@ -1,0 +1,86 @@
+# This workflow will install Python dependencies, run tests with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python PyTest
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: testing
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.4.0
+      with:
+        redis-version: 6
+    - name: Start MariaDB
+      uses: shogo82148/actions-setup-mysql@v1
+      with:
+        distribution: 'mariadb'
+        mysql-version: '10.6'
+        user: singuser
+        password: ${{ secrets.SEP_MYSQL_PASSWORD }}
+    - name: Test with pytest
+      env:
+          LOGURU_LEVEL:       DEBUG
+          GUNICORN_CHDIR:     ${{ secrets.GUNICORN_CHDIR }}
+
+          SEP_INTERNAL_TOKEN: ${{ secrets.SEP_INTERNAL_TOKEN }}
+          SEP_SECRET_KEY:     ${{ secrets.SEP_SECRET_KEY }}
+   
+          SEP_MYSQL_USER:     singuser
+          SEP_MYSQL_PASSWORD: ${{ secrets.SEP_MYSQL_PASSWORD }}
+          SEP_MYSQL_DB:       singdb
+
+          SEP_SMTP_FROM:      ${{ secrets.SEP_SMTP_FROM }}
+          SEP_SMTP_SERVER:    ${{ secrets.SEP_SMTP_SERVER }}
+          SEP_SMTP_USER:      ${{ secrets.SEP_SMTP_USER }}
+          SEP_SMTP_PASS:      ${{ secrets.SEP_SMTP_PASS }}
+          SEP_SMTP_HOSTNAME:  ${{ secrets.SEP_SMTP_HOSTNAME }}
+      run: |
+        echo "--- Checking MySQL/MariaDB version"
+        mysql -uroot -h127.0.0.1 -e 'SELECT version()' --table
+        echo "--- Creating ephemeral MySQL DB"
+        mysql -uroot -h127.0.0.1 -e 'CREATE DATABASE singdb;'
+        echo "--- Creating ephemeral MySQL grant (PRIVILEGES)"
+        mysql -uroot -h127.0.0.1 -e 'GRANT ALL PRIVILEGES ON `singdb`.* TO `singuser`@`127.0.0.1`;'
+        echo "--- Creating ephemeral MySQL grant (USAGE)"
+        mysql -uroot -h127.0.0.1 -e 'GRANT USAGE ON *.* TO `singuser`@`127.0.0.1`;'
+
+        echo "--- Starting app in background"
+        python3 api/app.py &>/dev/null &
+        echo "--- Sleep(3)"
+        sleep 3
+        echo "--- Checking DB creation"
+        mysql -usinguser -h127.0.0.1 -p${{ secrets.SEP_MYSQL_PASSWORD }} -e 'SHOW TABLES FROM singdb;' --table
+        echo "--- Starting PyTest [EXTERNAL]"
+        pytest api/tests/external/test_0*.py api/tests/external/test_1*.py
+        echo "--- Checking DB creation"
+        mysql -usinguser -h127.0.0.1 -p${{ secrets.SEP_MYSQL_PASSWORD }} -e 'USE singdb;SELECT * FROM users;' --table
+        mysql -usinguser -h127.0.0.1 -p${{ secrets.SEP_MYSQL_PASSWORD }} -e 'USE singdb;SELECT * FROM creatures;' --table
+        echo "--- Starting PyTest [INTERNAL]"
+        pytest -s api/tests/internal
+        echo "--- Starting PyTest [EXTERNAL] (Cleaning)"
+        pytest api/tests/external/test_99*.py
