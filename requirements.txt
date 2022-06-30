@@ -58,7 +58,7 @@ pymysql==1.0.2
     # via -r requirements.in
 redis==3.5.3
     # via yarqueue
-requests==2.28.0
+requests==2.28.1
     # via -r requirements.in
 six==1.16.0
     # via
