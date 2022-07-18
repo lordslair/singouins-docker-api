@@ -13,4 +13,3 @@ from .instances                 import *
 from .maps                      import *
 from .metas                     import *
 from .queue                     import *
-from .statuses                  import *

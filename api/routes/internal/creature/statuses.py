@@ -6,7 +6,7 @@ from loguru                     import logger
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql                      import *
+from nosql.models.RedisStatus   import *
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -14,23 +14,12 @@ from variables                  import API_INTERNAL_TOKEN
 # Routes /internal
 #
 # /internal/creature/*
-# API: PUT /internal/creature/{creatureid}/status/{statusmetaid}
-def creature_status_add(creatureid,statusmetaid):
+# API: PUT /internal/creature/{creatureid}/status/{status_name}/{duration}
+def creature_status_add(creatureid,status_name,duration):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
         logger.warn(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
-    if not request.is_json:
-        msg = f'Missing JSON in request'
-        logger.warn(msg)
-        return jsonify({"msg": msg, "success": False, "payload": None}), 400
-
-    duration    = request.json.get('duration')
-
-    if not isinstance(duration, int):
-        return jsonify({"success": False,
-                        "msg": f'Duration should be an INT (duration:{duration})',
-                        "payload": None}), 200
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -41,8 +30,15 @@ def creature_status_add(creatureid,statusmetaid):
 
     # Status add
     try:
-        creature_status   = add_status(creature,duration,statusmetaid)
-        creature_statuses = get_statuses(creature)
+        redis_status = RedisStatus(creature)
+
+        redis_status.duration_base = duration
+        redis_status.name          = status_name
+        redis_status.source        = creature.id
+
+        # This returns True if the HASH is properly stored in Redis
+        stored_status     = redis_status.store()
+        creature_statuses = redis_status.get_all()
     except Exception as e:
         msg = f'Status Query KO [{e}]'
         logger.error(msg)
@@ -50,7 +46,7 @@ def creature_status_add(creatureid,statusmetaid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if creature_status and creature_statuses:
+        if stored_status and creature_statuses:
             msg = f'Status add OK (creatureid:{creature.id})'
             logger.debug(msg)
             return jsonify({"success": True,
@@ -64,8 +60,8 @@ def creature_status_add(creatureid,statusmetaid):
                             "msg": msg,
                             "payload": None}), 200
 
-# API: DELETE /internal/creature/{creatureid}/status/{statusmetaid}
-def creature_status_del(creatureid,statusmetaid):
+# API: DELETE /internal/creature/{creatureid}/status/{status_name}
+def creature_status_del(creatureid,status_name):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
         logger.warn(msg)
@@ -80,8 +76,9 @@ def creature_status_del(creatureid,statusmetaid):
 
     # Status del
     try:
-        creature_status   = del_status(creature,statusmetaid)
-        creature_statuses = get_statuses(creature)
+        redis_status      = RedisStatus(creature)
+        deleted_status    = redis_status.destroy(status_name)
+        creature_statuses = redis_status.get_all()
     except Exception as e:
         msg = f'Status Query KO [{e}]'
         logger.error(msg)
@@ -89,28 +86,22 @@ def creature_status_del(creatureid,statusmetaid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if creature_status > 0:
-            msg = f'Status del OK (creatureid:{creature.id},statusmetaid:{statusmetaid})'
+        if deleted_status:
+            msg = f'Status del OK (creatureid:{creature.id},status_name:{status_name})'
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
                             "payload": {"statuses": creature_statuses,
                                         "creature": creature}}), 200
-        elif creature_status == 0:
-            msg = f'Status del KO - Status Not Found (creatureid:{creature.id},statusmetaid:{statusmetaid})'
-            logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
         else:
-            msg = f'Status del KO - Failed (creatureid:{creature.id},statusmetaid:{statusmetaid})'
-            logger.warning(msg)
-            return jsonify({"success": False,
+            msg = f'Status del KO - Failed (creatureid:{creature.id},status_name:{status_name})'
+            logger.error(msg)
+            return warning({"success": False,
                             "msg": msg,
                             "payload": None}), 200
 
-# API: GET /internal/creature/{creatureid}/status/{statusmetaid}
-def creature_status_get_one(creatureid,statusmetaid):
+# API: GET /internal/creature/{creatureid}/status/{status_name}
+def creature_status_get_one(creatureid,status_name):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
         logger.warn(msg)
@@ -125,7 +116,8 @@ def creature_status_get_one(creatureid,statusmetaid):
 
     # Status get
     try:
-        creature_status  = get_status(creature,statusmetaid)
+        redis_status    = RedisStatus(creature)
+        creature_status = redis_status.get(status_name).dict
     except Exception as e:
         msg = f'Status Query KO [{e}]'
         logger.error(msg)
@@ -134,20 +126,20 @@ def creature_status_get_one(creatureid,statusmetaid):
                         "payload": None}), 200
     else:
         if creature_status is False:
-            msg = f'Status get KO - Status Not Found (creatureid:{creature.id},statusmetaid:{statusmetaid})'
+            msg = f'Status get KO - Status Not Found (creatureid:{creature.id},status_name:{status_name})'
             logger.warning(msg)
             return jsonify({"success": False,
                             "msg": msg,
                             "payload": None}), 200
         elif creature_status:
-            msg = f'Status get OK (creatureid:{creature.id},statusmetaid:{statusmetaid})'
+            msg = f'Status get OK (creatureid:{creature.id},status_name:{status_name})'
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
                             "payload": {"status": creature_status,
                                         "creature": creature}}), 200
         else:
-            msg = f'Status get KO - Failed (creatureid:{creature.id},statusmetaid:{statusmetaid})'
+            msg = f'Status get KO - Failed (creatureid:{creature.id},status_name:{status_name})'
             logger.warning(msg)
             return jsonify({"success": False,
                             "msg": msg,
@@ -169,7 +161,8 @@ def creature_status_get_all(creatureid):
 
     # Statuses get
     try:
-        creature_statuses = get_statuses(creature)
+        redis_status      = RedisStatus(creature)
+        creature_statuses = redis_status.get_all()
     except Exception as e:
         msg = f'Statuses Query KO [{e}]'
         logger.error(msg)

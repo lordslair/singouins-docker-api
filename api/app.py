@@ -403,13 +403,13 @@ app.add_url_rule('/internal/creature/<int:creatureid>/position/<int:x>/<int:y>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.position.creature_position_set)
 # Routes /internal/creature/{creatureid}/status/*
-app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/status/<string:status_name>/<int:duration>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.statuses.creature_status_add)
-app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/status/<string:status_name>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.statuses.creature_status_del)
-app.add_url_rule('/internal/creature/<int:creatureid>/status/<int:statusmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/status/<string:status_name>',
                  methods=['GET'],
                  view_func=routes.internal.creature.statuses.creature_status_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>/statuses',

@@ -425,7 +425,7 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatsResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/status/{statusmetaid}:
+  /internal/creature/{creatureid}/status/{status_name}/{duration}:
     put:
       tags:
         - '/internal : Internal requests'
@@ -435,11 +435,20 @@ paths:
           name: creatureid
           schema:
             type: integer
+            nullable: false
           required: true
         - in: path
-          name: statusmetaid
+          name: status_name
           schema:
-            type: integer
+            type: string
+            nullable: false
+          required: true
+        - in: path
+          name: duration
+          schema:
+            type: int
+            nullable: false
+            minimum: 1
           required: true
       requestBody:
         description: ''
@@ -461,6 +470,7 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatusesResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/status/{status_name}:
     delete:
       tags:
         - '/internal : Internal requests'
@@ -472,9 +482,10 @@ paths:
             type: integer
           required: true
         - in: path
-          name: statusmetaid
+          name: status_name
           schema:
-            type: integer
+            type: string
+            nullable: false
           required: true
       responses:
         '200':
@@ -496,9 +507,10 @@ paths:
             type: integer
           required: true
         - in: path
-          name: statusmetaid
+          name: status_name
           schema:
-            type: integer
+            type: string
+            nullable: false
           required: true
       responses:
         '200':
@@ -513,7 +525,7 @@ paths:
     get:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature Statuses request
+      summary: Internal Creature GET ALL Status request
       parameters:
         - in: path
           name: creatureid

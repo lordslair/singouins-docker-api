@@ -15,6 +15,5 @@ KORP_ID         = 0
 METAS           = ['armor','weapon','race','effect','skill','status']
 SKILLMETA_ID    = 1
 SKILLMETA_NAME  = 'Bloodstrike'
-STATUSMETA_ID   = 11
-STATUSMETA_NAME = 'Poisoned'
+STATUS_NAME     = 'Poisoned'
 SQUAD_ID        = 0
