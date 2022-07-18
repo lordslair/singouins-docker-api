@@ -173,7 +173,7 @@ class RedisStats:
     def destroy(self):
         try:
             logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            r.del(self.hkey)
+            r.delete(self.hkey)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
