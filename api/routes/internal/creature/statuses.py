@@ -117,7 +117,7 @@ def creature_status_get_one(creatureid,status_name):
     # Status get
     try:
         redis_status    = RedisStatus(creature)
-        creature_status = redis_status.get(status_name).dict
+        creature_status = redis_status.get(status_name)
     except Exception as e:
         msg = f'Status Query KO [{e}]'
         logger.error(msg)
@@ -136,7 +136,7 @@ def creature_status_get_one(creatureid,status_name):
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
-                            "payload": {"status": creature_status,
+                            "payload": {"status": creature_status.dict,
                                         "creature": creature}}), 200
         else:
             msg = f'Status get KO - Failed (creatureid:{creature.id},status_name:{status_name})'
