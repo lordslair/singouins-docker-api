@@ -11,6 +11,7 @@ def test_singouins_auth_register():
     payload   = {'password': 'plop', 'mail': 'user@exemple.com'}
     response  = requests.post(url, json = payload)
 
+    assert 'User successfully added' in json.loads(response.text)['msg']
     assert response.status_code == 201
 
 def test_singouins_auth_login():

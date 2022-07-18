@@ -4,6 +4,7 @@ import smtplib
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text      import MIMEText
+from loguru               import logger
 
 from utils.variables import SMTP_FROM, SMTP_SERVER, SMTP_USER, SMTP_PASS, SMTP_HOSTNAME
 
@@ -25,6 +26,9 @@ def send(adress, subject, body):
         mail.login(SMTP_USER, SMTP_PASS)
         mail.sendmail(message["From"],message["To"],message.as_string())
         mail.close()
-        return True
     except smtplib.SMTPException as e:
+        logger.error(f'Sending EMail KO [{e}]')
         return False
+    else:
+        logger.trace(f'Sending EMail OK')
+        return True

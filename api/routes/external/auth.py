@@ -83,7 +83,7 @@ def auth_register():
                             urldiscord = DISCORD_URL)):
             return jsonify({"msg": "User successfully added | mail OK"}), code
         else:
-            return jsonify({"msg": "User successfully added | mail KO"}), 206
+            return jsonify({"msg": "User successfully added | mail KO"}), code
     elif code == 409:
         return jsonify({"msg": "User or Email already exists"}), code
     else:
@@ -143,7 +143,7 @@ def auth_forgotpassword():
                             urldiscord = DISCORD_URL)):
             return jsonify({"msg": "Password successfully replaced | mail OK"}), code
         else:
-            return jsonify({"msg": "Password successfully replaced | mail KO"}), 206
+            return jsonify({"msg": "Password successfully replaced | mail KO"}), code
     else:
         return jsonify({"msg": "Oops!"}), 422
 
