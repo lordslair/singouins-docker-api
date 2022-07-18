@@ -12,20 +12,7 @@ def fn_creature_view_get(creature):
 
     try:
         # We check if we have the data in redis
-        cached_stats = RedisStats(creature).as_dict()
-        if cached_stats:
-            # Data was in Redis, so we return it
-            creature_stats = cached_stats
-        else:
-            # Data was not in Redis, so we compute it
-            generated_stats = RedisStats(creature).refresh().dict
-            if generated_stats:
-                # Data was computed, so we return it
-                creature_stats = generated_stats
-            else:
-                msg = f'Stats computation KO (creatureid:{creature.id})'
-                logger.error(msg)
-                return None
+        creature_stats  = RedisStats(creature).dict
 
         range = 4 + round(creature_stats['base']['p'] / 50)
         maxx  = creature.x + range
@@ -74,20 +61,7 @@ def fn_creature_squad_view_get(creature):
     views = [] # We initialize the result array
     for pc in squad:
         # We check if we have the data in redis
-        cached_stats = RedisStats(pc).as_dict()
-        if cached_stats:
-            # Data was in Redis, so we return it
-            creature_stats = cached_stats
-        else:
-            # Data was not in Redis, so we compute it
-            generated_stats = RedisStats(pc).refresh().dict
-            if generated_stats:
-                # Data was computed, so we return it
-                creature_stats = generated_stats
-            else:
-                msg = f'Stats computation KO (pcid:{pc.id})'
-                logger.error(msg)
-                return None
+        creature_stats  = RedisStats(pc).dict
         try:
             range = 4 + round(creature_stats['base']['p'] / 50)
             maxx  = pc.x + range

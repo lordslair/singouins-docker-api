@@ -45,9 +45,11 @@ def test_singouins_internal_creature():
 def test_singouins_internal_creature_stats():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats'
     response  = requests.get(url, headers=HEADERS)
+    stats     = json.loads(response.text)['payload']['stats']
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
+    assert stats['def']['hp']                   <= stats['def']['hpmax']
 
 def test_singouins_internal_creature_wallet():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet'

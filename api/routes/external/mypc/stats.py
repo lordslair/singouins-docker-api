@@ -30,23 +30,7 @@ def stats_get(pcid):
 
     try:
         # We check if we have the data in redis
-        cached_stats = RedisStats(pc).as_dict()
-        if cached_stats:
-            # Data was in Redis, so we return it
-            pc_stats = cached_stats
-        else:
-            # Data was not in Redis, so we compute it
-            generated_stats = RedisStats(pc).refresh().dict
-            if generated_stats:
-                # Data was computed, so we return it
-                pc_stats = generated_stats
-            else:
-                msg = f'Stats computation KO (pcid:{pc.id})'
-                logger.error(msg)
-                return (200,
-                        False,
-                        msg,
-                        None)
+        creature_stats  = RedisStats(pc)
     except Exception as e:
         msg = f'Stats Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
@@ -56,4 +40,4 @@ def stats_get(pcid):
     else:
         return jsonify({"success": True,
                         "msg": f'Stats Query OK (pcid:{pc.id})',
-                        "payload": pc_stats}), 200
+                        "payload": creature_stats.dict}), 200

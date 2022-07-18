@@ -40,22 +40,16 @@ def creature_stats(creatureid):
 
     try:
         # We check if we have the data in redis
-        cached_stats = RedisStats(creature).as_dict()
-        if cached_stats:
-            # Data was in Redis, so we return it
-            creature_stats = cached_stats
+        creature_stats = RedisStats(creature)
+        if creature_stats:
+            logger.trace(f'creature_stats:{creature_stats.__dict__}')
+            pass
         else:
-            # Data was not in Redis, so we compute it
-            generated_stats = RedisStats(creature).refresh().dict
-            if generated_stats:
-                # Data was computed, so we return it
-                creature_stats = generated_stats
-            else:
-                msg = f'Stats computation KO (pcid:{pc.id})'
-                logger.error(msg)
-                return jsonify({"success": False,
-                                "msg": msg,
-                                "payload": None}), 200
+            msg = f'Stats computation KO (creature.id:{creature.id})'
+            logger.error(msg)
+            return jsonify({"success": False,
+                            "msg": msg,
+                            "payload": None}), 200
     except Exception as e:
         msg = f'Stats Query KO (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -65,5 +59,5 @@ def creature_stats(creatureid):
     else:
         return jsonify({"success": True,
                         "msg": f'Stats Query OK (creatureid:{creature.id})',
-                        "payload": {"stats":    creature_stats,
+                        "payload": {"stats":    creature_stats.dict,
                                     "creature": creature}}), 200

@@ -8,6 +8,8 @@ from mysql.methods.fn_inventory import *
 from mysql.methods.fn_user      import *
 from nosql                      import *
 
+from nosql.models.RedisStats    import *
+
 # Loading the Meta for later use
 try:
     metaRaces   = metas.get_meta('race')
@@ -164,7 +166,9 @@ def mypc_del(pcid):
             logger.trace('PC Wallet delete OK')
 
         if fn_creature_stats_del(creature):
-            logger.trace('PC Stats delete OK')
+            logger.trace('PC Stats delete OK (MySQL)')
+        if RedisStats(creature).destroy():
+            logger.trace('PC Stats delete OK (Redis)')
 
         # Now we can delete tue PC itself
         if fn_creature_del(creature):
