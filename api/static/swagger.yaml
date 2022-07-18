@@ -561,6 +561,41 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureWalletResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/wallet/{caliber}/{operation}/{count}:
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Wallet request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+            nullable: false
+          required: true
+        - in: path
+          name: operation
+          schema:
+            type: string
+            enum: [add, consume]
+            nullable: false
+          required: true
+        - in: path
+          name: count
+          schema:
+            type: int
+            nullable: false
+            minimum: 1
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureWalletResponse'
+      security:
+        - internal_token: []
   /internal/creatures:
     get:
       tags:
@@ -2475,13 +2510,44 @@ components:
       type: object
       nullable: false
       properties:
+        currency:
+          $ref: '#/components/schemas/WalletCurrencyObject'
+        ammo:
+          $ref: '#/components/schemas/WalletAmmoObject'
+        shards:
+          $ref: '#/components/schemas/WalletShardsObject'
+
+    WalletShardsObject:
+      type: object
+      nullable: false
+      properties:
+        broken:
+          type: integer
+          nullable: false
+        common:
+          type: integer
+          nullable: false
+        epic:
+          type: integer
+          nullable: false
+        legendary:
+          type: integer
+          nullable: false
+        rare:
+          type: integer
+          nullable: false
+        uncommon:
+          type: integer
+          nullable: false
+
+    WalletAmmoObject:
+      type: object
+      nullable: false
+      properties:
         arrow:
           type: integer
           nullable: false
         bolt:
-          type: integer
-          nullable: false
-        broken:
           type: integer
           nullable: false
         cal22:
@@ -2499,31 +2565,18 @@ components:
         cal55:
           type: integer
           nullable: false
-        common:
-          type: integer
-          nullable: false
-        currency:
-          type: integer
-          nullable: false
-        date:
-          type: string
-          nullable: false
-        epic:
-          type: integer
-          nullable: false
-        id:
-          type: integer
-          nullable: false
-        legendary:
-          type: integer
-          nullable: false
-        rare:
-          type: integer
-          nullable: false
         shell:
           type: integer
           nullable: false
-        uncommon:
+
+    WalletCurrencyObject:
+      type: object
+      nullable: false
+      properties:
+        bananas:
+          type: integer
+          nullable: false
+        sausages:
           type: integer
           nullable: false
 

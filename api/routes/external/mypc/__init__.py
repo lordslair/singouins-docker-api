@@ -9,6 +9,7 @@ from mysql.methods.fn_user      import *
 from nosql                      import *
 
 from nosql.models.RedisStats    import *
+from nosql.models.RedisWallet   import *
 
 # Loading the Meta for later use
 try:
@@ -70,20 +71,34 @@ def mypc_add():
                                     "payload": None}), 200
 
                 try:
-                    if fn_cosmetic_add(pc,pccosmetic):
-                        logger.debug('PC Cosmetic OK')
-                    if fn_slots_add(pc):
-                        logger.debug('PC Slots OK')
-                    if fn_wallet_add(pc):
-                        logger.debug('PC Wallet OK')
-                    if fn_creature_stats_add(pc,metaRace,pcclass):
-                        logger.debug('PC Stats OK')
+                    # We initialize a fresh wallet
+                    redis_wallet = RedisWallet(pc).init()
                 except Exception as e:
-                    msg = f'PC Cosmetics/Slots/Wallet/Stats creation KO [{e}]'
+                    msg = f'PC RedisWallet creation KO [{e}]'
                     logger.error(msg)
                     return jsonify({"success": False,
                                     "msg": msg,
                                     "payload": None}), 200
+                else:
+                    if redis_wallet:
+                        logger.trace('PC RedisWallet creation OK')
+                    else:
+                        logger.warning('PC RedisWallet creation KO')
+
+                try:
+                    if fn_cosmetic_add(pc,pccosmetic):
+                        logger.debug('PC Cosmetic OK')
+                    if fn_slots_add(pc):
+                        logger.debug('PC Slots OK')
+                    if fn_creature_stats_add(pc,metaRace,pcclass):
+                        logger.debug('PC Stats OK')
+                except Exception as e:
+                    msg = f'PC Cosmetics/Slots creation KO [{e}]'
+                    logger.error(msg)
+                    return jsonify({"success": False,
+                                    "msg": msg,
+                                    "payload": None}), 200
+
                 else:
                     if pcequipment:
                         try:
@@ -109,6 +124,7 @@ def mypc_add():
                                              "state"     : 100,
                                              "rarity"    : 'Common'}
                                 lh = fn_item_add(pc,lh_caracs)
+
                         except Exception as e:
                             msg = f'PC Weapons creation KO [{e}]'
                             logger.error(msg)
@@ -176,13 +192,14 @@ def mypc_del(pcid):
             logger.trace('PC Cosmetics delete OK')
         if fn_slots_del(creature):
             logger.trace('PC Slots delete OK')
-        if fn_wallet_del(creature):
-            logger.trace('PC Wallet delete OK')
 
         if fn_creature_stats_del(creature):
             logger.trace('PC Stats delete OK (MySQL)')
         if RedisStats(creature).destroy():
             logger.trace('PC Stats delete OK (Redis)')
+
+        if RedisWallet(creature).destroy():
+            logger.trace('PC RedisWallet delete OK')
 
         # Now we can delete tue PC itself
         if fn_creature_del(creature):

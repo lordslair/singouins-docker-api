@@ -2,7 +2,7 @@
 
 from ..session          import Session
 from ..models.items     import Cosmetic,Item
-from ..models.creatures import CreatureSlots,Wallet
+from ..models.creatures import CreatureSlots
 
 from nosql              import * # Custom internal module for Redis queries
 
@@ -336,72 +336,5 @@ def fn_slots_set_one(creature,slot,itemid):
         return None
     else:
         return slots
-    finally:
-        session.close()
-
-#
-# Wallet
-#
-
-def fn_wallet_add(creature):
-    session = Session()
-
-    try:
-        wallet = Wallet(id = creature.id)
-
-        # Money is added
-        wallet.currency = 250
-
-        session.add(wallet)
-        session.commit()
-        session.refresh(wallet)
-    except Exception as e:
-        session.rollback()
-        logger.error(f'Wallet Query KO [{e}]')
-        return None
-    else:
-        if wallet:
-            return wallet
-        else:
-            return None
-    finally:
-        session.close()
-
-def fn_wallet_del(creature):
-    session = Session()
-
-    try:
-        wallet = session.query(Wallet)\
-                        .filter(Wallet.id == creature.id)\
-                        .one_or_none()
-
-        if wallet: session.delete(wallet)
-
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        logger.error(f'Wallet Query KO [{e}]')
-        return None
-    else:
-        return True
-    finally:
-        session.close()
-
-def fn_wallet_get(creature):
-    session = Session()
-
-    try:
-        wallet = session.query(Wallet)\
-                        .filter(Wallet.id == creature.id)\
-                        .one_or_none()
-    except Exception as e:
-        session.rollback()
-        logger.error(f'Wallet Query KO [{e}]')
-        return None
-    else:
-        if wallet:
-            return wallet
-        else:
-            return None
     finally:
         session.close()

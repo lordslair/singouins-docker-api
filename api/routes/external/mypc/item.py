@@ -8,6 +8,7 @@ from mysql.methods.fn_inventory import *
 from mysql.methods.fn_user      import fn_user_get
 
 from nosql                      import *
+from nosql.models.RedisWallet   import *
 
 #
 # Routes /mypc/{pcid}/item
@@ -32,11 +33,11 @@ def item_get(pcid):
         all_items_sql  = fn_item_get_all(creature)
         all_items_json = json.loads(jsonify(all_items_sql).get_data())
 
-        armor     = [x for x in all_items_json if x['metatype'] == 'armor']
-        slots     = fn_slots_get_all(creature)
-        cosmetic  = fn_cosmetics_get_all(creature)
-        wallet    = [fn_wallet_get(creature)]
-        weapon    = [x for x in all_items_json if x['metatype'] == 'weapon']
+        armor        = [x for x in all_items_json if x['metatype'] == 'armor']
+        slots        = fn_slots_get_all(creature)
+        cosmetic     = fn_cosmetics_get_all(creature)
+        redis_wallet = RedisWallet(creature)
+        weapon       = [x for x in all_items_json if x['metatype'] == 'weapon']
     except Exception as e:
         msg = f'Items Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -50,4 +51,4 @@ def item_get(pcid):
                                     "armor":     armor,
                                     "equipment": slots,
                                     "cosmetic":  cosmetic,
-                                    "wallet":    wallet}}), 200
+                                    "wallet":    redis_wallet.dict}}), 200

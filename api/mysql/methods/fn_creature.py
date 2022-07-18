@@ -8,9 +8,10 @@ from ..session           import Session
 from ..models            import (Creature,
                                  CreatureSlots,
                                  CreatureStats,
-                                 Item,
-                                 Wallet)
+                                 Item)
 from nosql               import * # Custom internal module for Redis queries
+
+from nosql.models.RedisWallet   import *
 
 from ..utils.loot        import *
 
@@ -230,12 +231,16 @@ def fn_creature_gain_loot(pc,tg):
             # Loots are generated
             loots   = get_loots(tg)
             # We add loot only to the killer
-            wallet           = session.query(Wallet)\
-                                      .filter(Wallet.id == pc.id)\
-                                      .one_or_none()
+            redis_wallet     = RedisWallet(pc)
             currency         = loots[0]['currency']
-            wallet.currency += currency       # We add currency
-            wallet.date      = datetime.now() # We update the date in DB
+
+            if pc.race <= 4:
+                # It is a Singouin, we add bananas
+                redis_wallet.bananas += currency
+            else:
+                redis_wallet.sausages += currency
+            # We store the Wallet
+            redis_wallet.store()
 
             incr_hs(pc,f'combat:loot:currency', currency) # Redis HighScore
 
@@ -272,12 +277,16 @@ def fn_creature_gain_loot(pc,tg):
             for pcsquad in squadlist:
                 # Loots are generated
                 loots            = get_loots(tg)
-                wallet           = session.query(Wallet)\
-                                          .filter(Wallet.id == pcsquad.id)\
-                                          .one_or_none()
-                currency = round(loots[0]['currency']/len(squadlist))
-                wallet.currency += currency       # We add currency
-                wallet.date      = datetime.now() # We update the date in DB
+                redis_wallet     = RedisWallet(pc)
+                currency         = round(loots[0]['currency']/len(squadlist))
+
+                if pc.race <= 4:
+                    # It is a Singouin, we add bananas
+                    redis_wallet.bananas += currency
+                else:
+                    redis_wallet.sausages += currency
+                # We store the Wallet
+                redis_wallet.store()
 
                 incr_hs(pcsquad,f'combat:loot:currency', currency) # Redis HighScore
 

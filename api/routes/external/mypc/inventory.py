@@ -7,11 +7,11 @@ from loguru                     import logger
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 from mysql.methods.fn_inventory import *
-from mysql.methods.fn_wallet    import fn_wallet_shards_add
 
 from nosql.models.RedisPa       import *
 from nosql.models.RedisStats    import *
 from nosql.models.RedisEvent    import *
+from nosql.models.RedisWallet   import *
 from nosql                      import *
 
 #
@@ -53,28 +53,38 @@ def inventory_item_dismantle(pcid,itemid):
                             "msg": msg,
                             "payload": None}), 200
 
-    if   item.rarity == 'Broken':
-        shards = [6,0,0,0,0,0]
-        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[0])
-    elif item.rarity == 'Common':
-        shards = [0,5,0,0,0,0]
-        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[1])
-    elif item.rarity == 'Uncommon':
-        shards = [0,0,4,0,0,0]
-        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[2])
-    elif item.rarity == 'Rare':
-        shards = [0,0,0,3,0,0]
-        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[3])
-    elif item.rarity == 'Epic':
-        shards = [0,0,0,0,2,0]
-        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[4])
-    elif item.rarity == 'Legendary':
-        shards = [0,0,0,0,0,1]
-        incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', shards[5])
-
     try:
         # We add the shards in the wallet
-        wallet = fn_wallet_shards_add(pc,shards)
+        redis_wallet = RedisWallet(pc)
+        if   item.rarity == 'Broken':
+            redis_wallet.broken += 6
+            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 6)
+        elif item.rarity == 'Common':
+            redis_wallet.common += 5
+            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 5)
+        elif item.rarity == 'Uncommon':
+            redis_wallet.uncommon += 4
+            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 4)
+        elif item.rarity == 'Rare':
+            redis_wallet.rare += 3
+            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 3)
+        elif item.rarity == 'Epic':
+            redis_wallet.epic += 2
+            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 2)
+        elif item.rarity == 'Legendary':
+            redis_wallet.legendary += 1
+            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 1)
+    except Exception as e:
+        msg = f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        # We store the Wallet into Redis
+        redis_wallet.store()
+        redis_wallet.refresh()
     except Exception as e:
         msg = f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
@@ -107,13 +117,8 @@ def inventory_item_dismantle(pcid,itemid):
         # JOB IS DONE
         return jsonify({"success": True,
                         "msg": f'Item dismantle OK (pcid:{pc.id})',
-                        "payload": {"shards": {"Broken":    shards[0],
-                                               "Common":    shards[1],
-                                               "Uncommon":  shards[2],
-                                               "Rare":      shards[3],
-                                               "Epic":      shards[4],
-                                               "Legendary": shards[5]},
-                                    "wallet": wallet}}), 200
+                        "payload": {"creature": pc,
+                                    "wallet":   redis_wallet.dict}}), 200
 
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>
 @jwt_required()

@@ -157,8 +157,8 @@ def test_singouins_inventory_item_dismantle():
 
     url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/dismantle' # POST
     response   = requests.post(url, headers=headers)
-    common     = json.loads(response.text)['payload']['shards']['Common']
+    shards     = json.loads(response.text)['payload']['wallet']['shards']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
-    assert common > 0
+    assert shards['common'] > 0

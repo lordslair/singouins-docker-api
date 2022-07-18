@@ -33,9 +33,9 @@ def test_singouins_action_unload():
 
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
-    wallet     = json.loads(response.text)['payload']['wallet'][0]
+    wallet     = json.loads(response.text)['payload']['wallet']
 
-    assert wallet['cal22'] > 0
+    assert wallet['ammo']['cal22'] > 0
 
 def test_singouins_action_reload():
     url      = f'{API_URL}/auth/login' # POST
@@ -64,6 +64,6 @@ def test_singouins_action_reload():
 
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
-    wallet     = json.loads(response.text)['payload']['wallet'][0]
+    wallet     = json.loads(response.text)['payload']['wallet']
 
-    assert wallet['cal22'] == 0
+    assert wallet['ammo']['cal22'] == 0
