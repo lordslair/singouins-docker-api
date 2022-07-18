@@ -51,6 +51,41 @@ def test_singouins_internal_creature_stats():
     assert json.loads(response.text)['success'] == True
     assert stats['def']['hp']                   <= stats['def']['hpmax']
 
+def test_singouins_internal_creature_stats_hp_consume():
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats'
+    response  = requests.get(url, headers=HEADERS)
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] == True
+
+    hp = json.loads(response.text)['payload']['stats']['def']['hp']
+
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats/hp/consume/30'
+    response  = requests.put(url, headers=HEADERS)
+    payload   = json.loads(response.text)['payload']
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] == True
+    assert payload['stats']['def']['hp']        == hp - 30
+
+
+def test_singouins_internal_creature_stats_hp_add():
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats'
+    response  = requests.get(url, headers=HEADERS)
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] == True
+
+    hp = json.loads(response.text)['payload']['stats']['def']['hp']
+
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats/hp/add/20'
+    response  = requests.put(url, headers=HEADERS)
+    payload   = json.loads(response.text)['payload']
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] == True
+    assert payload['stats']['def']['hp']        == hp + 20
+
 def test_singouins_internal_creature_wallet():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet'
     response  = requests.get(url, headers=HEADERS)

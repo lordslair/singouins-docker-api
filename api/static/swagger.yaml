@@ -389,6 +389,42 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatsResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/stats/hp/{operation}/{count}:
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Stats operation (HP)
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+            nullable: false
+            minimum: 1
+          required: true
+        - in: path
+          name: operation
+          schema:
+            type: string
+            enum: [add, consume]
+            nullable: false
+          required: true
+        - in: path
+          name: count
+          schema:
+            type: integer
+            nullable: false
+            minimum: 1
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureStatsResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/status/{statusmetaid}:
     put:
       tags:

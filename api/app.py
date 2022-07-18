@@ -419,6 +419,9 @@ app.add_url_rule('/internal/creature/<int:creatureid>/statuses',
 app.add_url_rule('/internal/creature/<int:creatureid>/stats',
                  methods=['GET'],
                  view_func=routes.internal.creature.stats.creature_stats)
+app.add_url_rule('/internal/creature/<int:creatureid>/stats/hp/<string:operation>/<int:count>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.stats.creature_stats_hp_modify)
 # Routes /internal/creature/{creatureid}/wallet/*
 app.add_url_rule('/internal/creature/<int:creatureid>/wallet',
                  methods=['GET'],
