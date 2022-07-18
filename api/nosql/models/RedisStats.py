@@ -2,7 +2,7 @@
 
 from nosql.connector            import *
 
-from mysql.methods.fn_creature  import fn_creature_get,fn_creature_stats_get
+from mysql.methods.fn_creature  import fn_creature_stats_get
 from mysql.methods.fn_inventory import fn_slots_get_all,fn_item_get_one
 
 class RedisStats:
@@ -67,7 +67,12 @@ class RedisStats:
 
                 self.dodge = self.r
                 self.parry = round(((self.g-100)/50) * ((self.m-100)/50))
+            except Exception as e:
+                logger.error(f'{self.logh} Method KO (Building from Caracs) [{e}]')
+            else:
+                logger.trace(f'{self.logh} Method >> (Building from Caracs)')
 
+            try:
                 # Working to find armor from equipped items
                 self.arm_b = 0
                 self.arm_p = 0
@@ -86,7 +91,12 @@ class RedisStats:
                             metaWeapon = dict(list(filter(lambda x:x["id"] == armor.metaid,metaWeapons))[0]) # Gruikfix
                             self.arm_b += metaWeapon['arm_b']
                             self.arm_p += metaWeapon['arm_p']
+            except Exception as e:
+                logger.error(f'{self.logh} Method KO (Building from Equipment) [{e}]')
+            else:
+                logger.trace(f'{self.logh} Method >> (Building from Equipment)')
 
+            try:
                 # We push data in final dict
                 logger.trace(f'{self.logh} Method >> (Storing HASH)')
                 hashdict = {"m":      0 + self.m,
@@ -104,9 +114,9 @@ class RedisStats:
                             "dodge":  self.r,
                             "parry":  self.parry}
 
-                r.hmset(self.hkey, hashdict)
+                r.hset(self.hkey, mapping=hashdict)
             except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
+                logger.error(f'{self.logh} Method KO (Storing HASH) [{e}]')
             else:
                 logger.trace(f'{self.logh} Method OK')
 

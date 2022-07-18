@@ -116,10 +116,24 @@ def mypc_add():
                                             "msg": msg,
                                             "payload": None}), 200
                         else:
-                            logger.debug(pc)
-                            return jsonify({"success": True,
-                                            "msg": f'PC creation OK (pcid:{pc.id})',
-                                            "payload": pc}), 201
+                            # Everything has been populated. Stats can be done
+                            try:
+                                # We initialize a fresh stats
+                                redis_stats = RedisStats(pc)
+                                # We immediately store it
+                                redis_stats.store()
+                            except Exception as e:
+                                msg = f'PC RedisStats creation KO [{e}]'
+                                logger.error(msg)
+                                return jsonify({"success": False,
+                                                "msg": msg,
+                                                "payload": None}), 200
+                            else:
+                                logger.trace('PC RedisStats creation OK')
+                                logger.debug(pc)
+                                return jsonify({"success": True,
+                                                "msg":     f'PC creation OK (pcid:{pc.id})',
+                                                "payload": pc}), 201
 
 # API: GET /mypc
 @jwt_required()
