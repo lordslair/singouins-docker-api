@@ -88,7 +88,7 @@ class RedisStatus:
                                 "type":          self.type
                             }
             else:
-                logger.trace(f'{self.logh} Method KO - HASH not found')
+                logger.warning(f'{self.logh} Method KO - HASH not found')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
