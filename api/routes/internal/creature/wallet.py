@@ -118,7 +118,7 @@ def creature_wallet_modify(creatureid,caliber,operation,count):
 
         # This returns True if the HASH is properly stored in Redis
         stored_wallet     = redis_wallet.store()
-        redis_wallet_new  = redis_wallet.refresh()
+        redis_wallet.refresh()
     except Exception as e:
         msg = f'Wallet Query KO - Failed (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -126,10 +126,10 @@ def creature_wallet_modify(creatureid,caliber,operation,count):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if stored_wallet and redis_wallet_new:
+        if stored_wallet and redis_wallet:
             return jsonify({"success": True,
                             "msg": f'Wallet Query OK (pcid:{creature.id})',
-                            "payload": {"wallet":   redis_wallet_new.dict,
+                            "payload": {"wallet":   redis_wallet.dict,
                                         "creature": creature}}), 200
         else:
             return jsonify({"success": True,
