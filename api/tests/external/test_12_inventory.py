@@ -74,6 +74,15 @@ def test_singouins_inventory_item_unequip():
     assert json.loads(response.text)['success'] == True
     assert equipment['holster'] is None
 
+    # We need to re-equip it for some /internal tests later
+    url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/equip/weapon/holster' # POST
+    response   = requests.post(url, headers=headers)
+    equipment  = json.loads(response.text)['payload']['equipment']
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] == True
+    assert equipment['holster'] == itemid
+
 def test_singouins_inventory_item_offset_move():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)

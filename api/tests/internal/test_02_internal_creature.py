@@ -35,6 +35,9 @@ def test_singouins_internal_creature_equipment_ammo_consume():
             itemid = equipment['lefthand']['id']
             ammo   = equipment['righthand']['ammo']
 
+    assert itemid is not None
+    assert ammo   is not None
+
     if itemid and ammo:
         url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/consume/1'
         response  = requests.put(url, headers=HEADERS)
@@ -65,6 +68,9 @@ def test_singouins_internal_creature_equipment_ammo_add():
             itemid = equipment['lefthand']['id']
             ammo   = equipment['righthand']['ammo']
 
+    assert itemid is not None
+    assert ammo   is not None
+
     if itemid and ammo:
         url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/add/2'
         response  = requests.put(url, headers=HEADERS)
@@ -94,6 +100,9 @@ def test_singouins_internal_creature_equipment_ammo_weird():
         if equipment['lefthand']['ammo'] > 0:
             itemid = equipment['lefthand']['id']
             ammo   = equipment['righthand']['ammo']
+
+    assert itemid is not None
+    assert ammo   is not None
 
     if itemid and ammo:
         url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/plop/add/2'
