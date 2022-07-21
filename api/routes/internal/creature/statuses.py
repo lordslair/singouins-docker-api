@@ -4,7 +4,6 @@ from flask                      import Flask, jsonify, request
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
 
 from nosql.models.RedisStatus   import *
 

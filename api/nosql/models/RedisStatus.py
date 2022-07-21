@@ -2,11 +2,10 @@
 
 from nosql.connector            import *
 
-from mysql.methods.fn_creature  import fn_creature_get
-
 class RedisStatus:
     def __init__(self,creature):
         self.hkey     = f'statuses:{creature.instance}:{creature.id}'
+        self.instance = creature.instance
         self.logh     = f'[creature.id:{creature.id}]'
 
         # The pre-generated statuses does not already exist in redis
@@ -32,6 +31,7 @@ class RedisStatus:
                             "bearer":        self.bearer,
                             "duration_base": self.duration_base,
                             "duration_left": self.duration_left,
+                            "id":            1,
                             "name":          self.name,
                             "source":        self.source,
                             "type":          self.type
@@ -83,6 +83,7 @@ class RedisStatus:
                                 "bearer":        self.bearer,
                                 "duration_base": self.duration_base,
                                 "duration_left": self.duration_left,
+                                "id":            1,
                                 "name":          self.name,
                                 "source":        self.source,
                                 "type":          self.type
@@ -105,9 +106,9 @@ class RedisStatus:
         try:
             # We get the list of keys for all the statuses
             keys        = r.keys(path)
-            logger.debug(f'keys:{keys}')
+            logger.trace(f'keys:{keys}')
             sorted_keys = sorted(keys)
-            logger.debug(f'sorted_keys:{sorted_keys}')
+            logger.trace(f'sorted_keys:{sorted_keys}')
             # We initialize indexes used during iterations
             index       = 0
             # We create a pipeline to query the keys TTL
@@ -119,7 +120,7 @@ class RedisStatus:
 
             # We loop over the status keys to build the data
             for key in sorted_keys:
-                logger.debug(f'key:{key}')
+                logger.trace(f'key:{key}')
                 status = {
                             "bearer":        self.bearer,
                             "duration_base": int(pipeline[index]['duration_base']),
@@ -149,9 +150,9 @@ class RedisStatus:
         try:
             # We get the list of keys for all the statuses
             keys        = r.keys(path)
-            logger.debug(f'keys:{keys}')
+            logger.trace(f'keys:{keys}')
             sorted_keys = sorted(keys)
-            logger.debug(f'sorted_keys:{sorted_keys}')
+            logger.trace(f'sorted_keys:{sorted_keys}')
             # We initialize indexes used during iterations
             index       = 0
             # We create a pipeline to query the keys TTL
@@ -163,7 +164,7 @@ class RedisStatus:
 
             # We loop over the status keys to build the data
             for key in sorted_keys:
-                logger.debug(f'key:{key}')
+                logger.trace(f'key:{key}')
                 status = {
                             "bearer":        int(pipeline[index]['bearer']),
                             "duration_base": int(pipeline[index]['duration_base']),

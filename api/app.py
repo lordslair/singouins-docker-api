@@ -53,6 +53,7 @@ import                      routes.external.mypc.mp
 import                      routes.external.mypc.pa
 import                      routes.external.mypc.squad
 import                      routes.external.mypc.stats
+import                      routes.external.mypc.statuses
 import                      routes.external.mypc.view
 import                      routes.external.pc
 
@@ -157,17 +158,18 @@ app.add_url_rule('/mypc/<int:pcid>/stats',
 
 #
 # Routes: /cds
+#         /effects
+#         /statuses
 #
 app.add_url_rule('/mypc/<int:pcid>/cds',
                  methods=['GET'],
                  view_func=routes.external.mypc.cds.cds_get)
-
-#
-# Routes: /effects
-#
 app.add_url_rule('/mypc/<int:pcid>/effects',
                  methods=['GET'],
                  view_func=routes.external.mypc.effects.effects_get)
+app.add_url_rule('/mypc/<int:pcid>/statuses',
+                 methods=['GET'],
+                 view_func=routes.external.mypc.statuses.statuses_get)
 
 #
 # Routes: /view

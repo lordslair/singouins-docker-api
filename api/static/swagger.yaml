@@ -1033,6 +1033,27 @@ paths:
       responses:
         '200':
           description: OK - CDs found
+  /mypc/{pcid}/statuses:
+    get:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC Statuses
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: OK - Statuses found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureStatusesResponse'
   /mypc/{pcid}/view:
     get:
       tags:
@@ -2510,31 +2531,33 @@ components:
         bearer:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         duration_base:
           type: integer
           nullable: false
+          example: 300
+          minimum: 1
         duration_left:
           type: integer
           nullable: false
         id:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         name:
-          type: object
+          type: string
           nullable: false
-          properties:
-            en:
-              type: string
-              nullable: false
-            fr:
-              type: string
-              nullable: false
         source:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         type:
           type: string
           nullable: false
+          example: 'status'
     UserObject:
       type: object
       nullable: true
