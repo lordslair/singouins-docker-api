@@ -375,6 +375,9 @@ app.add_url_rule('/internal/creature/<int:creatureid>/cds',
 app.add_url_rule('/internal/creature/<int:creatureid>/equipment',
                  methods=['GET'],
                  view_func=routes.internal.creature.equipment.creature_equipment)
+app.add_url_rule('/internal/creature/<int:creatureid>/equipment/<int:itemid>/ammo/<string:operation>/<int:count>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.equipment.creature_equipment_modifiy)
 # Routes /internal/creature/{creatureid}/effect/*
 app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectmetaid>',
                  methods=['PUT'],

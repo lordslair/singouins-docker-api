@@ -292,6 +292,47 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureEquipmentResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/equipment/{itemid}/ammo/{operation}/{count}:
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Equipment request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: itemid
+          schema:
+            type: int
+            nullable: false
+            minimum: 1
+          required: true
+        - in: path
+          name: operation
+          schema:
+            type: string
+            enum: [add, consume]
+            nullable: false
+          required: true
+        - in: path
+          name: count
+          schema:
+            type: int
+            nullable: false
+            minimum: 1
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureItemResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/pa:
     get:
       tags:
@@ -1898,6 +1939,26 @@ components:
         success:
           type: boolean
           nullable: false
+
+    InternalCreatureItemResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            creature:
+              $ref: '#/components/schemas/PcObject'
+            equipment:
+              $ref: '#/components/schemas/ItemObject'
+        success:
+          type: boolean
+          nullable: false
+
     InternalCreatureEffectResponse:
       type: object
       properties:
