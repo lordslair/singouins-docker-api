@@ -99,7 +99,7 @@ class RedisStatus:
 
     def get_all(self):
         path      = f'{self.hkey}:*'
-        #                         └────> Wildcard for {statusmetaname}
+        #                         └────> Wildcard for {status_name}
         statuses  = []
 
         try:
@@ -122,6 +122,50 @@ class RedisStatus:
                 logger.debug(f'key:{key}')
                 status = {
                             "bearer":        self.bearer,
+                            "duration_base": int(pipeline[index]['duration_base']),
+                            "duration_left": int(pipeline[index+1]),
+                            "id":            int(1 + index/2),
+                            "name":          pipeline[index]['name'],
+                            "source":        int(pipeline[index]['source']),
+                            "type":          pipeline[index]['duration_base']
+                         }
+                # We update the index for next iteration
+                index += 2
+                # We add the status into statuses list
+                statuses.append(status)
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.logh} Method OK')
+            return statuses
+
+    def get_all_instance(self):
+        path      = f'statuses:{self.instance}:*:*'
+        #                                      │ └────────> Wildcard for {status_name}
+        #                                      └──────────> Wildcard for {creatureid}
+        statuses  = []
+
+        try:
+            # We get the list of keys for all the statuses
+            keys        = r.keys(path)
+            logger.debug(f'keys:{keys}')
+            sorted_keys = sorted(keys)
+            logger.debug(f'sorted_keys:{sorted_keys}')
+            # We initialize indexes used during iterations
+            index       = 0
+            # We create a pipeline to query the keys TTL
+            p = r.pipeline()
+            for key in sorted_keys:
+                p.hgetall(key)
+                p.ttl(key)
+            pipeline = p.execute()
+
+            # We loop over the status keys to build the data
+            for key in sorted_keys:
+                logger.debug(f'key:{key}')
+                status = {
+                            "bearer":        int(pipeline[index]['bearer']),
                             "duration_base": int(pipeline[index]['duration_base']),
                             "duration_left": int(pipeline[index+1]),
                             "id":            int(1 + index/2),
