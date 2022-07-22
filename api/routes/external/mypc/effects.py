@@ -6,7 +6,7 @@ from flask_jwt_extended         import jwt_required,get_jwt_identity
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql                      import *
+from nosql.models.RedisEffect   import *
 
 #
 # Routes /mypc/{pcid}/effects
@@ -28,14 +28,16 @@ def effects_get(pcid):
                         "payload": None}), 409
 
     try:
-        pc_effects = effects.get_effects(pc)
+        pc_effect  = RedisEffect(pc)
+        pc_effects = pc_effect.get_all()
     except Exception as e:
-        msg = f'Stats Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'Effects Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
     else:
         return jsonify({"success": True,
-                        "msg": f'Stats Query OK (pcid:{pc.id})',
-                        "payload": pc_effects}), 200
+                        "msg": f'Effects Query OK (pcid:{pc.id})',
+                        "payload": {"effects":  pc_effects,
+                                    "creature": pc}}), 200

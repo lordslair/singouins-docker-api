@@ -95,6 +95,8 @@ def test_singouins_mypc_effects():
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
+    payload = json.loads(response.text)['payload']
+    assert isinstance(payload['effects'], list)
 
 def test_singouins_mypc_cds():
     url      = f'{API_URL}/auth/login' # POST

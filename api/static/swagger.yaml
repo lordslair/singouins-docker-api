@@ -187,7 +187,7 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureCdsResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/effect/{effectmetaid}:
+  /internal/creature/{creatureid}/effect/{effect_name}:
     put:
       tags:
         - '/internal : Internal requests'
@@ -199,9 +199,10 @@ paths:
             type: integer
           required: true
         - in: path
-          name: effectmetaid
+          name: effect_name
           schema:
-            type: integer
+            type: string
+            example: 'EffectName'
           required: true
       requestBody:
         description: ''
@@ -214,9 +215,21 @@ paths:
                 duration:
                   type: integer
                   nullable: false
-                sourceid:
+                  minimum: 1
+                  example: 300
+                extra:
+                  type: object
+                  properties:
+                    extrakey:
+                      type: string
+                      nullable: true
+                      example: 'extravalue'
+                  nullable: true
+                source:
                   type: integer
                   nullable: false
+                  minimum: 1
+                  example: 300
       responses:
         '200':
           description: OK
@@ -226,16 +239,16 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureEffectsResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/effect/{effectid}:
     delete:
       tags:
         - '/internal : Internal requests'
       summary: Internal Creature DEL Effect request
       parameters:
         - in: path
-          name: effectid
+          name: effect_name
           schema:
-            type: integer
+            type: string
+            example: 'EffectName'
           required: true
         - in: path
           name: creatureid
@@ -1069,6 +1082,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreatureCdsResponse'
+  /mypc/{pcid}/effects:
+    get:
+      tags:
+        - '/mypc: PC Requests (on your own PC)'
+      summary: Get PC Effects
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: OK - Effects found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureEffectsResponse'
   /mypc/{pcid}/statuses:
     get:
       tags:
@@ -2303,6 +2337,14 @@ components:
         duration_left:
           type: integer
           nullable: false
+        extra:
+          type: object
+          properties:
+            extrakey:
+              type: string
+              nullable: true
+              example: 'extravalue'
+          nullable: true
         id:
           type: integer
           nullable: false
@@ -2328,31 +2370,41 @@ components:
         bearer:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         duration_base:
           type: integer
           nullable: false
+          example: 300
+          minimum: 1
         duration_left:
           type: integer
           nullable: false
+        extra:
+          type: object
+          properties:
+            extrakey:
+              type: string
+              nullable: true
+              example: 'extravalue'
+          nullable: true
         id:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         name:
-          type: object
+          type: string
           nullable: false
-          properties:
-            en:
-              type: string
-              nullable: false
-            fr:
-              type: string
-              nullable: false
         source:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         type:
           type: string
           nullable: false
+          example: 'effect'
     InstanceObject:
       type: object
       nullable: true

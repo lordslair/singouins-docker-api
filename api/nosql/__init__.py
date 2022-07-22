@@ -6,7 +6,6 @@ from .initialize                import initialize_redis
 
 initialize_redis()
 
-from .effects                   import *
 from .incr                      import *
 from .instances                 import *
 from .maps                      import *

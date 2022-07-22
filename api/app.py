@@ -381,13 +381,13 @@ app.add_url_rule('/internal/creature/<int:creatureid>/equipment/<int:itemid>/amm
                  methods=['PUT'],
                  view_func=routes.internal.creature.equipment.creature_equipment_modifiy)
 # Routes /internal/creature/{creatureid}/effect/*
-app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.effects.creature_effect_add)
-app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.effects.creature_effect_del)
-app.add_url_rule('/internal/creature/<int:creatureid>/effect/<int:effectid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name>',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
