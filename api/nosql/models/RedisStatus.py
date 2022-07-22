@@ -15,6 +15,7 @@ class RedisStatus:
             self.bearer        = creature.id
             self.duration_base = None
             self.duration_left = None
+            self.extra         = None
             self.name          = None
             self.source        = None
             self.type          = 'status'
@@ -27,10 +28,14 @@ class RedisStatus:
         # Whatever the scenarion, We push data in the object
         try:
             logger.trace(f'{self.logh} Method >> (dict Creating)')
+            # We convert JSON > dict
+            if isinstance(self.extra, str):
+                self.extra = json.loads(self.extra)
             self.dict = {
                             "bearer":        self.bearer,
                             "duration_base": self.duration_base,
                             "duration_left": self.duration_left,
+                            "extra":         self.extra,
                             "id":            1,
                             "name":          self.name,
                             "source":        self.source,
@@ -46,9 +51,14 @@ class RedisStatus:
         try:
             # We push data in final dict
             logger.trace(f'{self.logh} Method >> (Creating dict)')
+            # We convert dict > JSON
+            if isinstance(self.extra, dict):
+                self.extra = json.dumps(self.extra)
+
             hashdict =  {
                             "bearer":        self.bearer,
                             "duration_base": self.duration_base,
+                            "extra":         self.extra,
                             "name":          self.name,
                             "source":        self.source,
                             "type":          self.type
@@ -79,10 +89,15 @@ class RedisStatus:
                 self.source        = int(hash['source'])
                 self.type          = hash['type']
 
+                # We convert JSON > dict
+                if isinstance(hash['extra'], str):
+                    self.extra = json.loads(hash['extra'])
+
                 self.dict = {
                                 "bearer":        self.bearer,
                                 "duration_base": self.duration_base,
                                 "duration_left": self.duration_left,
+                                "extra":         self.extra,
                                 "id":            1,
                                 "name":          self.name,
                                 "source":        self.source,
@@ -121,10 +136,14 @@ class RedisStatus:
             # We loop over the status keys to build the data
             for key in sorted_keys:
                 logger.trace(f'key:{key}')
+                # We convert JSON > dict
+                if isinstance(pipeline[index]['extra'], str):
+                    extra = json.loads(pipeline[index]['extra'])
                 status = {
                             "bearer":        self.bearer,
                             "duration_base": int(pipeline[index]['duration_base']),
                             "duration_left": int(pipeline[index+1]),
+                            "extra":         extra,
                             "id":            int(1 + index/2),
                             "name":          pipeline[index]['name'],
                             "source":        int(pipeline[index]['source']),
@@ -165,10 +184,14 @@ class RedisStatus:
             # We loop over the status keys to build the data
             for key in sorted_keys:
                 logger.trace(f'key:{key}')
+                # We convert JSON > dict
+                if isinstance(pipeline[index]['extra'], str):
+                    extra = json.loads(pipeline[index]['extra'])
                 status = {
                             "bearer":        int(pipeline[index]['bearer']),
                             "duration_base": int(pipeline[index]['duration_base']),
                             "duration_left": int(pipeline[index+1]),
+                            "extra":         extra,
                             "id":            int(1 + index/2),
                             "name":          pipeline[index]['name'],
                             "source":        int(pipeline[index]['source']),

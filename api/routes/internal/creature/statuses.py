@@ -13,12 +13,29 @@ from variables                  import API_INTERNAL_TOKEN
 # Routes /internal
 #
 # /internal/creature/*
-# API: PUT /internal/creature/{creatureid}/status/{status_name}/{duration}
-def creature_status_add(creatureid,status_name,duration):
+# API: PUT /internal/creature/{creatureid}/status/{status_name}
+def creature_status_add(creatureid,status_name):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
         logger.warn(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
+    if not request.is_json:
+        msg = f'Missing JSON in request'
+        logger.warn(msg)
+        return jsonify({"msg": msg, "success": False, "payload": None}), 400
+
+    duration    = request.json.get('duration')
+    extra       = request.json.get('extra')
+    source      = request.json.get('source')
+
+    if not isinstance(duration, int):
+        return jsonify({"success": False,
+                        "msg": f'Duration should be an INT (duration:{duration})',
+                        "payload": None}), 200
+    if not isinstance(source, int):
+        return jsonify({"success": False,
+                        "msg": f'Source should be an INT (source:{source})',
+                        "payload": None}), 200
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -32,8 +49,9 @@ def creature_status_add(creatureid,status_name,duration):
         redis_status = RedisStatus(creature)
 
         redis_status.duration_base = duration
+        redis_status.extra         = extra
         redis_status.name          = status_name
-        redis_status.source        = creature.id
+        redis_status.source        = source
 
         # This returns True if the HASH is properly stored in Redis
         stored_status     = redis_status.store()

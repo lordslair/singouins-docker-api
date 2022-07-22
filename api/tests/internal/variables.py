@@ -13,8 +13,17 @@ EFFECTMETA_ID   = 1
 EFFECTMETA_NAME = 'Effect One'
 KORP_ID         = 0
 METAS           = ['armor','weapon','race','effect','skill','status']
-STATUS_NAME     = 'Poisoned'
 SQUAD_ID        = 0
+
+# Status
+STATUS_NAME     = 'Poisoned'
+STATUS_JSON     = {
+                    "duration": 300,
+                    "extra": {
+                                "extrakey": 'extravalue'
+                             },
+                    "source": 1
+                  }
 
 # Skill/CD
 SKILL_NAME      = 'Bloodstrike'

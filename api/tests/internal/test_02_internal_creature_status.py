@@ -6,11 +6,12 @@ import requests
 from variables import (API_URL,
                        CREATURE_ID,
                        HEADERS,
+                       STATUS_JSON,
                        STATUS_NAME)
 
 def test_singouins_internal_creature_status_add():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/status/{STATUS_NAME}/30' # PUT
-    response  = requests.put(url, headers=HEADERS)
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/status/{STATUS_NAME}' # PUT
+    response  = requests.put(url, headers=HEADERS, json = STATUS_JSON)
     statuses  = json.loads(response.text)['payload']['statuses']
 
     assert response.status_code                 == 200

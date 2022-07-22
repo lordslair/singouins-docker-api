@@ -484,7 +484,7 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatsResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/status/{status_name}/{duration}:
+  /internal/creature/{creatureid}/status/{status_name}:
     put:
       tags:
         - '/internal : Internal requests'
@@ -520,6 +520,21 @@ paths:
                 duration:
                   type: integer
                   nullable: false
+                  minimum: 1
+                  example: 300
+                extra:
+                  type: object
+                  properties:
+                    extrakey:
+                      type: string
+                      nullable: true
+                      example: 'extravalue'
+                  nullable: true
+                source:
+                  type: integer
+                  nullable: false
+                  minimum: 1
+                  example: 300
       responses:
         '200':
           description: OK
@@ -529,7 +544,6 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatusesResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/status/{status_name}:
     delete:
       tags:
         - '/internal : Internal requests'
@@ -2565,6 +2579,14 @@ components:
         duration_left:
           type: integer
           nullable: false
+        extra:
+          type: object
+          properties:
+            extrakey:
+              type: string
+              nullable: true
+              example: 'extravalue'
+          nullable: true
         id:
           type: integer
           nullable: false
