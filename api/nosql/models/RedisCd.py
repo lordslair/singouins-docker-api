@@ -5,6 +5,7 @@ from nosql.connector            import *
 class RedisCd:
     def __init__(self,creature):
         self.hkey     = f'cds:{creature.instance}:{creature.id}'
+        self.instance = creature.instance
         self.logh     = f'[creature.id:{creature.id}]'
 
         # The pre-generated cds does not already exist in redis
