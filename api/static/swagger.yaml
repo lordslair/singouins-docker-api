@@ -245,15 +245,15 @@ paths:
       summary: Internal Creature DEL Effect request
       parameters:
         - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
           name: effect_name
           schema:
             type: string
             example: 'EffectName'
-          required: true
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
           required: true
       responses:
         '200':
@@ -273,6 +273,12 @@ paths:
           name: creatureid
           schema:
             type: integer
+          required: true
+        - in: path
+          name: effect_name
+          schema:
+            type: string
+            example: 'EffectName'
           required: true
       responses:
         '200':
@@ -337,7 +343,7 @@ paths:
         - in: path
           name: itemid
           schema:
-            type: int
+            type: integer
             nullable: false
             minimum: 1
           required: true
@@ -351,7 +357,7 @@ paths:
         - in: path
           name: count
           schema:
-            type: int
+            type: integer
             nullable: false
             minimum: 1
           required: true
@@ -515,13 +521,6 @@ paths:
             type: string
             nullable: false
           required: true
-        - in: path
-          name: duration
-          schema:
-            type: int
-            nullable: false
-            minimum: 1
-          required: true
       requestBody:
         description: ''
         required: true
@@ -660,6 +659,13 @@ paths:
             nullable: false
           required: true
         - in: path
+          name: caliber
+          schema:
+            type: string
+            enum: ['cal22','cal223','cal311','cal50','cal55','shell','bolt','arrow']
+            nullable: false
+          required: true
+        - in: path
           name: operation
           schema:
             type: string
@@ -669,7 +675,7 @@ paths:
         - in: path
           name: count
           schema:
-            type: int
+            type: integer
             nullable: false
             minimum: 1
           required: true
