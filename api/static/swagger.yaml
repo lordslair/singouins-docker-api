@@ -65,7 +65,7 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureProfileResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/cd/{skillmetaid}:
+  /internal/creature/{creatureid}/cd/{skill_name}:
     put:
       tags:
         - '/internal : Internal requests'
@@ -77,9 +77,10 @@ paths:
             type: integer
           required: true
         - in: path
-          name: skillmetaid
+          name: skill_name
           schema:
-            type: integer
+            type: string
+            example: 'Bloodstrike'
           required: true
       requestBody:
         description: ''
@@ -92,6 +93,21 @@ paths:
                 duration:
                   type: integer
                   nullable: false
+                  minimum: 1
+                  example: 300
+                extra:
+                  type: object
+                  properties:
+                    extrakey:
+                      type: string
+                      nullable: true
+                      example: 'extravalue'
+                  nullable: true
+                source:
+                  type: integer
+                  nullable: false
+                  minimum: 1
+                  example: 300
       responses:
         '200':
           description: OK
@@ -112,9 +128,10 @@ paths:
             type: integer
           required: true
         - in: path
-          name: skillmetaid
+          name: skill_name
           schema:
-            type: integer
+            type: string
+            example: 'Bloodstrike'
           required: true
       responses:
         '200':
@@ -136,9 +153,10 @@ paths:
             type: integer
           required: true
         - in: path
-          name: skillmetaid
+          name: skill_name
           schema:
-            type: integer
+            type: string
+            example: 'Bloodstrike'
           required: true
       responses:
         '200':
@@ -1033,6 +1051,10 @@ paths:
       responses:
         '200':
           description: OK - CDs found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureCdsResponse'
   /mypc/{pcid}/statuses:
     get:
       tags:
@@ -2257,31 +2279,33 @@ components:
         bearer:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         duration_base:
           type: integer
           nullable: false
+          example: 300
+          minimum: 1
         duration_left:
           type: integer
           nullable: false
         id:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         name:
-          type: object
+          type: string
           nullable: false
-          properties:
-            en:
-              type: string
-              nullable: false
-            fr:
-              type: string
-              nullable: false
         source:
           type: integer
           nullable: false
+          example: 1
+          minimum: 1
         type:
           type: string
           nullable: false
+          example: 'cd'
 
     EffectObject:
       type: object

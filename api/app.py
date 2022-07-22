@@ -361,13 +361,13 @@ app.add_url_rule('/internal/creature/<int:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
 # Routes /internal/creature/{creatureid}/cd/*
-app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.cds.creature_cd_add)
-app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.cds.creature_cd_del)
-app.add_url_rule('/internal/creature/<int:creatureid>/cd/<int:skillmetaid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
                  methods=['GET'],
                  view_func=routes.internal.creature.cds.creature_cd_get_one)
 app.add_url_rule('/internal/creature/<int:creatureid>/cds',

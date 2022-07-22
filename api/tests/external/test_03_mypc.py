@@ -114,6 +114,9 @@ def test_singouins_mypc_cds():
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
+    payload = json.loads(response.text)['payload']
+    assert isinstance(payload['cds'], list)
+
 def test_singouins_mypc_statuses():
     url      = f'{API_URL}/auth/login' # POST
     response = requests.post(url, json = AUTH_PAYLOAD)
