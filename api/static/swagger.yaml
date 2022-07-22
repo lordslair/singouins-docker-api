@@ -696,7 +696,7 @@ paths:
                 $ref: '#/components/schemas/InternalCreaturesResponse'
       security:
         - internal_token: []
-  /internal/discord/associate:
+  /internal/discord/link:
     post:
       tags:
         - '/internal : Internal requests'
