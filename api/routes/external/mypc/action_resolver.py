@@ -12,15 +12,18 @@ from mysql.methods.fn_user      import fn_user_get
 from nosql                      import * # Custom internal module for Redis queries
 from nosql.models.RedisPa       import *
 from nosql.models.RedisEvent    import *
+from nosql.models.RedisCd       import *
+from nosql.models.RedisEffect   import *
+from nosql.models.RedisStatus   import *
 
 from variables                  import RESOLVER_URL
 
 #
 # Routes /mypc/{pcid}/action/resolver/*
 #
-# API: POST /mypc/{pcid}/action/resolver/skill/{skillmetaid}
+# API: POST /mypc/{pcid}/action/resolver/skill/{skill_name}
 @jwt_required()
-def action_resolver_skill(pcid,skillmetaid):
+def action_resolver_skill(pcid,skill_name):
     pc          = fn_creature_get(None,pcid)[3]
     user        = fn_user_get(get_jwt_identity())
 
@@ -45,7 +48,8 @@ def action_resolver_skill(pcid,skillmetaid):
                         "payload": None}), 200
 
     try:
-        cd  = cds.get_cd(pc,skillmetaid)
+        redis_cd    = RedisStatus(pc)
+        creature_cd = redis_cd.get(skill_name)
     except Exception as e:
         msg = f'CDs Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
@@ -53,9 +57,9 @@ def action_resolver_skill(pcid,skillmetaid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if cd:
+        if creature_cd:
             # The skill was already used, and still on CD
-            msg = f'Skill already on CD (pcid:{pc.id},skillmetaid:{skillmetaid})'
+            msg = f'Skill already on CD (pcid:{pc.id},skill_name:{skill_name})'
             logger.debug(msg)
             return jsonify({"success": False,
                             "msg": msg,
@@ -68,9 +72,12 @@ def action_resolver_skill(pcid,skillmetaid):
         fightEventparams   = request.json.get('params',   None)
         map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
-        creatures_effects  = effects.get_instance_effects(pc)
-        creatures_statuses = statuses.get_instance_statuses(pc)
-        creatures_cds      = cds.get_instance_cds(pc)
+        creatures_effect   = RedisEffect(pc)
+        creatures_effects  = creatures_effect.get_all_instance()
+        creatures_status   = RedisStatus(pc)
+        creatures_statuses = creatures_status.get_all_instance()
+        creatures_cd       = RedisCd(pc)
+        creatures_cds      = creatures_cd.get_all_instance()
         pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
@@ -99,9 +106,10 @@ def action_resolver_skill(pcid,skillmetaid):
               }
 
     try:
+        logger.trace(payload)
         response  = requests.post(f'{RESOLVER_URL}/', json = payload)
     except Exception as e:
-        msg = f'Resolver Query KO (pcid:{pc.id},skillmetaid:{skillmetaid}) [{e}]'
+        msg = f'Resolver Query KO (pcid:{pc.id},skill_name:{skill_name}) [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
@@ -111,7 +119,7 @@ def action_resolver_skill(pcid,skillmetaid):
         RedisEvent(pc).add(pc.id,
                            None,
                            'skill',
-                           f'Used a Skill ({skillmetaid})',
+                           f'Used a Skill ({skill_name})',
                            30*86400)
         msg = f'Resolver Query OK (pcid:{pc.id})'
         logger.debug(msg)
@@ -151,9 +159,12 @@ def action_resolver_move(pcid):
         fightEventparams   = request.json.get('params',   None)
         map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
-        creatures_effects  = effects.get_instance_effects(pc)
-        creatures_statuses = statuses.get_instance_statuses(pc)
-        creatures_cds      = cds.get_instance_cds(pc)
+        creatures_effect   = RedisEffect(pc)
+        creatures_effects  = creatures_effect.get_all_instance()
+        creatures_status   = RedisStatus(pc)
+        creatures_statuses = creatures_status.get_all_instance()
+        creatures_cd       = RedisCd(pc)
+        creatures_cds      = creatures_cd.get_all_instance()
         pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
@@ -233,9 +244,12 @@ def action_resolver_context(pcid):
         fightEventparams   = request.json.get('params',   None)
         map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
-        creatures_effects  = effects.get_instance_effects(pc)
-        creatures_statuses = statuses.get_instance_statuses(pc)
-        creatures_cds      = cds.get_instance_cds(pc)
+        creatures_effect   = RedisEffect(pc)
+        creatures_effects  = creatures_effect.get_all_instance()
+        creatures_status   = RedisStatus(pc)
+        creatures_statuses = creatures_status.get_all_instance()
+        creatures_cd       = RedisCd(pc)
+        creatures_cds      = creatures_cd.get_all_instance()
         pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'

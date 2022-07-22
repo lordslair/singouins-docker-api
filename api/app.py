@@ -247,7 +247,7 @@ app.add_url_rule('/mypc/<int:pcid>/action/resolver/context',
 app.add_url_rule('/mypc/<int:pcid>/action/resolver/move',
                  methods=['POST'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_move)
-app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<int:skillmetaid>',
+app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<string:skill_name>',
                  methods=['PUT'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_skill)
 
