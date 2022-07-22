@@ -1088,6 +1088,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreatureCdsResponse'
+  /mypc/{pcid}/action/resolver/context:
+    post:
+      tags:
+        - '/mypc/{pcid}/action: Resolver Requests'
+      summary: Get Resolver Context
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: OK - Context found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureResolverContextResponse'
   /mypc/{pcid}/effects:
     get:
       tags:
@@ -1986,6 +2007,78 @@ components:
           type: integer
           nullable: false
           example: 100
+
+    InternalCreatureResolverContextResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            resolver:
+              type: string
+              example: null
+              nullable: false
+            context:
+              type: object
+              properties:
+                map:
+                  type: integer
+                  example: 1
+                  minimum: 1
+                  nullable: false
+                instance:
+                  type: integer
+                  example: 1
+                  minimum: 1
+                  nullable: false
+                creatures:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PcObject'
+                effects:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EffectObject'
+                status:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StatusObject'
+                cd:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CdObject'
+                pa:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PaObject'
+                fightevent:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: 'fightEventname'
+                      nullable: false
+                    type:
+                      type: integer
+                      example: 0
+                      minimum: 0
+                      nullable: false
+                    actor:
+                      type: integer
+                      example: 1
+                      minimum: 1
+                      nullable: false
+                    params:
+                      type: string
+                      example: 'fightEventparams'
+                      nullable: false
+        success:
+          type: boolean
+          nullable: false
 
     InternalCreatureCdResponse:
       type: object
