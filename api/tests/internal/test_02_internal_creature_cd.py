@@ -6,11 +6,12 @@ import requests
 from variables import (API_URL,
                        CREATURE_ID,
                        HEADERS,
+                       SKILL_JSON,
                        SKILL_NAME)
 
 def test_singouins_internal_creature_cd_add():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/cd/{SKILL_NAME}/30' # PUT
-    response  = requests.put(url, headers=HEADERS)
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/cd/{SKILL_NAME}' # PUT
+    response  = requests.put(url, headers=HEADERS, json = SKILL_JSON)
     cds       = json.loads(response.text)['payload']['cds']
 
     assert response.status_code                 == 200
