@@ -19,7 +19,7 @@ def test_singouins_inventory_item_get():
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
     itemmetaid = json.loads(response.text)['payload']['weapon'][0]['metaid']
-    righthand  = json.loads(response.text)['payload']['equipment'][0]['righthand']
+    righthand  = json.loads(response.text)['payload']['equipment']['righthand']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True
@@ -60,7 +60,7 @@ def test_singouins_inventory_item_unequip():
 
     url        = f'{API_URL}/mypc/{pcid}/item' # GET
     response   = requests.get(url, headers=headers)
-    itemid     = json.loads(response.text)['payload']['equipment'][0]['holster']
+    itemid     = json.loads(response.text)['payload']['equipment']['holster']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] == True

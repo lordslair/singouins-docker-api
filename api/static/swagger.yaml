@@ -1428,6 +1428,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MypcItemResponse'
 
   /mypc/{pcid}/squad:
     post:
@@ -2405,6 +2409,93 @@ components:
           type: boolean
           nullable: false
 
+    MypcItemResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            armor:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemObject'
+            cosmetic:
+              type: array
+              items:
+                $ref: '#/components/schemas/CosmeticObject'
+            equipment:
+              type: object
+              properties:
+                date:
+                  type: string
+                  nullable: false
+                  example: "Wed, 16 Mar 2022 15:02:12 GMT"
+                feet:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                hands:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                head:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                holster:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                id:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                lefthand:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                legs:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                righthand:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                shoulders:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+                torso:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  minimum: 1
+              nullable: false
+            wallet:
+              $ref: '#/components/schemas/WalletObject'
+            weapon:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemObject'
+
+        success:
+          type: boolean
+          nullable: false
+
     GenericResponse:
       type: object
       properties:
@@ -2461,6 +2552,50 @@ components:
           type: string
           nullable: false
           example: 'cd'
+
+    CosmeticObject:
+      type: object
+      nullable: true
+      properties:
+        bearer:
+          type: integer
+          example: 1
+          minimum: 1
+          nullable: false
+        bound:
+          type: boolean
+          example: true
+          nullable: false
+        bound_type:
+          type: string
+          nullable: false
+        data:
+          type: string
+          nullable: false
+        date:
+          type: string
+          example: "Wed, 16 Mar 2022 15:02:12 GMT"
+          nullable: false
+        id:
+          type: integer
+          example: 1
+          minimum: 1
+          nullable: false
+        metaid:
+          type: integer
+          example: 4
+          minimum: 1
+          nullable: false
+        rarity:
+          type: string
+          enum: ['Broken','Common','Uncommon','Rare','Epic','Legendary']
+          example: 'Common'
+          nullable: false
+        state:
+          type: integer
+          example: 97
+          minimum: 0
+          nullable: false
 
     EffectObject:
       type: object

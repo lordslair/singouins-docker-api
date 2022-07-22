@@ -42,15 +42,15 @@ def pc_item_get_all(creatureid):
     try:
         equipment = fn_slots_get_all(creature)
 
-        feet      = fn_item_get_one(equipment[0].feet)
-        hands     = fn_item_get_one(equipment[0].hands)
-        head      = fn_item_get_one(equipment[0].head)
-        holster   = fn_item_get_one(equipment[0].holster)
-        lefthand  = fn_item_get_one(equipment[0].lefthand)
-        righthand = fn_item_get_one(equipment[0].righthand)
-        shoulders = fn_item_get_one(equipment[0].shoulders)
-        torso     = fn_item_get_one(equipment[0].torso)
-        legs      = fn_item_get_one(equipment[0].legs)
+        feet      = fn_item_get_one(equipment.feet)
+        hands     = fn_item_get_one(equipment.hands)
+        head      = fn_item_get_one(equipment.head)
+        holster   = fn_item_get_one(equipment.holster)
+        lefthand  = fn_item_get_one(equipment.lefthand)
+        righthand = fn_item_get_one(equipment.righthand)
+        shoulders = fn_item_get_one(equipment.shoulders)
+        torso     = fn_item_get_one(equipment.torso)
+        legs      = fn_item_get_one(equipment.legs)
 
         # We publicly anounce the cosmetics owned by a PC
         cosmetic  = fn_cosmetics_get_all(creature)

@@ -246,7 +246,7 @@ def fn_slots_get_all(creature):
     try:
         result = session.query(CreatureSlots)\
                         .filter(CreatureSlots.id == creature.id)\
-                        .all()
+                        .one_or_none()
     except Exception as e:
         logger.error(f'Slots Query KO [{e}]')
         return None
