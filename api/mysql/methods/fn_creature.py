@@ -12,8 +12,7 @@ from ..models            import (Creature,
 from nosql               import * # Custom internal module for Redis queries
 
 from nosql.models.RedisWallet   import *
-
-from ..utils.loot        import *
+from nosql.publish              import *
 
 # Loading the Meta for later use
 try:
@@ -215,6 +214,19 @@ def fn_creature_kill(pc,tg,action):
         else:
             msg = f'Queue PUT OK (queue:{queue})'
             logger.trace(msg)
+
+        # We put the info in pubsub channel for IA to regulate the instance
+        try:
+            pmsg     = {"action":   'kill',
+                        "instance": None,
+                        "creature": tg}
+            pchannel = 'ai-creature'
+            publish(pchannel, jsonify(pmsg).get_data())
+        except Exception as e:
+            msg = f'Publish({pchannel}) KO [{e}]'
+            logger.error(msg)
+        else:
+            logger.trace(f'Publish({pchannel}) OK')
 
         msg = f'Creature Kill OK ([{tgid}] {tgname})'
         logger.trace(msg)

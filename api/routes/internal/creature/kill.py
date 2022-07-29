@@ -17,6 +17,31 @@ from nosql.queue                import *
 
 from variables                  import API_INTERNAL_TOKEN
 
+# We define color lists for embeds, messages, etc
+color_int              = {}
+color_int['Broken']    = 10197915
+color_int['Common']    = 16777215
+color_int['Uncommon']  = 8311585
+color_int['Rare']      = 4886754
+color_int['Epic']      = 9442302
+color_int['Legendary'] = 16098851
+
+color_hex              = {}
+color_hex['Broken']    = '9B9B9B'
+color_hex['Common']    = 'FFFFFF'
+color_hex['Uncommon']  = '7ED321'
+color_hex['Rare']      = '4A90E2'
+color_hex['Epic']      = '9013FE'
+color_hex['Legendary'] = 'F5A623'
+
+color_dis              = {}
+color_dis['Broken']    = ':brown_square:'
+color_dis['Common']    = ':white_medium_square:'
+color_dis['Uncommon']  = ':green_square:'
+color_dis['Rare']      = ':blue_square:'
+color_dis['Epic']      = ':purple_square:'
+color_dis['Legendary'] = ':purple_square:'
+
 #
 # Routes /internal
 #
@@ -53,7 +78,7 @@ def creature_kill(creatureid,victimid):
     else:
         if currency:
             msg = f'Currency Generation OK (creatureid:{creature.id},currency:{currency})'
-            logger.debug(msg)
+            logger.trace(msg)
     # Loots
     try:
         loots = get_loots(victim)
@@ -66,7 +91,7 @@ def creature_kill(creatureid,victimid):
     else:
         if loots:
             msg = f'Loot Generation OK (creatureid:{creature.id},loots:{len(loots)})'
-            logger.debug(msg)
+            logger.trace(msg)
 
     # We check if the killer is in a Squad or not
     if creature.squad is None:
@@ -90,7 +115,7 @@ def creature_kill(creatureid,victimid):
             else:
                 if currency:
                     msg = f'Currency Add OK (creatureid:{creature.id},currency:{currency})'
-                    logger.debug(msg)
+                    logger.trace(msg)
 
             # XP is generated
             try:
@@ -104,7 +129,7 @@ def creature_kill(creatureid,victimid):
                                 "payload": None}), 200
             else:
                 msg = f'XP add OK (creatureid:{creature.id},xp:{xp_gained})'
-                logger.debug(msg)
+                logger.trace(msg)
 
             for loot in loots:
                 # Items are added
@@ -150,6 +175,19 @@ def creature_kill(creatureid,victimid):
                 msg = f'Queue PUT OK (queue:{queue},topic:loot)'
                 logger.trace(msg)
 
+            """ NEED TO RECODE
+            # We put the info in queue for ws Discord
+            qmsg = {"ciphered": False,
+            "payload": {"color_int": color_int[item.rarity],
+                        "path": f'/resources/sprites/{item.metatype}s/{item.metaid}.png',
+                        "title": f"{itemmeta['name']}",
+                        "item": f'Looted by [{pcsquad.id}] {pcsquad.name}',
+                        "footer": f'NB: This item is [{item.bound_type}]'},
+            "embed": True,
+            "scope": f'Squad-{pc.squad}'}
+            yqueue_put('yarqueue:discord', qmsg)
+            """
+
         except Exception as e:
             msg = f'Solo drops KO (creatureid:{creature.id},victimid:{victimid}) [{e}]'
             logger.error(msg)
@@ -175,7 +213,7 @@ def creature_kill(creatureid,victimid):
             else:
                 if members:
                     msg = f'Squad Query OK (creatureid:{creature.id},members:{len(members)})'
-                    logger.debug(msg)
+                    logger.trace(msg)
 
             # We loop over the members
             for member in members:
@@ -198,7 +236,7 @@ def creature_kill(creatureid,victimid):
                 else:
                     if currency:
                         msg = f'Currency Add OK (creatureid:{member.id},currency:{currency})'
-                        logger.debug(msg)
+                        logger.trace(msg)
 
                 # XP is generated
                 try:
@@ -212,7 +250,7 @@ def creature_kill(creatureid,victimid):
                                     "payload": None}), 200
                 else:
                     msg = f'XP add OK (creatureid:{member.id},xp:{xp_gained})'
-                    logger.debug(msg)
+                    logger.trace(msg)
 
             for loot in loots:
                 # Items are added
@@ -296,7 +334,7 @@ def creature_kill(creatureid,victimid):
 #
 
 def get_loots(victim):
-    logger.debug(f'Generating Loots for victim: [{victim.id}] {victim.name}')
+    logger.trace(f'Generating Loots for victim: [{victim.id}] {victim.name}')
     # We initialize the global loot list
     loots    = []
     # We initialize some values lists
@@ -359,16 +397,7 @@ def get_loots(victim):
     return loots
 
 def get_currency(victim):
-    logger.debug(f'Generating Currency for victim: [{victim.id}] {victim.name}')
+    logger.trace(f'Generating Currency for victim: [{victim.id}] {victim.name}')
     currency = (victim.level // 10) * 100 + randint(1, 100)
     logger.trace(f'Generated  Currency:{currency}')
     return currency
-
-if __name__ == "__main__":
-    #creature    = fn_creature_get(None,1)[3]
-    #victim      = fn_creature_get(None,2660)[3]
-    #get_loots(victim)
-    #get_currency(victim)
-    #get_xp(creature,victim)
-
-    creature_kill(1,2660)

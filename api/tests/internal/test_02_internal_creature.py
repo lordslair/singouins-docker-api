@@ -265,7 +265,7 @@ def test_singouins_internal_creatures():
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] == True
 
-def test_singouins_internal_creature_pop():
+def test_singouins_internal_creature_pop_n_kill():
     url       = f'{API_URL}/internal/creature' # PUT
     payload   = {"raceid": 11,
                  "gender": True,

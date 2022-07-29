@@ -412,7 +412,7 @@ def instance_leave(pcid,instanceid):
                         logger.trace(f"{h} CreatureStats({creature_to_kill.id}) delete OK (MySQL)")
                     else:
                         logger.warning(f"{h} CreatureStats({creature_to_kill.id}) delete KO (MySQL)")
-                    # We put the info in pubsub channel for IA to populate the instance
+                    # We put the info in pubsub channel for IA to regulate the instance
                     try:
                         pmsg     = {"action":   'kill',
                                     "instance": instance._asdict(),

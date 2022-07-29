@@ -10,6 +10,7 @@ from mysql.methods.fn_user      import fn_user_get
 from mysql.methods.fn_creatures import fn_creatures_in_all_instances
 
 from nosql                      import *
+from nosql.publish              import *
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -44,6 +45,19 @@ def creature_add():
                         "msg": msg,
                         "payload": None}), 200
     else:
+        # We put the info in pubsub channel for IA to populate the instance
+        try:
+            pmsg     = {"action":   'pop',
+                        "instance": None,
+                        "creature": creature}
+            pchannel = 'ai-creature'
+            publish(pchannel, jsonify(pmsg).get_data())
+        except Exception as e:
+            msg = f'Publish({pchannel}) KO [{e}]'
+            logger.error(msg)
+        else:
+            logger.trace(f'Publish({pchannel}) OK')
+
         msg = f'Creature creation OK'
         logger.debug(msg)
         return jsonify({"success": True,
@@ -73,6 +87,19 @@ def creature_del(creatureid):
                             "msg": msg,
                             "payload": None}), 200
 
+        # We put the info in pubsub channel for IA to regulate the instance
+        try:
+            pmsg     = {"action":   'kill',
+                        "instance": None,
+                        "creature": creature}
+            pchannel = 'ai-creature'
+            publish(pchannel, jsonify(pmsg).get_data())
+        except Exception as e:
+            msg = f'Publish({pchannel}) KO [{e}]'
+            logger.error(msg)
+        else:
+            logger.trace(f'Publish({pchannel}) OK')
+
     try:
         # Now we can delete tue PC itself
         if fn_creature_del(creature):
@@ -84,8 +111,10 @@ def creature_del(creatureid):
                         "msg": msg,
                         "payload": None}), 200
     else:
+        msg = f'Creature delete OK (creatureid:{creature.id})'
+        logger.debug(msg)
         return jsonify({"success": True,
-                        "msg": f'Creature delete OK (creatureid:{creature.id})',
+                        "msg": msg,
                         "payload": None}), 200
 
 # API: GET /internal/creature/{creatureid}
