@@ -30,7 +30,6 @@ import                      routes.internal.creature.statuses
 import                      routes.internal.creature.wallet
 import                      routes.internal.discord
 import                      routes.internal.korp
-import                      routes.internal.instance.queue
 import                      routes.internal.meta
 import                      routes.internal.squad
 import                      routes.internal.up
@@ -451,10 +450,6 @@ app.add_url_rule('/internal/discord/creatures',
 app.add_url_rule('/internal/discord/user',
                  methods=['POST'],
                  view_func=routes.internal.discord.discord_user)
-# Routes /internal/instance/*
-app.add_url_rule('/internal/instance/queue',
-                 methods=['GET'],
-                 view_func=routes.internal.instance.queue.queue_get)
 # Routes /internal/korp/*
 app.add_url_rule('/internal/korp/<int:korpid>',
                  methods=['GET'],
