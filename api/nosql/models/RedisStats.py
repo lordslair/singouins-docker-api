@@ -76,7 +76,7 @@ class RedisStats:
                 # Working to find armor from equipped items
                 self.arm_b = 0
                 self.arm_p = 0
-                slots = fn_slots_get_all(creature)[0]
+                slots = fn_slots_get_all(creature)
                 if slots:
                     armormetas = []
                     armors     = [fn_item_get_one(slots.feet),
@@ -91,6 +91,8 @@ class RedisStats:
                             metaWeapon = dict(list(filter(lambda x:x["id"] == armor.metaid,metaWeapons))[0]) # Gruikfix
                             self.arm_b += metaWeapon['arm_b']
                             self.arm_p += metaWeapon['arm_p']
+                else:
+                    logger.warning(f'{self.logh} Method >> Slots Not Found')
             except Exception as e:
                 logger.error(f'{self.logh} Method KO (Building from Equipment) [{e}]')
             else:

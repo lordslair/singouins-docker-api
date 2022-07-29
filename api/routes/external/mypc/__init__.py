@@ -4,6 +4,7 @@ from flask                      import Flask, jsonify, request
 from flask_jwt_extended         import jwt_required,get_jwt_identity
 
 from mysql.methods.fn_creature  import *
+from mysql.methods.fn_creatures import *
 from mysql.methods.fn_inventory import *
 from mysql.methods.fn_user      import *
 from nosql                      import *
@@ -70,34 +71,42 @@ def mypc_add():
                     return jsonify({"success": False,
                                     "msg": f'PC creation KO (username:{username},pcname:{pcname}) [{e}]',
                                     "payload": None}), 200
+                else:
+                    h = f'[Creature.id:{pc.id}]' # Header for logging
 
                 try:
                     # We initialize a fresh wallet
                     redis_wallet = RedisWallet(pc).init()
                 except Exception as e:
-                    msg = f'PC RedisWallet creation KO [{e}]'
+                    msg = f'{h} RedisWallet creation KO [{e}]'
                     logger.error(msg)
                     return jsonify({"success": False,
-                                    "msg": msg,
+                                    "msg":     msg,
                                     "payload": None}), 200
                 else:
                     if redis_wallet:
-                        logger.trace('PC RedisWallet creation OK')
+                        logger.trace(f'{h} RedisWallet creation OK')
                     else:
-                        logger.warning('PC RedisWallet creation KO')
+                        logger.warning(f'{h} RedisWallet creation KO')
 
                 try:
                     if fn_cosmetic_add(pc,pccosmetic):
-                        logger.debug('PC Cosmetic OK')
+                        logger.trace(f'{h} Cosmetic creation OK')
+                    else:
+                        logger.warning(f'{h} Cosmetic creation KO')
                     if fn_slots_add(pc):
-                        logger.debug('PC Slots OK')
+                        logger.trace(f'{h} Slots creation OK')
+                    else:
+                        logger.warning(f'{h} Slots creation KO')
                     if fn_creature_stats_add(pc,metaRace,pcclass):
-                        logger.debug('PC Stats OK')
+                        logger.trace(f'{h} Stats creation OK (MySQL)')
+                    else:
+                        logger.warning(f'{h} Stats creation KO (MySQL)')
                 except Exception as e:
-                    msg = f'PC Cosmetics/Slots creation KO [{e}]'
+                    msg = f'{h} PC Cosmetics/Slots/Stats creation KO [{e}]'
                     logger.error(msg)
                     return jsonify({"success": False,
-                                    "msg": msg,
+                                    "msg":     msg,
                                     "payload": None}), 200
 
                 else:
@@ -127,30 +136,35 @@ def mypc_add():
                                 lh = fn_item_add(pc,lh_caracs)
 
                         except Exception as e:
-                            msg = f'PC Weapons creation KO [{e}]'
+                            msg = f'{h} Weapons creation KO [{e}]'
                             logger.error(msg)
                             return jsonify({"success": False,
                                             "msg": msg,
                                             "payload": None}), 200
                         else:
                             # Everything has been populated. Stats can be done
+                            msg = f'{h} Weapons creation OK'
+                            logger.trace(msg)
                             try:
                                 # We initialize a fresh stats
                                 redis_stats = RedisStats(pc)
                                 # We immediately store it
                                 redis_stats.store()
                             except Exception as e:
-                                msg = f'PC RedisStats creation KO [{e}]'
+                                msg = f'{h} RedisStats creation KO [{e}]'
                                 logger.error(msg)
                                 return jsonify({"success": False,
                                                 "msg": msg,
                                                 "payload": None}), 200
                             else:
-                                logger.trace('PC RedisStats creation OK')
-                                logger.debug(pc)
-                                return jsonify({"success": True,
-                                                "msg":     f'PC creation OK (pcid:{pc.id})',
-                                                "payload": pc}), 201
+                                logger.trace(f'{h} RedisStats creation OK')
+
+                    # Everything went well
+                    msg = f'{h} Creature creation OK'
+                    logger.debug(msg)
+                    return jsonify({"success": True,
+                                    "msg":     msg,
+                                    "payload": pc}), 201
 
 # API: GET /mypc
 @jwt_required()
@@ -182,38 +196,64 @@ def mypc_del(pcid):
     username = get_jwt_identity()
     creature = fn_creature_get(None,pcid)[3]
 
-    if not creature:
+    if creature is None:
+        msg = f'Creature({pcid}) does not exist'
+        logger.warning(msg)
         return jsonify({"success": False,
-                        "msg": f'PC does not exist (creatureid:{creature})',
+                        "msg":     msg,
+                        "payload": None}), 200
+    else:
+        h = f'[Creature.id:{creature.id}]' # Header for logging
+
+    if creature.instance:
+        msg = f'{h} Creature should not be in an Instance({creature.instance})'
+        logger.debug(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
                         "payload": None}), 200
 
     try:
         # We start do delete PC elements
         if fn_cosmetic_del(creature):
-            logger.trace('PC Cosmetics delete OK')
+            logger.trace(f'{h} Cosmetics delete OK')
         if fn_slots_del(creature):
-            logger.trace('PC Slots delete OK')
+            logger.trace(f'{h} Slots delete OK')
 
         if fn_creature_stats_del(creature):
-            logger.trace('PC Stats delete OK (MySQL)')
+            logger.trace(f'{h} Stats delete OK (MySQL)')
         if RedisStats(creature).destroy():
-            logger.trace('PC Stats delete OK (Redis)')
+            logger.trace(f'{h} Stats delete OK (Redis)')
 
         if RedisWallet(creature).destroy():
-            logger.trace('PC RedisWallet delete OK')
+            logger.trace(f'{h} RedisWallet delete OK')
+
+        """
+        # We leave the instance if we are in one
+        if creature.instance:
+            if len(fn_creatures_in_instance(creature.instance)) == 1:
+                # The creature is the last in Instance, we destroy it quickly
+                if RedisInstance(creature).destroy():
+                    logger.trace(f'{h} Instance leave OK (instance.id:{creature.instance})')
+                else:
+                    logger.trace(f'{h} Instance leave KO (instance.id:{creature.instance})')
+                    """
 
         # Now we can delete tue PC itself
         if fn_creature_del(creature):
-            logger.trace('PC delete OK')
+            logger.trace(f'{h} Creature delete OK (MySQL)')
+        else:
+            logger.warning(f'{h} Creature delete KO (MySQL)')
 
         # TODO: For now we do NOT delete items on PC deletion
     except Exception as e:
-        msg = f'PC delete KO (username:{username},pcid:{pcid}) [{e}]'
+        msg = f'{h} Creature delete KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
     else:
+        msg = f'{h} Creature delete OK'
+        logger.debug(msg)
         return jsonify({"success": True,
-                        "msg": f'PC delete OK (username:{username},pcid:{pcid})',
+                        "msg": msg,
                         "payload": None}), 200

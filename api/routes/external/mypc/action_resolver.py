@@ -14,6 +14,7 @@ from nosql.models.RedisPa       import *
 from nosql.models.RedisEvent    import *
 from nosql.models.RedisCd       import *
 from nosql.models.RedisEffect   import *
+from nosql.models.RedisInstance import *
 from nosql.models.RedisStatus   import *
 
 from variables                  import RESOLVER_URL
@@ -66,19 +67,60 @@ def action_resolver_skill(pcid,skill_name):
                             "payload": cd}), 200
 
     try:
+        creatures_effect  = RedisEffect(pc)
+        creatures_effects = creatures_effect.get_all_instance()
+    except Exception as e:
+        msg = f'RedisEffect Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        creatures_status   = RedisStatus(pc)
+        creatures_statuses = creatures_status.get_all_instance()
+    except Exception as e:
+        msg = f'RedisStatus Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        creatures_cd  = RedisCd(pc)
+        creatures_cds = creatures_cd.get_all_instance()
+    except Exception as e:
+        msg = f'RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        pas = RedisPa(pc).get()
+    except Exception as e:
+        msg = f'RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        instance = RedisInstance(creature = pc)
+        map      = instance.map
+    except Exception as e:
+        msg = f'RedisInstance Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
         fightEventname     = request.json.get('name',     None)
         fightEventtype     = request.json.get('type',     None)
         fightEventactor    = request.json.get('actor',    None)
         fightEventparams   = request.json.get('params',   None)
-        map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
-        creatures_effect   = RedisEffect(pc)
-        creatures_effects  = creatures_effect.get_all_instance()
-        creatures_status   = RedisStatus(pc)
-        creatures_statuses = creatures_status.get_all_instance()
-        creatures_cd       = RedisCd(pc)
-        creatures_cds      = creatures_cd.get_all_instance()
-        pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
         logger.error(msg)
@@ -153,19 +195,60 @@ def action_resolver_move(pcid):
                         "payload": None}), 200
 
     try:
+        creatures_effect  = RedisEffect(pc)
+        creatures_effects = creatures_effect.get_all_instance()
+    except Exception as e:
+        msg = f'RedisEffect Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        creatures_status   = RedisStatus(pc)
+        creatures_statuses = creatures_status.get_all_instance()
+    except Exception as e:
+        msg = f'RedisStatus Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        creatures_cd  = RedisCd(pc)
+        creatures_cds = creatures_cd.get_all_instance()
+    except Exception as e:
+        msg = f'RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        pas = RedisPa(pc).get()
+    except Exception as e:
+        msg = f'RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        instance = RedisInstance(creature = pc)
+        map      = instance.map
+    except Exception as e:
+        msg = f'RedisInstance Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
         fightEventname     = request.json.get('name',     None)
         fightEventtype     = request.json.get('type',     None)
         fightEventactor    = request.json.get('actor',    None)
         fightEventparams   = request.json.get('params',   None)
-        map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
-        creatures_effect   = RedisEffect(pc)
-        creatures_effects  = creatures_effect.get_all_instance()
-        creatures_status   = RedisStatus(pc)
-        creatures_statuses = creatures_status.get_all_instance()
-        creatures_cd       = RedisCd(pc)
-        creatures_cds      = creatures_cd.get_all_instance()
-        pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
         logger.error(msg)
@@ -238,19 +321,60 @@ def action_resolver_context(pcid):
                         "payload": None}), 200
 
     try:
+        creatures_effect  = RedisEffect(pc)
+        creatures_effects = creatures_effect.get_all_instance()
+    except Exception as e:
+        msg = f'RedisEffect Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        creatures_status   = RedisStatus(pc)
+        creatures_statuses = creatures_status.get_all_instance()
+    except Exception as e:
+        msg = f'RedisStatus Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        creatures_cd  = RedisCd(pc)
+        creatures_cds = creatures_cd.get_all_instance()
+    except Exception as e:
+        msg = f'RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        pas = RedisPa(pc).get()
+    except Exception as e:
+        msg = f'RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
+        instance = RedisInstance(creature = pc)
+        map      = instance.map
+    except Exception as e:
+        msg = f'RedisInstance Query KO [{e}]'
+        logger.error(msg)
+        return jsonify({"success": False,
+                        "msg": msg,
+                        "payload": None}), 200
+
+    try:
         fightEventname     = request.json.get('name',     None)
         fightEventtype     = request.json.get('type',     None)
         fightEventactor    = request.json.get('actor',    None)
         fightEventparams   = request.json.get('params',   None)
-        map                = instances.get_instance(pc.instance)['map']
         creatures          = fn_creatures_in_instance(pc.instance)
-        creatures_effect   = RedisEffect(pc)
-        creatures_effects  = creatures_effect.get_all_instance()
-        creatures_status   = RedisStatus(pc)
-        creatures_statuses = creatures_status.get_all_instance()
-        creatures_cd       = RedisCd(pc)
-        creatures_cds      = creatures_cd.get_all_instance()
-        pas                = RedisPa(pc).get()
     except Exception as e:
         msg = f'ResolverInfo Query KO [{e}]'
         logger.error(msg)
