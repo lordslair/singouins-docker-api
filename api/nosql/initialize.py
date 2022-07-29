@@ -39,5 +39,15 @@ def initialize_redis():
         logger.error(f'Redis init: KO [{e}]')
     else:
         logger.info(f'Redis init: OK system:map:*')
+
+    try:
+        if r.exists(f'system:instance_max_id'):
+            pass
+        else:
+            r.set(f'system:instance_max_id', 0)
+    except Exception as e:
+        logger.error(f'Redis init: KO [{e}]')
+    else:
+        logger.info(f'Redis init: OK system:instance_max_id')
     finally:
         logger.info('Redis init: end')
