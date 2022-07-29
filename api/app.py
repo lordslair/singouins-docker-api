@@ -392,6 +392,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_all)
+# Routes /internal/creature/{creatureid}/kill/*
+app.add_url_rule('/internal/creature/{creatureid}/kill/{victimid}',
+                 methods=['POST'],
+                 view_func=routes.internal.creature.pa.creature_pa_get)
 # Routes /internal/creature/{creatureid}/pa/*
 app.add_url_rule('/internal/creature/<int:creatureid>/pa',
                  methods=['GET'],

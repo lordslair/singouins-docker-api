@@ -169,170 +169,76 @@ def fn_creature_kill(pc,tg,action):
     try:
         tg      = session.query(Creature).filter(Creature.id == tg.id).one_or_none()
         session.delete(tg)
-        session.commit()
+        #session.commit()
     except Exception as e:
-        return (200,
-                False,
-                f'[SQL] PC Kill failed (tgid:{tgid},tgname:{tgname}) [{e}]',
-                None)
+        msg = f'Creature DB delete KO ([{tgid}] {tgname}) [{e}]'
+        logger.error(msg)
+        return False
     else:
-        # We put the info in queue for ws
-        qciphered = False
-        qpayload  = {"id": pc.id, "target": {"id": tgid, "name": tgname}, "action": action}
-        qscope    = {"id": None, "scope": 'broadcast'}
-        qmsg = {"ciphered": qciphered,
-                "payload": qpayload,
-                "route": "mypc/{id1}/action/attack/{id2}/{id3}",
-                "scope": qscope}
-        yqueue_put('broadcast', qmsg)
+        # Creature has been deleted from DB
+        msg = f'Creature DB delete OK ([{tgid}] {tgname})'
+        logger.trace(msg)
+        # Now we send the WS messages
+        # Broadcast Queue
+        queue = 'broadcast'
+        qmsg = {"ciphered": False,
+                "payload":  {"id": pc.id,
+                             "target": {"id": tg.id, "name": tg.name},
+                             "action": None},
+                "route":    "mypc/{id1}/action/resolver/skill/{id2}",
+                "scope":    {"id": None,
+                             "scope": 'broadcast'}}
+        try:
+            yqueue_put(queue, qmsg)
+        except Exception as e:
+            msg = f'Queue PUT KO (queue:{queue}) [{e}]'
+            logger.error(msg)
+        else:
+            msg = f'Queue PUT OK (queue:{queue})'
+            logger.trace(msg)
 
-        # We put the info in queue for ws
+        # Discord Queue
+        queue = 'yarqueue:discord'
+        if pc.squad is not None:
+            scope = f'Squad-{pc.squad}'
+        else:
+            scope = None
         qmsg = {"ciphered": False,
                 "payload": f':pirate_flag: **[{pc.id}] {pc.name}** killed **[{tgid}] {tgname}**',
                 "embed": None,
                 "scope": f'Squad-{pc.squad}'}
-        yqueue_put('yarqueue:discord', qmsg)
+        try:
+            yqueue_put(queue, qmsg)
+        except Exception as e:
+            msg = f'Queue PUT KO (queue:{queue}) [{e}]'
+            logger.error(msg)
+        else:
+            msg = f'Queue PUT OK (queue:{queue})'
+            logger.trace(msg)
 
-        return (200,
-                True,
-                f'PC Kill successed (tgid:{tgid},tgname:{tgname})',
-                None)
+        msg = f'Creature Kill OK ([{tgid}] {tgname})'
+        logger.trace(msg)
+        return True
     finally:
         session.close()
 
-def fn_creature_gain_xp(pc,tg):
+def fn_creature_xp_add(pc,xp):
     session = Session()
     try:
-        if pc.squad is None:
-            # We add PX only to the killer
-            pc.xp  += tg.level       # We add XP
-            pc.date = datetime.now() # We update date
-        else:
-            # We add PX to the killer squad
-            squadlist = session.query(Creature)\
-                               .filter(Creature.squad == pc.squad)\
-                               .filter(Creature.squad_rank != 'Pending').all()
-            for pcsquad in squadlist:
-                pcsquad.xp  += round(tg.level/len(squadlist)) # We add XP
-                pcsquad.date = datetime.now()                 # We update date
+        pc = session.query(Creature)\
+                    .filter(Creature.id == pc.id)\
+                    .one_or_none()
+        pc.xp  += xp
         session.commit()
     except Exception as e:
-        return (False,
-                f'[SQL] XP update failed (pcid:{pc.id},tgid:{tg.id})')
+        session.rollback()
+        msg = f'XP update KO (pcid:{pc.id},xp:{xp}) [{e}]'
+        logger.error(msg)
+        return None
     else:
-        return (True, None)
-    finally:
-        session.close()
-
-def fn_creature_gain_loot(pc,tg):
-    session = Session()
-    try:
-        if pc.squad is None:
-            # Loots are generated
-            loots   = get_loots(tg)
-            # We add loot only to the killer
-            redis_wallet     = RedisWallet(pc)
-            currency         = loots[0]['currency']
-
-            if pc.race <= 4:
-                # It is a Singouin, we add bananas
-                redis_wallet.bananas += currency
-            else:
-                redis_wallet.sausages += currency
-            # We store the Wallet
-            redis_wallet.store()
-
-            incr_hs(pc,f'combat:loot:currency', currency) # Redis HighScore
-
-            if loots[0]['item'] is not None:
-                # Items are added
-                item = Item(metatype   = loots[0]['item']['metatype'],
-                            metaid     = loots[0]['item']['metaid'],
-                            bearer     = pc.id,
-                            bound      = loots[0]['item']['bound'],
-                            bound_type = loots[0]['item']['bound_type'],
-                            modded     = False,
-                            mods       = None,
-                            state      = randint(0,100),
-                            rarity     = loots[0]['item']['rarity'],
-                            offsetx    = None,
-                            offsety    = None,
-                            date       = datetime.now())
-
-                session.add(item)
-                incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
-
-                if   item.metatype == 'weapon':
-                     itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaWeapons))[0]) # Gruikfix
-                     # item.ammo is by default None, we initialize it here
-                     if itemmeta['ranged'] == True:
-                         item.ammo = 0
-                elif item.metatype == 'armor':
-                     itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaArmors))[0]) # Gruikfix
-        else:
-            # We add loot to the killer squad
-            squadlist = session.query(Creature)\
-                               .filter(Creature.squad == pc.squad)\
-                               .filter(Creature.squad_rank != 'Pending').all()
-            for pcsquad in squadlist:
-                # Loots are generated
-                loots            = get_loots(tg)
-                redis_wallet     = RedisWallet(pc)
-                currency         = round(loots[0]['currency']/len(squadlist))
-
-                if pc.race <= 4:
-                    # It is a Singouin, we add bananas
-                    redis_wallet.bananas += currency
-                else:
-                    redis_wallet.sausages += currency
-                # We store the Wallet
-                redis_wallet.store()
-
-                incr_hs(pcsquad,f'combat:loot:currency', currency) # Redis HighScore
-
-                if loots[0]['item'] is not None:
-                    # Items are added
-                    item = Item(metatype   = loots[0]['item']['metatype'],
-                                metaid     = loots[0]['item']['metaid'],
-                                bearer     = pcsquad.id,
-                                bound      = loots[0]['item']['bound'],
-                                bound_type = loots[0]['item']['bound_type'],
-                                modded     = False,
-                                mods       = None,
-                                state      = randint(0,100),
-                                rarity     = loots[0]['item']['rarity'],
-                                offsetx    = None,
-                                offsety    = None,
-                                date       = datetime.now())
-
-                    session.add(item)
-                    incr_hs(pc,f'combat:loot:item:{item.rarity}', 1) # Redis HighScore
-
-                    if   item.metatype == 'weapon':
-                        itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaWeapons))[0]) # Gruikfix
-                        # item.ammo is by default None, we initialize it here
-                        if itemmeta['ranged'] == True:
-                            item.ammo = 0
-                    elif item.metatype == 'armor':
-                        itemmeta = dict(list(filter(lambda x:x["id"] == item.metaid,metaArmors))[0]) # Gruikfix
-
-                    # We put the info in queue for ws Discord
-                    qmsg = {"ciphered": False,
-                            "payload": {"color_int": color_int[item.rarity],
-                                        "path": f'/resources/sprites/{item.metatype}s/{item.metaid}.png',
-                                        "title": f"{itemmeta['name']}",
-                                        "item": f'Looted by [{pcsquad.id}] {pcsquad.name}',
-                                        "footer": f'NB: This item is [{item.bound_type}]'},
-                            "embed": True,
-                            "scope": f'Squad-{pc.squad}'}
-                    yqueue_put('yarqueue:discord', qmsg)
-        session.commit()
-    except Exception as e:
-        # Something went wrong during commit
-        return (False,
-                f'[SQL] Loot update failed (pcid:{pc.id})')
-    else:
-        return (True, None)
+        msg = f'XP update OK (pcid:{pc.id},xp:{xp})'
+        logger.trace(msg)
+        return True
     finally:
         session.close()
 
