@@ -123,6 +123,19 @@ def test_singouins_mypc_instance_join():
     assert json.loads(response.text)['success'] == True
     assert instanceid is not None
 
+    url      = f'{API_URL}/mypc/{pcid}/instance/{instanceid}/leave' # POST
+    response = requests.post(url, headers=headers)
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] == True
+
+    # PJTestInstanceJoin leave his own instance (it will delete it)
+    url      = f'{API_URL}/mypc/{targetid}/instance/{instanceid}/leave' # POST
+    response = requests.post(url, headers=headers)
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] == True
+
     # We cleanup the PJTestInstanceJoin
     url      = f'{API_URL}/mypc/{targetid}' # DELETE
     response = requests.delete(url, headers=headers)

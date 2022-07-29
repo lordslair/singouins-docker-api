@@ -17,9 +17,19 @@ def test_singouins_pc_delete():
     pclist   = json.loads(response.text)['payload']
 
     for pc in pclist:
-        pcid     = pc['id']
-        url      = f'{API_URL}/mypc/{pcid}' # DELETE
-        response = requests.delete(url, headers=headers)
+        pcid       = pc['id']
+        instanceid = pc['instance']
+        if instanceid is not None:
+            # We need to leave the instance
+            url      = f'{API_URL}/mypc/{pcid}/instance/{instanceid}/leave' # POST
+            response = requests.post(url, headers=headers)
+
+            assert response.status_code == 200
+            assert json.loads(response.text)['success'] == True
+
+        # We delete the PC
+        url        = f'{API_URL}/mypc/{pcid}' # DELETE
+        response   = requests.delete(url, headers=headers)
 
         assert json.loads(response.text)['success'] == True
         assert response.status_code == 200

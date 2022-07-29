@@ -17,6 +17,19 @@ def test_singouins_action_resolver_context():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
 
+    instanceid = json.loads(response.text)['payload'][0]['instance']
+    if instanceid is None:
+        # We need to have the PJ in an instance - we open a new one
+        url      = f'{API_URL}/mypc/{pcid}/instance' # PUT
+        payload  = {"mapid": 1,
+                    "hardcore": True,
+                    "fast": False,
+                    "public": True}
+        response = requests.put(url, json = payload, headers=headers)
+
+        assert response.status_code == 201
+        assert json.loads(response.text)['success'] == True
+
     RESOLVER_JSON = {
                         "name":   "RegularMovesFightClass",
                         "type":   3,

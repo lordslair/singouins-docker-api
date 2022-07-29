@@ -10,6 +10,7 @@ from nosql                      import *
 
 from nosql.models.RedisStats    import *
 from nosql.models.RedisWallet   import *
+from nosql.models.RedisInstance import *
 
 # Loading the Meta for later use
 try:
