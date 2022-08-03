@@ -23,6 +23,7 @@ import                      routes.internal.creature
 import                      routes.internal.creature.cds
 import                      routes.internal.creature.effects
 import                      routes.internal.creature.equipment
+import                      routes.internal.creature.kill
 import                      routes.internal.creature.pa
 import                      routes.internal.creature.position
 import                      routes.internal.creature.stats
@@ -393,9 +394,9 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_all)
 # Routes /internal/creature/{creatureid}/kill/*
-app.add_url_rule('/internal/creature/{creatureid}/kill/{victimid}',
+app.add_url_rule('/internal/creature/<int:creatureid>/kill/<int:victimid>',
                  methods=['POST'],
-                 view_func=routes.internal.creature.pa.creature_pa_get)
+                 view_func=routes.internal.creature.kill.creature_kill)
 # Routes /internal/creature/{creatureid}/pa/*
 app.add_url_rule('/internal/creature/<int:creatureid>/pa',
                  methods=['GET'],

@@ -2,6 +2,7 @@
 
 import dataclasses
 
+from flask               import jsonify
 from random              import randint
 
 from ..session           import Session
@@ -168,7 +169,7 @@ def fn_creature_kill(pc,tg,action):
     try:
         tg      = session.query(Creature).filter(Creature.id == tg.id).one_or_none()
         session.delete(tg)
-        #session.commit()
+        session.commit()
     except Exception as e:
         msg = f'Creature DB delete KO ([{tgid}] {tgname}) [{e}]'
         logger.error(msg)

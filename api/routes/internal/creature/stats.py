@@ -66,7 +66,7 @@ def creature_stats(creatureid):
 def creature_stats_hp_modify(creatureid,operation,count):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     if not isinstance(count, int):
