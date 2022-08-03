@@ -21,6 +21,8 @@ def send(adress, subject, body):
     try:
         mail = smtplib.SMTP_SSL(SMTP_SERVER,
                                 local_hostname = SMTP_HOSTNAME)
+
+        mail.connect(host=SMTP_SERVER)
         mail.ehlo()
         mail.set_debuglevel(0)
         mail.login(SMTP_USER, SMTP_PASS)
