@@ -28,7 +28,7 @@ flask-bcrypt==1.0.1
     # via -r requirements.in
 flask-cors==3.0.10
     # via -r requirements.in
-flask-jwt-extended==4.4.2
+flask-jwt-extended==4.4.3
     # via -r requirements.in
 flask-swagger-ui==4.11.1
     # via -r requirements.in
