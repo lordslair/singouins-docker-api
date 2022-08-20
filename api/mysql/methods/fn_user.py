@@ -101,6 +101,25 @@ def fn_user_get(username):
     finally:
         session.close()
 
+def fn_user_get_from_creature(creature):
+    session = Session()
+
+    try:
+       result = session.query(User)\
+                       .filter(User.id == creature.account)\
+                       .one_or_none()
+    except Exception as e:
+        logger.error(f'User Query KO (creature.id:{creature.id}) [{e}]')
+        return False
+    else:
+        if result:
+            return result
+        else:
+            logger.trace(f'User Query KO - Not Found (creature.id:{creature.id})')
+            return False
+    finally:
+        session.close()
+
 def fn_user_get_from_discord(discordname):
     session = Session()
 

@@ -28,6 +28,7 @@ import                      routes.internal.creature.pa
 import                      routes.internal.creature.position
 import                      routes.internal.creature.stats
 import                      routes.internal.creature.statuses
+import                      routes.internal.creature.user
 import                      routes.internal.creature.wallet
 import                      routes.internal.discord
 import                      routes.internal.korp
@@ -435,6 +436,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/stats/hp/<string:operation
 app.add_url_rule('/internal/creature/<int:creatureid>/wallet',
                  methods=['GET'],
                  view_func=routes.internal.creature.wallet.creature_wallet)
+# Routes /internal/creature/{creatureid}/user/*
+app.add_url_rule('/internal/creature/<int:creatureid>/user',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.user.creature_user)
 app.add_url_rule('/internal/creature/<int:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.wallet.creature_wallet_modify)
