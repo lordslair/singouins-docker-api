@@ -48,10 +48,10 @@ color_dis['Legendary'] = ':purple_square:'
 # /internal/creature/*
 # API: POST /internal/creature/{creatureid}/kill/{victimid}
 def creature_kill(creatureid,victimid):
-    #if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-    #    msg = f'Token not authorized'
-    #    logger.warn(msg)
-    #    return jsonify({"success": False, "msg": msg, "payload": None}), 403
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'Token not authorized'
+        logger.warning(msg)
+        return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
     creature    = fn_creature_get(None,creatureid)[3]
@@ -78,7 +78,7 @@ def creature_kill(creatureid,victimid):
     else:
         if currency:
             msg = f'Currency Generation OK (creatureid:{creature.id},currency:{currency})'
-            logger.trace(msg)
+            logger.debug(msg)
     # Loots
     try:
         loots = get_loots(victim)
@@ -91,7 +91,7 @@ def creature_kill(creatureid,victimid):
     else:
         if loots:
             msg = f'Loot Generation OK (creatureid:{creature.id},loots:{len(loots)})'
-            logger.trace(msg)
+            logger.debug(msg)
 
     # We check if the killer is in a Squad or not
     if creature.squad is None:
@@ -115,7 +115,7 @@ def creature_kill(creatureid,victimid):
             else:
                 if currency:
                     msg = f'Currency Add OK (creatureid:{creature.id},currency:{currency})'
-                    logger.trace(msg)
+                    logger.debug(msg)
 
             # XP is generated
             try:
@@ -129,7 +129,7 @@ def creature_kill(creatureid,victimid):
                                 "payload": None}), 200
             else:
                 msg = f'XP add OK (creatureid:{creature.id},xp:{xp_gained})'
-                logger.trace(msg)
+                logger.debug(msg)
 
             for loot in loots:
                 # Items are added
@@ -144,7 +144,7 @@ def creature_kill(creatureid,victimid):
                 else:
                     if item:
                         msg = f'Loot Add OK (creatureid:{creature.id},loot:{loot})'
-                        logger.trace(msg)
+                        logger.debug(msg)
 
             # Now we send the WS messages for loot/drops
             # Broadcast Queue
@@ -213,7 +213,7 @@ def creature_kill(creatureid,victimid):
             else:
                 if members:
                     msg = f'Squad Query OK (creatureid:{creature.id},members:{len(members)})'
-                    logger.trace(msg)
+                    logger.debug(msg)
 
             # We loop over the members
             for member in members:
@@ -236,7 +236,7 @@ def creature_kill(creatureid,victimid):
                 else:
                     if currency:
                         msg = f'Currency Add OK (creatureid:{member.id},currency:{currency})'
-                        logger.trace(msg)
+                        logger.debug(msg)
 
                 # XP is generated
                 try:
@@ -250,7 +250,7 @@ def creature_kill(creatureid,victimid):
                                     "payload": None}), 200
                 else:
                     msg = f'XP add OK (creatureid:{member.id},xp:{xp_gained})'
-                    logger.trace(msg)
+                    logger.debug(msg)
 
             for loot in loots:
                 # Items are added
@@ -297,7 +297,7 @@ def creature_kill(creatureid,victimid):
                 else:
                     if item:
                         msg = f'Loot Add OK (creatureid:{winner.id},loot:{loot})'
-                        logger.trace(msg)
+                        logger.debug(msg)
 
         except Exception as e:
             msg = f'Squad drops KO (creatureid:{creature.id},victimid:{victimid}) [{e}]'
