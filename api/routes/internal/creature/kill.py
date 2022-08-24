@@ -1,5 +1,8 @@
 # -*- coding: utf8 -*-
 
+import dataclasses
+import datetime
+
 from flask                      import Flask, jsonify, request
 from loguru                     import logger
 from random                     import randint,choices
@@ -64,6 +67,15 @@ def creature_kill(creatureid,victimid):
         return jsonify({"success": False,
                         "msg":     f'Victim unknown (victimid:{victimid})',
                         "payload": None}), 200
+    # Loading the Meta for later use
+    try:
+        metaArmors  = get_meta('armor')
+        metaWeapons = get_meta('weapon')
+    except Exception as e:
+        logger.error(f'Meta fectching: KO [{e}]')
+    else:
+        logger.trace(f'Meta fectching: OK')
+
 
     # We generate the drops
     # Currency
@@ -175,19 +187,6 @@ def creature_kill(creatureid,victimid):
                 msg = f'Queue PUT OK (queue:{queue},topic:loot)'
                 logger.trace(msg)
 
-            """ NEED TO RECODE
-            # We put the info in queue for ws Discord
-            qmsg = {"ciphered": False,
-            "payload": {"color_int": color_int[item.rarity],
-                        "path": f'/resources/sprites/{item.metatype}s/{item.metaid}.png',
-                        "title": f"{itemmeta['name']}",
-                        "item": f'Looted by [{pcsquad.id}] {pcsquad.name}',
-                        "footer": f'NB: This item is [{item.bound_type}]'},
-            "embed": True,
-            "scope": f'Squad-{pc.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            """
-
         except Exception as e:
             msg = f'Solo drops KO (creatureid:{creature.id},victimid:{victimid}) [{e}]'
             logger.error(msg)
@@ -257,7 +256,12 @@ def creature_kill(creatureid,victimid):
                 try:
                     # We need to pick who wins the item in the squad
                     winner = choices(members,k=1)[0]
-                    item = fn_item_add(winner,loot)
+                    item   = fn_item_add(winner,loot)
+                    # If needed we convert the date
+                    if isinstance(item.date, datetime.date):
+                        item.date = item.date.strftime('%Y-%m-%d %H:%M:%S')
+                    if isinstance(winner.date, datetime.date):
+                        winner.date = winner.date.strftime('%Y-%m-%d %H:%M:%S')
 
                     # Now we send the WS messages for loot/drops
                     # Broadcast Queue
@@ -286,6 +290,31 @@ def creature_kill(creatureid,victimid):
                         logger.error(msg)
                     else:
                         msg = f'Queue PUT OK (queue:{queue},topic:loot)'
+                        logger.trace(msg)
+
+                    # We put the info in queue for ws Discord
+                    if item.metatype == 'weapon':
+                        itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaWeapons))[0]) # Gruikfix
+                    elif item.metatype == 'armor':
+                        itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaArmors))[0]) # Gruikfix
+                    else:
+                        logger.warning(f'Item metatype unknown (item.metatype:{item.metatype})')
+
+                    queue = 'yarqueue:discord'
+                    qmsg = {"ciphered": False,
+                            "payload": {"color_int": color_int[item.rarity],
+                                        "item":      dataclasses.asdict(item),
+                                        "meta":      itemmeta,
+                                        "winner":    dataclasses.asdict(winner)},
+                            "embed": True,
+                            "scope": f'Squad-{winner.squad}'}
+                    try:
+                        yqueue_put(queue, qmsg)
+                    except Exception as e:
+                        msg = f'Queue PUT KO (queue:{queue}) [{e}]'
+                        logger.error(msg)
+                    else:
+                        msg = f'Queue PUT OK (queue:{queue})'
                         logger.trace(msg)
 
                 except Exception as e:
