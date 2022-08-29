@@ -36,6 +36,8 @@ def fn_creature_view_get(creature):
             if creature['race'] >= 11:
                 creature['diplo'] = 'enemy'
 
+            view_final.append(creature)
+
         return(view_final)
     finally:
         session.close()
