@@ -436,13 +436,13 @@ app.add_url_rule('/internal/creature/<int:creatureid>/stats/hp/<string:operation
 app.add_url_rule('/internal/creature/<int:creatureid>/wallet',
                  methods=['GET'],
                  view_func=routes.internal.creature.wallet.creature_wallet)
+app.add_url_rule('/internal/creature/<int:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.wallet.creature_wallet_modify)
 # Routes /internal/creature/{creatureid}/user/*
 app.add_url_rule('/internal/creature/<int:creatureid>/user',
                  methods=['GET'],
                  view_func=routes.internal.creature.user.creature_user)
-app.add_url_rule('/internal/creature/<int:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.wallet.creature_wallet_modify)
 # Routes /internal/creatures/*
 app.add_url_rule('/internal/creatures',
                  methods=['GET'],
