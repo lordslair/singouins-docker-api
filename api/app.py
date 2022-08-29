@@ -21,6 +21,7 @@ from utils.gunilog                 import *
 # Imports of endpoint functions
 import                      routes.internal.creature
 import                      routes.internal.creature.cds
+import                      routes.internal.creature.context
 import                      routes.internal.creature.effects
 import                      routes.internal.creature.equipment
 import                      routes.internal.creature.kill
@@ -375,6 +376,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
 app.add_url_rule('/internal/creature/<int:creatureid>/cds',
                  methods=['GET'],
                  view_func=routes.internal.creature.cds.creature_cd_get_all)
+# Routes /internal/creature/{creatureid}/context/*
+app.add_url_rule('/internal/creature/<int:creatureid>/context',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.context.creature_context_get)
 # Routes /internal/creature/{creatureid}/equipment/*
 app.add_url_rule('/internal/creature/<int:creatureid>/equipment',
                  methods=['GET'],

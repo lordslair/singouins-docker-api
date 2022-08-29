@@ -187,6 +187,26 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureCdsResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/context:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Context request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureResolverContextResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/effect/{effect_name}:
     put:
       tags:
@@ -1137,7 +1157,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreatureResolverContextResponse'
+                $ref: '#/components/schemas/CreatureResolverContextResponse'
   /mypc/{pcid}/effects:
     get:
       tags:
@@ -2041,7 +2061,7 @@ components:
           nullable: false
           example: 100
 
-    InternalCreatureResolverContextResponse:
+    CreatureResolverContextResponse:
       type: object
       properties:
         msg:
@@ -2109,6 +2129,50 @@ components:
                       type: string
                       example: 'fightEventparams'
                       nullable: false
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreatureResolverContextResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          properties:
+            map:
+              type: integer
+              example: 1
+              minimum: 1
+              nullable: false
+            instance:
+              type: integer
+              example: 1
+              minimum: 1
+              nullable: false
+            creatures:
+              type: array
+              items:
+                $ref: '#/components/schemas/PcObject'
+            effects:
+              type: array
+              items:
+                $ref: '#/components/schemas/EffectObject'
+            status:
+              type: array
+              items:
+                $ref: '#/components/schemas/StatusObject'
+            cd:
+              type: array
+              items:
+                $ref: '#/components/schemas/CdObject'
+            pa:
+              type: array
+              items:
+                $ref: '#/components/schemas/PaObject'
         success:
           type: boolean
           nullable: false
