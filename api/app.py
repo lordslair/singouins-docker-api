@@ -29,6 +29,7 @@ import                      routes.internal.creature.position
 import                      routes.internal.creature.stats
 import                      routes.internal.creature.statuses
 import                      routes.internal.creature.user
+import                      routes.internal.creature.view
 import                      routes.internal.creature.wallet
 import                      routes.internal.discord
 import                      routes.internal.korp
@@ -443,6 +444,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/wallet/<string:caliber>/<s
 app.add_url_rule('/internal/creature/<int:creatureid>/user',
                  methods=['GET'],
                  view_func=routes.internal.creature.user.creature_user)
+# Routes /internal/creature/{creatureid}/view/*
+app.add_url_rule('/internal/creature/<int:creatureid>/view',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.view.creature_view_get)
 # Routes /internal/creatures/*
 app.add_url_rule('/internal/creatures',
                  methods=['GET'],
