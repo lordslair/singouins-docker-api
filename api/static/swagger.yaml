@@ -675,6 +675,26 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatusesResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/view:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature View request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatureViewResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/wallet:
     get:
       tags:
@@ -2129,6 +2149,21 @@ components:
                       type: string
                       example: 'fightEventparams'
                       nullable: false
+        success:
+          type: boolean
+          nullable: false
+
+    CreatureViewResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: array
+          items:
+            $ref: '#/components/schemas/PcObject'
         success:
           type: boolean
           nullable: false
