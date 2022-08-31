@@ -9,6 +9,7 @@ from mysql.methods.fn_inventory import *
 from mysql.methods.fn_user      import *
 from nosql                      import *
 
+from nosql.models.RedisHS       import *
 from nosql.models.RedisStats    import *
 from nosql.models.RedisWallet   import *
 from nosql.models.RedisInstance import *
