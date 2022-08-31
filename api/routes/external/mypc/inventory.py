@@ -8,11 +8,11 @@ from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 from mysql.methods.fn_inventory import *
 
+from nosql.models.RedisEvent    import *
+from nosql.models.RedisHS       import *
 from nosql.models.RedisPa       import *
 from nosql.models.RedisStats    import *
-from nosql.models.RedisEvent    import *
 from nosql.models.RedisWallet   import *
-from nosql                      import *
 
 #
 # Routes /mypc/{pcid}/pa
@@ -58,22 +58,16 @@ def inventory_item_dismantle(pcid,itemid):
         redis_wallet = RedisWallet(pc)
         if   item.rarity == 'Broken':
             redis_wallet.broken += 6
-            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 6)
         elif item.rarity == 'Common':
             redis_wallet.common += 5
-            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 5)
         elif item.rarity == 'Uncommon':
             redis_wallet.uncommon += 4
-            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 4)
         elif item.rarity == 'Rare':
             redis_wallet.rare += 3
-            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 3)
         elif item.rarity == 'Epic':
             redis_wallet.epic += 2
-            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 2)
         elif item.rarity == 'Legendary':
             redis_wallet.legendary += 1
-            incr.many(f'highscores:{pc.id}:action:dismantle:shards:{item.rarity}', 1)
     except Exception as e:
         msg = f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
@@ -106,7 +100,7 @@ def inventory_item_dismantle(pcid,itemid):
         # We consume the blue PA (1)
         RedisPa(pc).set(0,1)
         # We add HighScore
-        incr.many(f'highscores:{pc.id}:action:dismantle:items', 1)
+        RedisHS(pc).incr('action_dismantle')
     except Exception as e:
         msg = f'Redis Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)

@@ -227,6 +227,9 @@ def mypc_del(pcid):
         if RedisWallet(creature).destroy():
             logger.trace(f'{h} RedisWallet delete OK')
 
+        if RedisHS(creature).destroy():
+            logger.trace(f'{h} RedisHS delete OK')
+
         """
         # We leave the instance if we are in one
         if creature.instance:

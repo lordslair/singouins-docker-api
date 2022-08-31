@@ -9,6 +9,7 @@ from mysql.methods.fn_inventory import *
 
 from nosql.models.RedisPa       import *
 from nosql.models.RedisEvent    import *
+from nosql.models.RedisHS       import *
 from nosql.models.RedisWallet   import *
 
 #
@@ -83,8 +84,11 @@ def action_weapon_reload(pcid,weaponid):
         neededammo = itemmeta['max_ammo'] - item.ammo
         if walletammo < neededammo:
             # Not enough ammo to reload
+            msg = (f"Not enough Ammo to reload (pcid:{pc.id},"
+                   f"cal:{itemmeta['caliber']},ammo:{walletammo}<{neededammo})")
+            logger.debug(msg)
             return jsonify({"success": False,
-                            "msg": f'Not enough PA to reload (pcid:{pc.id})',
+                            "msg": msg,
                             "payload": None}), 200
 
         # We reload the weapon
@@ -103,7 +107,7 @@ def action_weapon_reload(pcid,weaponid):
         # We consume the PA
         RedisPa(pc).set(itemmeta['pas_reload'],0)
         # Wa add HighScore
-        incr.one(f'highscores:{pc.id}:action:reload')
+        RedisHS(pc).incr('action_reload')
         # We create the Creature Event
         RedisEvent(pc).add(pc.id,
                            None,
@@ -190,8 +194,8 @@ def action_weapon_unload(pcid,weaponid):
         fn_item_ammo_set(weaponid,0)
         # We consume the PA
         RedisPa(pc).set(0,2)
-        # Wa add HighScore
-        incr.one(f'highscores:{pc.id}:action:unload')
+        # We add HighScore
+        RedisHS(pc).incr('action_unload')
         # We create the Creature Event
         RedisEvent(pc).add(pc.id,
                            None,
