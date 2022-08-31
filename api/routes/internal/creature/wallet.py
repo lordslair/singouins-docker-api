@@ -18,7 +18,7 @@ from variables                  import API_INTERNAL_TOKEN
 def creature_wallet(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
@@ -62,7 +62,7 @@ def creature_wallet(creatureid):
 def creature_wallet_modify(creatureid,caliber,operation,count):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     if not isinstance(count, int):

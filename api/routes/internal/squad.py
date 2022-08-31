@@ -1,9 +1,9 @@
 # -*- coding: utf8 -*-
 
 from flask                      import Flask, jsonify, request
+from loguru                     import logger
 
 from mysql.methods.fn_squad     import *
-from nosql                      import *
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -14,10 +14,8 @@ from variables                  import API_INTERNAL_TOKEN
 def internal_squad_get_one(squadid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
-
-    incr.one('queries:internal:squad')
 
     try:
         squad = fn_squad_get_one(squadid)
@@ -45,10 +43,8 @@ def internal_squad_get_one(squadid):
 def internal_squad_get_all():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
-
-    incr.one('queries:internal:squads')
 
     try:
         squads = fn_squad_get_all()

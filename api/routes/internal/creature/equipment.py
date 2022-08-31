@@ -20,7 +20,7 @@ from variables                  import API_INTERNAL_TOKEN
 def creature_equipment(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks
@@ -67,7 +67,7 @@ def creature_equipment(creatureid):
 def creature_equipment_modifiy(creatureid,itemid,operation,count):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     if operation not in ['add','consume']:

@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 from flask                     import Flask, jsonify, request
+from loguru                    import logger
 
 from mysql.methods.fn_user     import fn_user_get_from_discord,fn_user_link_from_discord
 from mysql.methods.fn_creature import fn_creature_get_all,fn_creature_get
@@ -59,11 +60,11 @@ def discord_link():
 def discord_creature_get_one():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
     if not request.is_json:
         msg = f'Missing JSON in request'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"msg": msg, "success": False, "payload": None}), 400
 
     discordname = request.json.get('discordname')
@@ -116,11 +117,11 @@ def discord_creature_get_one():
 def discord_creature_get_all():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
     if not request.is_json:
         msg = f'Missing JSON in request'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"msg": msg, "success": False, "payload": None}), 400
 
     discordname  = request.json.get('discordname')
@@ -173,11 +174,11 @@ def discord_creature_get_all():
 def discord_user():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
     if not request.is_json:
         msg = f'Missing JSON in request'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"msg": msg, "success": False, "payload": None}), 400
 
     discordname  = request.json.get('discordname')

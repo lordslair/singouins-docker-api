@@ -1,9 +1,9 @@
 # -*- coding: utf8 -*-
 
 from flask                 import Flask, jsonify, request
+from loguru                import logger
 
 from mysql.methods.fn_korp import *
-from nosql                 import *
 
 from variables             import API_INTERNAL_TOKEN
 
@@ -14,10 +14,8 @@ from variables             import API_INTERNAL_TOKEN
 def internal_korp_get_one(korpid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
-
-    incr.one('queries:internal:korp')
 
     try:
         korp = fn_korp_get_one(korpid)
@@ -45,10 +43,8 @@ def internal_korp_get_one(korpid):
 def internal_korp_get_all():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
-
-    incr.one('queries:internal:korps')
 
     try:
         korps = fn_korp_get_all()

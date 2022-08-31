@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 from flask              import Flask, jsonify, request
+from loguru             import logger
 
 from nosql              import *
 
@@ -14,7 +15,7 @@ def internal_meta_get_one(metatype):
     # Pre-flight checks
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:

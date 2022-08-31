@@ -17,7 +17,7 @@ from variables                  import API_INTERNAL_TOKEN
 def creature_position_set(creatureid,x,y):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     # Pre-flight checks

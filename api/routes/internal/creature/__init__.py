@@ -22,11 +22,11 @@ from variables                  import API_INTERNAL_TOKEN
 def creature_add():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
     if not request.is_json:
         msg = f'Missing JSON in request'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"msg": msg, "success": False, "payload": None}), 400
 
     try:
@@ -68,7 +68,7 @@ def creature_add():
 def creature_del(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:
@@ -121,7 +121,7 @@ def creature_del(creatureid):
 def creature_get_one(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:
@@ -143,7 +143,7 @@ def creature_get_one(creatureid):
 def creature_get_all():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
         msg = f'Token not authorized'
-        logger.warn(msg)
+        logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:
