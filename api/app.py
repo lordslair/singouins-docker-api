@@ -24,6 +24,7 @@ import                      routes.internal.creature.cds
 import                      routes.internal.creature.context
 import                      routes.internal.creature.effects
 import                      routes.internal.creature.equipment
+import                      routes.internal.creature.highscore
 import                      routes.internal.creature.kill
 import                      routes.internal.creature.pa
 import                      routes.internal.creature.position
@@ -400,6 +401,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name
 app.add_url_rule('/internal/creature/<int:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_all)
+# Routes /internal/creature/{creatureid}/highscore/*
+app.add_url_rule('/internal/creature/<int:creatureid>/highscore',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.highscore.creature_highscore_get)
 # Routes /internal/creature/{creatureid}/kill/*
 app.add_url_rule('/internal/creature/<int:creatureid>/kill/<int:victimid>',
                  methods=['POST'],

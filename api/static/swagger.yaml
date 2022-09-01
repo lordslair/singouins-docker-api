@@ -390,6 +390,28 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureItemResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/highscore:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature HighScore request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+            nullable: false
+            minimum: 1
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalCreatureHighScoreResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/kill/{victimid}:
     post:
       tags:
@@ -2275,6 +2297,25 @@ components:
           properties:
             creature:
               $ref: '#/components/schemas/PcObject'
+            highscore:
+              $ref: '#/components/schemas/HighScoreObject'
+        success:
+          type: boolean
+          nullable: false
+
+    InternalCreatureHighScoreResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          format: string
+          nullable: false
+        payload:
+          type: object
+          nullable: true
+          properties:
+            creature:
+              $ref: '#/components/schemas/PcObject'
             equipment:
               $ref: '#/components/schemas/ItemObject'
         success:
@@ -2792,6 +2833,35 @@ components:
         tick:
           type: integer
           nullable: false
+    HighScoreObject:
+      type: object
+      nullable: true
+      properties:
+        action_dismantle:
+          type: integer
+          nullable: false
+          example: 1
+          minimum: 0
+        action_load:
+          type: integer
+          nullable: false
+          example: 2
+          minimum: 0
+        action_move:
+          type: integer
+          nullable: false
+          example: 3
+          minimum: 0
+        action_reload:
+          type: integer
+          nullable: false
+          example: 4
+          minimum: 0
+        action_unload:
+          type: integer
+          nullable: false
+          example: 5
+          minimum: 0
     KorpObject:
       type: object
       nullable: false
