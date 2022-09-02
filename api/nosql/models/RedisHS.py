@@ -13,7 +13,7 @@ class RedisHS:
 
         try:
             hashdict = {
-                "action_load": 0,
+                "action_reload": 0,
                 "action_unload": 0,
                 "action_dismantle": 0,
                 "action_move": 0,
