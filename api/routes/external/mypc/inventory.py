@@ -55,30 +55,19 @@ def inventory_item_dismantle(pcid,itemid):
 
     try:
         # We add the shards in the wallet
-        redis_wallet = RedisWallet(pc)
+        creature_wallet = RedisWallet(pc)
         if   item.rarity == 'Broken':
-            redis_wallet.broken += 6
+            creature_wallet.incr(item.rarity.lower(), 6)
         elif item.rarity == 'Common':
-            redis_wallet.common += 5
+            creature_wallet.incr(item.rarity.lower(), 5)
         elif item.rarity == 'Uncommon':
-            redis_wallet.uncommon += 4
+            creature_wallet.incr(item.rarity.lower(), 4)
         elif item.rarity == 'Rare':
-            redis_wallet.rare += 3
+            creature_wallet.incr(item.rarity.lower(), 3)
         elif item.rarity == 'Epic':
-            redis_wallet.epic += 2
+            creature_wallet.incr(item.rarity.lower(), 2)
         elif item.rarity == 'Legendary':
-            redis_wallet.legendary += 1
-    except Exception as e:
-        msg = f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]'
-        logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
-
-    try:
-        # We store the Wallet into Redis
-        redis_wallet.store()
-        redis_wallet.refresh()
+            creature_wallet.incr(item.rarity.lower(), 1)
     except Exception as e:
         msg = f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]'
         logger.error(msg)
@@ -112,7 +101,7 @@ def inventory_item_dismantle(pcid,itemid):
         return jsonify({"success": True,
                         "msg": f'Item dismantle OK (pcid:{pc.id})',
                         "payload": {"creature": pc,
-                                    "wallet":   redis_wallet.dict}}), 200
+                                    "wallet":   creature_wallet._asdict()}}), 200
 
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>
 @jwt_required()

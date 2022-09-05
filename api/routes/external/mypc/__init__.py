@@ -77,7 +77,7 @@ def mypc_add():
 
                 try:
                     # We initialize a fresh wallet
-                    redis_wallet = RedisWallet(pc).init()
+                    creature_wallet = RedisWallet(pc)
                 except Exception as e:
                     msg = f'{h} RedisWallet creation KO [{e}]'
                     logger.error(msg)
@@ -85,7 +85,7 @@ def mypc_add():
                                     "msg":     msg,
                                     "payload": None}), 200
                 else:
-                    if redis_wallet:
+                    if creature_wallet:
                         logger.trace(f'{h} RedisWallet creation OK')
                     else:
                         logger.warning(f'{h} RedisWallet creation KO')

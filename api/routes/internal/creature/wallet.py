@@ -39,8 +39,7 @@ def creature_wallet(creatureid):
                             "payload": None}), 200
 
     try:
-        redis_wallet    = RedisWallet(creature)
-        creature_wallet = redis_wallet.dict
+        creature_wallet = RedisWallet(creature)
     except Exception as e:
         msg = f'Wallet Query KO - Failed (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -51,7 +50,7 @@ def creature_wallet(creatureid):
         if creature_wallet:
             return jsonify({"success": True,
                             "msg": f'Wallet Query OK (pcid:{creature.id})',
-                            "payload": {"wallet":   creature_wallet,
+                            "payload": {"wallet":   creature_wallet._asdict(),
                                         "creature": creature}}), 200
         else:
             return jsonify({"success": True,
@@ -96,29 +95,11 @@ def creature_wallet_modify(creatureid,caliber,operation,count):
                             "payload": None}), 200
 
     try:
-        redis_wallet    = RedisWallet(creature)
+        creature_wallet = RedisWallet(creature)
         if operation == 'consume' and count > 0:
-            if   caliber == 'cal22':  redis_wallet.cal22  -= count
-            elif caliber == 'cal223': redis_wallet.cal223 -= count
-            elif caliber == 'cal311': redis_wallet.cal311 -= count
-            elif caliber == 'cal50':  redis_wallet.cal50  -= count
-            elif caliber == 'cal55':  redis_wallet.cal55  -= count
-            elif caliber == 'shell':  redis_wallet.shell  -= count
-            elif caliber == 'bolt':   redis_wallet.bolt   -= count
-            elif caliber == 'arrow':  redis_wallet.arrow  -= count
+            creature_wallet.incr(caliber, count * (-1))
         else:
-            if   caliber == 'cal22':  redis_wallet.cal22  += count
-            elif caliber == 'cal223': redis_wallet.cal223 += count
-            elif caliber == 'cal311': redis_wallet.cal311 += count
-            elif caliber == 'cal50':  redis_wallet.cal50  += count
-            elif caliber == 'cal55':  redis_wallet.cal55  += count
-            elif caliber == 'shell':  redis_wallet.shell  += count
-            elif caliber == 'bolt':   redis_wallet.bolt   += count
-            elif caliber == 'arrow':  redis_wallet.arrow  += count
-
-        # This returns True if the HASH is properly stored in Redis
-        stored_wallet     = redis_wallet.store()
-        redis_wallet.refresh()
+            creature_wallet.incr(caliber, count)
     except Exception as e:
         msg = f'Wallet Query KO - Failed (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -126,10 +107,10 @@ def creature_wallet_modify(creatureid,caliber,operation,count):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if stored_wallet and redis_wallet:
+        if creature_wallet:
             return jsonify({"success": True,
                             "msg": f'Wallet Query OK (pcid:{creature.id})',
-                            "payload": {"wallet":   redis_wallet.dict,
+                            "payload": {"wallet":   creature_wallet._asdict(),
                                         "creature": creature}}), 200
         else:
             return jsonify({"success": True,

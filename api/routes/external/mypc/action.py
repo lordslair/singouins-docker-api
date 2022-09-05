@@ -70,16 +70,8 @@ def action_weapon_reload(pcid,weaponid):
 
     try:
         # We add the shards in the wallet
-        redis_wallet = RedisWallet(pc)
-
-        if   itemmeta['caliber'] == '.22':   walletammo = redis_wallet.cal22
-        elif itemmeta['caliber'] == '.223':  walletammo = redis_wallet.cal223
-        elif itemmeta['caliber'] == '.311':  walletammo = redis_wallet.cal311
-        elif itemmeta['caliber'] == '.50':   walletammo = redis_wallet.cal50
-        elif itemmeta['caliber'] == '.55':   walletammo = redis_wallet.cal55
-        elif itemmeta['caliber'] == 'shell': walletammo = redis_wallet.shell
-        elif itemmeta['caliber'] == 'bolt':  walletammo = redis_wallet.bolt
-        elif itemmeta['caliber'] == 'arrow': walletammo = redis_wallet.arrow
+        creature_wallet = RedisWallet(pc)
+        walletammo      = getattr(creature_wallet,itemmeta['caliber'])
 
         neededammo = itemmeta['max_ammo'] - item.ammo
         if walletammo < neededammo:
@@ -94,16 +86,7 @@ def action_weapon_reload(pcid,weaponid):
         # We reload the weapon
         fn_item_ammo_set(weaponid,neededammo)
         # We remove the ammo from wallet
-        if   itemmeta['caliber'] == '.22':   redis_wallet.cal22  -= neededammo
-        elif itemmeta['caliber'] == '.223':  redis_wallet.cal223 -= neededammo
-        elif itemmeta['caliber'] == '.311':  redis_wallet.cal311 -= neededammo
-        elif itemmeta['caliber'] == '.50':   redis_wallet.cal50  -= neededammo
-        elif itemmeta['caliber'] == '.55':   redis_wallet.cal55  -= neededammo
-        elif itemmeta['caliber'] == 'shell': redis_wallet.shell  -= neededammo
-        elif itemmeta['caliber'] == 'bolt':  redis_wallet.bolt   -= neededammo
-        elif itemmeta['caliber'] == 'arrow': redis_wallet.arrow  -= neededammo
-        # We store the Wallet
-        redis_wallet.store()
+        creature_wallet.incr(itemmeta['caliber'], neededammo * (-1))
         # We consume the PA
         RedisPa(pc).set(itemmeta['pas_reload'],0)
         # Wa add HighScore
@@ -178,18 +161,9 @@ def action_weapon_unload(pcid,weaponid):
 
     try:
         # We add the shards in the wallet
-        redis_wallet = RedisWallet(pc)
+        creature_wallet = RedisWallet(pc)
         # We add the ammo to wallet
-        if   itemmeta['caliber'] == '.22':   redis_wallet.cal22  += item.ammo
-        elif itemmeta['caliber'] == '.223':  redis_wallet.cal223 += item.ammo
-        elif itemmeta['caliber'] == '.311':  redis_wallet.cal311 += item.ammo
-        elif itemmeta['caliber'] == '.50':   redis_wallet.cal50  += item.ammo
-        elif itemmeta['caliber'] == '.55':   redis_wallet.cal55  += item.ammo
-        elif itemmeta['caliber'] == 'shell': redis_wallet.shell  += item.ammo
-        elif itemmeta['caliber'] == 'bolt':  redis_wallet.bolt   += item.ammo
-        elif itemmeta['caliber'] == 'arrow': redis_wallet.arrow  += item.ammo
-        # We store the Wallet
-        redis_wallet.store()
+        creature_wallet.incr(itemmeta['caliber'], item.ammo)
         # We unload the weapon
         fn_item_ammo_set(weaponid,0)
         # We consume the PA

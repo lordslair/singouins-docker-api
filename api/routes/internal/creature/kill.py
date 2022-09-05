@@ -110,14 +110,12 @@ def creature_kill(creatureid,victimid):
         try:
             try:
                 # We add loot only to the killer
-                redis_wallet = RedisWallet(creature)
+                creature_wallet = RedisWallet(creature)
                 if creature.race <= 4:
                     # It is a Singouin, we add bananas
-                    redis_wallet.bananas += currency
+                    creature_wallet.incr('bananas', currency)
                 else:
-                    redis_wallet.sausages += currency
-                # We store the Wallet
-                redis_wallet.store()
+                    creature_wallet.incr('sausages', currency)
             except Exception as e:
                 msg = f'Currency Add KO (creatureid:{creature.id}) [{e}]'
                 logger.error(msg)
@@ -218,14 +216,12 @@ def creature_kill(creatureid,victimid):
             for member in members:
                 try:
                     # We add loot only to the killer
-                    redis_wallet = RedisWallet(member)
+                    creature_wallet = RedisWallet(member)
                     if creature.race <= 4:
                         # It is a Singouin, we add bananas
-                        redis_wallet.bananas += int(currency/len(members))
+                        creature_wallet.incr('bananas', int(currency/len(members)))
                     else:
-                        redis_wallet.sausages += int(currency/len(members))
-                    # We store the Wallet
-                    redis_wallet.store()
+                        creature_wallet.incr('sausages', int(currency/len(members)))
                 except Exception as e:
                     msg = f'Currency Add KO (creatureid:{member.id}) [{e}]'
                     logger.error(msg)
