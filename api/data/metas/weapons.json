@@ -932,7 +932,7 @@
     {
         "arpen":0,
         "burst_acc":0,
-        "caliber":".22",
+        "caliber":"cal22",
         "defcan":0,
         "dmg_base":60,
         "dmg_radius":null,
@@ -962,7 +962,7 @@
     {
         "arpen":0,
         "burst_acc":-50,
-        "caliber":".22",
+        "caliber":"cal22",
         "defcan":0,
         "dmg_base":60,
         "dmg_radius":null,
@@ -1022,7 +1022,7 @@
     {
         "arpen":0,
         "burst_acc":0,
-        "caliber":".223",
+        "caliber":"cal223",
         "defcan":0,
         "dmg_base":70,
         "dmg_radius":null,
@@ -1052,7 +1052,7 @@
     {
         "arpen":-10,
         "burst_acc":0,
-        "caliber":"12 Gauge",
+        "caliber":"shell",
         "defcan":2,
         "dmg_base":110,
         "dmg_radius":null,
@@ -1082,7 +1082,7 @@
     {
         "arpen":-10,
         "burst_acc":0,
-        "caliber":"12 Gauge",
+        "caliber":"shell",
         "defcan":5,
         "dmg_base":110,
         "dmg_radius":null,
@@ -1112,7 +1112,7 @@
     {
         "arpen":0,
         "burst_acc":0,
-        "caliber":".223",
+        "caliber":"cal223",
         "defcan":0,
         "dmg_base":70,
         "dmg_radius":null,
@@ -1142,7 +1142,7 @@
     {
         "arpen":0,
         "burst_acc":-25,
-        "caliber":".223",
+        "caliber":"cal223",
         "defcan":0,
         "dmg_base":70,
         "dmg_radius":null,
@@ -1172,7 +1172,7 @@
     {
         "arpen":0,
         "burst_acc":0,
-        "caliber":".311",
+        "caliber":"cal311",
         "defcan":0,
         "dmg_base":90,
         "dmg_radius":null,
@@ -1292,7 +1292,7 @@
     {
         "arpen":0,
         "burst_acc":0,
-        "caliber":".311",
+        "caliber":"cal311",
         "defcan":0,
         "dmg_base":90,
         "dmg_radius":null,
@@ -1322,7 +1322,7 @@
     {
         "arpen":-10,
         "burst_acc":0,
-        "caliber":"12 Gauge",
+        "caliber":"shell",
         "defcan":5,
         "dmg_base":110,
         "dmg_radius":null,
@@ -1352,7 +1352,7 @@
     {
         "arpen":-10,
         "burst_acc":-50,
-        "caliber":"12 Gauge",
+        "caliber":"shell",
         "defcan":2,
         "dmg_base":110,
         "dmg_radius":null,
@@ -1442,7 +1442,7 @@
     {
         "arpen":0,
         "burst_acc":-20,
-        "caliber":".311",
+        "caliber":"cal311",
         "defcan":0,
         "dmg_base":90,
         "dmg_radius":null,
@@ -1472,7 +1472,7 @@
     {
         "arpen":0,
         "burst_acc":-33,
-        "caliber":".311",
+        "caliber":"cal311",
         "defcan":0,
         "dmg_base":90,
         "dmg_radius":null,
@@ -1502,7 +1502,7 @@
     {
         "arpen":0,
         "burst_acc":-50,
-        "caliber":".50",
+        "caliber":"cal50",
         "defcan":0,
         "dmg_base":100,
         "dmg_radius":null,
@@ -1652,7 +1652,7 @@
     {
         "arpen":15,
         "burst_acc":0,
-        "caliber":".55",
+        "caliber":"cal55",
         "defcan":0,
         "dmg_base":125,
         "dmg_radius":null,
@@ -1682,7 +1682,7 @@
     {
         "arpen":0,
         "burst_acc":-50,
-        "caliber":".223",
+        "caliber":"cal223",
         "defcan":0,
         "dmg_base":70,
         "dmg_radius":null,
