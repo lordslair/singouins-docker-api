@@ -13,13 +13,15 @@ MYSQL_HOST     = os.environ.get("SEP_MYSQL_HOST", '127.0.0.1')
 MYSQL_PORT     = os.environ.get("SEP_MYSQL_PORT", 3306)
 
 # SQLAlchemy variables
-SQL_DSN        = f'{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
+SQL_DSN        = (f'{MYSQL_USER}:{MYSQL_PASSWORD}@'
+                  f'{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}')
 
 # External URL
 API_URL        = os.environ.get("SEP_API_URL", 'http://127.0.0.1:5000')
 
 # Redis variables
-REDIS_HOST    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
+REDIS_HOST    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST",
+                               '127.0.0.1')
 REDIS_PORT    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
 REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
 
@@ -33,8 +35,10 @@ DISCORD_URL   = os.environ.get("SEP_DISCORD_URL", 'http://127.0.0.1')
 API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
 
 # Resolver variables
-RESOLVER_HOST    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST", '127.0.0.1')
-RESOLVER_PORT    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT", 5000)
+RESOLVER_HOST    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST",
+                                  '127.0.0.1')
+RESOLVER_PORT    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT",
+                                  5000)
 RESOLVER_URL     = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
 
 # Gunicorn variables

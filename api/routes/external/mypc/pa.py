@@ -1,41 +1,67 @@
 # -*- coding: utf8 -*-
 
-from flask                      import Flask, jsonify, request
-from flask_jwt_extended         import jwt_required,get_jwt_identity
+from flask                      import jsonify
+from flask_jwt_extended         import (jwt_required,
+                                        get_jwt_identity)
+from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql.models.RedisPa       import *
+from nosql.models.RedisPa       import RedisPa
+
 
 #
-# Routes /mypc/{pcid}/pa
+# Routes /mypc/{pcid}/pa/*
 #
 # API: GET /mypc/{pcid}/pa
 @jwt_required()
 def pa_get(pcid):
-    pc       = fn_creature_get(None,pcid)[3]
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    if creature.account != user.id:
+        msg = (f'Token/username mismatch '
+               f'(creatureid:{creature.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        payload = RedisPa(pc).get()
+        payload = RedisPa(creature).get()
     except Exception as e:
-        msg = f'PA Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'PA Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": payload,
+            }
+        ), 200
     else:
-        return jsonify({"success": True,
-                        "msg": f'PA Query OK (pcid:{pc.id})',
-                        "payload": payload}), 200
+        msg = f'PA Query OK (pcid:{creature.id})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": payload,
+            }
+        ), 200

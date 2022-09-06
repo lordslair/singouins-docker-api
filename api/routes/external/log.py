@@ -1,8 +1,8 @@
 # -*- coding: utf8 -*-
 
-from flask              import Flask, jsonify, request
+from flask              import jsonify, request
+from loguru             import logger
 
-from nosql              import *
 
 #
 # Routes /log
@@ -10,10 +10,18 @@ from nosql              import *
 # API: POST /log
 def front():
     if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request", "success": False, "payload": None}), 400
+        msg = 'Missing JSON in request'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 400
 
-    log_level     = request.json.get('level',           None)
-    log_msg_short = request.json.get('short_message',   None)
+    log_level     = request.json.get('level', None)
+    log_msg_short = request.json.get('short_message', None)
 
     try:
         if log_level == 1:
@@ -31,6 +39,18 @@ def front():
         elif log_level == 7:
             logger.trace(log_msg_short)
     except Exception as e:
-        return jsonify({"msg": f'Logging KO [{e}]', "success": False, "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": f'Logging KO [{e}]',
+                "payload": None,
+            }
+        ), 200
     else:
-        return jsonify({"msg": f'Logging OK', "success": True, "payload": None}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": 'Logging OK',
+                "payload": None,
+            }
+        ), 200

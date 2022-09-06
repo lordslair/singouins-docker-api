@@ -7,19 +7,21 @@ from variables import (API_URL,
                        CREATURE_ID,
                        HEADERS)
 
+
 def test_singouins_internal_creature_equipment():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
+
 
 def test_singouins_internal_creature_equipment_ammo_consume():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
 
     equipment = json.loads(response.text)['payload']['equipment']
     if equipment['holster'] is not None:
@@ -39,20 +41,21 @@ def test_singouins_internal_creature_equipment_ammo_consume():
     assert ammo   is not None
 
     if itemid and ammo:
-        url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/consume/1'
-        response  = requests.put(url, headers=HEADERS)
-        payload   = json.loads(response.text)['payload']
+        url = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/consume/1'  # noqa
+        response = requests.put(url, headers=HEADERS)
+        payload  = json.loads(response.text)['payload']
 
         assert response.status_code                 == 200
-        assert json.loads(response.text)['success'] == True
+        assert json.loads(response.text)['success'] is True
         assert payload['item']['ammo']              == ammo - 1
+
 
 def test_singouins_internal_creature_equipment_ammo_add():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
 
     equipment = json.loads(response.text)['payload']['equipment']
     if equipment['holster'] is not None:
@@ -72,20 +75,21 @@ def test_singouins_internal_creature_equipment_ammo_add():
     assert ammo   is not None
 
     if itemid and ammo:
-        url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/add/2'
-        response  = requests.put(url, headers=HEADERS)
-        payload   = json.loads(response.text)['payload']
+        url = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/add/2'  # noqa
+        response = requests.put(url, headers=HEADERS)
+        payload = json.loads(response.text)['payload']
 
         assert response.status_code                 == 200
-        assert json.loads(response.text)['success'] == True
+        assert json.loads(response.text)['success'] is True
         assert payload['item']['ammo']              == ammo + 2
+
 
 def test_singouins_internal_creature_equipment_ammo_weird():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
 
     equipment = json.loads(response.text)['payload']['equipment']
     if equipment['holster'] is not None:
@@ -105,50 +109,54 @@ def test_singouins_internal_creature_equipment_ammo_weird():
     assert ammo   is not None
 
     if itemid and ammo:
-        url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/plop/add/2'
-        response  = requests.put(url, headers=HEADERS)
+        url = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/plop/add/2'  # noqa
+        response = requests.put(url, headers=HEADERS)
 
         assert response.status_code                 == 404
 
-        url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/plop/2'
-        response  = requests.put(url, headers=HEADERS)
-        payload   = json.loads(response.text)['payload']
+        url = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/plop/2'  # noqa
+        response = requests.put(url, headers=HEADERS)
 
         assert response.status_code                 == 200
-        assert json.loads(response.text)['success'] == False
+        assert json.loads(response.text)['success'] is False
 
-        url       = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/add/plop'
-        response  = requests.put(url, headers=HEADERS)
+        url = f'{API_URL}/internal/creature/{CREATURE_ID}/equipment/{itemid}/ammo/add/plop'  # noqa
+        response = requests.put(url, headers=HEADERS)
 
         assert response.status_code                 == 404
+
 
 def test_singouins_internal_creature_pa_get():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
+
 
 def test_singouins_internal_creature_pa_consume():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa/consume/1/1'
     response  = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
+
 
 def test_singouins_internal_creature_pa_reset():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/pa/reset'
     response  = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
+
 
 def test_singouins_internal_creature():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
+
 
 def test_singouins_internal_creature_stats():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats'
@@ -156,24 +164,25 @@ def test_singouins_internal_creature_stats():
     stats     = json.loads(response.text)['payload']['stats']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert stats['def']['hp']                   <= stats['def']['hpmax']
+
 
 def test_singouins_internal_creature_stats_hp_consume():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
 
     hp = json.loads(response.text)['payload']['stats']['def']['hp']
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/stats/hp/consume/30'
-    response  = requests.put(url, headers=HEADERS)
-    payload   = json.loads(response.text)['payload']
+    url = f'{API_URL}/internal/creature/{CREATURE_ID}/stats/hp/consume/30'
+    response = requests.put(url, headers=HEADERS)
+    payload = json.loads(response.text)['payload']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['stats']['def']['hp']        == hp - 30
 
 
@@ -182,7 +191,7 @@ def test_singouins_internal_creature_stats_hp_add():
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
 
     hp = json.loads(response.text)['payload']['stats']['def']['hp']
 
@@ -191,8 +200,9 @@ def test_singouins_internal_creature_stats_hp_add():
     payload   = json.loads(response.text)['payload']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['stats']['def']['hp']        == hp + 20
+
 
 def test_singouins_internal_creature_wallet():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet'
@@ -200,7 +210,7 @@ def test_singouins_internal_creature_wallet():
     payload   = json.loads(response.text)['payload']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['wallet']['ammo']['cal50']   >= 0
 
 
@@ -211,16 +221,17 @@ def test_singouins_internal_creature_wallet_add():
     cal50     = payload['wallet']['ammo']['cal50']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['wallet']['ammo']['cal50']   >= 0
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/cal50/add/30'
-    response  = requests.put(url, headers=HEADERS)
-    payload   = json.loads(response.text)['payload']
+    url = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/cal50/add/30'
+    response = requests.put(url, headers=HEADERS)
+    payload = json.loads(response.text)['payload']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['wallet']['ammo']['cal50']   == cal50 + 30
+
 
 def test_singouins_internal_creature_wallet_consume():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet'
@@ -229,34 +240,36 @@ def test_singouins_internal_creature_wallet_consume():
     cal50     = payload['wallet']['ammo']['cal50']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['wallet']['ammo']['cal50']   >= 0
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/cal50/consume/25'
-    response  = requests.put(url, headers=HEADERS)
-    payload   = json.loads(response.text)['payload']
+    url = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/cal50/consume/25'
+    response = requests.put(url, headers=HEADERS)
+    payload = json.loads(response.text)['payload']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert payload['wallet']['ammo']['cal50']   == cal50 - 25
 
+
 def test_singouins_internal_creature_wallet_weird():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/cal50/plop/30'
-    response  = requests.put(url, headers=HEADERS)
+    url = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/cal50/plop/30'
+    response = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == False
+    assert json.loads(response.text)['success'] is False
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/plip/add/30'
-    response  = requests.put(url, headers=HEADERS)
+    url = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/plip/add/30'
+    response = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == False
+    assert json.loads(response.text)['success'] is False
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/plip/add/plop'
-    response  = requests.put(url, headers=HEADERS)
+    url = f'{API_URL}/internal/creature/{CREATURE_ID}/wallet/plip/add/plop'
+    response = requests.put(url, headers=HEADERS)
 
     assert response.status_code                 == 404
+
 
 def test_singouins_internal_creature_user():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/user'
@@ -264,36 +277,38 @@ def test_singouins_internal_creature_user():
     payload   = json.loads(response.text)['payload']
 
     assert response.status_code                  == 200
-    assert json.loads(response.text)['success']  == True
+    assert json.loads(response.text)['success']  is True
     assert payload['user']                       is not None
     assert payload['creature']                   is not None
     assert payload['creature']['id']             == CREATURE_ID
+
 
 def test_singouins_internal_creatures():
     url       = f'{API_URL}/internal/creatures'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
+
 
 def test_singouins_internal_creature_pop_n_kill():
-    url       = f'{API_URL}/internal/creature' # PUT
+    url       = f'{API_URL}/internal/creature'  # PUT
     payload   = {"raceid": 11,
                  "gender": True,
                  "rarity": "Boss",
                  "instanceid": 0,
                  "x": 3,
                  "y": 3}
-    response  = requests.put(url, headers=HEADERS, json = payload)
+    response  = requests.put(url, headers=HEADERS, json=payload)
 
     creatureid = json.loads(response.text)['payload']['id']
 
     assert creatureid > 0
     assert response.status_code                 == 201
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
 
-    url       = f'{API_URL}/internal/creature/{creatureid}' # DELETE
-    response  = requests.delete(url, headers=HEADERS, json = payload)
+    url       = f'{API_URL}/internal/creature/{creatureid}'  # DELETE
+    response  = requests.delete(url, headers=HEADERS, json=payload)
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True

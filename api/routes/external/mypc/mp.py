@@ -1,11 +1,18 @@
 # -*- coding: utf8 -*-
 
-from flask                      import Flask, jsonify, request
-from flask_jwt_extended         import jwt_required,get_jwt_identity
+from flask                      import jsonify, request
+from flask_jwt_extended         import (jwt_required,
+                                        get_jwt_identity)
+from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
-from mysql.methods.fn_mp        import *
+from mysql.methods.fn_mp        import (fn_mp_add,
+                                        fn_mp_del_one,
+                                        fn_mp_get_one,
+                                        fn_mp_get_all,
+                                        fn_mp_addressbook_get)
+
 
 #
 # Routes /mypc/{pcid}/mp
@@ -18,171 +25,322 @@ def mp_add(pcid):
     # Pre-flight checks
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
-    pcsrcid = request.json.get('src',     None)
-    dsts    = request.json.get('dst',     None)
+    pcsrcid = request.json.get('src', None)
+    dsts    = request.json.get('dst', None)
     subject = request.json.get('subject', None)
-    body    = request.json.get('body',    None)
-    pcsrc   = fn_creature_get(None,pcsrcid)[3]
+    body    = request.json.get('body', None)
+    pcsrc   = fn_creature_get(None, pcsrcid)[3]
 
+    # Pre-flight checks
     if pcsrc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcsrc})',
-                        "payload": None}), 200
+        msg = f'Creature not found (creatureid:{pcsrc})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     if pcsrc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pcsrc.id},username:{user.name})',
-                        "payload": None}), 409
+        msg = (f'Token/username mismatch '
+               f'(creature.id:{pcsrc.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        success = fn_mp_add(pcsrc,pcsrcid,dsts,subject,body)
+        success = fn_mp_add(pcsrc, pcsrcid, dsts, subject, body)
     except Exception as e:
         msg = f'MP creation KO (srcid:{pcsrc.id},dstid:{dsts}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if success:
-            return jsonify({"success": True,
-                            "msg": f'MP creation OK (pcid:{pcsrc.id})',
-                            "payload": None}), 201
+            msg = f'MP creation OK (pcid:{pcsrc.id})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 201
         else:
-            return jsonify({"success": True,
-                            "msg": f'MP creation KO (pcid:{pcsrc.id})',
-                            "payload": None}), 200
+            msg = f'MP creation KO (pcid:{pcsrc.id})'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
 
 # API: DELETE /mypc/{pcid}/mp/{mpid}
 @jwt_required()
-def mp_del(pcid,mpid):
-    pc       = fn_creature_get(None,pcid)[3]
+def mp_del(pcid, mpid):
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{user.name})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    if creature.account != user.id:
+        msg = (f'Token/username mismatch '
+               f'(creature.id:{creature.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        success = fn_mp_del_one(pc,mpid)
+        success = fn_mp_del_one(creature, mpid)
     except Exception as e:
-        msg = f'MP deletion KO (pcid:{pc.id},mpid:{mpid}) [{e}]'
+        msg = f'MP deletion KO (pcid:{creature.id},mpid:{mpid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if success:
-            return jsonify({"success": True,
-                            "msg": f'MP deletion OK (pcid:{pc.id})',
-                            "payload": None}), 200
+            msg = f'MP deletion OK (pcid:{creature.id})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
         else:
-            return jsonify({"success": True,
-                            "msg": f'MP deletion KO (pcid:{pc.id})',
-                            "payload": None}), 200
+            msg = f'MP deletion KO (pcid:{creature.id})'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
 
 # API: GET /mypc/{pcid}/mp/{mpid}
 @jwt_required()
-def mp_get_one(pcid,mpid):
-    pc       = fn_creature_get(None,pcid)[3]
+def mp_get_one(pcid, mpid):
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{user.name})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    if creature.account != user.id:
+        msg = (f'Token/username mismatch '
+               f'(creature.id:{creature.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        mp = fn_mp_get_one(pc,mpid)
+        mp = fn_mp_get_one(creature, mpid)
     except Exception as e:
-        msg = f'MP query failed (pcid:{pc.id},mpid:{mpid})'
+        msg = f'MP Query KO (pcid:{creature.id},mpid:{mpid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if mp:
-            return jsonify({"success": True,
-                            "msg": f'MP Query OK (pcid:{pc.id})',
-                            "payload": mp}), 200
+            msg = f'MP Query OK (pcid:{creature.id})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": mp,
+                }
+            ), 200
         else:
-            return jsonify({"success": False,
-                            "msg": f'MP Query KO (pcid:{pc.id})',
-                            "payload": None}), 200
+            msg = f'MP Query KO (pcid:{creature.id})'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
 
 # API: GET /mypc/{pcid}/mp
 @jwt_required()
 def mp_get_all(pcid):
-    pc       = fn_creature_get(None,pcid)[3]
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{user.name})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    if creature.account != user.id:
+        msg = (f'Token/username mismatch '
+               f'(creature.id:{creature.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        mps = fn_mp_get_all(pc)
+        mps = fn_mp_get_all(creature)
     except Exception as e:
-        msg = f'MPs query failed (pcid:{pc.id},mpid:{mpid})'
+        msg = f'MPs Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if mps:
-            return jsonify({"success": True,
-                            "msg": f'MPs Query OK (pcid:{pc.id})',
-                            "payload": mps}), 200
+            msg = f'MPs Query OK (pcid:{creature.id})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": mps,
+                }
+            ), 200
         else:
-            return jsonify({"success": False,
-                            "msg": f'MPs Query KO (pcid:{pc.id})',
-                            "payload": None}), 200
+            msg = f'MPs Query KO (pcid:{creature.id})'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
 
 # API: GET /mypc/{pcid}/mp/addressbook
 @jwt_required()
 def addressbook_get(pcid):
-    pc       = fn_creature_get(None,pcid)[3]
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{user.name})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    if creature.account != user.id:
+        msg = (f'Token/username mismatch '
+               f'(creature.id:{creature.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        addressbook = fn_mp_addressbook_get(pc)
+        addressbook = fn_mp_addressbook_get(creature)
     except Exception as e:
-        msg = f'Addressbook query failed (pcid:{pc.id})'
+        msg = f'Addressbook Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if addressbook:
-            return jsonify({"success": True,
-                            "msg": f'Addressbook Query OK (pcid:{pc.id})',
-                            "payload": [{"id": row[0], "name": row[1]} for row in addressbook]}), 200
+            payload = [{"id": row[0], "name": row[1]} for row in addressbook]
+            msg = f'Addressbook Query OK (pcid:{creature.id})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": payload,
+                }
+            ), 200
         else:
-            return jsonify({"success": False,
-                            "msg": f'Addressbook Query KO (pcid:{pc.id})',
-                            "payload": None}), 200
+            msg = f'Addressbook Query KO (pcid:{creature.id})'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200

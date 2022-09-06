@@ -1,12 +1,15 @@
 # -*- coding: utf8 -*-
 
-from flask                      import Flask, jsonify, request
-from flask_jwt_extended         import jwt_required,get_jwt_identity
+from flask                      import jsonify
+from flask_jwt_extended         import (jwt_required,
+                                        get_jwt_identity)
+from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql.models.RedisEffect   import *
+from nosql.models.RedisEffect   import RedisEffect
+
 
 #
 # Routes /mypc/{pcid}/effects
@@ -14,30 +17,53 @@ from nosql.models.RedisEffect   import *
 # API: GET /mypc/{pcid}/effects
 @jwt_required()
 def effects_get(pcid):
-    pc       = fn_creature_get(None,pcid)[3]
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    if creature.account != user.id:
+        msg = (f'Token/username mismatch '
+               f'(creature.id:{creature.id},username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        pc_effect  = RedisEffect(pc)
-        pc_effects = pc_effect.get_all()
+        creature_effect  = RedisEffect(creature)
+        creature_effects = creature_effect.get_all()
     except Exception as e:
-        msg = f'Effects Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'Effects Query KO (creature.id:{creature.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
-        return jsonify({"success": True,
-                        "msg": f'Effects Query OK (pcid:{pc.id})',
-                        "payload": {"effects":  pc_effects,
-                                    "creature": pc}}), 200
+        msg = f'Effects Query OK (creature.id:{creature.id})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {"effects": creature_effects,
+                            "creature": creature},
+            }
+        ), 200

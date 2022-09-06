@@ -1,62 +1,103 @@
 # -*- coding: utf8 -*-
 
-from flask                      import Flask, jsonify, request
-from flask_jwt_extended         import jwt_required,get_jwt_identity
-from loguru                     import logger
+import json
+
+from flask                               import jsonify
+from flask_jwt_extended                  import (jwt_required,
+                                                 get_jwt_identity)
+from loguru                              import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
-from mysql.methods.fn_inventory import *
+from mysql.methods.fn_inventory import (fn_item_del,
+                                        fn_item_get_all,
+                                        fn_item_get_one,
+                                        fn_item_offset_set,
+                                        fn_slots_get_all,
+                                        fn_slots_get_one,
+                                        fn_slots_set_one)
 
-from nosql.models.RedisEvent    import *
-from nosql.models.RedisHS       import *
-from nosql.models.RedisPa       import *
-from nosql.models.RedisStats    import *
-from nosql.models.RedisWallet   import *
+from nosql.metas                import get_meta
+from nosql.queue                import yqueue_put
+from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisHS       import RedisHS
+from nosql.models.RedisPa       import RedisPa
+from nosql.models.RedisStats    import RedisStats
+from nosql.models.RedisWallet   import RedisWallet
+
 
 #
-# Routes /mypc/{pcid}/pa
+# Routes /mypc/{pcid}/inventory/*
 #
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle
 @jwt_required()
-def inventory_item_dismantle(pcid,itemid):
-    pc       = fn_creature_get(None,pcid)[3]
+def inventory_item_dismantle(pcid, itemid):
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
-                        "payload": None}), 409
-    if RedisPa(pc).get()['blue']['pa'] < 1:
-        return jsonify({"success": False,
-                        "msg": f'Not enough PA (pcid:{pcid})',
-                        "payload": None}), 200
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{creature.id}]'  # Header for logging
+    if creature.account != user.id:
+        msg = (f'{h} Token/username mismatch '
+               f'(username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
+    if RedisPa(creature).get()['blue']['pa'] < 1:
+        msg = f'{h} Not enough PA'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     try:
         item = fn_item_get_one(itemid)
     except Exception as e:
-        msg = f'Item Query KO - failed (pcid:{pc.id},itemid:{itemid}) [{e}]'
+        msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if item is None:
-            msg = f'Item Query KO - Not found (pcid:{pc.id},itemid:{itemid})'
+            msg = f'{h} Item Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
     try:
         # We add the shards in the wallet
-        creature_wallet = RedisWallet(pc)
-        if   item.rarity == 'Broken':
+        creature_wallet = RedisWallet(creature)
+        if item.rarity == 'Broken':
             creature_wallet.incr(item.rarity.lower(), 6)
         elif item.rarity == 'Common':
             creature_wallet.incr(item.rarity.lower(), 5)
@@ -69,396 +110,593 @@ def inventory_item_dismantle(pcid,itemid):
         elif item.rarity == 'Legendary':
             creature_wallet.incr(item.rarity.lower(), 1)
     except Exception as e:
-        msg = f'Wallet/Shards Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Wallet/Shards Query KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     try:
         # We destroy the item
-        fn_item_del(pc,item.id)
+        fn_item_del(creature, item.id)
     except Exception as e:
-        msg = f'Item Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Item Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     try:
         # We consume the blue PA (1)
-        RedisPa(pc).set(0,1)
+        RedisPa(creature).set(0, 1)
         # We add HighScore
-        RedisHS(pc).incr('action_dismantle')
+        RedisHS(creature).incr('action_dismantle')
     except Exception as e:
-        msg = f'Redis Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Redis Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         # JOB IS DONE
-        return jsonify({"success": True,
-                        "msg": f'Item dismantle OK (pcid:{pc.id})',
-                        "payload": {"creature": pc,
-                                    "wallet":   creature_wallet._asdict()}}), 200
+        msg = f'{h} Item dismantle OK (pcid:{creature.id})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "creature": creature,
+                    "wallet": creature_wallet._asdict(),
+                },
+            }
+        ), 200
 
-# API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>
+
+# API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
-def inventory_item_equip(pcid,type,slotname,itemid):
-    pc       = fn_creature_get(None,pcid)[3]
+def inventory_item_equip(pcid, type, slotname, itemid):
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{creature.id}]'  # Header for logging
+    if creature.account != user.id:
+        msg = (f'{h} Token/username mismatch '
+               f'(username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     # Loading the Meta for later use
     try:
-        metaWeapons = metas.get_meta('weapon')
-        metaArmors  = metas.get_meta('armor')
+        metaWeapons = get_meta('weapon')
+        metaArmors  = get_meta('armor')
     except Exception as e:
-        msg = f'Meta fectching: KO [{e}]'
+        msg = f'{h} Meta fectching: KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
-        logger.trace(f'Meta fectching: OK')
+        logger.trace(f'{h} Meta fectching: OK')
 
     try:
-        creature_stats = RedisStats(pc).dict
+        creature_stats = RedisStats(creature).dict
     except Exception as e:
-        msg = f'Stats Query KO - failed (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Stats Query KO - failed [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if creature_stats is None:
-            msg = f'Stats Query KO - Not found (pcid:{pc.id})'
+            msg = f'{h} Stats Query KO - Not found'
             logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
     try:
         item = fn_item_get_one(itemid)
     except Exception as e:
-        msg = f'Item Query KO - failed (pcid:{pc.id},itemid:{itemid}) [{e}]'
+        msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if item is None:
-            msg = f'Item Query KO - Not found (pcid:{pc.id},itemid:{itemid})'
+            msg = f'{h} Item Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
-    if   type == 'weapon':
-         itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaWeapons))[0]) # GruikFix
+    if type == 'weapon':
+        itemmeta = dict(list(filter(lambda x: x["id"] == item.metaid,
+                                    metaWeapons))[0])  # GruikFix
     elif type == 'armor':
-         itemmeta = dict(list(filter(lambda x:x["id"]==item.metaid,metaArmors))[0]) # Gruikfix
+        itemmeta = dict(list(filter(lambda x: x["id"] == item.metaid,
+                                    metaArmors))[0])  # Gruikfix
     if itemmeta is None:
-        msg = f'ItemMeta Query KO - Not found (pcid:{pc.id},itemid:{itemid})'
+        msg = f'{h} ItemMeta Query KO - Not found (itemid:{itemid})'
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
-    sizex,sizey = itemmeta['size'].split("x")
-    costpa      = round(int(sizex) * int(sizey) / 2)
-    if RedisPa(pc).get()['red']['pa'] < costpa:
-        msg = f"Not enough PA (pcid:{pc.id},redpa:{RedisPa(pc).get()['red']['pa']},cost:{costpa})"
+    sizex, sizey = itemmeta['size'].split("x")
+    costpa       = round(int(sizex) * int(sizey) / 2)
+    if RedisPa(creature).get()['red']['pa'] < costpa:
+        msg = (f"{h} Not enough PA "
+               f"(redpa:{RedisPa(creature).get()['red']['pa']},cost:{costpa})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     # Pre-requisite checks
     if itemmeta['min_m'] > creature_stats['base']['m']:
-        msg = f"M prequisites failed (m_min:{itemmeta['min_m']},m:{creature_stats['base']['m']})"
+        msg = (f"{h} M prequisites failed "
+               f"(m_min:{itemmeta['min_m']},m:{creature_stats['base']['m']})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     elif itemmeta['min_r'] > creature_stats['base']['r']:
-        msg = f"R prequisites failed (r_min:{itemmeta['min_r']},r:{creature_stats['base']['r']})"
+        msg = (f"{h} R prequisites failed "
+               f"(r_min:{itemmeta['min_r']},r:{creature_stats['base']['r']})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     elif itemmeta['min_g'] > creature_stats['base']['g']:
-        msg = f"G prequisites failed (g_min:{itemmeta['min_g']},g:{creature_stats['base']['g']})"
+        msg = (f"{h} G prequisites failed "
+               f"(g_min:{itemmeta['min_g']},g:{creature_stats['base']['g']})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     elif itemmeta['min_v'] > creature_stats['base']['v']:
-        msg = f"V prequisites failed (v_min:{itemmeta['min_v']},v:{creature_stats['base']['v']})"
+        msg = (f"{h} V prequisites failed "
+               f"(v_min:{itemmeta['min_v']},v:{creature_stats['base']['v']})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     elif itemmeta['min_p'] > creature_stats['base']['p']:
-        msg = f"P prequisites failed (p_min:{itemmeta['min_p']},p:{creature_stats['base']['p']})"
+        msg = (f"{h} P prequisites failed "
+               f"(p_min:{itemmeta['min_p']},p:{creature_stats['base']['p']})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     elif itemmeta['min_b'] > creature_stats['base']['b']:
-        msg = f"B prequisites failed (b_min:{itemmeta['min_b']},b:{creature_stats['base']['b']})"
+        msg = (f"{h} B prequisites failed "
+               f"(b_min:{itemmeta['min_b']},b:{creature_stats['base']['b']})")
         logger.warning(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     try:
-        equipment = fn_slots_get_one(pc)
+        equipment = fn_slots_get_one(creature)
     except Exception as e:
-        msg = f'Slots Query KO - failed (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Slots Query KO - failed [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if equipment is None:
-            msg = f'Slots Query KO - Not found (pcid:{pc.id},itemid:{itemid})'
+            msg = f'{h} Slots Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
     try:
-        # The item to equip exists, is owned by the PC, and we retrieved his equipment from DB
+        # The item to equip exists
+        # is owned by the PC, and we retrieved his equipment from DB
         if slotname == 'holster':
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the holster
-                fn_slots_set_one(pc,slotname,item.id)
+                fn_slots_set_one(creature, slotname, item.id)
             else:
-                return jsonify({"success": False,
-                                "msg": f"Item does not fit in holster (itemid:{item.id},size:{itemmeta['size']})",
-                                "payload": None}), 200
+                msg = (f"{h} Item does not fit in holster "
+                       f"(itemid:{item.id},size:{itemmeta['size']})")
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
         elif slotname == 'righthand':
             if equipment.righthand:
                 # Something is already equipped in RH
                 equipped = fn_item_get_one(equipment.righthand)
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
-                    if metaWeapons[equipped.metaid-1]['onehanded'] is True:
+                    if metaWeapons[equipped.metaid - 1]['onehanded'] is True:
                         # A 1H weapons is in RH : we replace
-                        fn_slots_set_one(pc,'righthand',item.id)
-                    if metaWeapons[equipped.metaid-1]['onehanded'] is False:
-                        # A 2H weapons is in RH & LH : we replace RH and clean LH
-                        fn_slots_set_one(pc,'righthand',item.id)
-                        fn_slots_set_one(pc,'lefthand',None)
+                        fn_slots_set_one(creature, 'righthand', item.id)
+                    if metaWeapons[equipped.metaid - 1]['onehanded'] is False:
+                        # A 2H weapons is in RH & LH
+                        # We replace RH and clean LH
+                        fn_slots_set_one(creature, 'righthand', item.id)
+                        fn_slots_set_one(creature, 'lefthand', None)
                 # We equip a 2H weapon
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
-                    fn_slots_set_one(pc,'righthand',item.id)
-                    fn_slots_set_one(pc,'lefthand',item.id)
+                    fn_slots_set_one(creature, 'righthand', item.id)
+                    fn_slots_set_one(creature, 'lefthand', item.id)
             else:
                 # Nothing in RH
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
-                    fn_slots_set_one(pc,'righthand',item.id)
+                    fn_slots_set_one(creature, 'righthand', item.id)
                 # We equip a 2H weapon
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
-                    fn_slots_set_one(pc,'righthand',item.id)
-                    fn_slots_set_one(pc,'lefthand',item.id)
+                    fn_slots_set_one(creature, 'righthand', item.id)
+                    fn_slots_set_one(creature, 'lefthand', item.id)
         elif slotname == 'lefthand':
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the left hand
-                fn_slots_set_one(pc,slotname,item.id)
+                fn_slots_set_one(creature, slotname, item.id)
             else:
-                return jsonify({"success": False,
-                                "msg": f"Item does not fit in left hand (itemid:{item.id},size:{itemmeta['size']})",
-                                "payload": None}), 200
-        else:
-            fn_slots_set_one(pc,slotname,item.id)
-    except Exception as e:
-        msg = f'Slots Query KO - failed (pcid:{pc.id},itemid:{itemid}) [{e}]'
-        logger.error(msg)
-        return jsonify({"success": False,
+                msg = (f"{h} Item does not fit in left hand "
+                       f"(itemid:{item.id},size:{itemmeta['size']})")
+                logger.trace(msg)
+                return jsonify(
+                    {
+                        "success": False,
                         "msg": msg,
-                        "payload": None}), 200
+                        "payload": None,
+                    }
+                ), 200
+        else:
+            fn_slots_set_one(creature, slotname, item.id)
+    except Exception as e:
+        msg = (f'{h} Slots Query KO - failed (itemid:{itemid}) [{e}]')
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     # Here everything should be OK with the equip
     try:
         # We consume the red PA (costpa) right now
-        RedisPa(pc).set(costpa,0)
+        RedisPa(creature).set(costpa, 0)
     except Exception as e:
-        msg = f'Redis Query KO (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Redis Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
     else:
-        equipment = fn_slots_get_one(pc)
+        equipment = fn_slots_get_one(creature)
 
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
                 "payload": equipment,
                 "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
                 "scope": {"id": None, "scope": 'broadcast'}}
-        queue.yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
         # We create the Creature Event
-        RedisEvent(pc).add(pc.id,
-                           None,
-                           'item',
-                           f'Equipped something',
-                           30*86400)
+        RedisEvent(creature).add(creature.id,
+                                 None,
+                                 'item',
+                                 'Equipped something',
+                                 30 * 86400)
         # JOB IS DONE
-        msg = f'Equip Query OK (pcid:{pc.id},itemid:{itemid})'
-        logger.trace(msg)
-        return jsonify({"success": True,
-                        "msg": msg,
-                        "payload": {"red": RedisPa(pc).get()['red'],
-                                    "blue": RedisPa(pc).get()['blue'],
-                                    "equipment": equipment}}), 200
+        msg = f'{h} Equip Query OK (itemid:{itemid})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "red": RedisPa(creature).get()['red'],
+                    "blue": RedisPa(creature).get()['blue'],
+                    "equipment": equipment,
+                },
+            }
+        ), 200
 
-# API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>
+
+# API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname> # noqa
 @jwt_required()
-def inventory_item_unequip(pcid,type,slotname,itemid):
-    pc       = fn_creature_get(None,pcid)[3]
+def inventory_item_unequip(pcid, type, slotname, itemid):
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{creature.id}]'  # Header for logging
+    if creature.account != user.id:
+        msg = (f'{h} Token/username mismatch '
+               f'(username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
-        equipment = fn_slots_get_one(pc)
+        equipment = fn_slots_get_one(creature)
     except Exception as e:
-        msg = f'Slots Query KO - failed (pcid:{pc.id}) [{e}]'
+        msg = f'{h} Slots Query KO - failed [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if equipment is None:
-            msg = f'Slots Query KO - Not found (pcid:{pc.id},itemid:{itemid})'
+            msg = f'{h} Slots Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
     try:
         if slotname == 'righthand':
             if equipment.righthand == itemid:
-                if equipment.righthand ==  equipment.lefthand:
+                if equipment.righthand == equipment.lefthand:
                     # If the weapon equipped takes both hands
-                    fn_slots_set_one(pc,'righthand',None)
-                    fn_slots_set_one(pc,'lefthand',None)
+                    fn_slots_set_one(creature, 'righthand', None)
+                    fn_slots_set_one(creature, 'lefthand', None)
                 else:
-                    fn_slots_set_one(pc,slotname,None)
+                    fn_slots_set_one(creature, slotname, None)
         elif slotname == 'lefthand':
             if equipment.lefthand == itemid:
-                if equipment.righthand ==  equipment.lefthand:
+                if equipment.righthand == equipment.lefthand:
                     # If the weapon equipped takes both hands
-                    fn_slots_set_one(pc,'righthand',None)
-                    fn_slots_set_one(pc,'lefthand',None)
+                    fn_slots_set_one(creature, 'righthand', None)
+                    fn_slots_set_one(creature, 'lefthand', None)
                 else:
-                    fn_slots_set_one(pc,slotname,None)
+                    fn_slots_set_one(creature, slotname, None)
         else:
-            fn_slots_set_one(pc,slotname,None)
+            fn_slots_set_one(creature, slotname, None)
     except Exception as e:
-        msg = f'Slots Query KO - failed (pcid:{pc.id},itemid:{itemid}) [{e}]'
+        msg = f'{h} Slots Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     # Here everything should be OK with the unequip
     else:
-        equipment = fn_slots_get_one(pc)
+        equipment = fn_slots_get_one(creature)
 
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
                 "payload": equipment,
                 "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
                 "scope": {"id": None, "scope": 'broadcast'}}
-        queue.yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
         # JOB IS DONE
-        msg = f'Unequip Query OK (pcid:{pc.id},itemid:{itemid})'
-        logger.trace(msg)
-        return jsonify({"success": True,
-                        "msg": msg,
-                        "payload": {"red": RedisPa(pc).get()['red'],
-                                    "blue": RedisPa(pc).get()['blue'],
-                                    "equipment": equipment}}), 200
+        msg = f'{h} Unequip Query OK (itemid:{itemid})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "red": RedisPa(creature).get()['red'],
+                    "blue": RedisPa(creature).get()['blue'],
+                    "equipment": equipment,
+                },
+            }
+        ), 200
 
-# API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>
+
+# API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety> # noqa
 @jwt_required()
-def inventory_item_offset(pcid,itemid,offsetx = None,offsety = None):
-    pc       = fn_creature_get(None,pcid)[3]
+def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
+    creature = fn_creature_get(None, pcid)[3]
     user     = fn_user_get(get_jwt_identity())
 
     # Pre-flight checks
-    if pc is None:
-        return jsonify({"success": False,
-                        "msg": f'Creature not found (pcid:{pcid})',
-                        "payload": None}), 200
-    if pc.account != user.id:
-        return jsonify({"success": False,
-                        "msg": f'Token/username mismatch (pcid:{pc.id},username:{username})',
-                        "payload": None}), 409
+    if creature is None:
+        msg = f'Creature not found (creatureid:{pcid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{creature.id}]'  # Header for logging
+    if creature.account != user.id:
+        msg = (f'{h} Token/username mismatch '
+               f'(username:{user})')
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 409
 
     try:
         item = fn_item_get_one(itemid)
     except Exception as e:
-        msg = f'Item Query KO - failed (pcid:{pc.id},itemid:{itemid}) [{e}]'
+        msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if item is None:
-            msg = f'Item Query KO - Not found (pcid:{pc.id},itemid:{itemid})'
+            msg = f'{h} Item Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
-
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
     try:
-        item = fn_item_offset_set(itemid,offsetx,offsety)
+        item = fn_item_offset_set(itemid, offsetx, offsety)
     except Exception as e:
-        msg = f'Item Query KO - failed (pcid:{pc.id},itemid:{itemid}) [{e}]'
+        msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
-        all_items_sql  = fn_item_get_all(pc)
+        all_items_sql  = fn_item_get_all(creature)
         all_items_json = json.loads(jsonify(all_items_sql).get_data())
 
         armor     = [x for x in all_items_json if x['metatype'] == 'armor']
         weapon    = [x for x in all_items_json if x['metatype'] == 'weapon']
-        equipment = fn_slots_get_all(pc)
+        equipment = fn_slots_get_all(creature)
 
         # JOB IS DONE
-        msg = f'Offset Query OK (pcid:{pc.id},itemid:{itemid})'
-        logger.trace(msg)
-        return jsonify({"success": True,
-                        "msg": msg,
-                        "payload": {"armor":     armor,
-                                    "equipment": equipment,
-                                    "weapon":    weapon}}), 200
+        msg = f'{h} Offset Query OK (itemid:{itemid})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "armor": armor,
+                    "equipment": equipment,
+                    "weapon": weapon,
+                },
+            }
+        ), 200

@@ -9,38 +9,42 @@ from variables import (API_URL,
                        EFFECT_JSON,
                        HEADERS)
 
+
 def test_singouins_internal_creature_effect_add():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effect/{EFFECT_NAME}' # PUT
-    response  = requests.put(url, headers=HEADERS, json = EFFECT_JSON)
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effect/{EFFECT_NAME}'  # PUT # noqa
+    response  = requests.put(url, headers=HEADERS, json=EFFECT_JSON)
     effects   = json.loads(response.text)['payload']['effects']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert effects[-1]['name']                  == EFFECT_NAME
 
+
 def test_singouins_internal_creature_effects():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effects' # GET
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effects'  # GET
     response  = requests.get(url, headers=HEADERS)
     effects   = json.loads(response.text)['payload']['effects']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert effects[-1]['name']                  == EFFECT_NAME
 
+
 def test_singouins_internal_creature_effect_get():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effect/{EFFECT_NAME}' # GET
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effect/{EFFECT_NAME}'  # GET # noqa
     response  = requests.get(url, headers=HEADERS)
     effect    = json.loads(response.text)['payload']['effect']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert effect['name']                       == EFFECT_NAME
 
+
 def test_singouins_internal_creature_effect_del():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effect/{EFFECT_NAME}' # DELETE
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/effect/{EFFECT_NAME}'  # DELETE # noqa
     response  = requests.delete(url, headers=HEADERS)
     effects   = json.loads(response.text)['payload']['effects']
 
     assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] == True
+    assert json.loads(response.text)['success'] is True
     assert effects                              == []

@@ -1,12 +1,12 @@
 import os
 import logging
-import sys
 
 from gunicorn.app.base import BaseApplication
 from gunicorn.glogging import Logger
 from loguru import logger
 
 LOG_LEVEL = logging.getLevelName(os.environ.get("GUNICORN_LEVEL", "INFO"))
+
 
 class InterceptHandler(logging.Handler):
     def emit(self, record):
@@ -22,7 +22,8 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        logger.opt(depth=depth,
+                   exception=record.exc_info).log(level, record.getMessage())
 
 
 class StubbedGunicornLogger(Logger):
