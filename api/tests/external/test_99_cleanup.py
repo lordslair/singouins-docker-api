@@ -52,7 +52,7 @@ def test_singouins_auth_delete():
 
     url      = f'{API_URL}/auth/delete'  # DELETE
     response = requests.delete(url,
-                               json={'mail': 'user@exemple.com'},
+                               json={'username': 'user@exemple.com'},
                                headers=headers)
 
     assert response.status_code == 200

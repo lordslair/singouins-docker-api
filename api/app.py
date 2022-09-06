@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
+import sys
+
 from flask                         import Flask, jsonify, request
 from flask_jwt_extended            import (JWTManager,
                                            jwt_required,
