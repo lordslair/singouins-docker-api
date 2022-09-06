@@ -1254,6 +1254,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreatureResolverContextResponse'
+  /mypc/{pcid}/action/resolver/move:
+    post:
+      tags:
+        - '/mypc/{pcid}/action: Resolver Requests'
+      summary: Get Resolver Move return
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatureResolverMoveBody'
+      responses:
+        '200':
+          description: OK - Move done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatureResolverContextResponse'
+  /mypc/{pcid}/action/resolver/skill:
+    post:
+      tags:
+        - '/mypc/{pcid}/action: Resolver Requests'
+      summary: Get Resolver Skill return
+      security:
+        - access_token: []
+      parameters:
+        - in: path
+          name: pcid
+          schema:
+            type: integer
+            example: 1
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatureResolverSkillBody'
+      responses:
+        '200':
+          description: OK - Skill done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatureResolverContextResponse'
   /mypc/{pcid}/effects:
     get:
       tags:
@@ -2220,6 +2276,46 @@ components:
           nullable: false
           example: 100
 
+    CreatureResolverMoveBody:
+      type: object
+      properties:
+        actor:
+          type: integer
+          nullable: false
+          example: 14
+          minimum: 1
+        name:
+          type: string
+          nullable: false
+          example: 'RegularMovesFightClass'
+        params:
+          type: object
+          nullable: false
+          example: '{}'
+        type:
+          type: integer
+          nullable: false
+          example: 3
+    CreatureResolverSkillBody:
+      type: object
+      properties:
+        actor:
+          type: integer
+          nullable: false
+          example: 14
+          minimum: 1
+        name:
+          type: string
+          nullable: false
+          example: 'WarsongActionsFightClass'
+        params:
+          type: object
+          nullable: false
+          example: '{}'
+        type:
+          type: integer
+          nullable: false
+          example: 0
     CreatureResolverContextResponse:
       type: object
       properties:
