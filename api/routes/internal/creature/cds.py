@@ -5,7 +5,7 @@ from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 
-from nosql.models.RedisCd       import *
+from nosql.models.RedisCd   import *
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -44,37 +44,35 @@ def creature_cd_add(creatureid,skill_name):
                         "msg":     f'Creature unknown (creatureid:{creatureid})',
                         "payload": None}), 200
 
-    # Status add
+    # Cd add
     try:
         redis_cd = RedisCd(creature)
-
-        redis_cd.duration_base = duration
-        redis_cd.name          = skill_name
-        redis_cd.source        = source
-        redis_cd.extra         = extra
-
         # This returns True if the HASH is properly stored in Redis
-        stored_cd     = redis_cd.store()
-        creature_cds  = redis_cd.get_all()
+        stored_cd = redis_cd.add(duration_base=duration,
+                                 extra=extra,
+                                 name=skill_name,
+                                 source=source
+                                 )
+        creature_cds = redis_cd.get_all()
     except Exception as e:
-        msg = f'Status Query KO [{e}]'
+        msg = f'Cd Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg":     msg,
                         "payload": None}), 200
     else:
         if stored_cd and creature_cds:
-            msg = f'Status add OK (creatureid:{creature.id})'
+            msg = f'Cd add OK (creatureid:{creature.id})'
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg":     msg,
-                            "payload": {"cds":      creature_cds,
+                            "payload": {"cds":  creature_cds,
                                         "creature": creature}}), 200
         else:
-            msg = f'Status add KO (creatureid:{creature.id})'
+            msg = f'Cd add KO (creatureid:{creature.id})'
             logger.warning(msg)
             return jsonify({"success": False,
-                            "msg":     msg,
+                            "msg": msg,
                             "payload": None}), 200
 
 # API: DELETE /internal/creature/{creatureid}/cd/{skill_name}
@@ -88,32 +86,32 @@ def creature_cd_del(creatureid,skill_name):
     creature    = fn_creature_get(None,creatureid)[3]
     if creature is None:
         return jsonify({"success": False,
-                        "msg":     f'Creature unknown (creatureid:{creatureid})',
+                        "msg": f'Creature unknown (creatureid:{creatureid})',
                         "payload": None}), 200
 
-    # Status del
+    # Cd del
     try:
         redis_cd      = RedisCd(creature)
         deleted_cd    = redis_cd.destroy(skill_name)
         creature_cds  = redis_cd.get_all()
     except Exception as e:
-        msg = f'Status Query KO [{e}]'
+        msg = f'Cd Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
-                        "msg":     msg,
+                        "msg": msg,
                         "payload": None}), 200
     else:
         if deleted_cd:
-            msg = f'Status del OK (creatureid:{creature.id},skill_name:{skill_name})'
+            msg = f'Cd del OK (creatureid:{creature.id},skill_name:{skill_name})'
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg":     msg,
-                            "payload": {"cds":      creature_cds,
+                            "payload": {"cds":  creature_cds,
                                         "creature": creature}}), 200
         else:
-            msg = f'Status del KO - Failed (creatureid:{creature.id},skill_name:{skill_name})'
-            logger.error(msg)
-            return warning({"success": False,
+            msg = f'Cd del KO - Failed (creatureid:{creature.id},skill_name:{skill_name})'
+            logger.warning(msg)
+            return jsonify({"success": False,
                             "msg":     msg,
                             "payload": None}), 200
 
@@ -131,32 +129,32 @@ def creature_cd_get_one(creatureid,skill_name):
                         "msg":     f'Creature unknown (creatureid:{creatureid})',
                         "payload": None}), 200
 
-    # Status get
+    # Cd get
     try:
         redis_cd    = RedisCd(creature)
         creature_cd = redis_cd.get(skill_name)
     except Exception as e:
-        msg = f'Status Query KO [{e}]'
+        msg = f'Cd Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg":     msg,
                         "payload": None}), 200
     else:
         if creature_cd is False:
-            msg = f'Status get KO - Status Not Found (creatureid:{creature.id},skill_name:{skill_name})'
+            msg = f'Cd get KO - Cd Not Found (creatureid:{creature.id},skill_name:{skill_name})'
             logger.warning(msg)
             return jsonify({"success": False,
                             "msg":     msg,
                             "payload": None}), 200
         elif creature_cd:
-            msg = f'Status get OK (creatureid:{creature.id},skill_name:{skill_name})'
+            msg = f'Cd get OK (creatureid:{creature.id},skill_name:{skill_name})'
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg":     msg,
-                            "payload": {"cd":       creature_cd.dict,
+                            "payload": {"cd":   creature_cd,
                                         "creature": creature}}), 200
         else:
-            msg = f'Status get KO - Failed (creatureid:{creature.id},skill_name:{skill_name})'
+            msg = f'Cd get KO - Failed (creatureid:{creature.id},skill_name:{skill_name})'
             logger.warning(msg)
             return jsonify({"success": False,
                             "msg":     msg,
@@ -176,26 +174,26 @@ def creature_cd_get_all(creatureid):
                         "msg":     f'Creature unknown (creatureid:{creatureid})',
                         "payload": None}), 200
 
-    # Statuses get
+    # CDs get
     try:
         redis_cd      = RedisCd(creature)
         creature_cds  = redis_cd.get_all()
     except Exception as e:
-        msg = f'Statuses Query KO [{e}]'
+        msg = f'CDs Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg":     msg,
                         "payload": None}), 200
     else:
         if isinstance(creature_cds, list):
-            msg = f'Statuses get OK (creatureid:{creature.id})'
+            msg = f'CDs get OK (creatureid:{creature.id})'
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg":     msg,
-                            "payload": {"cds":      creature_cds,
+                            "payload": {"cds":  creature_cds,
                                         "creature": creature}}), 200
         else:
-            msg = f'Statuses get KO - Failed (creatureid:{creature.id})'
+            msg = f'CDs get KO - Failed (creatureid:{creature.id})'
             logger.warning(msg)
             return jsonify({"success": False,
                             "msg":     msg,
