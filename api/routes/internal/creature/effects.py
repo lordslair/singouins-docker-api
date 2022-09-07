@@ -47,14 +47,12 @@ def creature_effect_add(creatureid,effect_name):
     # Effect add
     try:
         redis_effect = RedisEffect(creature)
-
-        redis_effect.duration_base = duration
-        redis_effect.name          = effect_name
-        redis_effect.source        = creature.id
-        redis_effect.extra         = extra
-
         # This returns True if the HASH is properly stored in Redis
-        stored_effect    = redis_effect.store()
+        stored_effect = redis_effect.add(duration_base=duration,
+                                         extra=extra,
+                                         name=effect_name,
+                                         source=source
+                                         )
         creature_effects = redis_effect.get_all()
     except Exception as e:
         msg = f'Effect Query KO [{e}]'
@@ -153,7 +151,7 @@ def creature_effect_get_one(creatureid,effect_name):
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg":     msg,
-                            "payload": {"effect":   creature_effect.dict,
+                            "payload": {"effect":   creature_effect,
                                         "creature": creature}}), 200
         else:
             msg = f'Effect get KO - Failed (creatureid:{creature.id},effect_name:{effect_name})'
