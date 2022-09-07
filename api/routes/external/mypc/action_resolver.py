@@ -144,9 +144,9 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        pas = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)
     except Exception as e:
-        msg = f'RedisCd Query KO [{e}]'
+        msg = f'RedisPa Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -197,7 +197,7 @@ def action_resolver_skill(pcid, skill_name):
             "effects": creatures_effects,
             "status": creatures_statuses,
             "cd": creatures_cds,
-            "pa": pas
+            "pa": creature_pa._asdict()
         },
         "fightEvent": {
             "name": fightEventname,
@@ -332,9 +332,9 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        pas = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)
     except Exception as e:
-        msg = f'RedisCd Query KO [{e}]'
+        msg = f'RedisPa Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -384,7 +384,7 @@ def action_resolver_move(pcid):
             "effects": creatures_effects,
             "status": creatures_statuses,
             "cd": creatures_cds,
-            "pa": pas
+            "pa": creature_pa._asdict()
         },
         "fightEvent": {
             "name": fightEventname,
@@ -517,9 +517,9 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        pas = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)
     except Exception as e:
-        msg = f'RedisCd Query KO [{e}]'
+        msg = f'RedisPa Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -569,7 +569,7 @@ def action_resolver_context(pcid):
             "effects": creatures_effects,
             "status": creatures_statuses,
             "cd": creatures_cds,
-            "pa": pas
+            "pa": creature_pa._asdict()
         },
         "fightEvent": {
             "name": fightEventname,

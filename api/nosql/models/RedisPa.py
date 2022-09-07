@@ -1,7 +1,8 @@
 # -*- coding: utf8 -*-
 
-from mysql.methods.fn_creature  import fn_creature_get
-from nosql.connector            import *
+from loguru                     import logger
+
+from nosql.connector            import r
 
 redpaduration  = 3600
 redpamax       = 16
@@ -11,83 +12,138 @@ bluepaduration = 3600
 bluepamax      = 8
 bluemaxttl     = bluepaduration * bluepamax
 
-class RedisPa:
-    def __init__(self,creature):
-        RedisPa.all      = {"blue": {"pa":    None,
-                                     "ttnpa": None,
-                                     "ttl":   None},
-                            "red":  {"pa":    None,
-                                     "ttnpa": None,
-                                     "ttl":   None}}
-        RedisPa.creature = creature
-        RedisPa.logh     = f'[creature.id:{RedisPa.creature.id}]'
 
-    @classmethod
-    def set(cls,redpa,bluepa):
+class RedisPa:
+    def __init__(self, creature):
+        self.creature = creature
+        self.hkey     = f'pa:{creature.id}'
+        self.logh     = f'[Creature.id:{self.creature.id}]'
+        logger.trace(f'{self.logh} Method >> Initialization')
+
+        self.redttl    = None
+        self.redpa     = None
+        self.redttnpa  = None
+        self.bluettl   = None
+        self.bluepa    = None
+        self.bluettnpa = None
+        self.refresh()
+
+    def consume(self, redpa=0, bluepa=0):
         try:
             if bluepa > 0:
+                logger.trace(f'{self.logh} Method >> (KEY Update) BLUE')
                 # An action consumed a blue PA, we need to update
-                key    = f'blue:{RedisPa.creature.id}'
+                key    = f'{self.hkey}:blue'
                 ttl    = r.ttl(key)
                 newttl = ttl + (bluepa * bluepaduration)
 
-                if ttl > 0:
-                    # Key still exists (PA count < PA max)
-                    r.expire(key,newttl)
-                else:
-                    # Key does not exist anymore (PA count = PA max)
-                    r.set(key,'',ex=newttl)
+                if newttl < bluepaduration * bluepamax:
+                    # We update the object
+                    self.bluepa = bluepa
+                    self.bluettl = newttl
+                    self.bluettnpa = self.bluettl % bluepaduration
+
+                    if ttl > 0:
+                        # Key still exists (PA count < PA max)
+                        r.expire(key, newttl)
+                    else:
+                        # Key does not exist anymore (PA count = PA max)
+                        r.set(key, '', ex=newttl)
             if redpa > 0:
+                logger.trace(f'{self.logh} Method >> (KEY Update) RED')
                 # An action consumed a red PA, we need to update
-                key    = f'red:{RedisPa.creature.id}'
+                key    = f'{self.hkey}:red'
                 ttl    = r.ttl(key)
                 newttl = ttl + (redpa * redpaduration)
 
-                if ttl > 0:
-                    # Key still exists (PA count < PA max)
-                    r.expire(key,newttl)
-                else:
-                    # Key does not exist anymore (PA count = PA max)
-                    r.set(key,'',ex=newttl)
+                if newttl < redpaduration * redpamax:
+                    # We update the object
+                    self.redpa = redpa
+                    self.redttl = newttl
+                    self.redttnpa = self.redttl % redpaduration
+
+                    if ttl > 0:
+                        # Key still exists (PA count < PA max)
+                        r.expire(key, newttl)
+                    else:
+                        # Key does not exist anymore (PA count = PA max)
+                        r.set(key, '', ex=newttl)
         except Exception as e:
-            logger.error(f'{RedisPa.logh} Method KO [{e}]')
+            logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{RedisPa.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK')
             return True
 
-    @classmethod
-    def get(cls):
+    def destroy(self):
+        self.reset()
+
+    def refresh(self):
         try:
-            redkey    = f'red:{RedisPa.creature.id}'
-            redttl    = r.ttl(redkey)
-            red       = {"pa":    int(round(((redmaxttl - abs(redttl))  / redpaduration))),
-                         "ttnpa": r.ttl(redkey) % redpaduration,
-                         "ttl":   redttl}
-
-            bluekey   = f'blue:{RedisPa.creature.id}'
-            bluettl   = r.ttl(bluekey)
-            blue      = {"pa":    int(round(((bluemaxttl - abs(bluettl))  / bluepaduration))),
-                         "ttnpa": r.ttl(bluekey) % bluepaduration,
-                         "ttl":   bluettl}
-
-            all       = {"red":  red,
-                         "blue": blue}
+            logger.trace(f'{self.logh} Method >> (KEY Loading)')
+            self.redttl   = r.ttl(f'{self.hkey}:red')
+            redpa_temp    = redmaxttl - abs(self.redttl)
+            self.redpa    = int(round(redpa_temp / redpaduration))
+            self.redttnpa = self.redttl % redpaduration
+            logger.trace(f'{self.logh} Method >> (KEY Loaded)')
         except Exception as e:
-            logger.error(f'{RedisPa.logh} Method KO [{e}]')
+            logger.error(f'{self.logh} Method KO [{e}]')
+        else:
+            logger.trace(f'{self.logh} Method OK')
+
+        try:
+            logger.trace(f'{self.logh} Method >> (KEY Loading)')
+            self.bluettl   = r.ttl(f'{self.hkey}:blue')
+            bluepa_temp    = bluemaxttl - abs(self.bluettl)
+            self.bluepa    = int(round(bluepa_temp / bluepaduration))
+            self.bluettnpa = self.bluettl % bluepaduration
+            logger.trace(f'{self.logh} Method >> (KEY Loaded)')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+        else:
+            logger.trace(f'{self.logh} Method OK')
+
+    def reset(self):
+        try:
+            logger.trace(f'{self.logh} Method >> (Expiring KEY)')
+            r.set(f'{self.hkey}:red', '', ex=1)
+            r.set(f'{self.hkey}:blue', '', ex=1)
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{RedisPa.logh} Method OK')
-            return all
-
-    @classmethod
-    def reset(cls):
-        try:
-            r.set(f'red:{RedisPa.creature.id}', 'red', ex=1)
-            r.set(f'blue:{RedisPa.creature.id}','blue',ex=1)
-        except Exception as e:
-            logger.error(f'{RedisPa.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{RedisPa.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK')
             return True
+
+    def _asdict(self):
+        # self.refresh()
+        hashdict = {
+            "blue":
+                {
+                    "pa": self.bluepa,
+                    "ttnpa": self.bluettnpa,
+                    "ttl": self.bluettl,
+                },
+            "red":
+                {
+                    "pa": self.redpa,
+                    "ttnpa": self.redttnpa,
+                    "ttl": self.redttl,
+                },
+        }
+        return hashdict
+
+
+if __name__ == '__main__':
+    from mysql.methods.fn_creature  import fn_creature_get
+
+    creature = fn_creature_get(None, 1)[3]
+    pa = RedisPa(creature)
+    logger.success(pa.__dict__)
+    logger.success(pa._asdict())
+    pa.consume(redpa=1)
+    pa.refresh()
+    logger.success(pa._asdict())
+    pa.reset()
+    pa.destroy()
+    logger.success(pa._asdict())

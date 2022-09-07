@@ -29,7 +29,7 @@ def creature_pa_get(creatureid):
                         "payload": None}), 200
 
     try:
-        creature_pa = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)
     except Exception as e:
         msg = f'PA Query KO (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -42,7 +42,7 @@ def creature_pa_get(creatureid):
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
-                            "payload": {"pa": creature_pa,
+                            "payload": {"pa": creature_pa._asdict(),
                                         "creature": creature}}), 200
         else:
             msg = f'PA Query KO (creatureid:{creature.id})'
@@ -77,7 +77,9 @@ def creature_pa_consume(creatureid,redpa,bluepa):
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
-    if redpa > RedisPa(creature).get()['red']['pa'] or bluepa > RedisPa(creature).get()['blue']['pa']:
+
+    creature_pa = RedisPa(creature)
+    if redpa > creature_pa.redpa or bluepa > creature_pa.bluepa:
         msg = f'Cannot consume that amount of PA (creatureid:{creature.id},redpa:{redpa},bluepa:{bluepa})'
         logger.warning(msg)
         return jsonify({"success": False,
@@ -85,8 +87,7 @@ def creature_pa_consume(creatureid,redpa,bluepa):
                         "payload": None}), 200
 
     try:
-        ret         = RedisPa(creature).set(redpa,bluepa)
-        creature_pa = RedisPa(creature).get()
+        ret = creature_pa.consume(redpa=redpa,bluepa=bluepa)
     except Exception as e:
         msg = f'PA Query KO - Failed (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa})'
         logger.error(msg)
@@ -99,7 +100,7 @@ def creature_pa_consume(creatureid,redpa,bluepa):
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
-                            "payload": {"pa": creature_pa,
+                            "payload": {"pa": creature_pa._asdict(),
                                         "creature": creature}}), 200
         else:
             msg = f'PA Query KO (creatureid:{creatureid},redpa:{redpa},bluepa:{bluepa})'
@@ -123,8 +124,8 @@ def creature_pa_reset(creatureid):
                         "payload": None}), 200
 
     try:
-        ret         = RedisPa(creature).reset()
-        creature_pa = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)
+        ret         = creature_pa.reset()
     except Exception as e:
         msg = f'PA Query KO - Failed (creatureid:{creatureid})'
         logger.error(msg)
@@ -137,7 +138,7 @@ def creature_pa_reset(creatureid):
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
-                            "payload": {"pa": creature_pa,
+                            "payload": {"pa": creature_pa._asdict(),
                                         "creature": creature}}), 200
         else:
             msg = f'PA Query KO (creatureid:{creatureid})'

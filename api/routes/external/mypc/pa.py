@@ -44,7 +44,7 @@ def pa_get(pcid):
         ), 409
 
     try:
-        payload = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)._asdict()
     except Exception as e:
         msg = f'PA Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -52,7 +52,7 @@ def pa_get(pcid):
             {
                 "success": False,
                 "msg": msg,
-                "payload": payload,
+                "payload": None,
             }
         ), 200
     else:
@@ -62,6 +62,6 @@ def pa_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": payload,
+                "payload": creature_pa,
             }
         ), 200

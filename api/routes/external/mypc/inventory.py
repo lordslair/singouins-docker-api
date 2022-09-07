@@ -59,7 +59,7 @@ def inventory_item_dismantle(pcid, itemid):
                 "payload": None,
             }
         ), 409
-    if RedisPa(creature).get()['blue']['pa'] < 1:
+    if RedisPa(creature).bluepa < 1:
         msg = f'{h} Not enough PA'
         logger.warning(msg)
         return jsonify(
@@ -136,7 +136,7 @@ def inventory_item_dismantle(pcid, itemid):
 
     try:
         # We consume the blue PA (1)
-        RedisPa(creature).set(0, 1)
+        RedisPa(creature).consume(bluepa=1)
         # We add HighScore
         RedisHS(creature).incr('action_dismantle')
     except Exception as e:
@@ -280,9 +280,9 @@ def inventory_item_equip(pcid, type, slotname, itemid):
 
     sizex, sizey = itemmeta['size'].split("x")
     costpa       = round(int(sizex) * int(sizey) / 2)
-    if RedisPa(creature).get()['red']['pa'] < costpa:
+    if RedisPa(creature).redpa < costpa:
         msg = (f"{h} Not enough PA "
-               f"(redpa:{RedisPa(creature).get()['red']['pa']},cost:{costpa})")
+               f"(redpa:{RedisPa(creature).redpa},cost:{costpa})")
         logger.warning(msg)
         return jsonify(
             {
@@ -461,7 +461,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
     # Here everything should be OK with the equip
     try:
         # We consume the red PA (costpa) right now
-        RedisPa(creature).set(costpa, 0)
+        RedisPa(creature).consume(redpa=costpa)
     except Exception as e:
         msg = f'{h} Redis Query KO [{e}]'
         logger.error(msg)
@@ -492,8 +492,8 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "red": RedisPa(creature).get()['red'],
-                    "blue": RedisPa(creature).get()['blue'],
+                    "red": RedisPa(creature)._asdict()['red'],
+                    "blue": RedisPa(creature)._asdict()['blue'],
                     "equipment": equipment,
                 },
             }
@@ -603,8 +603,8 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "red": RedisPa(creature).get()['red'],
-                    "blue": RedisPa(creature).get()['blue'],
+                    "red": RedisPa(creature)._asdict()['red'],
+                    "blue": RedisPa(creature)._asdict()['blue'],
                     "equipment": equipment,
                 },
             }

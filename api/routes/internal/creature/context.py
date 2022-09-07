@@ -74,7 +74,7 @@ def creature_context_get(creatureid):
                         "payload": None}), 200
 
     try:
-        pas = RedisPa(creature).get()
+        creature_pa = RedisPa(creature)
     except Exception as e:
         msg = f'RedisCd Query KO [{e}]'
         logger.error(msg)
@@ -109,7 +109,7 @@ def creature_context_get(creatureid):
         "effects": creatures_effects,
         "status": creatures_statuses,
         "cd": creatures_cds,
-        "pa": pas,
+        "pa": creature_pa._asdict(),
         }
 
     return jsonify({"success": True,
