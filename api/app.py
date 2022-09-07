@@ -260,15 +260,6 @@ app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<string:skill_name>',
 #
 # Routes: /action
 #
-@app.route('/mypc/<int:pcid>/action/move', methods=['POST'])
-@jwt_required()
-def api_mypc_action_move(pcid):
-    return jsonify({"msg": 'DEPRECATED', "success": True, "payload": RedisPa(fn_creature_get(None,pcid)[3]).get()}), 200
-@app.route('/mypc/<int:pcid>/action/attack/<int:weaponid>/<int:targetid>', methods=['POST'])
-@jwt_required()
-def api_mypc_action_attack(pcid,weaponid,targetid):
-    return jsonify({"msg": 'DEPRECATED', "success": True, "payload": None}), 200
-
 app.add_url_rule('/mypc/<int:pcid>/action/reload/<int:weaponid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.action.action_weapon_reload)
