@@ -59,7 +59,7 @@ def creature_stats(creatureid):
     else:
         return jsonify({"success": True,
                         "msg": f'Stats Query OK (creatureid:{creature.id})',
-                        "payload": {"stats":    creature_stats.dict,
+                        "payload": {"stats":    creature_stats._asdict(),
                                     "creature": creature}}), 200
 
 # API: PUT /internal/creature/{creatureid}/stats/hp/{operation}/{count}
@@ -99,14 +99,11 @@ def creature_stats_hp_modify(creatureid,operation,count):
         creature_stats  = RedisStats(creature)
         # We store back the modified value
         if operation == 'consume':
-            creature_stats.hp = int(creature_stats.hp) - count
+            creature_stats.hp -= count
         elif operation == 'add':
-            creature_stats.hp = int(creature_stats.hp) + count
+            creature_stats.hp += count
         else:
             pass
-        # We store updated stats
-        storage = creature_stats.store()
-
     except Exception as e:
         msg = f'Stats Query KO (creatureid:{creature.id},operation:{operation},count:{count}) [{e}]'
         logger.error(msg)
@@ -114,13 +111,8 @@ def creature_stats_hp_modify(creatureid,operation,count):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if storage:
-            creature_stats  = RedisStats(creature)
-            return jsonify({"success": True,
-                            "msg": f'Stats Query OK (creatureid:{creature.id})',
-                            "payload": {"stats":    creature_stats.dict,
-                                        "creature": creature}}), 200
-        else:
-            return jsonify({"success": True,
-                            "msg": f'Stats Query KO - RedisStats store() Failed',
-                            "payload": None}), 200
+        creature_stats  = RedisStats(creature)
+        return jsonify({"success": True,
+                        "msg": f'Stats Query OK (creatureid:{creature.id})',
+                        "payload": {"stats":    creature_stats._asdict(),
+                                    "creature": creature}}), 200

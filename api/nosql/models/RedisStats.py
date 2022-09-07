@@ -1,35 +1,34 @@
 # -*- coding: utf8 -*-
 
-from nosql.connector            import *
+import copy
+import json
+
+from loguru                     import logger
+
+from nosql.connector            import r
 
 from mysql.methods.fn_creature  import fn_creature_stats_get
-from mysql.methods.fn_inventory import fn_slots_get_all,fn_item_get_one
+from mysql.methods.fn_inventory import fn_slots_get_all, fn_item_get_one
+
 
 class RedisStats:
-    def __init__(self,creature):
+    def __init__(self, creature):
         self.hkey     = f'stats:{creature.id}'
-        self.logh     = f'[creature.id:{creature.id}]'
+        self.logh     = f'[Creature.id:{creature.id}]'
 
         if r.exists(self.hkey):
             # The pre-generated stats does already exist in redis
             try:
-                hash = r.hgetall(self.hkey)
+                hashdict = r.hgetall(self.hkey)
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
 
-                self.m      = int(hash['m'])
-                self.r      = int(hash['r'])
-                self.g      = int(hash['g'])
-                self.v      = int(hash['v'])
-                self.p      = int(hash['p'])
-                self.b      = int(hash['b'])
-                self.capcom = int(hash['capcom'])
-                self.capsho = int(hash['capsho'])
-                self.arm_p  = int(hash['arm_p'])
-                self.arm_b  = int(hash['arm_b'])
-                self.hpmax  = int(hash['hpmax'])
-                self.hp     = int(hash['hp'])
-                self.r      = int(hash['r'])
-                self.parry  = int(hash['parry'])
+                logger.warning(hashdict)
+
+                for k, v in hashdict.items():
+                    # We create the object attribute with converted INT
+                    setattr(self, k, int(v))
+                # We need to do that as it is stored as 'hp' due to the Setter
+                self._hp   = getattr(self, 'hp')
 
                 logger.trace(f'{self.logh} Method >> (HASH Loaded)')
             except Exception as e:
@@ -59,18 +58,32 @@ class RedisStats:
                     self.p = 0
                     self.b = 0
 
-                self.capcom = round((self.g + round((self.m + self.r)/2))/2)
-                self.capsho = round((self.v + round((self.b + self.r)/2))/2)
+                moymr       = round((self.m + self.r) / 2)
+                self.capcom = round((self.g + moymr) / 2)
+                moybr       = round((self.b + self.r) / 2)
+                self.capsho = round((self.v + moybr) / 2)
 
-                self.hpmax = 100 + self.m + round(creature.level/2)
+                self.hpmax = 100 + self.m + round(creature.level / 2)
+                self._hp   = self.hpmax
                 self.hp    = self.hpmax
 
                 self.dodge = self.r
-                self.parry = round(((self.g-100)/50) * ((self.m-100)/50))
+                newg       = (self.g - 100) / 50
+                newm       = (self.m - 100) / 50
+                self.parry = round(newg * newm)
             except Exception as e:
-                logger.error(f'{self.logh} Method KO (Building from Caracs) [{e}]')
+                logger.error(f'{self.logh} Method KO '
+                             f'(Building from Caracs) [{e}]')
             else:
                 logger.trace(f'{self.logh} Method >> (Building from Caracs)')
+
+            # Get the metaWeapons
+            if r.exists('system:meta:weapon'):
+                metaWeapons = json.loads(r.get('system:meta:weapon'))
+                logger.trace(f'{self.logh} Method >> metaWeapons OK')
+            else:
+                logger.warning(f'{self.logh} Method >> metaWeapons KO')
+                return False
 
             try:
                 # Working to find armor from equipped items
@@ -78,7 +91,6 @@ class RedisStats:
                 self.arm_p = 0
                 slots = fn_slots_get_all(creature)
                 if slots:
-                    armormetas = []
                     armors     = [fn_item_get_one(slots.feet),
                                   fn_item_get_one(slots.hands),
                                   fn_item_get_one(slots.head),
@@ -88,99 +100,37 @@ class RedisStats:
 
                     for armor in armors:
                         if armor is not None:
-                            metaWeapon = dict(list(filter(lambda x:x["id"] == armor.metaid,metaWeapons))[0]) # Gruikfix
+                            result = filter(lambda x: x["id"] == armor.metaid,
+                                            metaWeapons)
+                            metaWeapon = dict(list(result)[0])  # Gruikfix
                             self.arm_b += metaWeapon['arm_b']
                             self.arm_p += metaWeapon['arm_p']
                 else:
                     logger.warning(f'{self.logh} Method >> Slots Not Found')
             except Exception as e:
-                logger.error(f'{self.logh} Method KO (Building from Equipment) [{e}]')
+                logger.error(f'{self.logh} Method KO '
+                             f'(Building from Equipment) [{e}]')
             else:
-                logger.trace(f'{self.logh} Method >> (Building from Equipment)')
+                logger.trace(f'{self.logh} Method >> '
+                             f'(Building from Equipment)')
 
             try:
                 # We push data in final dict
                 logger.trace(f'{self.logh} Method >> (Storing HASH)')
-                hashdict = {"m":      0 + self.m,
-                            "r":      0 + self.r,
-                            "g":      0 + self.g,
-                            "v":      0 + self.v,
-                            "p":      0 + self.p,
-                            "b":      0 + self.b,
-                            "capcom": self.capcom,
-                            "capsho": self.capsho,
-                            "arm_p":  self.arm_p,
-                            "arm_b":  self.arm_b,
-                            "hpmax":  self.hpmax,
-                            "hp":     self.hp,
-                            "dodge":  self.r,
-                            "parry":  self.parry}
+                clone = copy.deepcopy(self)
+                if clone.hkey:
+                    del clone.hkey
+                if clone.logh:
+                    del clone.logh
+                if clone._hp:
+                    del clone._hp
+                hashdict = clone.__dict__
 
                 r.hset(self.hkey, mapping=hashdict)
             except Exception as e:
                 logger.error(f'{self.logh} Method KO (Storing HASH) [{e}]')
             else:
                 logger.trace(f'{self.logh} Method OK')
-
-        # Whatever the scenarion, We push data in the object
-        try:
-            logger.trace(f'{self.logh} Method >> (Creating dict)')
-            self.dict = {"base":{
-                                        "m": self.m,
-                                        "r": self.r,
-                                        "g": self.g,
-                                        "v": self.v,
-                                        "p": self.p,
-                                        "b": self.b
-                                },
-                              "off":{
-                                        "capcom": self.capcom,
-                                        "capsho": self.capsho
-                                    },
-                              "def":{
-                                        "armor":{
-                                                    "p": self.arm_p,
-                                                    "b": self.arm_b
-                                                },
-                                        "hpmax": self.hpmax,
-                                        "hp":    self.hp,
-                                        "dodge": self.r,
-                                        "parry": self.parry
-                                    }
-                              }
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method OK')
-
-    def store(self):
-        try:
-            # We push data in final dict
-            hashdict =  {
-                            "m":      self.m,
-                            "r":      self.r,
-                            "g":      self.g,
-                            "v":      self.v,
-                            "p":      self.p,
-                            "b":      self.b,
-                            "capcom": self.capcom,
-                            "capsho": self.capsho,
-                            "arm_p":  self.arm_p,
-                            "arm_b":  self.arm_b,
-                            "hpmax":  self.hpmax,
-                            "hp":     self.hp,
-                            "dodge":  self.r,
-                            "parry":  self.parry
-                        }
-            logger.trace(f'{self.logh} Method >> (Creating dict)')
-            r.hmset(self.hkey, hashdict)
-            logger.trace(f'{self.logh} Method >> (Storing HASH)')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return True
 
     def destroy(self):
         try:
@@ -192,3 +142,51 @@ class RedisStats:
         else:
             logger.trace(f'{self.logh} Method OK')
             return True
+
+    def _asdict(self):
+        hashdict = {
+            "base": {
+                "m": self.m,
+                "r": self.r,
+                "g": self.g,
+                "v": self.v,
+                "p": self.p,
+                "b": self.b
+            },
+            "off": {
+                "capcom": self.capcom,
+                "capsho": self.capsho,
+            },
+            "def": {
+                "armor": {
+                    "p": self.arm_p,
+                    "b": self.arm_b,
+                },
+                "hpmax": self.hpmax,
+                "hp": self._hp,
+                "dodge": self.r,
+                "parry": self.parry,
+            }
+        }
+        return hashdict
+
+    """
+    Getter/Setter block for HP management
+    It is done that way to r.hset() every time API code manipulates Creature HP
+    And avoid to build a store() method just for that purpose
+    As it is the only value that can be directly modified in the RedisStats
+    """
+    @property
+    def hp(self):
+        return self._hp
+
+    @hp.setter
+    def hp(self, hp):
+        self._hp = hp
+        try:
+            logger.trace(f'{self.logh} Method >> (Setting HASH) HP')
+            r.hset(self.hkey, 'hp', self._hp)
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+        else:
+            logger.trace(f'{self.logh} Method OK')

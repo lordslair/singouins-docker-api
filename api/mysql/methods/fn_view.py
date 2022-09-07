@@ -12,7 +12,7 @@ def fn_creature_view_get(creature):
 
     try:
         # We check if we have the data in redis
-        creature_stats  = RedisStats(creature).dict
+        creature_stats  = RedisStats(creature)._asdict()
 
         range = 4 + round(creature_stats['base']['p'] / 50)
         maxx  = creature.x + range

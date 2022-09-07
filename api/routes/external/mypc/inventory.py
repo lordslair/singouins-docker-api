@@ -214,7 +214,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         logger.trace(f'{h} Meta fectching: OK')
 
     try:
-        creature_stats = RedisStats(creature).dict
+        creature_stats = RedisStats(creature)._asdict()
     except Exception as e:
         msg = f'{h} Stats Query KO - failed [{e}]'
         logger.error(msg)

@@ -210,9 +210,7 @@ def mypc_add():
                         logger.trace(msg)
                         try:
                             # We initialize a fresh stats
-                            redis_stats = RedisStats(pc)
-                            # We immediately store it
-                            redis_stats.store()
+                            RedisStats(pc)
                         except Exception as e:
                             msg = f'{h} RedisStats creation KO [{e}]'
                             logger.error(msg)

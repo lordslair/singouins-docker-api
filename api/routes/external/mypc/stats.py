@@ -59,6 +59,6 @@ def stats_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": creature_stats.dict,
+                "payload": creature_stats._asdict(),
             }
         ), 200
