@@ -2,10 +2,13 @@
 
 import copy
 
-from nosql.connector            import *
+from loguru                     import logger
+
+from nosql.connector            import r
+
 
 class RedisHS:
-    def __init__(self,creature):
+    def __init__(self, creature):
         self.creature = creature
         self.hkey     = f'highscores:{creature.id}'
         self.logh     = f'[Creature.id:{self.creature.id}]'
@@ -17,7 +20,7 @@ class RedisHS:
                 "action_unload": 0,
                 "action_dismantle": 0,
                 "action_move": 0,
-                }
+            }
 
             for k, v in hashdict.items():
                 setattr(self, k, v)
@@ -51,13 +54,13 @@ class RedisHS:
             else:
                 logger.trace(f'{self.logh} Method OK')
 
-    def incr(self,key,count=1):
+    def incr(self, key, count=1):
         try:
             logger.trace(f'{self.logh} Method >> (HASH Incrementing)')
             # We increment the object attribute
-            setattr(self,key,getattr(self,key)+count)
+            setattr(self, key, getattr(self, key) + count)
             # We increment the hash key
-            r.hincrby(self.hkey,key,count)
+            r.hincrby(self.hkey, key, count)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
@@ -93,7 +96,10 @@ class RedisHS:
 
     def _asdict(self):
         clone = copy.deepcopy(self)
-        if clone.hkey: del clone.hkey
-        if clone.creature: del clone.creature
-        if clone.logh: del clone.logh
+        if clone.hkey:
+            del clone.hkey
+        if clone.creature:
+            del clone.creature
+        if clone.logh:
+            del clone.logh
         return clone.__dict__

@@ -1,21 +1,26 @@
 # -*- coding: utf8 -*-
 
-from datetime             import datetime
+import json
 
-from .connector            import *
-from .variables            import MAP_FILES,META_FILES
+from datetime                   import datetime
+from loguru                     import logger
+
+from nosql.connector            import r
+
+from .variables                 import MAP_FILES, META_FILES
+
 
 def initialize_redis():
     try:
-        logger.info(f'Redis init: start')
-        r.set('system:startup',datetime.now().isoformat())
+        logger.info('Redis init: start')
+        r.set('system:startup', datetime.now().isoformat())
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
         logger.info('Redis init: OK system:startup')
 
     try:
-        for meta,file in META_FILES.items():
+        for meta, file in META_FILES.items():
             with open(file) as f:
                 content = f.read()
                 logger.debug(f'Redis init: creating system:meta:{meta}')
@@ -23,10 +28,10 @@ def initialize_redis():
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
-        logger.info(f'Redis init: OK system:meta:*')
+        logger.info('Redis init: OK system:meta:*')
 
     try:
-        for map,file in MAP_FILES.items():
+        for map, file in MAP_FILES.items():
             with open(file) as f:
                 content = f.read()
                 data = json.loads(content)
@@ -34,20 +39,21 @@ def initialize_redis():
                 r.set(f'system:map:{map}:data', content)
                 r.set(f'system:map:{map}:type', 'Instance')
                 r.set(f'system:map:{map}:mode', 'Normal')
-                r.set(f'system:map:{map}:size', f"{data['height']}x{data['width']}")
+                r.set(f'system:map:{map}:size',
+                      f"{data['height']}x{data['width']}")
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
-        logger.info(f'Redis init: OK system:map:*')
+        logger.info('Redis init: OK system:map:*')
 
     try:
-        if r.exists(f'system:instance_max_id'):
+        if r.exists('system:instance_max_id'):
             pass
         else:
-            r.set(f'system:instance_max_id', 0)
+            r.set('system:instance_max_id', 0)
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
-        logger.info(f'Redis init: OK system:instance_max_id')
+        logger.info('Redis init: OK system:instance_max_id')
     finally:
         logger.info('Redis init: end')

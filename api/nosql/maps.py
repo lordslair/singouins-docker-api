@@ -1,10 +1,15 @@
 # -*- coding: utf8 -*-
 
-from .connector import *
+import json
+
+from loguru                     import logger
+
+from nosql.connector            import r
 
 #
 # Queries: system:maps:*
 #
+
 
 def get_map(mapid):
     mypattern = f'system:map:{mapid}'
@@ -13,7 +18,7 @@ def get_map(mapid):
     try:
         keys = r.exists(f'{mypattern}:data')
     except Exception as e:
-        logger.error(f'Query KO [{e}]')
+        logger.error(f'Map Query KO [{e}]')
         return False
     else:
         if keys:
@@ -24,12 +29,13 @@ def get_map(mapid):
 
     try:
         map = {"data": json.loads(r.get(f'{mypattern}:data')),
-               "id":   mapid,
+               "id": mapid,
                "mode": r.get(f'{mypattern}:mode'),
                "size": r.get(f'{mypattern}:size'),
                "type": r.get(f'{mypattern}:type')}
     except Exception as e:
-        logger.error(f'Query KO [{e}]')
+        logger.error(f'Map Query KO [{e}]')
         return False
     else:
+        logger.trace('Map Query OK')
         return map

@@ -1,15 +1,18 @@
 # -*- coding: utf8 -*-
 
-from .connector import *
+from loguru                     import logger
+
+from nosql.connector            import r
 
 #
 # Queries: Redis.publish
 #
 
-def publish(channel,msg):
+
+def publish(channel, msg):
     # Opening Queue
     try:
-        r.publish(channel,msg)
+        r.publish(channel, msg)
     except Exception as e:
         logger.error(f'Publish({channel}) KO [{e}]')
         return None

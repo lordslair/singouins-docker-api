@@ -1,10 +1,15 @@
 # -*- coding: utf8 -*-
 
-from .connector import *
+import json
+
+from loguru                     import logger
+
+from nosql.connector            import r
 
 #
 # Queries: system:meta:*
 #
+
 
 def get_meta(metatype):
     mypattern = 'system:meta'
@@ -15,7 +20,8 @@ def get_meta(metatype):
         else:
             return False
     except Exception as e:
-        print(f'[Redis:get_meta()] Query failed [{e}]')
+        logger.error(f'Meta Query KO [{e}]')
         return None
     else:
+        logger.trace('Meta Query OK')
         return meta
