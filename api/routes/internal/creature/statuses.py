@@ -47,14 +47,12 @@ def creature_status_add(creatureid,status_name):
     # Status add
     try:
         redis_status = RedisStatus(creature)
-
-        redis_status.duration_base = duration
-        redis_status.extra         = extra
-        redis_status.name          = status_name
-        redis_status.source        = source
-
         # This returns True if the HASH is properly stored in Redis
-        stored_status     = redis_status.store()
+        stored_status = redis_status.add(duration_base=duration,
+                                         extra=extra,
+                                         name=status_name,
+                                         source=source
+                                         )
         creature_statuses = redis_status.get_all()
     except Exception as e:
         msg = f'Status Query KO [{e}]'
@@ -112,8 +110,8 @@ def creature_status_del(creatureid,status_name):
                                         "creature": creature}}), 200
         else:
             msg = f'Status del KO - Failed (creatureid:{creature.id},status_name:{status_name})'
-            logger.error(msg)
-            return warning({"success": False,
+            logger.warning(msg)
+            return jsonify({"success": False,
                             "msg": msg,
                             "payload": None}), 200
 
@@ -153,7 +151,7 @@ def creature_status_get_one(creatureid,status_name):
             logger.debug(msg)
             return jsonify({"success": True,
                             "msg": msg,
-                            "payload": {"status": creature_status.dict,
+                            "payload": {"status": creature_status,
                                         "creature": creature}}), 200
         else:
             msg = f'Status get KO - Failed (creatureid:{creature.id},status_name:{status_name})'
