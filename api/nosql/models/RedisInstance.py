@@ -10,7 +10,6 @@ from nosql.connector            import r
 class RedisInstance:
     def __init__(self, creature, instanceid=None):
         self.creature = creature
-        self.hkey     = f'highscores:{creature.id}'
         if creature:
             self.logh = f'[Creature.id:{self.creature.id}]'
         else:
@@ -146,8 +145,6 @@ class RedisInstance:
 
     def _asdict(self):
         clone = copy.deepcopy(self)
-        if clone.hkey:
-            del clone.hkey
         if clone.creature:
             del clone.creature
         if clone.logh:

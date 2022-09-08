@@ -121,7 +121,7 @@ def test_singouins_korp_kick():
     korpid  = json.loads(response.text)['payload'][0]['korp']
 
     # We create a PJTestKorpKick
-    payload_pjtest['name'] = 'PJTestKorpInvite'
+    payload_pjtest['name'] = 'PJTestKorpKick'
 
     url      = f'{API_URL}/mypc'  # POST
     response = requests.post(url, json=payload_pjtest, headers=headers)

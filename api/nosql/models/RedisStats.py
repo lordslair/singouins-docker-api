@@ -22,8 +22,6 @@ class RedisStats:
                 hashdict = r.hgetall(self.hkey)
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
 
-                logger.warning(hashdict)
-
                 for k, v in hashdict.items():
                     # We create the object attribute with converted INT
                     setattr(self, k, int(v))
