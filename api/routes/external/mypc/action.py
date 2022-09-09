@@ -10,19 +10,11 @@ from mysql.methods.fn_user      import fn_user_get
 from mysql.methods.fn_inventory import (fn_item_get_one,
                                         fn_item_ammo_set)
 
-from nosql.metas                import get_meta
+from nosql.metas                import metaWeapons
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisWallet   import RedisWallet
-
-# Loading the Meta for later use
-try:
-    metaWeapons = get_meta('weapon')
-except Exception as e:
-    logger.error(f'Meta fectching KO [{e}]')
-else:
-    logger.trace('Meta fectching OK')
 
 
 #

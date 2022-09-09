@@ -17,7 +17,7 @@ from mysql.methods.fn_inventory import (fn_item_del,
                                         fn_slots_get_one,
                                         fn_slots_set_one)
 
-from nosql.metas                import get_meta
+from nosql.metas                import metaArmors, metaWeapons
 from nosql.queue                import yqueue_put
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisHS       import RedisHS
@@ -195,23 +195,6 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 "payload": None,
             }
         ), 409
-
-    # Loading the Meta for later use
-    try:
-        metaWeapons = get_meta('weapon')
-        metaArmors  = get_meta('armor')
-    except Exception as e:
-        msg = f'{h} Meta fectching: KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        logger.trace(f'{h} Meta fectching: OK')
 
     try:
         creature_stats = RedisStats(creature)._asdict()

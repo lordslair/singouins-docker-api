@@ -14,7 +14,7 @@ from mysql.methods.fn_creature  import (fn_creature_get,
 from mysql.methods.fn_inventory import fn_item_add
 from mysql.methods.fn_squad     import fn_squad_get_one
 
-from nosql.metas                import *
+from nosql.metas                import metaArmors, metaWeapons
 from nosql.models.RedisWallet   import *
 from nosql.queue                import *
 
@@ -67,15 +67,6 @@ def creature_kill(creatureid,victimid):
         return jsonify({"success": False,
                         "msg":     f'Victim unknown (victimid:{victimid})',
                         "payload": None}), 200
-    # Loading the Meta for later use
-    try:
-        metaArmors  = get_meta('armor')
-        metaWeapons = get_meta('weapon')
-    except Exception as e:
-        logger.error(f'Meta fectching: KO [{e}]')
-    else:
-        logger.trace(f'Meta fectching: OK')
-
 
     # We generate the drops
     # Currency
@@ -365,8 +356,6 @@ def get_loots(victim):
     # We initialize some values lists
     rarities = ['Broken','Common','Uncommon','Rare','Epic','Legendary']
     #
-    metaWeapons = get_meta('weapon')
-    metaArmors  = get_meta('armor')
     metaItems   = {
                     "weapon": metaWeapons,
                     "armor":  metaArmors,

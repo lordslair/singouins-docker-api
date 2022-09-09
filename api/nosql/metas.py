@@ -25,3 +25,9 @@ def get_meta(metatype):
     else:
         logger.trace('Meta Query OK')
         return meta
+
+
+# Loading the Meta for later use
+metaArmors = get_meta('armor')
+metaRaces = get_meta('race')
+metaWeapons = get_meta('weapon')

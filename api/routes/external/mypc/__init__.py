@@ -18,19 +18,10 @@ from mysql.methods.fn_inventory import (fn_cosmetic_add,
                                         fn_slots_del)
 from mysql.methods.fn_user      import fn_user_get
 
-from nosql.metas                import get_meta
+from nosql.metas                import metaRaces
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
-
-# Loading the Meta for later use
-try:
-    metaRaces   = get_meta('race')
-    metaWeapons = get_meta('weapon')
-except Exception as e:
-    logger.error(f'Meta fectching KO [{e}]')
-else:
-    logger.trace('Meta fectching OK')
 
 
 #
