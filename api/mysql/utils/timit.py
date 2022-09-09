@@ -2,6 +2,7 @@
 
 import time
 
+
 def timeit(method):
     def timed(*args, **kwargs):
         ts = time.time()

@@ -2,11 +2,12 @@
 
 import textwrap
 
+from loguru                     import logger
+
 from mysql.session              import Session
 from mysql.models               import MP, Creature
 from mysql.methods.fn_creature  import fn_creature_get
 
-from nosql                      import * # Custom internal module for Redis queries
 
 def fn_mp_addressbook_get(creature):
     session = Session()
@@ -14,33 +15,34 @@ def fn_mp_addressbook_get(creature):
     try:
         addressbook = session.query(Creature)\
                              .filter(Creature.race < 10)\
-                             .with_entities(Creature.id,Creature.name)\
+                             .with_entities(Creature.id, Creature.name)\
                              .all()
     except Exception as e:
         logger.error(f'Addressbook Query KO [{e}]')
         return None
     else:
         if addressbook:
-            logger.trace(f'Addressbook Query OK')
+            logger.trace('Addressbook Query OK')
             return addressbook
         else:
             return None
     finally:
         session.close()
 
-def fn_mp_add(creature,pcsrcid,dsts,subject,body):
+
+def fn_mp_add(creature, pcsrcid, dsts, subject, body):
     session = Session()
 
     try:
         for pcdstid in dsts:
-            pcdst   = fn_creature_get(None,pcdstid)[3]
+            pcdst   = fn_creature_get(None, pcdstid)[3]
             if pcdst:
-                mp = MP(src_id  = creature.id,
-                        src     = creature.name,
-                        dst_id  = pcdst.id,
-                        dst     = pcdst.name,
-                        subject = subject,
-                        body    = body)
+                mp = MP(src_id=creature.id,
+                        src=creature.name,
+                        dst_id=pcdst.id,
+                        dst=pcdst.name,
+                        subject=subject,
+                        body=body)
                 session.add(mp)
         session.commit()
     except Exception as e:
@@ -48,12 +50,13 @@ def fn_mp_add(creature,pcsrcid,dsts,subject,body):
         logger.error(f'MPs Query KO [{e}]')
         return None
     else:
-        logger.trace(f'MPs Query OK')
+        logger.trace('MPs Query OK')
         return True
     finally:
         session.close()
 
-def fn_mp_del_one(creature,mpid):
+
+def fn_mp_del_one(creature, mpid):
     session = Session()
 
     try:
@@ -63,7 +66,7 @@ def fn_mp_del_one(creature,mpid):
                     .one_or_none()
 
         if not mp:
-            logger.trace(f'MP Query Useless - No MP to delete')
+            logger.trace('MP Query Useless - No MP to delete')
 
         session.delete(mp)
         session.commit()
@@ -72,10 +75,11 @@ def fn_mp_del_one(creature,mpid):
         logger.error(f'MP Query KO [{e}]')
         return None
     else:
-        logger.trace(f'MP Query OK')
+        logger.trace('MP Query OK')
         return True
     finally:
         session.close()
+
 
 def fn_mp_get_all(creature):
     session = Session()
@@ -90,15 +94,18 @@ def fn_mp_get_all(creature):
     else:
         if mps:
             for mp in mps:
-                mp.body = textwrap.shorten(mp.body, width=50, placeholder="...")
-            logger.trace(f'MPs Query OK')
+                mp.body = textwrap.shorten(mp.body,
+                                           width=50,
+                                           placeholder="...")
+            logger.trace('MPs Query OK')
             return mps
         else:
             return None
     finally:
         session.close()
 
-def fn_mp_get_one(creature,mpid):
+
+def fn_mp_get_one(creature, mpid):
     session = Session()
 
     try:
@@ -110,7 +117,7 @@ def fn_mp_get_one(creature,mpid):
         logger.error(f'MP Query KO [{e}]')
         return None
     else:
-        logger.trace(f'MP Query OK')
+        logger.trace('MP Query OK')
         return mp
     finally:
         session.close()

@@ -1,34 +1,40 @@
 # -*- coding: utf8 -*-
 
-from mysql.session              import *
-from mysql.models               import Creature,Korp
+from loguru                     import logger
 
-def fn_korp_add_one(pc,korpname):
+from mysql.session              import Session
+from mysql.models               import Creature, Korp
+
+
+def fn_korp_add_one(creature, korpname):
     session = Session()
+    h       = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
-        korp = Korp(leader = pc.id,
-                    name   = korpname)
+        korp = Korp(leader=creature.id,
+                    name=korpname)
 
         session.add(korp)
         session.commit()
         session.refresh(korp)
     except Exception as e:
         session.rollback()
-        logger.error(f'Korp Query KO [{e}]')
+        logger.error(f'{h} Korp Query KO [{e}]')
         return None
     else:
         if korp:
-            logger.trace(f'Korp Query OK (pcid:{pc.id})')
+            logger.trace(f'{h} Korp Query OK')
             return korp
         else:
-            logger.trace(f'Korp Query KO - Not Found (pcid:{pc.id})')
+            logger.trace(f'{h} Korp Query KO - NotFound')
             return False
     finally:
         session.close()
 
+
 def fn_korp_delete_one(korpid):
     session = Session()
+    h       = '[Creature.id:None]'  # Header for logging
 
     try:
         korp    = session.query(Korp)\
@@ -39,19 +45,21 @@ def fn_korp_delete_one(korpid):
         session.commit()
     except Exception as e:
         session.rollback()
-        logger.error(f'Korp Query KO [{e}]')
+        logger.error(f'{h} Korp Query KO [{e}]')
         return None
     else:
-        logger.trace(f'Korp Query OK')
+        logger.trace(f'{h} Korp Query OK')
         return True
     finally:
         session.close()
 
+
 def fn_korp_get_one(korpid):
     session = Session()
+    h       = '[Creature.id:None]'  # Header for logging
 
     if not isinstance(korpid, int):
-        logger.error(f'Korp ID should be INT (korpid:{korpid})')
+        logger.error(f'{h} Korp ID should be INT (korpid:{korpid})')
         return None
 
     try:
@@ -67,25 +75,27 @@ def fn_korp_get_one(korpid):
                          .filter(Creature.korp_rank == 'Pending')\
                          .all()
     except Exception as e:
-        logger.error(f'Korp Query KO (korpid:{korpid}) [{e}]')
+        logger.error(f'{h} Korp Query KO (korpid:{korpid}) [{e}]')
         return None
     else:
         if korp:
-            logger.trace(f'Korp Query OK (korpid:{korpid})')
+            logger.trace(f'{h} Korp Query OK (korpid:{korpid})')
             return {"korp": korp,
                     "members": members,
                     "pending": pending}
         else:
-            logger.trace(f'Korp Query KO - Not Found (korpid:{korpid})')
+            logger.trace(f'{h} Korp Query KO - NotFound (korpid:{korpid})')
             return False
     finally:
         session.close()
 
+
 def fn_korp_get_one_by_name(korpname):
     session = Session()
+    h       = '[Creature.id:None]'  # Header for logging
 
     if not isinstance(korpname, str):
-        logger.error(f'Korp Name should be STR (korpname:{korpname})')
+        logger.error(f'{h} Korp Name should be STR (korpname:{korpname})')
         return None
 
     try:
@@ -105,42 +115,46 @@ def fn_korp_get_one_by_name(korpname):
             members = None
             pending = None
     except Exception as e:
-        logger.error(f'Korp Query KO (korpname:{korpname}) [{e}]')
+        logger.error(f'{h} Korp Query KO (korpname:{korpname}) [{e}]')
         return None
     else:
         if korp:
-            logger.trace(f'Korp Query OK (korpname:{korpname})')
+            logger.trace(f'{h} Korp Query OK (korpname:{korpname})')
             return {"korp": korp,
                     "members": members,
                     "pending": pending}
         else:
-            logger.trace(f'Korp Query KO - Not Found (korpname:{korpname})')
+            logger.trace(f'{h} Korp Query KO - NotFound (korpname:{korpname})')
             return False
     finally:
         session.close()
 
+
 def fn_korp_get_all():
     session = Session()
+    h       = '[Creature.id:None]'  # Header for logging
 
     try:
         korps = session.query(Korp)\
                        .all()
     except Exception as e:
-        logger.error(f'Korps Query KO [{e}]')
+        logger.error(f'{h} Korps Query KO [{e}]')
         return None
     else:
         if korps:
-            logger.trace(f'Korps Query OK')
+            logger.trace(f'{h} Korps Query OK')
             return korps
         else:
-            logger.trace(f'Korps Query KO - Not Found')
+            logger.trace(f'{h} Korps Query KO - Not Found')
             # We force an empty list as return as it could be "normal"
             return []
     finally:
         session.close()
 
-def fn_korp_set_rank(creature,korpid,rank):
+
+def fn_korp_set_rank(creature, korpid, rank):
     session = Session()
+    h       = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
         member  = session.query(Creature)\
@@ -153,14 +167,14 @@ def fn_korp_set_rank(creature,korpid,rank):
         session.refresh(member)
     except Exception as e:
         session.rollback()
-        logger.error(f'Korp Query KO (korpid:{korpid}) [{e}]')
+        logger.error(f'{h} Korp Query KO (korpid:{korpid}) [{e}]')
         return None
     else:
         if member:
-            logger.trace(f'Korp Query OK (creatureid:{creature.id})')
+            logger.trace(f'{h} Korp Query OK (korpid:{korpid})')
             return member
         else:
-            logger.trace(f'Korp Query KO - Not Found (creatureid:{creature.id})')
+            logger.trace(f'{h} Korp Query KO - NotFound (korpid:{korpid})')
             return False
     finally:
         session.close()

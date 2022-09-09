@@ -2,9 +2,37 @@
 
 from loguru                     import logger
 
-from .engine                    import engine
-from .base                      import Base
-from .models                    import *
+from mysql.engine               import engine
+from mysql.base                 import Base
+
+from mysql.models               import (Cosmetic,
+                                        Item,
+                                        Creature,
+                                        CreatureSlots,
+                                        CreatureStats,
+                                        Squad,
+                                        Korp,
+                                        MP,
+                                        User
+                                        )
+
+"""
+https://stackoverflow.com
+/questions/31079047/python-pep8-class-in-init-imported-but-not-used
+"""
+
+__all__ = [
+    'Cosmetic',
+    'Item',
+    'Creature',
+    'CreatureSlots',
+    'CreatureStats',
+    'Squad',
+    'Korp',
+    'MP',
+    'User',
+]
+
 
 def initialize_db():
     try:

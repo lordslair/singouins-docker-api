@@ -3,8 +3,11 @@
 import dataclasses
 import datetime
 
-from ..session           import Session
-from ..models            import Creature
+from loguru                     import logger
+
+from mysql.session              import Session
+from mysql.models               import Creature
+
 
 def fn_creatures_in_instance(instanceid):
     session = Session()
@@ -14,6 +17,8 @@ def fn_creatures_in_instance(instanceid):
                        .filter(Creature.instance == instanceid)\
                        .all()
     except Exception as e:
+        msg = f'Instance Query KO [{e}]'
+        logger.error(msg)
         return None
     else:
         creatures   = []
@@ -25,14 +30,19 @@ def fn_creatures_in_instance(instanceid):
             # We load the Creature dataclass into a python dict
             dict        = dataclasses.asdict(creature)
 
-            if dict['hp']:     del dict['hp']
-            if dict['hp_max']: del dict['hp_max']
+            if dict['hp']:
+                del dict['hp']
+            if dict['hp_max']:
+                del dict['hp_max']
             # We populate the creature dict in creatures array
             creatures.append(dict)
 
-        return(creatures)
+        msg = 'Creatures Query OK'
+        logger.trace(msg)
+        return creatures
     finally:
         session.close()
+
 
 def fn_creatures_in_all_instances():
     session = Session()
@@ -46,6 +56,8 @@ def fn_creatures_in_all_instances():
         logger.error(msg)
         return None
     else:
+        msg = 'Creatures Query OK'
+        logger.trace(msg)
         return creatures
     finally:
         session.close()
