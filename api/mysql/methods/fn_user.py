@@ -65,6 +65,27 @@ def fn_user_add(username, password):
             session.close()
 
 
+def fn_user_confirm(username):
+    session        = Session()
+
+    try:
+        user = session.query(User)\
+                      .filter(User.name == username)\
+                      .one_or_none()
+
+        user.active = True
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        logger.error(f'User Query KO (username:{username}) [{e}]')
+        return None
+    else:
+        return user
+    finally:
+        session.close()
+
+
 def fn_user_del(username):
     session = Session()
 
