@@ -10,6 +10,7 @@ from loguru                 import logger
 
 from mysql.methods.fn_user import (fn_forgot_password,
                                    fn_user_add,
+                                   fn_user_confirm,
                                    fn_user_del,
                                    fn_user_get)
 from utils.mail            import send
@@ -56,13 +57,17 @@ def auth_login():
         pass_check = None
 
     if not fn_user_get(username) or not pass_check:
+        msg = "Bad username or password"
+        logger.warning(msg)
         return jsonify(
             {
-                "msg": "Bad username or password",
+                "msg": msg,
             }
         ), 401
 
     # Identity can be any data that is json serializable
+    msg = "Access Token Query OK"
+    logger.trace(msg)
     return jsonify(
         {
             'access_token': create_access_token(identity=username),
@@ -74,6 +79,8 @@ def auth_login():
 # API: POST /auth/refresh
 @jwt_required(refresh=True)
 def auth_refresh():
+    msg = "Refresh Token Query OK"
+    logger.trace(msg)
     return jsonify(
         {
             'access_token': create_access_token(identity=get_jwt_identity())
@@ -116,54 +123,59 @@ def auth_register():
                 body.format(urllogo='[INSERT LOGO HERE]',
                             urlconfirm=url,
                             urldiscord=DISCORD_URL)):
+            msg = "User successfully added | mail OK"
+            logger.trace(msg)
             return jsonify(
                 {
-                    "msg": "User successfully added | mail OK",
+                    "msg": msg,
                 }
             ), code
         else:
+            msg = "User successfully added | mail KO"
+            logger.warning(msg)
             return jsonify(
                 {
-                    "msg": "User successfully added | mail KO",
+                    "msg": msg,
                 }
             ), code
     elif code == 409:
+        msg = "User or Email already exists"
+        logger.trace(msg)
         return jsonify(
             {
-                "msg": "User or Email already exists",
+                "msg": msg,
             }
         ), code
     else:
+        msg = "Oops!"
+        logger.error(msg)
         return jsonify(
             {
-                "msg": "Oops!",
+                "msg": msg,
             }
         ), 422
 
 
 # API: GET /auth/confirm/{token}
 def auth_confirm(token):
-    if confirm_token(token):
-        mail = confirm_token(token)
-        code = set_user_confirmed(mail)
-        if code == 201:
-            return jsonify(
-                {
-                    "msg": "User successfully confirmed",
-                }
-            ), code
+    username = confirm_token(token)
+    if username:
+        if fn_user_confirm(username):
+            msg = f'User Confirmation OK (username:{username})'
+            logger.trace(msg)
         else:
-            return jsonify(
-                {
-                    "msg": "Oops!",
-                }
-            ), 422
+            msg = f'User Confirmation KO (username:{username})'
+            logger.error(msg)
     else:
-        return jsonify(
-            {
-                "msg": "Confirmation link invalid or has expired",
-            }
-        ), 498
+        msg = "Confirmation link invalid or has expired"
+        logger.warning(msg)
+
+    # Finally
+    return jsonify(
+        {
+            "msg": msg,
+        }
+    ), 200
 
 
 # API: DELETE /auth/delete
@@ -194,21 +206,27 @@ def auth_delete():
 
     code = fn_user_del(username)
     if code == 200:
+        msg = "User successfully deleted"
+        logger.trace(msg)
         return jsonify(
             {
-                "msg": "User successfully deleted",
+                "msg": msg,
             }
         ), code
     if code == 404:
+        msg = "Bad username"
+        logger.warning(msg)
         return jsonify(
             {
-                "msg": "Bad username",
+                "msg": msg,
             }
         ), code
     else:
+        msg = "Oops!"
+        logger.error(msg)
         return jsonify(
             {
-                "msg": "Oops!",
+                "msg": msg,
             }
         ), 422
 
@@ -233,21 +251,27 @@ def auth_forgotpassword():
                 body.format(urllogo='[INSERT LOGO HERE]',
                             password=password,
                             urldiscord=DISCORD_URL)):
+            msg = "Password successfully replaced | mail OK"
+            logger.trace(msg)
             return jsonify(
                 {
-                    "msg": "Password successfully replaced | mail OK",
+                    "msg": msg,
                 }
             ), code
         else:
+            msg = "Password successfully replaced | mail KO"
+            logger.warning(msg)
             return jsonify(
                 {
-                    "msg": "Password successfully replaced | mail KO",
+                    "msg": msg,
                 }
             ), code
     else:
+        msg = "Oops!"
+        logger.error(msg)
         return jsonify(
             {
-                "msg": "Oops!",
+                "msg": msg,
             }
         ), 422
 
@@ -255,5 +279,7 @@ def auth_forgotpassword():
 # API: POST /auth/infos
 @jwt_required()
 def auth_infos():
+    msg = "User Query OK"
+    logger.trace(msg)
     # Access the identity of the current user with get_jwt_identity
     return jsonify(logged_in_as=get_jwt_identity()), 200
