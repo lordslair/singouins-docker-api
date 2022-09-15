@@ -1,0 +1,8 @@
+[flake8]
+# E221: Multiple spaces before operator
+# E272: Multiple spaces before keyword
+extend-ignore = E221, E272
+
+per-file-ignores =
+    # E501: Line too long
+    app.py: E501
