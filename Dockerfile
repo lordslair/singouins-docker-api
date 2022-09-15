@@ -1,5 +1,4 @@
 FROM alpine:3.15
-MAINTAINER @Lordslair
 
 RUN adduser -h /code -u 1000 -D -H api
 
@@ -19,24 +18,26 @@ ENV PYTHONIOENCODING='UTF-8'
 COPY                 requirements.txt /requirements.txt
 COPY --chown=api:api /api             /code
 
+WORKDIR /code
+ENV PATH="/code/.local/bin:${PATH}"
+ENV TZ="Europe/Paris"
+
 RUN apk update --no-cache \
-    && apk add --no-cache python3 \
+    && apk add --no-cache python3=3.9.13-r1 \
+                          tzdata=2022c-r0 \
     && apk add --no-cache --virtual .build-deps \
-                                    gcc \
-                                    g++ \
-                                    libc-dev \
-                                    libffi-dev \
-                                    python3-dev \
-                                    tzdata \
-    && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
-    && cd /code \
+                                    gcc=10.3.1_git20211027-r0 \
+                                    g++=10.3.1_git20211027-r0 \
+                                    libc-dev=0.7.2-r3 \
+                                    libffi-dev=3.4.2-r1 \
+                                    python3-dev=3.9.13-r1 \
     && su api -c "python3 -m ensurepip --upgrade \
-                  && /code/.local/bin/pip3 install --user -U -r /requirements.txt" \
+                  && pip3 install --user -U -r /requirements.txt" \
     && apk del .build-deps \
     && rm /requirements.txt
 
 USER api
-WORKDIR /code
+
 ENV PATH="/code/.local/bin:${PATH}"
 
 ENTRYPOINT ["/usr/bin/python3", "app.py"]
