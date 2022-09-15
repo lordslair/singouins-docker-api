@@ -1,33 +1,45 @@
 # -*- coding: utf8 -*-
 
-from flask                      import Flask, jsonify, request
+from flask                      import jsonify, request
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import (fn_creature_add,
                                         fn_creature_del,
                                         fn_creature_get)
-from mysql.methods.fn_user      import fn_user_get
 from mysql.methods.fn_creatures import fn_creatures_in_all_instances
 
-from nosql                      import *
-from nosql.publish              import *
+from nosql.publish              import publish
 
 from variables                  import API_INTERNAL_TOKEN
 
 #
 # Routes /internal
 #
+
+
 # /internal/creature/*
 # API: PUT /internal/creature
 def creature_add():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'Token not authorized'
+        msg = 'Token not authorized'
         logger.warning(msg)
-        return jsonify({"success": False, "msg": msg, "payload": None}), 403
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
     if not request.is_json:
-        msg = f'Missing JSON in request'
+        msg = 'Missing JSON in request'
         logger.warning(msg)
-        return jsonify({"msg": msg, "success": False, "payload": None}), 400
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 400
 
     try:
         creature = fn_creature_add(None,
@@ -58,21 +70,22 @@ def creature_add():
         else:
             logger.trace(f'Publish({pchannel}) OK')
 
-        msg = f'Creature creation OK'
+        msg = 'Creature creation OK'
         logger.debug(msg)
         return jsonify({"success": True,
                         "msg": msg,
                         "payload": creature}), 201
 
+
 # API: DELETE /internal/creature/{creatureid}
 def creature_del(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'Token not authorized'
+        msg = 'Token not authorized'
         logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:
-        creature = fn_creature_get(None,creatureid)[3]
+        creature = fn_creature_get(None, creatureid)[3]
     except Exception as e:
         msg = f'Creature Query KO (creatureid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -117,15 +130,16 @@ def creature_del(creatureid):
                         "msg": msg,
                         "payload": None}), 200
 
+
 # API: GET /internal/creature/{creatureid}
 def creature_get_one(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'Token not authorized'
+        msg = 'Token not authorized'
         logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
     try:
-        creature = fn_creature_get(None,creatureid)[3]
+        creature = fn_creature_get(None, creatureid)[3]
     except Exception as e:
         msg = f'Creature Query KO [{e}]'
         logger.error(msg)
@@ -133,16 +147,17 @@ def creature_get_one(creatureid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        msg = f'Creature Query OK'
+        msg = 'Creature Query OK'
         logger.debug(msg)
         return jsonify({"success": True,
                         "msg": msg,
                         "payload": creature}), 200
 
+
 # API: GET /internal/creatures
 def creature_get_all():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'Token not authorized'
+        msg = 'Token not authorized'
         logger.warning(msg)
         return jsonify({"success": False, "msg": msg, "payload": None}), 403
 
@@ -155,7 +170,7 @@ def creature_get_all():
                         "msg": msg,
                         "payload": None}), 200
     else:
-        msg = f'Creatures Query OK'
+        msg = 'Creatures Query OK'
         logger.debug(msg)
         return jsonify({"success": True,
                         "msg": msg,

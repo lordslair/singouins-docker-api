@@ -3,10 +3,8 @@
 
 import sys
 
-from flask                         import Flask, jsonify, request
-from flask_jwt_extended            import (JWTManager,
-                                           jwt_required,
-                                           get_jwt_identity)
+from flask                         import Flask, jsonify
+from flask_jwt_extended            import JWTManager
 from flask_cors                    import CORS
 from flask_swagger_ui              import get_swaggerui_blueprint
 
@@ -14,64 +12,71 @@ from prometheus_flask_exporter     import PrometheusMetrics
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from nosql.initialize              import initialize_redis
-from mysql.initialize              import initialize_db
-
-from variables                     import *
-from utils.gunilog                 import *
+from variables                     import (SEP_SECRET_KEY,
+                                           GUNICORN_BIND,
+                                           GUNICORN_CHDIR,
+                                           GUNICORN_RELOAD,
+                                           GUNICORN_THREADS,
+                                           GUNICORN_WORKERS)
+from utils.gunilog                 import (InterceptHandler,
+                                           LOG_LEVEL,
+                                           logger,
+                                           logging,
+                                           StandaloneApplication,
+                                           StubbedGunicornLogger)
 
 # Imports of endpoint functions
-import                      routes.internal.creature
-import                      routes.internal.creature.cds
-import                      routes.internal.creature.context
-import                      routes.internal.creature.effects
-import                      routes.internal.creature.equipment
-import                      routes.internal.creature.highscore
-import                      routes.internal.creature.kill
-import                      routes.internal.creature.pa
-import                      routes.internal.creature.position
-import                      routes.internal.creature.stats
-import                      routes.internal.creature.statuses
-import                      routes.internal.creature.user
-import                      routes.internal.creature.view
-import                      routes.internal.creature.wallet
-import                      routes.internal.discord
-import                      routes.internal.korp
-import                      routes.internal.meta
-import                      routes.internal.squad
-import                      routes.internal.up
+import routes.internal.creature
+import routes.internal.creature.cds
+import routes.internal.creature.context
+import routes.internal.creature.effects
+import routes.internal.creature.equipment
+import routes.internal.creature.highscore
+import routes.internal.creature.kill
+import routes.internal.creature.pa
+import routes.internal.creature.position
+import routes.internal.creature.stats
+import routes.internal.creature.statuses
+import routes.internal.creature.user
+import routes.internal.creature.view
+import routes.internal.creature.wallet
+import routes.internal.discord
+import routes.internal.korp
+import routes.internal.meta
+import routes.internal.squad
+import routes.internal.up
 
-import                      routes.external.auth
-import                      routes.external.log
-import                      routes.external.map
-import                      routes.external.meta
-import                      routes.external.mypc
-import                      routes.external.mypc.action
-import                      routes.external.mypc.action_resolver
-import                      routes.external.mypc.cds
-import                      routes.external.mypc.effects
-import                      routes.external.mypc.events
-import                      routes.external.mypc.instance
-import                      routes.external.mypc.item
-import                      routes.external.mypc.inventory
-import                      routes.external.mypc.korp
-import                      routes.external.mypc.mp
-import                      routes.external.mypc.pa
-import                      routes.external.mypc.squad
-import                      routes.external.mypc.stats
-import                      routes.external.mypc.statuses
-import                      routes.external.mypc.view
-import                      routes.external.pc
+import routes.external.auth
+import routes.external.log
+import routes.external.map
+import routes.external.meta
+import routes.external.mypc
+import routes.external.mypc.action
+import routes.external.mypc.action_resolver
+import routes.external.mypc.cds
+import routes.external.mypc.effects
+import routes.external.mypc.events
+import routes.external.mypc.instance
+import routes.external.mypc.item
+import routes.external.mypc.inventory
+import routes.external.mypc.korp
+import routes.external.mypc.mp
+import routes.external.mypc.pa
+import routes.external.mypc.squad
+import routes.external.mypc.stats
+import routes.external.mypc.statuses
+import routes.external.mypc.view
+import routes.external.pc
 
 app = Flask(__name__)
-CORS(app)                        # We wrap around all the app the CORS
-metrics = PrometheusMetrics(app) # We wrap around all the app the metrics
+CORS(app)                         # We wrap around all the app the CORS
+metrics = PrometheusMetrics(app)  # We wrap around all the app the metrics
 
 # Setup the flask_swagger_ui extension
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     '/swagger',
     '/static/swagger.yaml',
-    config = { 'app_name': "S&P Internal API" }
+    config={'app_name': "S&P Internal API"}
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix='/swagger')
 
@@ -82,14 +87,16 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
 jwt = JWTManager(app)
 
+
 #
 # Routes /check (k8s livenessProbe)
 #
 @app.route('/check', methods=['GET'])
 def check():
-    return jsonify({"msg": f'UP and running',
+    return jsonify({"msg": 'UP and running',
                     "success": True,
                     "payload": None}), 200
+
 
 #
 # Routes /auth
@@ -509,14 +516,14 @@ if __name__ == '__main__':
     logger.configure(handlers=[{"sink": sys.stdout}])
 
     options = {
-        "bind":         GUNICORN_BIND,
-        "workers":      GUNICORN_WORKERS,
-        "threads":      GUNICORN_THREADS,
-        "accesslog":    "-",
-        "errorlog":     "-",
+        "bind": GUNICORN_BIND,
+        "workers": GUNICORN_WORKERS,
+        "threads": GUNICORN_THREADS,
+        "accesslog": "-",
+        "errorlog": "-",
         "logger_class": StubbedGunicornLogger,
-        "reload":       GUNICORN_RELOAD,
-        "chdir":        GUNICORN_CHDIR
+        "reload": GUNICORN_RELOAD,
+        "chdir": GUNICORN_CHDIR
     }
 
     StandaloneApplication(app, options).run()

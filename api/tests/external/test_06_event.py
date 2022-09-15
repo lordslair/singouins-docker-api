@@ -20,6 +20,6 @@ def test_singouins_event():
     url       = f'{API_URL}/mypc/{pcid}/event'  # GET
     response  = requests.get(url, headers=headers)
 
-    assert json.loads(response.text)['success'] is True
     assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
     assert isinstance(json.loads(response.text)['payload'], list)

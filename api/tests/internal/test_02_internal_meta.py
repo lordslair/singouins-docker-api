@@ -15,3 +15,4 @@ def test_singouins_internal_meta():
 
         assert response.status_code == 200
         assert json.loads(response.text)['success'] is True
+        assert 'Meta Query OK' in json.loads(response.text)['msg']

@@ -121,10 +121,10 @@ def fn_user_get(username):
         return None
     else:
         if result:
-            logger.trace(f'User Query OK(username:{username})')
+            logger.trace(f'User Query OK (username:{username})')
             return result
         else:
-            logger.trace(f'User Query KO - Not Found (username:{username})')
+            logger.trace(f'User Query KO - NotFound (username:{username})')
             return False
     finally:
         session.close()

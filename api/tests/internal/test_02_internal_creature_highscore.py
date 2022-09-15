@@ -8,7 +8,7 @@ from variables import (API_URL,
                        HEADERS)
 
 
-def test_singouins_internal_view():
+def test_singouins_internal_creature_highscore():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/highscore'
     response  = requests.get(url, headers=HEADERS)
 

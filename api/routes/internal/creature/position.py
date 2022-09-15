@@ -1,56 +1,77 @@
 # -*- coding: utf8 -*-
 
-from flask                      import Flask, jsonify, request
+from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get,fn_creature_position_set
-
-from nosql                      import *
+from mysql.methods.fn_creature  import (fn_creature_get,
+                                        fn_creature_position_set)
 
 from variables                  import API_INTERNAL_TOKEN
 
 #
 # Routes /internal
 #
+
+
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/position/{x}/{y}
-def creature_position_set(creatureid,x,y):
+def creature_position_set(creatureid, x, y):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'Token not authorized'
+        msg = 'Token not authorized'
         logger.warning(msg)
-        return jsonify({"success": False, "msg": msg, "payload": None}), 403
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     # Pre-flight checks
-    try:
-        creature = fn_creature_get(None,creatureid)[3]
-    except Exception as e:
-        msg = f'Creature Query KO (creatureid:{creature.id}) [{e}]'
-        logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+    creature    = fn_creature_get(None, creatureid)[3]
+    if creature is None:
+        msg = f'Creature not found (creatureid:{creatureid})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
-        if not creature:
-            msg = f'Creature Query KO - Not Found (creatureid:{creature.id})'
-            logger.warning(msg)
-            return jsonify({"success": False,
-                            "msg": msg,
-                            "payload": None}), 200
+        h = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
-        creature    = fn_creature_position_set(creature.id,x,y)
+        creature    = fn_creature_position_set(creature.id, x, y)
     except Exception as e:
-        msg = f'Creature Query KO - Failed (creatureid:{creature.id}) [{e}]'
+        msg = f'{h} Position Query KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if creature:
-            return jsonify({"success": True,
-                            "msg": f'Creature Query OK (pcid:{creature.id})',
-                            "payload": creature}), 200
+            msg = f'{h} Position Query OK'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": creature,
+                }
+            ), 200
         else:
-            return jsonify({"success": True,
-                            "msg": f'Creature Query KO - Not Found (pcid:{creature.id})',
-                            "payload": None}), 200
+            msg = f'{h} Position Query KO - NotFound'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200

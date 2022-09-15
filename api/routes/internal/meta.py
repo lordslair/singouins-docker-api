@@ -1,37 +1,61 @@
 # -*- coding: utf8 -*-
 
-from flask              import Flask, jsonify, request
-from loguru             import logger
+from flask                      import jsonify, request
+from loguru                     import logger
 
-from nosql              import *
+from nosql.metas                import get_meta
 
-from variables          import API_INTERNAL_TOKEN
+from variables                  import API_INTERNAL_TOKEN
 
 #
 # Routes /internal
 #
+
+
 # API: GET /internal/meta
 def internal_meta_get_one(metatype):
     # Pre-flight checks
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'Token not authorized'
+        msg = 'Token not authorized'
         logger.warning(msg)
-        return jsonify({"success": False, "msg": msg, "payload": None}), 403
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     try:
-        meta = metas.get_meta(metatype)
+        meta = get_meta(metatype)
     except Exception as e:
-        msg = f'Query KO (metatype:{metatype}) [{e}]'
+        msg = f'Meta Query KO (metatype:{metatype}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if meta:
-            return jsonify({"success": True,
-                            "msg": f'Query OK (metatype:{metatype})',
-                            "payload": meta}), 200
+            msg = f'Meta Query OK (metatype:{metatype})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": meta,
+                }
+            ), 200
         else:
-            return jsonify({"success": False,
-                            "msg": f'Meta not found (metatype:{metatype})',
-                            "payload": None}), 200
+            msg = f'Meta Query KO - NotFound (metatype:{metatype})'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
