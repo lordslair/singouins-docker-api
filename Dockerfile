@@ -38,6 +38,4 @@ RUN apk update --no-cache \
 
 USER api
 
-ENV PATH="/code/.local/bin:${PATH}"
-
 ENTRYPOINT ["/usr/bin/python3", "app.py"]
