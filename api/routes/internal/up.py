@@ -24,7 +24,7 @@ def up_get():
         ), 403
 
     msg = 'UP and running'
-    logger.warning(msg)
+    logger.debug(msg)
     return jsonify(
         {
             "success": True,
