@@ -7,9 +7,10 @@ from loguru                     import logger
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_inventory import (fn_cosmetics_get_all,
                                         fn_item_get_one,
-                                        fn_slots_get_all)
+                                        )
 
 from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisSlots    import RedisSlots
 
 
 #
@@ -45,17 +46,17 @@ def pc_item_get_all(creatureid):
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
-        equipment = fn_slots_get_all(creature)
+        creature_slots = RedisSlots(creature)
 
-        feet      = fn_item_get_one(equipment.feet)
-        hands     = fn_item_get_one(equipment.hands)
-        head      = fn_item_get_one(equipment.head)
-        holster   = fn_item_get_one(equipment.holster)
-        lefthand  = fn_item_get_one(equipment.lefthand)
-        righthand = fn_item_get_one(equipment.righthand)
-        shoulders = fn_item_get_one(equipment.shoulders)
-        torso     = fn_item_get_one(equipment.torso)
-        legs      = fn_item_get_one(equipment.legs)
+        feet      = fn_item_get_one(creature_slots.feet)
+        hands     = fn_item_get_one(creature_slots.hands)
+        head      = fn_item_get_one(creature_slots.head)
+        holster   = fn_item_get_one(creature_slots.holster)
+        lefthand  = fn_item_get_one(creature_slots.lefthand)
+        righthand = fn_item_get_one(creature_slots.righthand)
+        shoulders = fn_item_get_one(creature_slots.shoulders)
+        torso     = fn_item_get_one(creature_slots.torso)
+        legs      = fn_item_get_one(creature_slots.legs)
 
         # We publicly anounce the cosmetics owned by a PC
         cosmetic  = fn_cosmetics_get_all(creature)

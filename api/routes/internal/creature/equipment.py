@@ -4,9 +4,10 @@ from flask                      import jsonify, request
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import (fn_slots_get_one,
-                                        fn_item_get_one,
+from mysql.methods.fn_inventory import (fn_item_get_one,
                                         fn_item_ammo_set)
+
+from nosql.models.RedisSlots    import RedisSlots
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -45,7 +46,7 @@ def creature_equipment(creatureid):
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
-        slots = fn_slots_get_one(creature)
+        creature_slots = RedisSlots(creature)
     except Exception as e:
         msg = f'{h} Slots Query KO [{e}]'
         logger.error(msg)
@@ -59,15 +60,15 @@ def creature_equipment(creatureid):
 
     try:
         equipment = {
-            "feet":      fn_item_get_one(slots.feet),
-            "hands":     fn_item_get_one(slots.hands),
-            "head":      fn_item_get_one(slots.head),
-            "holster":   fn_item_get_one(slots.holster),
-            "lefthand":  fn_item_get_one(slots.lefthand),
-            "righthand": fn_item_get_one(slots.righthand),
-            "shoulders": fn_item_get_one(slots.shoulders),
-            "torso":     fn_item_get_one(slots.torso),
-            "legs":      fn_item_get_one(slots.legs),
+            "feet":      fn_item_get_one(creature_slots.feet),
+            "hands":     fn_item_get_one(creature_slots.hands),
+            "head":      fn_item_get_one(creature_slots.head),
+            "holster":   fn_item_get_one(creature_slots.holster),
+            "lefthand":  fn_item_get_one(creature_slots.lefthand),
+            "righthand": fn_item_get_one(creature_slots.righthand),
+            "shoulders": fn_item_get_one(creature_slots.shoulders),
+            "torso":     fn_item_get_one(creature_slots.torso),
+            "legs":      fn_item_get_one(creature_slots.legs),
             }
     except Exception as e:
         msg = f'{h} Equipment Query KO [{e}]'

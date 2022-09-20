@@ -75,37 +75,6 @@ class Creature(Base):
 
 
 @dataclass
-class CreatureSlots(Base):
-    __tablename__ = 'creaturesSlots'
-
-    id: int
-    lefthand: int
-    righthand: int
-    holster: int
-    head: int
-    shoulders: int
-    torso: int
-    hands: int
-    legs: int
-    feet: int
-    date: str
-
-    id         = Column(Integer, primary_key=True)
-    lefthand   = Column(Integer, nullable=True)
-    righthand  = Column(Integer, nullable=True)
-    holster    = Column(Integer, nullable=True)
-    head       = Column(Integer, nullable=True)
-    shoulders  = Column(Integer, nullable=True)
-    torso      = Column(Integer, nullable=True)
-    hands      = Column(Integer, nullable=True)
-    legs       = Column(Integer, nullable=True)
-    feet       = Column(Integer, nullable=True)
-    date       = Column(DateTime(timezone=True),
-                        nullable=False,
-                        server_default=func.now(), server_onupdate=func.now())
-
-
-@dataclass
 class CreatureStats(Base):
     __tablename__ = 'creaturesStats'
 

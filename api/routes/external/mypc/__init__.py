@@ -13,13 +13,12 @@ from mysql.methods.fn_creature  import (fn_creature_add,
                                         fn_creature_stats_del)
 from mysql.methods.fn_inventory import (fn_cosmetic_add,
                                         fn_cosmetic_del,
-                                        fn_item_add,
-                                        fn_slots_add,
-                                        fn_slots_del)
+                                        fn_item_add)
 from mysql.methods.fn_user      import fn_user_get
 
 from nosql.metas                import metaRaces
 from nosql.models.RedisHS       import RedisHS
+from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -132,10 +131,6 @@ def mypc_add():
                     logger.trace(f'{h} Cosmetic creation OK')
                 else:
                     logger.warning(f'{h} Cosmetic creation KO')
-                if fn_slots_add(pc):
-                    logger.trace(f'{h} Slots creation OK')
-                else:
-                    logger.warning(f'{h} Slots creation KO')
                 if fn_creature_stats_add(pc, metaRace, pcclass):
                     logger.trace(f'{h} Stats creation OK (MySQL)')
                 else:
@@ -301,8 +296,6 @@ def mypc_del(pcid):
         # We start do delete PC elements
         if fn_cosmetic_del(creature):
             logger.trace(f'{h} Cosmetics delete OK')
-        if fn_slots_del(creature):
-            logger.trace(f'{h} Slots delete OK')
 
         if fn_creature_stats_del(creature):
             logger.trace(f'{h} Stats delete OK (MySQL)')
@@ -311,7 +304,8 @@ def mypc_del(pcid):
 
         if RedisWallet(creature).destroy():
             logger.trace(f'{h} RedisWallet delete OK')
-
+        if RedisSlots(creature).destroy():
+            logger.trace(f'{h} RedisSlots delete OK')
         if RedisHS(creature).destroy():
             logger.trace(f'{h} RedisHS delete OK')
 

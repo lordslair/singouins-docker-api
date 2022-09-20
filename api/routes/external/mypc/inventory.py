@@ -13,15 +13,14 @@ from mysql.methods.fn_inventory import (fn_item_del,
                                         fn_item_get_all,
                                         fn_item_get_one,
                                         fn_item_offset_set,
-                                        fn_slots_get_all,
-                                        fn_slots_get_one,
-                                        fn_slots_set_one)
+                                        )
 
 from nosql.metas                import metaArmors, metaWeapons
 from nosql.queue                import yqueue_put
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
+from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -344,7 +343,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         ), 200
 
     try:
-        equipment = fn_slots_get_one(creature)
+        creature_slots = RedisSlots(creature)
     except Exception as e:
         msg = f'{h} Slots Query KO - failed [{e}]'
         logger.error(msg)
@@ -356,7 +355,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
             }
         ), 200
     else:
-        if equipment is None:
+        if creature_slots is None:
             msg = f'{h} Slots Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
             return jsonify(
@@ -373,7 +372,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         if slotname == 'holster':
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the holster
-                fn_slots_set_one(creature, slotname, item.id)
+                creature_slots.holster = item.id
             else:
                 msg = (f"{h} Item does not fit in holster "
                        f"(itemid:{item.id},size:{itemmeta['size']})")
@@ -385,38 +384,38 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                     }
                 ), 200
         elif slotname == 'righthand':
-            if equipment.righthand:
+            if creature_slots.righthand:
                 # Something is already equipped in RH
-                equipped = fn_item_get_one(equipment.righthand)
+                equipped = fn_item_get_one(creature_slots.righthand)
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
                     if metaWeapons[equipped.metaid - 1]['onehanded'] is True:
                         # A 1H weapons is in RH : we replace
-                        fn_slots_set_one(creature, 'righthand', item.id)
+                        creature_slots.righthand = item.id
                     if metaWeapons[equipped.metaid - 1]['onehanded'] is False:
                         # A 2H weapons is in RH & LH
                         # We replace RH and clean LH
-                        fn_slots_set_one(creature, 'righthand', item.id)
-                        fn_slots_set_one(creature, 'lefthand', None)
+                        creature_slots.righthand = item.id
+                        creature_slots.lefthand = None
                 # We equip a 2H weapon
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
-                    fn_slots_set_one(creature, 'righthand', item.id)
-                    fn_slots_set_one(creature, 'lefthand', item.id)
+                    creature_slots.righthand = item.id
+                    creature_slots.lefthand = item.id
             else:
                 # Nothing in RH
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
-                    fn_slots_set_one(creature, 'righthand', item.id)
+                    creature_slots.righthand = item.id
                 # We equip a 2H weapon
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
-                    fn_slots_set_one(creature, 'righthand', item.id)
-                    fn_slots_set_one(creature, 'lefthand', item.id)
+                    creature_slots.righthand = item.id
+                    creature_slots.lefthand = item.id
         elif slotname == 'lefthand':
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the left hand
-                fn_slots_set_one(creature, slotname, item.id)
+                creature_slots.lefthand = item.id
             else:
                 msg = (f"{h} Item does not fit in left hand "
                        f"(itemid:{item.id},size:{itemmeta['size']})")
@@ -429,7 +428,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                     }
                 ), 200
         else:
-            fn_slots_set_one(creature, slotname, item.id)
+            setattr(creature_slots, slotname, item.id)
     except Exception as e:
         msg = (f'{h} Slots Query KO - failed (itemid:{itemid}) [{e}]')
         logger.error(msg)
@@ -452,11 +451,9 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        equipment = fn_slots_get_one(creature)
-
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
-                "payload": equipment,
+                "payload": creature_slots._asdict(),
                 "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
                 "scope": {"id": None, "scope": 'broadcast'}}
         yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
@@ -477,7 +474,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 "payload": {
                     "red": RedisPa(creature)._asdict()['red'],
                     "blue": RedisPa(creature)._asdict()['blue'],
-                    "equipment": equipment,
+                    "equipment": creature_slots._asdict(),
                 },
             }
         ), 200
@@ -515,7 +512,7 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
         ), 409
 
     try:
-        equipment = fn_slots_get_one(creature)
+        creature_slots = RedisSlots(creature)
     except Exception as e:
         msg = f'{h} Slots Query KO - failed [{e}]'
         logger.error(msg)
@@ -527,7 +524,7 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
             }
         ), 200
     else:
-        if equipment is None:
+        if creature_slots is None:
             msg = f'{h} Slots Query KO - Not found (itemid:{itemid})'
             logger.warning(msg)
             return jsonify(
@@ -540,23 +537,23 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
 
     try:
         if slotname == 'righthand':
-            if equipment.righthand == itemid:
-                if equipment.righthand == equipment.lefthand:
+            if creature_slots.righthand == itemid:
+                if creature_slots.righthand == creature_slots.lefthand:
                     # If the weapon equipped takes both hands
-                    fn_slots_set_one(creature, 'righthand', None)
-                    fn_slots_set_one(creature, 'lefthand', None)
+                    creature_slots.righthand = None
+                    creature_slots.lefthand = None
                 else:
-                    fn_slots_set_one(creature, slotname, None)
+                    creature_slots.righthand = None
         elif slotname == 'lefthand':
-            if equipment.lefthand == itemid:
-                if equipment.righthand == equipment.lefthand:
+            if creature_slots.lefthand == itemid:
+                if creature_slots.righthand == creature_slots.lefthand:
                     # If the weapon equipped takes both hands
-                    fn_slots_set_one(creature, 'righthand', None)
-                    fn_slots_set_one(creature, 'lefthand', None)
+                    creature_slots.righthand = None
+                    creature_slots.lefthand = None
                 else:
-                    fn_slots_set_one(creature, slotname, None)
+                    creature_slots.lefthand = None
         else:
-            fn_slots_set_one(creature, slotname, None)
+            setattr(creature_slots, slotname, None)
     except Exception as e:
         msg = f'{h} Slots Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -569,11 +566,9 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
         ), 200
     # Here everything should be OK with the unequip
     else:
-        equipment = fn_slots_get_one(creature)
-
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
-                "payload": equipment,
+                "payload": creature_slots._asdict(),
                 "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
                 "scope": {"id": None, "scope": 'broadcast'}}
         yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
@@ -588,7 +583,7 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
                 "payload": {
                     "red": RedisPa(creature)._asdict()['red'],
                     "blue": RedisPa(creature)._asdict()['blue'],
-                    "equipment": equipment,
+                    "equipment": creature_slots._asdict(),
                 },
             }
         ), 200
@@ -667,7 +662,8 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
 
         armor     = [x for x in all_items_json if x['metatype'] == 'armor']
         weapon    = [x for x in all_items_json if x['metatype'] == 'weapon']
-        equipment = fn_slots_get_all(creature)
+
+        creature_slots = RedisSlots(creature)
 
         # JOB IS DONE
         msg = f'{h} Offset Query OK (itemid:{itemid})'
@@ -678,7 +674,7 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
                 "msg": msg,
                 "payload": {
                     "armor": armor,
-                    "equipment": equipment,
+                    "equipment": creature_slots._asdict(),
                     "weapon": weapon,
                 },
             }

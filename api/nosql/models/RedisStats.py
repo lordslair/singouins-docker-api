@@ -7,8 +7,10 @@ from loguru                     import logger
 
 from nosql.connector            import r
 
+from nosql.models.RedisSlots    import RedisSlots
+
 from mysql.methods.fn_creature  import fn_creature_stats_get
-from mysql.methods.fn_inventory import fn_slots_get_all, fn_item_get_one
+from mysql.methods.fn_inventory import fn_item_get_one
 
 
 class RedisStats:
@@ -87,14 +89,14 @@ class RedisStats:
                 # Working to find armor from equipped items
                 self.arm_b = 0
                 self.arm_p = 0
-                slots = fn_slots_get_all(creature)
-                if slots:
-                    armors     = [fn_item_get_one(slots.feet),
-                                  fn_item_get_one(slots.hands),
-                                  fn_item_get_one(slots.head),
-                                  fn_item_get_one(slots.shoulders),
-                                  fn_item_get_one(slots.torso),
-                                  fn_item_get_one(slots.legs)]
+                creature_slots = RedisSlots(creature)
+                if creature_slots:
+                    armors     = [fn_item_get_one(creature_slots.feet),
+                                  fn_item_get_one(creature_slots.hands),
+                                  fn_item_get_one(creature_slots.head),
+                                  fn_item_get_one(creature_slots.shoulders),
+                                  fn_item_get_one(creature_slots.torso),
+                                  fn_item_get_one(creature_slots.legs)]
 
                     for armor in armors:
                         if armor is not None:

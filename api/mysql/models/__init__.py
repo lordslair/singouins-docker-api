@@ -3,7 +3,6 @@
 from mysql.models.items         import (Cosmetic,
                                         Item)
 from mysql.models.creatures     import (Creature,
-                                        CreatureSlots,
                                         CreatureStats,
                                         Squad,
                                         Korp)
@@ -15,7 +14,6 @@ __all__ = [
     'Cosmetic',
     'Item',
     'Creature',
-    'CreatureSlots',
     'CreatureStats',
     'Squad',
     'Korp',
