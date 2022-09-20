@@ -25,10 +25,8 @@ else:
 # Metafiles location for Redis init
 META_FILES = {
     'armor': f'{DATA_PATH}/metas/armors.json',
-    'effect': f'{DATA_PATH}/metas/effects.json',
+    'consumable': f'{DATA_PATH}/metas/consumables.json',
     'race': f'{DATA_PATH}/metas/races.json',
-    'skill': f'{DATA_PATH}/metas/skills.json',
-    'status': f'{DATA_PATH}/metas/statuses.json',
     'weapon': f'{DATA_PATH}/metas/weapons.json',
 }
 # Mapfiles location for Redis init
