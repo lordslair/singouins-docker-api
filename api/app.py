@@ -27,6 +27,7 @@ from utils.gunilog                 import (InterceptHandler,
 
 # Imports of endpoint functions
 import routes.internal.creature
+import routes.internal.creature.auction
 import routes.internal.creature.cds
 import routes.internal.creature.context
 import routes.internal.creature.effects
@@ -364,6 +365,19 @@ app.add_url_rule('/internal/creature/<int:creatureid>',
 app.add_url_rule('/internal/creature/<int:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
+# Routes /internal/creature/{creatureid}/auction/*
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['POST'],
+                 view_func=routes.internal.creature.auction.creature_auction_buy)
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.auction.creature_auction_get)
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.auction.creature_auction_sell)
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['DELETE'],
+                 view_func=routes.internal.creature.auction.creature_auction_remove)
 # Routes /internal/creature/{creatureid}/cd/*
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
                  methods=['PUT'],
