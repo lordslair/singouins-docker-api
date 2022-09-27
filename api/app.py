@@ -27,11 +27,13 @@ from utils.gunilog                 import (InterceptHandler,
 
 # Imports of endpoint functions
 import routes.internal.creature
+import routes.internal.creature.auction
 import routes.internal.creature.cds
 import routes.internal.creature.context
 import routes.internal.creature.effects
 import routes.internal.creature.equipment
 import routes.internal.creature.highscore
+import routes.internal.creature.inventory
 import routes.internal.creature.kill
 import routes.internal.creature.pa
 import routes.internal.creature.position
@@ -364,6 +366,23 @@ app.add_url_rule('/internal/creature/<int:creatureid>',
 app.add_url_rule('/internal/creature/<int:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
+# Routes /internal/creature/{creatureid}/auction/*
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['POST'],
+                 view_func=routes.internal.creature.auction.creature_auction_buy)
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.auction.creature_auction_get)
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.auction.creature_auction_sell)
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+                 methods=['DELETE'],
+                 view_func=routes.internal.creature.auction.creature_auction_remove)
+# Routes /internal/creature/{creatureid}/auction/*
+app.add_url_rule('/internal/creature/<int:creatureid>/auctions',
+                 methods=['POST'],
+                 view_func=routes.internal.creature.auction.creature_auctions_search)
 # Routes /internal/creature/{creatureid}/cd/*
 app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
                  methods=['PUT'],
@@ -405,6 +424,10 @@ app.add_url_rule('/internal/creature/<int:creatureid>/effects',
 app.add_url_rule('/internal/creature/<int:creatureid>/highscore',
                  methods=['GET'],
                  view_func=routes.internal.creature.highscore.creature_highscore_get)
+# Routes /internal/creature/{creatureid}/inventory/*
+app.add_url_rule('/internal/creature/<int:creatureid>/inventory',
+                 methods=['GET'],
+                 view_func=routes.internal.creature.inventory.creature_inventory_get)
 # Routes /internal/creature/{creatureid}/kill/*
 app.add_url_rule('/internal/creature/<int:creatureid>/kill/<int:victimid>',
                  methods=['POST'],

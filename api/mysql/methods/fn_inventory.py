@@ -113,6 +113,31 @@ def fn_item_ammo_set(itemid, ammo):
         session.close()
 
 
+def fn_item_owner_set(itemid, ownerid):
+    session = Session()
+
+    if itemid is None:
+        return None
+
+    try:
+        item = session.query(Item)\
+                      .filter(Item.id == itemid)\
+                      .one_or_none()
+
+        item.bearer = ownerid
+        session.commit()
+        session.refresh(item)
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Item Query KO [{e}]')
+        return None
+    else:
+        logger.trace('Item Query OK')
+        return item
+    finally:
+        session.close()
+
+
 def fn_item_get_one(itemid):
     session = Session()
 
