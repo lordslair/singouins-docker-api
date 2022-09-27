@@ -1,0 +1,32 @@
+[
+    {
+        "craftable":true,
+        "hp":10,
+        "id":1,
+        "name":"Banana Milkshake I",
+        "tradable":true,
+        "size":"1x1",
+        "slot":"Potion",
+        "tier":0
+    },
+    {
+        "craftable":true,
+        "hp":25,
+        "id":1,
+        "name":"Banana Milkshake II",
+        "tradable":true,
+        "size":"1x1",
+        "slot":"Potion",
+        "tier":1
+    },
+    {
+        "craftable":true,
+        "hp":100,
+        "id":1,
+        "name":"Banana Milkshake III",
+        "tradable":true,
+        "size":"1x1",
+        "slot":"Potion",
+        "tier":2
+    },
+]
