@@ -333,7 +333,7 @@ paths:
     get:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature Equipment request
+      summary: Internal Creature Equipment request (Items in slots)
       parameters:
         - in: path
           name: creatureid
@@ -353,7 +353,7 @@ paths:
     put:
       tags:
         - '/internal : Internal requests'
-      summary: Internal Creature Equipment request
+      summary: Internal Creature Equipment request (Items in slots)
       parameters:
         - in: path
           name: creatureid
@@ -388,6 +388,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreatureItemResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/inventory:
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Creature Inventory request (Items in bags)
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+            nullable: false
+            minimum: 1
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
       security:
         - internal_token: []
   /internal/creature/{creatureid}/highscore:
