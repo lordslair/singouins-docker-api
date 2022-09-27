@@ -33,7 +33,7 @@ class RedisAuction:
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
                 hashdict = r.hgetall(fullkey)
             else:
-                logger.warnng(f'{self.logh} Method KO (HASH NotFound)')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
 
             for k, v in hashdict.items():
@@ -105,6 +105,8 @@ class RedisAuction:
                 path = f'{self.hkey}:{metatype}:{metaid}:*'
             elif metatype:
                 path = f'{self.hkey}:{metatype}:*'
+            elif metaid:
+                path = f'{self.hkey}:*'
             else:
                 logger.warning(f'{self.logh} Method KO - Wrong parameters')
                 return None
