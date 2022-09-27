@@ -66,7 +66,11 @@ def test_singouins_internal_creature_auction_reremove():
 
 def test_singouins_internal_creature_auctions_search():
     url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auctions'  # POST # noqa
-    response  = requests.post(url, headers=HEADERS, json={'metaid': 34})
+    response  = requests.post(
+        url,
+        headers=HEADERS,
+        json={'metatype': 'weapon', 'metaid': 34}
+        )
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] is True
