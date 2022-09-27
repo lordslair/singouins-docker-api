@@ -65,6 +65,161 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureProfileResponse'
       security:
         - internal_token: []
+  /internal/creature/{creatureid}/auction/{itemid}:
+    delete:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Auction DEL request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: itemid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+    get:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Auction GET request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: itemid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+    put:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Auction ADD request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: itemid
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  type: integer
+                  nullable: false
+                  minimum: 1
+                  example: 300
+                price:
+                  type: integer
+                  nullable: false
+                  minimum: 1
+                  example: 100
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Auction BUY request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: itemid
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
+  /internal/creature/{creatureid}/auctions:
+    post:
+      tags:
+        - '/internal : Internal requests'
+      summary: Internal Auction SEARCH request
+      parameters:
+        - in: path
+          name: creatureid
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        description: ''
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metaid:
+                  type: integer
+                  nullable: false
+                  minimum: 1
+                  example: 14
+                  required: true
+                metatype:
+                  schema:
+                    type: string
+                    enum: [armor, weapon]
+                    nullable: false
+                  required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericResponse'
+      security:
+        - internal_token: []
   /internal/creature/{creatureid}/cd/{skill_name}:
     put:
       tags:
