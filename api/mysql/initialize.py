@@ -31,6 +31,13 @@ __all__ = [
     'User',
 ]
 
+"""
+# NOTA BENE
+the __all__ just above NEEDS to be commented once during first app init
+Or the DB schema won't be created
+# Gruik
+"""
+
 
 def initialize_db():
     try:
