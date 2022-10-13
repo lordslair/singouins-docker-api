@@ -31,3 +31,33 @@ def get_meta(metatype):
 metaArmors = get_meta('armor')
 metaRaces = get_meta('race')
 metaWeapons = get_meta('weapon')
+
+if __name__ == '__main__':
+
+    for meta in metaArmors:
+        for k, v in meta.items():
+            if v is None:
+                meta[k] = 'None'
+            elif v is False:
+                meta[k] = 'False'
+            elif v is True:
+                meta[k] = 'True'
+        r.hset(f"metas:armor:{meta['id']}", mapping=meta)
+    for meta in metaRaces:
+        for k, v in meta.items():
+            if v is None:
+                meta[k] = 'None'
+            elif v is False:
+                meta[k] = 'False'
+            elif v is True:
+                meta[k] = 'True'
+        r.hset(f"metas:race:{meta['id']}", mapping=meta)
+    for meta in metaWeapons:
+        for k, v in meta.items():
+            if v is None:
+                meta[k] = 'None'
+            elif v is False:
+                meta[k] = 'False'
+            elif v is True:
+                meta[k] = 'True'
+        r.hset(f"metas:weapon:{meta['id']}", mapping=meta)

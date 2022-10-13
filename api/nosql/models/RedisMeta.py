@@ -22,7 +22,7 @@ class RedisMeta:
                         newv = False
                     elif v == 'true' or v == 'True':
                         newv = True
-                    elif v == '' or v == 'none' or v == 'null':
+                    elif v == '' or v == 'none' or v == 'None' or v == 'null':
                         newv = None
                     elif v.isdigit():
                         newv = int(v)

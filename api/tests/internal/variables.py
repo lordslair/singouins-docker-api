@@ -10,7 +10,7 @@ HEADERS            = {"Authorization": f"Bearer {API_INTERNAL_TOKEN}"}
 # Creature ID variables
 CREATURE_ID     = 1
 KORP_ID         = 0
-METAS           = ['armor', 'weapon', 'race', 'effect', 'skill', 'status']
+METAS           = ['armor', 'weapon', 'race']
 SQUAD_ID        = 0
 
 # Effect
