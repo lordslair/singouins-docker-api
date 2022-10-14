@@ -270,9 +270,9 @@ def discord_creature_get_all():
             }
         ), 200
     else:
-        if pcs:
-            msg = f'Query OK (discordname:{discordname})'
-            logger.debug(msg)
+        msg = f'Query OK (discordname:{discordname})'
+        logger.debug(msg)
+        if len(pcs) > 0:
             return jsonify(
                 {
                     "success": True,
@@ -281,15 +281,13 @@ def discord_creature_get_all():
                 }
             ), 200
         else:
-            msg = f'Query KO - NotFound (discordname:{discordname})'
-            logger.warning(msg)
             return jsonify(
                 {
-                    "success": False,
+                    "success": True,
                     "msg": msg,
-                    "payload": None,
+                    "payload": pcs,
                 }
-            ), 200
+            ), 404
 
 
 # /internal/discord/user

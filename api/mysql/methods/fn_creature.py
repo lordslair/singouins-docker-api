@@ -135,7 +135,7 @@ def fn_creature_get_all(userid):
             logger.trace(message)
             return pcs
         else:
-            return None
+            return []
     finally:
         session.close()
 
