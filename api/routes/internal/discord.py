@@ -360,4 +360,4 @@ def discord_user():
                     "msg": msg,
                     "payload": None,
                 }
-            ), 200
+            ), 404
