@@ -34,7 +34,11 @@ def fn_creature_add(name,
         if metaRace['id'] > 10:
             # We want to create a NPC
             name = metaRace['name']
+    except Exception as e:
+        msg = f'PC creation KO (name:{name}) [{e}]'
+        logger.error(msg)
 
+    try:
         pc = Creature(name=name,
                       race=metaRace['id'],
                       rarity=rarity,
