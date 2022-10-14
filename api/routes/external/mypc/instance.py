@@ -143,7 +143,6 @@ def instance_add(pcid):
             "public": public
         }
         instance = RedisInstance(creature=creature)
-        instance.new(instance_dict)
     except Exception as e:
         msg = f"{h} Instance Query KO [{e}]"
         logger.error(msg)
@@ -154,139 +153,39 @@ def instance_add(pcid):
                 "payload": None,
             }
         ), 200
+
+    # Generate a new instance for this Creature
+    try:
+        instance.new(instance_dict)
+    except Exception as e:
+        msg = f"{h} Instance create KO [{e}]"
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+
+    # Everything went well so far
+    try:
+        # Assign the PC into the instance
+        ret = fn_creature_instance_set(creature, instance.id)
+    except Exception as e:
+        msg = f'{h} Instance Query KO (instanceid:{instance.id}) [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
-        if instance:
-            # Everything went well so far
-            try:
-                # Assign the PC into the instance
-                ret = fn_creature_instance_set(creature, instance.id)
-            except Exception as e:
-                msg = f'{h} Instance Query KO (instanceid:{instance.id}) [{e}]'
-                logger.error(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
-            else:
-                if ret is None:
-                    msg = f'{h} Instance set KO (instanceid:{instance.id})'
-                    logger.warning(msg)
-                    return jsonify(
-                        {
-                            "success": False,
-                            "msg": msg,
-                            "payload": None,
-                        }
-                    ), 200
-
-            # Everything went well, creation DONE
-            # We put the info in queue for Discord
-            scopes = []
-            if ret.korp is not None:
-                scopes.append(f'Korp-{ret.korp}')
-            if ret.squad is not None:
-                scopes.append(f'Squad-{ret.squad}')
-            for scope in scopes:
-                try:
-                    qmsg = {
-                        "ciphered": False,
-                        "payload": (f':map: **[{ret.id}] {ret.name}** '
-                                    f'opened an Instance ({instance.id})'),
-                        "embed": None,
-                        "scope": scope,
-                    }
-                    yqueue_put('yarqueue:discord', qmsg)
-                except Exception as e:
-                    msg = (f'{h} Queue Query KO '
-                           f'(Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]')
-                    logger.error(msg)
-                else:
-                    logger.trace(f'{h} Queue Query OK '
-                                 f'(Queue:yarqueue:discord,qmsg:{qmsg})')
-            # We need to create the mobs to populate the instance
-            try:
-                (mapx, mapy) = map['size'].split('x')
-                mobs_generated = []
-                mobs_nbr = 1
-                rarities = [
-                    'Small',
-                    'Medium',
-                    'Big',
-                    'Unique',
-                    'Boss',
-                    'God',
-                ]
-                while mobs_nbr < 4:
-                    try:
-                        #
-                        race   = randint(11, 14)
-                        gender = randint(0, 1)
-                        rarity = choices(rarities,
-                                         weights=(20, 30, 20, 10, 15, 5),
-                                         k=1)[0]
-                        x = randint(1, int(mapx))
-                        y = randint(1, int(mapy))
-                        mob = fn_creature_add('Will be replaced later',
-                                              race,
-                                              gender,
-                                              None,
-                                              rarity,
-                                              x,
-                                              y,
-                                              instance.id)
-                    except Exception as e:
-                        msg = (f'{h} Population in Instance KO for mob '
-                               f'#{mobs_nbr} [{e}]')
-                        logger.error(msg)
-                    else:
-                        if mob is None:
-                            msg = (f'{h} Population in Instance KO for mob '
-                                   f'#{mobs_nbr}')
-                            logger.warning(msg)
-                        else:
-                            mobs_generated.append(mob)
-                            # We put the info in pubsub channel
-                            # for IA to populate the instance
-                            try:
-                                pmsg     = {"action": 'pop',
-                                            "instance": instance._asdict(),
-                                            "creature": mob}
-                                pchannel = 'ai-creature'
-                                publish(pchannel, jsonify(pmsg).get_data())
-                            except Exception as e:
-                                msg = f'{h} Publish({pchannel}) KO [{e}]'
-                                logger.error(msg)
-                            else:
-                                pass
-
-                    mobs_nbr += 1
-            except Exception as e:
-                msg = f'{h} Population in Instance KO [{e}]'
-                logger.error(msg)
-            else:
-                if len(mobs_generated) > 0:
-                    msg = (f'{h} Population in Instance OK '
-                           f'(mobs:{len(mobs_generated)})')
-                    logger.trace(msg)
-                else:
-                    msg = '{h} Population in Instance KO'
-                    logger.error(msg)
-            # Finally everything is done
-            msg = f'{h} Instance create OK'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": instance._asdict(),
-                }
-            ), 201
-        else:
-            msg = f'{h} Instance create KO'
-            logger.error(msg)
+        if ret is None:
+            msg = f'{h} Instance set KO (instanceid:{instance.id})'
+            logger.warning(msg)
             return jsonify(
                 {
                     "success": False,
@@ -294,6 +193,109 @@ def instance_add(pcid):
                     "payload": None,
                 }
             ), 200
+
+    # Everything went well, creation DONE
+    # We put the info in queue for Discord
+    scopes = []
+    if ret.korp is not None:
+        scopes.append(f'Korp-{ret.korp}')
+    if ret.squad is not None:
+        scopes.append(f'Squad-{ret.squad}')
+    for scope in scopes:
+        try:
+            qmsg = {
+                "ciphered": False,
+                "payload": (f':map: **[{ret.id}] {ret.name}** '
+                            f'opened an Instance ({instance.id})'),
+                "embed": None,
+                "scope": scope,
+            }
+            yqueue_put('yarqueue:discord', qmsg)
+        except Exception as e:
+            msg = (f'{h} Queue Query KO '
+                   f'(Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]')
+            logger.error(msg)
+        else:
+            logger.trace(f'{h} Queue Query OK '
+                         f'(Queue:yarqueue:discord,qmsg:{qmsg})')
+    # We need to create the mobs to populate the instance
+    try:
+        (mapx, mapy) = map['size'].split('x')
+        mobs_generated = []
+        mobs_nbr = 1
+        rarities = [
+            'Small',
+            'Medium',
+            'Big',
+            'Unique',
+            'Boss',
+            'God',
+        ]
+        while mobs_nbr < 4:
+            try:
+                #
+                race   = randint(11, 14)
+                gender = randint(0, 1)
+                rarity = choices(rarities,
+                                 weights=(20, 30, 20, 10, 15, 5),
+                                 k=1)[0]
+                x = randint(1, int(mapx))
+                y = randint(1, int(mapy))
+                mob = fn_creature_add('Will be replaced later',
+                                      race,
+                                      gender,
+                                      None,
+                                      rarity,
+                                      x,
+                                      y,
+                                      instance.id)
+            except Exception as e:
+                msg = (f'{h} Population in Instance KO for mob '
+                       f'#{mobs_nbr} [{e}]')
+                logger.error(msg)
+            else:
+                if mob is None:
+                    msg = (f'{h} Population in Instance KO for mob '
+                           f'#{mobs_nbr}')
+                    logger.warning(msg)
+                else:
+                    mobs_generated.append(mob)
+                    # We put the info in pubsub channel
+                    # for IA to populate the instance
+                    try:
+                        pmsg     = {"action": 'pop',
+                                    "instance": instance._asdict(),
+                                    "creature": mob}
+                        pchannel = 'ai-creature'
+                        publish(pchannel, jsonify(pmsg).get_data())
+                    except Exception as e:
+                        msg = f'{h} Publish({pchannel}) KO [{e}]'
+                        logger.error(msg)
+                    else:
+                        pass
+
+            mobs_nbr += 1
+    except Exception as e:
+        msg = f'{h} Population in Instance KO [{e}]'
+        logger.error(msg)
+    else:
+        if len(mobs_generated) > 0:
+            msg = (f'{h} Population in Instance OK '
+                   f'(mobs:{len(mobs_generated)})')
+            logger.trace(msg)
+        else:
+            msg = f'{h} Population in Instance KO'
+            logger.error(msg)
+    # Finally everything is done
+    msg = f'{h} Instance create OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": instance._asdict(),
+        }
+    ), 201
 
 
 # API: GET /mypc/{pcid}/instance/{instanceid}
