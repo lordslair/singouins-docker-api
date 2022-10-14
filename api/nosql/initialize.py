@@ -31,6 +31,25 @@ def initialize_redis():
         logger.info('Redis init: OK system:meta:*')
 
     try:
+        for metatype, file in META_FILES.items():
+            metas = json.loads(r.get(f'system:meta:{metatype}'))
+            logger.debug(f'Redis init: creating metas:{metatype}:*')
+            metas = json.loads(content)
+            for meta in metas:
+                for k, v in meta.items():
+                    if v is None:
+                        meta[k] = 'None'
+                    elif v is False:
+                        meta[k] = 'False'
+                    elif v is True:
+                        meta[k] = 'True'
+                r.hset(f"metas:{metatype}:{meta['id']}", mapping=meta)
+    except Exception as e:
+        logger.error(f'Redis init: KO [{e}]')
+    else:
+        logger.info('Redis init: OK metas:*')
+
+    try:
         for map, file in MAP_FILES.items():
             with open(file) as f:
                 content = f.read()
