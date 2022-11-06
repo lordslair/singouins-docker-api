@@ -3,87 +3,9 @@
 from loguru                     import logger
 
 from mysql.session              import Session
-from mysql.models               import (Cosmetic,
-                                        Item)
+from mysql.models               import Item
 
 from nosql.metas                import metaWeapons
-
-#
-# Cosmetics
-#
-
-
-def fn_cosmetic_add(creature, pccosmetic):
-    session = Session()
-    h       = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    try:
-        cosmetic = Cosmetic(metaid=pccosmetic['metaid'],
-                            bearer=creature.id,
-                            bound=1,
-                            bound_type='BoP',
-                            state=99,
-                            rarity='Epic',
-                            data=str(pccosmetic['data']))
-
-        session.add(cosmetic)
-        session.expunge(cosmetic)
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        logger.error(f'{h} Cosmetic Query KO [{e}]')
-        return None
-    else:
-        if cosmetic:
-            logger.trace(f'{h} Cosmetic Query OK')
-            return cosmetic
-        else:
-            logger.warning(f'{h} Cosmetic Query KO')
-            return None
-    finally:
-        session.close()
-
-
-def fn_cosmetic_del(creature):
-    session = Session()
-    h       = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    try:
-        cosmetic = session.query(Cosmetic)\
-                          .filter(Cosmetic.bearer == creature.id)\
-                          .one_or_none()
-
-        if cosmetic:
-            session.delete(cosmetic)
-
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        logger.error(f'{h} Cosmetic Query KO [{e}]')
-        return None
-    else:
-        logger.trace(f'{h} Cosmetic Query OK')
-        return True
-    finally:
-        session.close()
-
-
-def fn_cosmetics_get_all(creature):
-    session = Session()
-    h       = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    try:
-        result = session.query(Cosmetic)\
-                        .filter(Cosmetic.bearer == creature.id)\
-                        .all()
-    except Exception as e:
-        logger.error(f'{h} Cosmetic Query KO [{e}]')
-        return None
-    else:
-        logger.trace(f'{h} Cosmetic Query OK')
-        return result
-    finally:
-        session.close()
 
 
 #

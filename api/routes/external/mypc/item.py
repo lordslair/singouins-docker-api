@@ -9,10 +9,10 @@ from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_inventory import (fn_item_get_all,
-                                        fn_cosmetics_get_all,
                                         )
 from mysql.methods.fn_user      import fn_user_get
 
+from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -55,7 +55,7 @@ def item_get(pcid):
 
         armor = [x for x in all_items_json if x['metatype'] == 'armor']
         creature_slots = RedisSlots(creature)
-        cosmetic = fn_cosmetics_get_all(creature)
+        creature_cosmetics = RedisCosmetic(creature).get_all()
         creature_wallet = RedisWallet(creature)
         weapon = [x for x in all_items_json if x['metatype'] == 'weapon']
     except Exception as e:
@@ -79,7 +79,7 @@ def item_get(pcid):
                     "weapon": weapon,
                     "armor": armor,
                     "equipment": creature_slots._asdict(),
-                    "cosmetic": cosmetic,
+                    "cosmetic": creature_cosmetics,
                     "wallet": creature_wallet._asdict(),
                 },
             }

@@ -5,10 +5,9 @@ from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import (fn_cosmetics_get_all,
-                                        fn_item_get_one,
-                                        )
+from mysql.methods.fn_inventory import fn_item_get_one
 
+from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisSlots    import RedisSlots
 
@@ -59,7 +58,7 @@ def pc_item_get_all(creatureid):
         legs      = fn_item_get_one(creature_slots.legs)
 
         # We publicly anounce the cosmetics owned by a PC
-        cosmetic  = fn_cosmetics_get_all(creature)
+        creature_cosmetics = RedisCosmetic(creature).get_all()
     except Exception as e:
         msg = f'{h} Equipment Query KO [{e}]'
         logger.error(msg)
@@ -153,7 +152,7 @@ def pc_item_get_all(creatureid):
             "success": True,
             "msg": msg,
             "payload": {"equipment": metas,
-                        "cosmetic": cosmetic},
+                        "cosmetic": creature_cosmetics},
         }
     ), 200
 

@@ -5,8 +5,7 @@ from loguru                     import logger
 from mysql.engine               import engine
 from mysql.base                 import Base
 
-from mysql.models               import (Cosmetic,
-                                        Item,
+from mysql.models               import (Item,
                                         Creature,
                                         CreatureStats,
                                         Squad,
@@ -21,7 +20,6 @@ https://stackoverflow.com
 """
 
 __all__ = [
-    'Cosmetic',
     'Item',
     'Creature',
     'CreatureStats',

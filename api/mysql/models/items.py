@@ -14,38 +14,6 @@ from ..base                     import Base
 
 
 @dataclass
-class Cosmetic(Base):
-    __tablename__ = 'cosmetics'
-
-    id: int
-    metaid: int
-    bearer: int
-    bound: bool
-    bound_type: str
-    state: int
-    rarity: str
-    data: str
-    date: str
-
-    id          = Column(Integer, primary_key=True)
-    metaid      = Column(Integer, nullable=False)
-    bearer      = Column(Integer, nullable=True)
-    bound       = Column(Boolean, nullable=False)
-    bound_type  = Column(Enum('BoE', 'BoP', 'BoA', 'BoU', 'BtA'))
-    state       = Column(Integer, nullable=True)
-    rarity      = Column(Enum('Legendary',
-                              'Epic',
-                              'Rare',
-                              'Common',
-                              'Uncommon',
-                              'Broken'))
-    data        = Column(Text, nullable=True)
-    date        = Column(DateTime(timezone=True),
-                         nullable=False,
-                         server_default=func.now(), server_onupdate=func.now())
-
-
-@dataclass
 class Item(Base):
     __tablename__ = 'items'
 
