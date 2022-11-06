@@ -11,10 +11,10 @@ from mysql.methods.fn_creature  import (fn_creature_get,
                                         fn_creature_kill,
                                         fn_creature_xp_add)
 
-from mysql.methods.fn_inventory import fn_item_add
 from mysql.methods.fn_squad     import fn_squad_get_one
 
 from nosql.metas                import metaArmors, metaWeapons
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisWallet   import RedisWallet
 from nosql.queue                import yqueue_put
 
@@ -158,7 +158,7 @@ def creature_kill(creatureid, victimid):
             for loot in loots:
                 # Items are added
                 try:
-                    item = fn_item_add(creature, loot)
+                    item = RedisItem(creature).new(loot)
                 except Exception as e:
                     msg = f'{h} Loot Add KO (loot:{loot}) [{e}]'
                     logger.error(msg)
@@ -264,7 +264,7 @@ def creature_kill(creatureid, victimid):
                 try:
                     # We need to pick who wins the item in the squad
                     winner = choices(members, k=1)[0]
-                    item   = fn_item_add(winner, loot)
+                    item = RedisItem(winner).new(loot)
                     # If needed we convert the date
                     if isinstance(item.date, datetime.date):
                         item.date = item.date.strftime('%Y-%m-%d %H:%M:%S')

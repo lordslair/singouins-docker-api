@@ -1,18 +1,15 @@
 # -*- coding: utf8 -*-
 
-import json
-
 from flask                      import jsonify
 from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import (fn_item_get_all,
-                                        )
 from mysql.methods.fn_user      import fn_user_get
 
 from nosql.models.RedisCosmetic import RedisCosmetic
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -50,14 +47,16 @@ def item_get(pcid):
         ), 409
 
     try:
-        all_items_sql = fn_item_get_all(creature)
-        all_items_json = json.loads(jsonify(all_items_sql).get_data())
+        creature_inventory = RedisItem(creature).search(
+            field='bearer', query=f'[{creature.id} {creature.id}]'
+            )
 
-        armor = [x for x in all_items_json if x['metatype'] == 'armor']
+        armor = [x for x in creature_inventory if x['metatype'] == 'armor']
+        weapon = [x for x in creature_inventory if x['metatype'] == 'weapon']
+
         creature_slots = RedisSlots(creature)
         creature_cosmetics = RedisCosmetic(creature).get_all()
         creature_wallet = RedisWallet(creature)
-        weapon = [x for x in all_items_json if x['metatype'] == 'weapon']
     except Exception as e:
         msg = f'Items Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)

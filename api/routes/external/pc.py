@@ -5,10 +5,10 @@ from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import fn_item_get_one
 
 from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 
 
@@ -47,15 +47,15 @@ def pc_item_get_all(creatureid):
     try:
         creature_slots = RedisSlots(creature)
 
-        feet      = fn_item_get_one(creature_slots.feet)
-        hands     = fn_item_get_one(creature_slots.hands)
-        head      = fn_item_get_one(creature_slots.head)
-        holster   = fn_item_get_one(creature_slots.holster)
-        lefthand  = fn_item_get_one(creature_slots.lefthand)
-        righthand = fn_item_get_one(creature_slots.righthand)
-        shoulders = fn_item_get_one(creature_slots.shoulders)
-        torso     = fn_item_get_one(creature_slots.torso)
-        legs      = fn_item_get_one(creature_slots.legs)
+        feet      = RedisItem(creature).get(creature_slots.feet)
+        hands     = RedisItem(creature).get(creature_slots.hands)
+        head      = RedisItem(creature).get(creature_slots.head)
+        holster   = RedisItem(creature).get(creature_slots.holster)
+        lefthand  = RedisItem(creature).get(creature_slots.lefthand)
+        righthand = RedisItem(creature).get(creature_slots.righthand)
+        shoulders = RedisItem(creature).get(creature_slots.shoulders)
+        torso     = RedisItem(creature).get(creature_slots.torso)
+        legs      = RedisItem(creature).get(creature_slots.legs)
 
         # We publicly anounce the cosmetics owned by a PC
         creature_cosmetics = RedisCosmetic(creature).get_all()
@@ -72,15 +72,15 @@ def pc_item_get_all(creatureid):
     else:
         pass
 
-    feetmetaid      = feet.metaid      if feet      is not None else None
-    handsmetaid     = hands.metaid     if hands     is not None else None
-    headmetaid      = head.metaid      if head      is not None else None
-    holstermetaid   = holster.metaid   if holster   is not None else None
-    shouldersmetaid = shoulders.metaid if shoulders is not None else None
-    torsometaid     = torso.metaid     if torso     is not None else None
-    legsmetaid      = legs.metaid      if legs      is not None else None
+    feetmetaid      = feet.metaid      if feet      else None
+    handsmetaid     = hands.metaid     if hands     else None
+    headmetaid      = head.metaid      if head      else None
+    holstermetaid   = holster.metaid   if holster   else None
+    shouldersmetaid = shoulders.metaid if shoulders else None
+    torsometaid     = torso.metaid     if torso     else None
+    legsmetaid      = legs.metaid      if legs      else None
 
-    if righthand is not None and lefthand is not None:
+    if righthand and lefthand:
         # PC has 2 weapons equipped.
         if righthand.id == lefthand.id:
             # PC has ONE two-handed weapon equipped.
@@ -93,18 +93,18 @@ def pc_item_get_all(creatureid):
             lefthandmetaid  = lefthand.metaid
     else:
         # PC has 1 or 0 weapons equipped.
-        righthandmetaid = righthand.metaid if righthand is not None else None
-        lefthandmetaid  = lefthand.metaid  if lefthand  is not None else None
+        righthandmetaid = righthand.metaid if righthand else None
+        lefthandmetaid  = lefthand.metaid  if lefthand  else None
 
-    feetmetatype      = feet.metatype      if feet      is not None else None
-    handsmetatype     = hands.metatype     if hands     is not None else None
-    headmetatype      = head.metatype      if head      is not None else None
-    holstermetatype   = holster.metatype   if holster   is not None else None
-    lefthandmetatype  = lefthand.metatype  if lefthand  is not None else None
-    righthandmetatype = righthand.metatype if righthand is not None else None
-    shouldersmetatype = shoulders.metatype if shoulders is not None else None
-    torsometatype     = torso.metatype     if torso     is not None else None
-    legsmetatype      = legs.metatype      if legs      is not None else None
+    feetmetatype      = feet.metatype      if feet      else None
+    handsmetatype     = hands.metatype     if hands     else None
+    headmetatype      = head.metatype      if head      else None
+    holstermetatype   = holster.metatype   if holster   else None
+    lefthandmetatype  = lefthand.metatype  if lefthand  else None
+    righthandmetatype = righthand.metatype if righthand else None
+    shouldersmetatype = shoulders.metatype if shoulders else None
+    torsometatype     = torso.metatype     if torso     else None
+    legsmetatype      = legs.metatype      if legs      else None
 
     metas = {
         "feet": {

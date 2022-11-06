@@ -9,15 +9,11 @@ from loguru                              import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
-from mysql.methods.fn_inventory import (fn_item_del,
-                                        fn_item_get_all,
-                                        fn_item_get_one,
-                                        fn_item_offset_set,
-                                        )
 
 from nosql.metas                import metaArmors, metaWeapons
 from nosql.queue                import yqueue_put
 from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSlots    import RedisSlots
@@ -70,7 +66,7 @@ def inventory_item_dismantle(pcid, itemid):
         ), 200
 
     try:
-        item = fn_item_get_one(itemid)
+        item = RedisItem(creature).get(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -121,7 +117,7 @@ def inventory_item_dismantle(pcid, itemid):
 
     try:
         # We destroy the item
-        fn_item_del(creature, item.id)
+        RedisItem(creature).destroy(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO (pcid:{creature.id}) [{e}]'
         logger.error(msg)
@@ -220,7 +216,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
             ), 200
 
     try:
-        item = fn_item_get_one(itemid)
+        item = RedisItem(creature).get(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -386,7 +382,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         elif slotname == 'righthand':
             if creature_slots.righthand:
                 # Something is already equipped in RH
-                equipped = fn_item_get_one(creature_slots.righthand)
+                equipped = RedisItem(creature).get(creature_slots.righthand)
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
                     if metaWeapons[equipped.metaid - 1]['onehanded'] is True:
@@ -621,7 +617,7 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
         ), 409
 
     try:
-        item = fn_item_get_one(itemid)
+        item = RedisItem(creature).get(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -645,7 +641,8 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
             ), 200
 
     try:
-        item = fn_item_offset_set(itemid, offsetx, offsety)
+        item.offsetx = offsetx
+        item.offsety = offsety
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -657,11 +654,12 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
             }
         ), 200
     else:
-        all_items_sql  = fn_item_get_all(creature)
-        all_items_json = json.loads(jsonify(all_items_sql).get_data())
+        creature_inventory = RedisItem(creature).search(
+            field='bearer', query=f'[{creature.id} {creature.id}]'
+            )
 
-        armor     = [x for x in all_items_json if x['metatype'] == 'armor']
-        weapon    = [x for x in all_items_json if x['metatype'] == 'weapon']
+        armor = [x for x in creature_inventory if x['metatype'] == 'armor']
+        weapon = [x for x in creature_inventory if x['metatype'] == 'weapon']
 
         creature_slots = RedisSlots(creature)
 

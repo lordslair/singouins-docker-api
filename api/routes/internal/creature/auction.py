@@ -4,9 +4,9 @@ from flask                      import jsonify, request
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import fn_item_get_one, fn_item_owner_set
 
 from nosql.models.RedisAuction  import RedisAuction
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisWallet   import RedisWallet
 
 from variables                  import API_INTERNAL_TOKEN
@@ -79,7 +79,7 @@ def creature_auction_sell(creatureid, itemid):
     else:
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
-    item    = fn_item_get_one(itemid)
+    item = RedisItem(creature).get(itemid)
     if item is None:
         msg = f'{h} Item not found (itemid:{itemid})'
         logger.warning(msg)
@@ -198,7 +198,7 @@ def creature_auction_remove(creatureid, itemid):
     else:
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
-    item    = fn_item_get_one(itemid)
+    item = RedisItem(creature).get(itemid)
     if item is None:
         msg = f'{h} Item not found (itemid:{itemid})'
         logger.warning(msg)
@@ -284,7 +284,7 @@ def creature_auction_buy(creatureid, itemid):
     else:
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
-    item    = fn_item_get_one(itemid)
+    item = RedisItem(creature).get(itemid)
     if item is None:
         msg = f'{h} Item not found (itemid:{itemid})'
         logger.warning(msg)
@@ -348,9 +348,10 @@ def creature_auction_buy(creatureid, itemid):
                 count=round(auction.price * 0.9)
                 )
             # We change the Item owner
-            item = fn_item_owner_set(item.id, creature.id)
-            if item is None:
-                msg = f'{h} Auction Query KO'
+            try:
+                item.bearer = creature.id
+            except Exception as e:
+                msg = f'{h} Auction Query KO [{e}]'
                 logger.warning(msg)
                 return jsonify(
                     {
@@ -359,6 +360,7 @@ def creature_auction_buy(creatureid, itemid):
                         "payload": None,
                     }
                 ), 200
+
             # We are done
             msg = f'{h} Auction Query OK'
             logger.debug(msg)
@@ -368,7 +370,7 @@ def creature_auction_buy(creatureid, itemid):
                     "msg": msg,
                     "payload": {
                         "creature": creature,
-                        "item": item,
+                        "item": item._asdict(),
                         "auction": {
                             "duration_base": auction.duration_base,
                             "duration_left": 0,
@@ -423,7 +425,7 @@ def creature_auction_get(creatureid, itemid):
     else:
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
-    item    = fn_item_get_one(itemid)
+    item = RedisItem(creature).get(itemid)
     if item is None:
         msg = f'{h} Item not found (itemid:{itemid})'
         logger.warning(msg)
@@ -459,7 +461,7 @@ def creature_auction_get(creatureid, itemid):
                     "msg": msg,
                     "payload": {
                         "creature": creature,
-                        "item": item,
+                        "item": item._asdict(),
                         "auction": {
                             "duration_base": auction.duration_base,
                             "duration_left": 0,

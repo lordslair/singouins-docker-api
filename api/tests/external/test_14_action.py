@@ -17,12 +17,12 @@ def test_singouins_action_unload():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
 
-    url        = f'{API_URL}/mypc/{pcid}/item'  # GET
-    response   = requests.get(url, headers=headers)
-    itemid     = json.loads(response.text)['payload']['weapon'][0]['id']
-    metaid     = json.loads(response.text)['payload']['weapon'][0]['metaid']
-
-    assert metaid == 34  # Needs to be a Pistolet
+    url      = f'{API_URL}/mypc/{pcid}/item'  # GET
+    response = requests.get(url, headers=headers)
+    weapons  = json.loads(response.text)['payload']['weapon']
+    # We need the Pistolet (metaid:34)
+    weapon   = [x for x in weapons if x['metaid'] == 34][0]
+    itemid   = weapon['id']
 
     url       = f'{API_URL}/mypc/{pcid}/action/unload/{itemid}'  # POST
     response  = requests.post(url, headers=headers)
@@ -49,12 +49,12 @@ def test_singouins_action_reload():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
 
-    url        = f'{API_URL}/mypc/{pcid}/item'  # GET
-    response   = requests.get(url, headers=headers)
-    itemid     = json.loads(response.text)['payload']['weapon'][0]['id']
-    metaid     = json.loads(response.text)['payload']['weapon'][0]['metaid']
-
-    assert metaid == 34  # Needs to be a Pistolet
+    url      = f'{API_URL}/mypc/{pcid}/item'  # GET
+    response = requests.get(url, headers=headers)
+    weapons  = json.loads(response.text)['payload']['weapon']
+    # We need the Pistolet (metaid:34)
+    weapon   = [x for x in weapons if x['metaid'] == 34][0]
+    itemid   = weapon['id']
 
     url       = f'{API_URL}/mypc/{pcid}/action/reload/{itemid}'  # POST
     response  = requests.post(url, headers=headers)

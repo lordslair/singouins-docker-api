@@ -7,10 +7,10 @@ from loguru                     import logger
 
 from nosql.connector            import r
 
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 
 from mysql.methods.fn_creature  import fn_creature_stats_get
-from mysql.methods.fn_inventory import fn_item_get_one
 
 
 class RedisStats:
@@ -91,15 +91,17 @@ class RedisStats:
                 self.arm_p = 0
                 creature_slots = RedisSlots(creature)
                 if creature_slots:
-                    armors     = [fn_item_get_one(creature_slots.feet),
-                                  fn_item_get_one(creature_slots.hands),
-                                  fn_item_get_one(creature_slots.head),
-                                  fn_item_get_one(creature_slots.shoulders),
-                                  fn_item_get_one(creature_slots.torso),
-                                  fn_item_get_one(creature_slots.legs)]
+                    armors = [
+                        RedisItem(creature).get(creature_slots.feet),
+                        RedisItem(creature).get(creature_slots.hands),
+                        RedisItem(creature).get(creature_slots.head),
+                        RedisItem(creature).get(creature_slots.shoulders),
+                        RedisItem(creature).get(creature_slots.torso),
+                        RedisItem(creature).get(creature_slots.legs),
+                        ]
 
                     for armor in armors:
-                        if armor is not None:
+                        if armor:
                             result = filter(lambda x: x["id"] == armor.metaid,
                                             metaWeapons)
                             metaWeapon = dict(list(result)[0])  # Gruikfix

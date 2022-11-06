@@ -33,8 +33,11 @@ class RedisSlots:
                     # We create the object attribute
                     if v == '':
                         newv = None
-                    else:
+                    # INT
+                    elif v.isdigit():
                         newv = int(v)
+                    else:
+                        newv = v
                     setattr(self, f'_{k}', newv)
 
                 logger.trace(f'{self.logh} Method >> (KEY Loaded)')

@@ -99,26 +99,32 @@ def test_singouins_inventory_item_offset_move():
 
     url        = f'{API_URL}/mypc/{pcid}/item'  # GET
     response   = requests.get(url, headers=headers)
-    weapon     = json.loads(response.text)['payload']['weapon']
-    itemid     = weapon[0]['id']
-    offsetx    = weapon[0]['offsetx']
-    offsety    = weapon[0]['offsety']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert offsetx is None
-    assert offsety is None
+
+    weapons    = json.loads(response.text)['payload']['weapon']
+    # We know one weapon is in holster
+    holster    = json.loads(response.text)['payload']['equipment']['holster']
+    # So we need the other one
+    weapon     = [x for x in weapons if x['id'] != holster][0]
+    itemid     = weapon['id']
+    assert weapon['offsetx'] is None
+    assert weapon['offsety'] is None
 
     url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/offset/1/1'  # POST # noqa
     response   = requests.post(url, headers=headers)
-    weapon     = json.loads(response.text)['payload']['weapon']
-    offsetx    = weapon[0]['offsetx']
-    offsety    = weapon[0]['offsety']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert offsetx == 1
-    assert offsety == 1
+
+    weapons    = json.loads(response.text)['payload']['weapon']
+    # We know one weapon is in holster
+    holster    = json.loads(response.text)['payload']['equipment']['holster']
+    # So we need the other one
+    weapon     = [x for x in weapons if x['id'] != holster][0]
+    assert weapon['offsetx'] == 1
+    assert weapon['offsety'] == 1
 
 
 def test_singouins_inventory_item_offset_del():
@@ -133,26 +139,26 @@ def test_singouins_inventory_item_offset_del():
 
     url        = f'{API_URL}/mypc/{pcid}/item'  # GET
     response   = requests.get(url, headers=headers)
-    weapon     = json.loads(response.text)['payload']['weapon']
-    itemid     = weapon[0]['id']
-    offsetx    = weapon[0]['offsetx']
-    offsety    = weapon[0]['offsety']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert offsetx == 1
-    assert offsety == 1
+    weapons    = json.loads(response.text)['payload']['weapon']
+    # We know one weapon is in holster
+    holster    = json.loads(response.text)['payload']['equipment']['holster']
+    # So we need the other one
+    weapon     = [x for x in weapons if x['id'] != holster][0]
+    itemid     = weapon['id']
 
     url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/offset'  # DELETE # noqa
     response   = requests.delete(url, headers=headers)
-    weapon     = json.loads(response.text)['payload']['weapon']
-    offsetx    = weapon[0]['offsetx']
-    offsety    = weapon[0]['offsety']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert offsetx is None
-    assert offsety is None
+
+    weapons    = json.loads(response.text)['payload']['weapon']
+    weapon     = [x for x in weapons if x['id'] == itemid][0]
+    assert weapon['offsetx'] is None
+    assert weapon['offsety'] is None
 
 
 def test_singouins_inventory_item_dismantle():
@@ -167,13 +173,19 @@ def test_singouins_inventory_item_dismantle():
 
     url        = f'{API_URL}/mypc/{pcid}/item'  # GET
     response   = requests.get(url, headers=headers)
-    weapon     = json.loads(response.text)['payload']['weapon']
-    itemid     = weapon[1]['id']
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+    weapons    = json.loads(response.text)['payload']['weapon']
+    # We know one weapon is in holster
+    holster    = json.loads(response.text)['payload']['equipment']['holster']
+    # So we need the other one
+    weapon     = [x for x in weapons if x['id'] != holster][0]
+    itemid     = weapon['id']
 
     url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/dismantle'  # POST # noqa
     response   = requests.post(url, headers=headers)
-    shards     = json.loads(response.text)['payload']['wallet']['shards']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
+    shards = json.loads(response.text)['payload']['wallet']['shards']
     assert shards['common'] > 0

@@ -291,7 +291,7 @@ def test_singouins_internal_creatures():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_internal_creature_pop_n_kill():
+def test_singouins_internal_creature_pop_n_delete():
     url       = f'{API_URL}/internal/creature'  # PUT
     payload   = {"raceid": 11,
                  "gender": True,
@@ -309,6 +309,29 @@ def test_singouins_internal_creature_pop_n_kill():
 
     url       = f'{API_URL}/internal/creature/{creatureid}'  # DELETE
     response  = requests.delete(url, headers=HEADERS, json=payload)
+
+    assert response.status_code                 == 200
+    assert json.loads(response.text)['success'] is True
+
+
+def test_singouins_internal_creature_pop_n_kill():
+    url       = f'{API_URL}/internal/creature'  # PUT
+    payload   = {"raceid": 11,
+                 "gender": True,
+                 "rarity": "Boss",
+                 "instanceid": 0,
+                 "x": 3,
+                 "y": 3}
+    response  = requests.put(url, headers=HEADERS, json=payload)
+
+    creatureid = json.loads(response.text)['payload']['id']
+
+    assert creatureid > 0
+    assert response.status_code                 == 201
+    assert json.loads(response.text)['success'] is True
+
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/kill/{creatureid}'  # POST # noqa
+    response  = requests.post(url, headers=HEADERS, json=payload)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] is True

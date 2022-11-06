@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-from mysql.models.items         import Item
 from mysql.models.creatures     import (Creature,
                                         CreatureStats,
                                         Squad,
@@ -10,7 +9,6 @@ from mysql.models.users         import User
 
 
 __all__ = [
-    'Item',
     'Creature',
     'CreatureStats',
     'Squad',

@@ -4,8 +4,8 @@ from flask                      import jsonify, request
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import fn_item_get_all
 
+from nosql.models.RedisItem     import RedisItem
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -44,7 +44,9 @@ def creature_inventory_get(creatureid):
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
-        creature_inventory = fn_item_get_all(creature)
+        creature_inventory = RedisItem(creature).search(
+            field='bearer', query=f'[{creature.id} {creature.id}]'
+            )
     except Exception as e:
         msg = f'{h} Inventory Query KO [{e}]'
         logger.error(msg)

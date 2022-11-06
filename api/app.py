@@ -6,6 +6,7 @@ import sys
 from flask                         import Flask, jsonify
 from flask_jwt_extended            import JWTManager
 from flask_cors                    import CORS
+from flask_uuid                    import FlaskUUID
 from flask_swagger_ui              import get_swaggerui_blueprint
 
 from prometheus_flask_exporter     import PrometheusMetrics
@@ -72,6 +73,7 @@ import routes.external.pc
 
 app = Flask(__name__)
 CORS(app)                         # We wrap around all the app the CORS
+FlaskUUID(app)                    # We wrap around all the app the UUID control
 metrics = PrometheusMetrics(app)  # We wrap around all the app the metrics
 
 # Setup the flask_swagger_ui extension
@@ -222,19 +224,19 @@ app.add_url_rule('/mypc/<int:pcid>/item',
 #
 # Routes /inventory/item
 #
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle',
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/dismantle',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_dismantle)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname>',
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/equip/<string:type>/<string:slotname>',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_equip)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety>',
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/offset/<int:offsetx>/<int:offsety>',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_offset)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/offset',
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/offset',
                  methods=['DELETE'],
                  view_func=routes.external.mypc.inventory.inventory_item_offset)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname>',
+app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/unequip/<string:type>/<string:slotname>',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_unequip)
 
@@ -269,10 +271,10 @@ app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<string:skill_name>',
 #
 # Routes: /action
 #
-app.add_url_rule('/mypc/<int:pcid>/action/reload/<int:weaponid>',
+app.add_url_rule('/mypc/<int:pcid>/action/reload/<uuid:weaponid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.action.action_weapon_reload)
-app.add_url_rule('/mypc/<int:pcid>/action/unload/<int:weaponid>',
+app.add_url_rule('/mypc/<int:pcid>/action/unload/<uuid:weaponid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.action.action_weapon_unload)
 
@@ -367,16 +369,16 @@ app.add_url_rule('/internal/creature/<int:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
 # Routes /internal/creature/{creatureid}/auction/*
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
                  methods=['POST'],
                  view_func=routes.internal.creature.auction.creature_auction_buy)
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
                  methods=['GET'],
                  view_func=routes.internal.creature.auction.creature_auction_get)
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.auction.creature_auction_sell)
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<int:itemid>',
+app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.auction.creature_auction_remove)
 # Routes /internal/creature/{creatureid}/auction/*
@@ -404,7 +406,7 @@ app.add_url_rule('/internal/creature/<int:creatureid>/context',
 app.add_url_rule('/internal/creature/<int:creatureid>/equipment',
                  methods=['GET'],
                  view_func=routes.internal.creature.equipment.creature_equipment)
-app.add_url_rule('/internal/creature/<int:creatureid>/equipment/<int:itemid>/ammo/<string:operation>/<int:count>',
+app.add_url_rule('/internal/creature/<int:creatureid>/equipment/<uuid:itemid>/ammo/<string:operation>/<int:count>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.equipment.creature_equipment_modifiy)
 # Routes /internal/creature/{creatureid}/effect/*

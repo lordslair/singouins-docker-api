@@ -7,12 +7,11 @@ from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
 from mysql.methods.fn_user      import fn_user_get
-from mysql.methods.fn_inventory import (fn_item_get_one,
-                                        fn_item_ammo_set)
 
 from nosql.metas                import metaWeapons
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -51,7 +50,7 @@ def action_weapon_reload(pcid, weaponid):
 
     # Retrieving weapon stats
     try:
-        item = fn_item_get_one(weaponid)
+        item = RedisItem(creature).get(weaponid)
     except Exception as e:
         msg = (f'Item Query KO '
                f'(creature.id:{creature.id},weaponid:{weaponid}) [{e}]')
@@ -149,7 +148,7 @@ def action_weapon_reload(pcid, weaponid):
             ), 200
 
         # We reload the weapon
-        fn_item_ammo_set(weaponid, neededammo)
+        item.ammo = neededammo
         # We remove the ammo from wallet
         creature_wallet.incr(itemmeta['caliber'], neededammo * (-1))
         # We consume the PA
@@ -183,7 +182,7 @@ def action_weapon_reload(pcid, weaponid):
                 "payload": {
                     "red": RedisPa(creature)._asdict()['red'],
                     "blue": RedisPa(creature)._asdict()['blue'],
-                    "weapon": fn_item_get_one(weaponid),
+                    "weapon": RedisItem(creature).get(weaponid)._asdict(),
                 },
             }
         ), 200
@@ -220,7 +219,7 @@ def action_weapon_unload(pcid, weaponid):
 
     # Retrieving weapon stats
     try:
-        item = fn_item_get_one(weaponid)
+        item = RedisItem(creature).get(weaponid)
     except Exception as e:
         msg = f'Item Query KO (pcid:{creature.id},weaponid:{weaponid}) [{e}]'
         logger.error(msg)
@@ -279,7 +278,7 @@ def action_weapon_unload(pcid, weaponid):
         # We add the ammo to wallet
         creature_wallet.incr(itemmeta['caliber'], item.ammo)
         # We unload the weapon
-        fn_item_ammo_set(weaponid, 0)
+        item.ammo = 0
         # We consume the PA
         RedisPa(creature).consume(bluepa=2)
         # We add HighScore
@@ -311,7 +310,7 @@ def action_weapon_unload(pcid, weaponid):
                 "payload": {
                     "red": RedisPa(creature)._asdict()['red'],
                     "blue": RedisPa(creature)._asdict()['blue'],
-                    "weapon": fn_item_get_one(weaponid),
+                    "weapon": RedisItem(creature).get(weaponid)._asdict(),
                 },
             }
         ), 200

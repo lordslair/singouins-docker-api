@@ -11,12 +11,12 @@ from mysql.methods.fn_creature  import (fn_creature_add,
                                         fn_creature_get_all,
                                         fn_creature_stats_add,
                                         fn_creature_stats_del)
-from mysql.methods.fn_inventory import fn_item_add
 from mysql.methods.fn_user      import fn_user_get
 
 from nosql.metas                import metaRaces
 from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisHS       import RedisHS
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
@@ -162,7 +162,7 @@ def mypc_add():
                                 "state": 100,
                                 "rarity": 'Common'
                             }
-                            fn_item_add(pc, rh_caracs)
+                            RedisItem(pc).new(rh_caracs)
 
                         if pcequipment['lefthand'] is not None:
                             lh_caracs = {
@@ -177,7 +177,7 @@ def mypc_add():
                                 "state": 100,
                                 "rarity": 'Common'
                             }
-                            fn_item_add(pc, lh_caracs)
+                            RedisItem(pc).new(lh_caracs)
 
                     except Exception as e:
                         msg = f'{h} Weapons creation KO [{e}]'
@@ -299,7 +299,7 @@ def mypc_del(pcid):
         if fn_creature_stats_del(creature):
             logger.trace(f'{h} Stats delete OK (MySQL)')
         if RedisStats(creature).destroy():
-            logger.trace(f'{h} Stats delete OK (Redis)')
+            logger.trace(f'{h} RedisStats delete OK (Redis)')
 
         if RedisWallet(creature).destroy():
             logger.trace(f'{h} RedisWallet delete OK')

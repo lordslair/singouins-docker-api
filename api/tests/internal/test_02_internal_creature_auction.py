@@ -10,13 +10,13 @@ from variables import (API_URL,
 
 
 def test_singouins_internal_creature_auction_sell():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/197'  # PUT # noqa
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         return True
 
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # PUT # noqa
     response  = requests.put(
         url,
         headers=HEADERS,
@@ -28,13 +28,13 @@ def test_singouins_internal_creature_auction_sell():
 
 
 def test_singouins_internal_creature_auction_remove():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/197'  # DELETE # noqa
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         return True
 
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # DELETE # noqa
     response  = requests.delete(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -42,13 +42,13 @@ def test_singouins_internal_creature_auction_remove():
 
 
 def test_singouins_internal_creature_auction_resell():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/197'  # PUT # noqa
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         return True
 
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # PUT # noqa
     response  = requests.put(
         url,
         headers=HEADERS,
@@ -60,13 +60,13 @@ def test_singouins_internal_creature_auction_resell():
 
 
 def test_singouins_internal_creature_auction_get():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/197'  # GET # noqa
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         return True
 
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # GET # noqa
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -74,13 +74,13 @@ def test_singouins_internal_creature_auction_get():
 
 
 def test_singouins_internal_creature_auction_buy():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/197'  # POST # noqa
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         return True
 
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # POST # noqa
     response  = requests.post(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -88,13 +88,13 @@ def test_singouins_internal_creature_auction_buy():
 
 
 def test_singouins_internal_creature_auction_reremove():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/197'  # DELETE # noqa
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         return True
 
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # DELETE # noqa
     response  = requests.delete(url, headers=HEADERS)
 
     assert response.status_code                 == 200

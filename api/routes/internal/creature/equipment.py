@@ -4,9 +4,8 @@ from flask                      import jsonify, request
 from loguru                     import logger
 
 from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_inventory import (fn_item_get_one,
-                                        fn_item_ammo_set)
 
+from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 
 from variables                  import API_INTERNAL_TOKEN
@@ -59,17 +58,23 @@ def creature_equipment(creatureid):
         ), 200
 
     try:
-        equipment = {
-            "feet":      fn_item_get_one(creature_slots.feet),
-            "hands":     fn_item_get_one(creature_slots.hands),
-            "head":      fn_item_get_one(creature_slots.head),
-            "holster":   fn_item_get_one(creature_slots.holster),
-            "lefthand":  fn_item_get_one(creature_slots.lefthand),
-            "righthand": fn_item_get_one(creature_slots.righthand),
-            "shoulders": fn_item_get_one(creature_slots.shoulders),
-            "torso":     fn_item_get_one(creature_slots.torso),
-            "legs":      fn_item_get_one(creature_slots.legs),
-            }
+        equipment = {}
+        for slot in [
+            'feet', 'hands', 'head',
+            'holster', 'lefthand', 'righthand',
+            'shoulders', 'torso', 'legs'
+        ]:
+            itemuuid = getattr(creature_slots, slot)
+            if itemuuid is None:
+                # If the Slot is empty, let's put None directly
+                equipment[slot] = None
+            else:
+                # An item is equipped in this slot, lets gather info
+                item = RedisItem(creature).get(itemuuid)
+                if item:
+                    equipment[slot] = item._asdict()
+                else:
+                    equipment[slot] = None
     except Exception as e:
         msg = f'{h} Equipment Query KO [{e}]'
         logger.error(msg)
@@ -136,12 +141,12 @@ def creature_equipment_modifiy(creatureid, itemid, operation, count):
         h = f'[Creature.id:{creature.id}]'  # Header for logging
 
     try:
-        item = fn_item_get_one(itemid)
+        item = RedisItem(creature).get(itemid)
         if item and item.ammo > 0:
             if operation == 'consume':
-                item_modified = fn_item_ammo_set(item.id, item.ammo - count)
+                item.ammo -= count
             else:
-                item_modified = fn_item_ammo_set(item.id, item.ammo + count)
+                item.ammo += count
         else:
             msg = f'{h} Item Query KO (itemid:{itemid})'
             logger.error(msg)
@@ -163,26 +168,15 @@ def creature_equipment_modifiy(creatureid, itemid, operation, count):
             }
         ), 200
     else:
-        if item_modified:
-            msg = f'{h} Item Query OK (itemid:{itemid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": {
-                        "item": item_modified,
-                        "creature": creature,
-                        },
-                }
-            ), 200
-        else:
-            msg = f'{h} Item Query KO (itemid:{itemid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'{h} Item Query OK (itemid:{itemid})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "item": item._asdict(),
+                    "creature": creature,
+                    },
+            }
+        ), 200
