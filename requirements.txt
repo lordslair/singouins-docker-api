@@ -54,7 +54,7 @@ packaging==21.3
     # via redis
 prometheus-client==0.15.0
     # via prometheus-flask-exporter
-prometheus-flask-exporter==0.20.3
+prometheus-flask-exporter==0.21.0
     # via -r requirements.in
 pyjwt==2.5.0
     # via flask-jwt-extended
