@@ -207,7 +207,7 @@ class RedisItem:
         for result in results.docs:
             item = {
                 "ammo": str2typed(result.ammo),
-                "bearer": int(result.bearer),
+                "bearer": result.bearer,
                 "bound": str2typed(result.bound),
                 "bound_type": result.bound_type,
                 "date": result.date,
@@ -361,7 +361,7 @@ if __name__ == '__main__':
         SCORE 0.5
         SCORE_FIELD "item_score"
         SCHEMA
-            bearer NUMERIC
+            bearer TEXT
             bound TEXT
             bound_type TEXT
             id TAG

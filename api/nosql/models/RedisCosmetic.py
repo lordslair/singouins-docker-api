@@ -79,15 +79,16 @@ class RedisCosmetic:
             pass
 
         try:
+            bearer = self.creature.id.replace('-', ' ')
             logger.trace(
                 f'{self.logh} Method >> '
-                f'(Searching @bearer:[{self.creature.id} {self.creature.id}])'
+                f'(Searching @bearer:{bearer})'
                 )
             # Query("search engine").paging(0, 10)
             # f"@bearer:[{bearerid} {bearerid}]"
             results = r.ft(index).search(
                 Query(
-                    f"@bearer:[{self.creature.id} {self.creature.id}]"
+                    f"@bearer:{bearer}"
                     ).paging(0, 25)
                 )
         except Exception as e:
@@ -140,15 +141,16 @@ class RedisCosmetic:
             pass
 
         try:
+            bearer = self.creature.id.replace('-', ' ')
             logger.trace(
                 f'{self.logh} Method >> '
-                f'(Searching @bearer:[{self.creature.id} {self.creature.id}])'
+                f'(Searching @bearer:{bearer})'
                 )
             # Query("search engine").paging(0, 10)
             # f"@bearer:[{bearerid} {bearerid}]"
             results = r.ft(index).search(
                 Query(
-                    f"@bearer:[{self.creature.id} {self.creature.id}]"
+                    f"@bearer:{bearer}"
                     ).paging(0, 25)
                 )
         except Exception as e:
@@ -259,7 +261,7 @@ if __name__ == '__main__':
         SCORE 0.5
         SCORE_FIELD "cosmetic_score"
         SCHEMA
-            bearer NUMERIC
+            bearer TEXT
             bound TEXT
             bound_type TEXT
             id TAG
