@@ -196,25 +196,6 @@ app.add_url_rule('/mypc/<int:pcid>/view',
                  view_func=routes.external.mypc.view.view_get)
 
 #
-# Routes: /mp
-#
-app.add_url_rule('/mypc/<int:pcid>/mp',
-                 methods=['POST'],
-                 view_func=routes.external.mypc.mp.mp_add)
-app.add_url_rule('/mypc/<int:pcid>/mp/<int:mpid>',
-                 methods=['GET'],
-                 view_func=routes.external.mypc.mp.mp_get_one)
-app.add_url_rule('/mypc/<int:pcid>/mp/<int:mpid>',
-                 methods=['DELETE'],
-                 view_func=routes.external.mypc.mp.mp_del)
-app.add_url_rule('/mypc/<int:pcid>/mp',
-                 methods=['GET'],
-                 view_func=routes.external.mypc.mp.mp_get_all)
-app.add_url_rule('/mypc/<int:pcid>/mp/addressbook',
-                 methods=['GET'],
-                 view_func=routes.external.mypc.mp.addressbook_get)
-
-#
 # Routes /item
 #
 app.add_url_rule('/mypc/<int:pcid>/item',

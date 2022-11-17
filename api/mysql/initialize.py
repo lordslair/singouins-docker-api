@@ -9,7 +9,6 @@ from mysql.models               import (Creature,
                                         CreatureStats,
                                         Squad,
                                         Korp,
-                                        MP,
                                         User
                                         )
 
@@ -23,7 +22,6 @@ __all__ = [
     'CreatureStats',
     'Squad',
     'Korp',
-    'MP',
     'User',
 ]
 
