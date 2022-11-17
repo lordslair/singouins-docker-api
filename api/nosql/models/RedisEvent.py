@@ -32,11 +32,11 @@ class RedisEvent:
                 if hashdict['src'] == '':
                     src = None
                 else:
-                    src = int(hashdict['src'])
+                    src = hashdict['src']
                 if hashdict['dst'] == '':
                     dst = None
                 else:
-                    dst = int(hashdict['dst'])
+                    dst = hashdict['dst']
                 # We build the event item
                 event = {
                     "src": src,

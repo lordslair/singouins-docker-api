@@ -241,20 +241,6 @@ class RedisCosmetic:
 
 
 if __name__ == '__main__':
-    from mysql.methods.fn_creature  import fn_creature_get
-
-    cosmetic_caracs = {
-        'metaid': 8,
-        'data': {'hasGender': True, 'beforeArmor': False, 'hideArmor': None}
-    }
-
-    creature = fn_creature_get(None, 1)[3]
-    cosmetic = RedisCosmetic(creature).new(cosmetic_caracs)
-
-    logger.success(RedisCosmetic().get(cosmetic.id)._asdict())
-    logger.success(RedisCosmetic(creature).get_all())
-    RedisCosmetic(creature).destroy_all()
-
     """
     FT.CREATE cosmetic_idx PREFIX 1 "cosmetics:"
         LANGUAGE english

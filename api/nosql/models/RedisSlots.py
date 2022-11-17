@@ -1,8 +1,9 @@
 # -*- coding: utf8 -*-
 
-from loguru                     import logger
+from loguru                      import logger
 
-from nosql.connector            import r
+from nosql.connector             import r
+from nosql.variables             import str2typed, typed2str
 
 
 class RedisSlots:
@@ -30,15 +31,7 @@ class RedisSlots:
                 hashdict = r.hgetall(self.hkey)
 
                 for k, v in hashdict.items():
-                    # We create the object attribute
-                    if v == '':
-                        newv = None
-                    # INT
-                    elif v.isdigit():
-                        newv = int(v)
-                    else:
-                        newv = v
-                    setattr(self, f'_{k}', newv)
+                    setattr(self, f'_{k}', str2typed(v))
 
                 logger.trace(f'{self.logh} Method >> (KEY Loaded)')
             except Exception as e:
@@ -87,20 +80,14 @@ class RedisSlots:
     """
     @property
     def feet(self):
-        if self._feet == '':
-            return None
-        else:
-            return self._feet
+        return self._feet
 
     @feet.setter
     def feet(self, feet):
-        if feet is None:
-            self._feet = ''
-        else:
-            self._feet = feet
+        self._feet = feet
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.feet')
-            r.hset(self.hkey, 'feet', self._feet)
+            r.hset(self.hkey, 'feet', typed2str(self._feet))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -108,20 +95,14 @@ class RedisSlots:
 
     @property
     def hands(self):
-        if self._hands == '':
-            return None
-        else:
-            return self._hands
+        return self._hands
 
     @hands.setter
     def hands(self, hands):
-        if hands is None:
-            self._hands = ''
-        else:
-            self._hands = hands
+        self._hands = hands
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.hands')
-            r.hset(self.hkey, 'hands', self._hands)
+            r.hset(self.hkey, 'hands', typed2str(self._hands))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -129,20 +110,14 @@ class RedisSlots:
 
     @property
     def head(self):
-        if self._head == '':
-            return None
-        else:
-            return self._head
+        return self._head
 
     @head.setter
     def head(self, head):
-        if head is None:
-            self._head = ''
-        else:
-            self._head = head
+        self._head = head
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.head')
-            r.hset(self.hkey, 'head', self._head)
+            r.hset(self.hkey, 'head', typed2str(self._head))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -150,20 +125,14 @@ class RedisSlots:
 
     @property
     def holster(self):
-        if self._holster == '':
-            return None
-        else:
-            return self._holster
+        return self._holster
 
     @holster.setter
     def holster(self, holster):
-        if holster is None:
-            self._holster = ''
-        else:
-            self._holster = holster
+        self._holster = holster
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.holster')
-            r.hset(self.hkey, 'holster', self._holster)
+            r.hset(self.hkey, 'holster', typed2str(self._holster))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -171,20 +140,14 @@ class RedisSlots:
 
     @property
     def lefthand(self):
-        if self._lefthand == '':
-            return None
-        else:
-            return self._lefthand
+        return self._lefthand
 
     @lefthand.setter
     def lefthand(self, lefthand):
-        if lefthand is None:
-            self._lefthand = ''
-        else:
-            self._lefthand = lefthand
+        self._lefthand = lefthand
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.lefthand')
-            r.hset(self.hkey, 'lefthand', self._lefthand)
+            r.hset(self.hkey, 'lefthand', typed2str(self._lefthand))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -192,20 +155,14 @@ class RedisSlots:
 
     @property
     def legs(self):
-        if self._legs == '':
-            return None
-        else:
-            return self._legs
+        return self._legs
 
     @legs.setter
     def legs(self, legs):
-        if legs is None:
-            self._legs = ''
-        else:
-            self._legs = legs
+        self._legs = legs
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.legs')
-            r.hset(self.hkey, 'legs', self._legs)
+            r.hset(self.hkey, 'legs', typed2str(self._legs))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -213,22 +170,16 @@ class RedisSlots:
 
     @property
     def righthand(self):
-        if self._righthand == '':
-            return None
-        else:
-            return self._righthand
+        return self._righthand
 
     @righthand.setter
     def righthand(self, righthand):
-        if righthand is None:
-            self._righthand = ''
-        else:
-            self._righthand = righthand
+        self._righthand = righthand
         try:
             logger.trace(
                 f'{self.logh} Method >> (Setting HASH) Slot.righthand'
                 )
-            r.hset(self.hkey, 'righthand', self._righthand)
+            r.hset(self.hkey, 'righthand', typed2str(self._righthand))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -236,22 +187,16 @@ class RedisSlots:
 
     @property
     def shoulders(self):
-        if self._shoulders == '':
-            return None
-        else:
-            return self._shoulders
+        return self._shoulders
 
     @shoulders.setter
     def shoulders(self, shoulders):
-        if shoulders is None:
-            self._shoulders = ''
-        else:
-            self._shoulders = shoulders
+        self._shoulders = shoulders
         try:
             logger.trace(
                 f'{self.logh} Method >> (Setting HASH) Slot.shoulders'
                 )
-            r.hset(self.hkey, 'shoulders', self._shoulders)
+            r.hset(self.hkey, 'shoulders', typed2str(self._shoulders))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -259,20 +204,14 @@ class RedisSlots:
 
     @property
     def torso(self):
-        if self._torso == '':
-            return None
-        else:
-            return self._torso
+        return self._torso
 
     @torso.setter
     def torso(self, torso):
-        if torso is None:
-            self._torso = ''
-        else:
-            self._torso = torso
+        self._torso = torso
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.torso')
-            r.hset(self.hkey, 'torso', self._torso)
+            r.hset(self.hkey, 'torso', typed2str(self._torso))
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
@@ -280,12 +219,4 @@ class RedisSlots:
 
 
 if __name__ == '__main__':
-    from mysql.methods.fn_creature  import fn_creature_get
-
-    creature = fn_creature_get(None, 1)[3]
-    slots = RedisSlots(creature)
-    slots.holster = 198
-    slots.righthand = 197
-    logger.success(slots._asdict())
-    logger.success(slots.righthand)
-    logger.success(slots.lefthand)
+    pass

@@ -41,7 +41,7 @@ class RedisEffect:
             if isinstance(extra, dict):
                 self.extra = json.dumps(extra)
             if extra is None:
-                self.extra = ''
+                self.extra = 'None'
 
             self.duration_base = duration_base
             self.duration_left = duration_base
@@ -74,15 +74,15 @@ class RedisEffect:
                 hash = r.hgetall(f'{self.hkey}:{name}')
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
 
-                self.bearer        = int(hash['bearer'])
+                self.bearer        = hash['bearer']
                 self.duration_base = int(hash['duration_base'])
                 self.duration_left = int(r.ttl(f'{self.hkey}:{name}'))
                 self.name          = hash['name']
-                self.source        = int(hash['source'])
+                self.source        = hash['source']
                 self.type          = hash['type']
 
                 # We convert JSON > dict
-                if hash['extra'] == '':
+                if hash['extra'] == 'None':
                     self.extra = None
                 elif isinstance(hash['extra'], str):
                     self.extra = json.loads(hash['extra'])
@@ -129,7 +129,7 @@ class RedisEffect:
             for key in sorted_keys:
                 logger.trace(f'key:{key}')
                 # We convert JSON > dict
-                if pipeline[index]['extra'] == '':
+                if pipeline[index]['extra'] == 'None':
                     extra = None
                 elif isinstance(pipeline[index]['extra'], str):
                     extra = json.loads(pipeline[index]['extra'])
@@ -140,7 +140,7 @@ class RedisEffect:
                     "extra": extra,
                     "id": int(1 + index / 2),
                     "name": pipeline[index]['name'],
-                    "source": int(pipeline[index]['source']),
+                    "source": pipeline[index]['source'],
                     "type": pipeline[index]['type']
                 }
                 # We update the index for next iteration
@@ -178,18 +178,18 @@ class RedisEffect:
             for key in sorted_keys:
                 logger.trace(f'key:{key}')
                 # We convert JSON > dict
-                if pipeline[index]['extra'] == '':
+                if pipeline[index]['extra'] == 'None':
                     extra = None
                 elif isinstance(pipeline[index]['extra'], str):
                     extra = json.loads(pipeline[index]['extra'])
                 effect = {
-                    "bearer": int(pipeline[index]['bearer']),
+                    "bearer": pipeline[index]['bearer'],
                     "duration_base": int(pipeline[index]['duration_base']),
                     "duration_left": int(pipeline[index + 1]),
                     "extra": extra,
                     "id": int(1 + index / 2),
                     "name": pipeline[index]['name'],
-                    "source": int(pipeline[index]['source']),
+                    "source": pipeline[index]['source'],
                     "type": pipeline[index]['type']
                 }
                 # We update the index for next iteration

@@ -135,15 +135,4 @@ class RedisPa:
 
 
 if __name__ == '__main__':
-    from mysql.methods.fn_creature  import fn_creature_get
-
-    creature = fn_creature_get(None, 1)[3]
-    pa = RedisPa(creature)
-    logger.success(pa.__dict__)
-    logger.success(pa._asdict())
-    pa.consume(redpa=1)
-    pa.refresh()
-    logger.success(pa._asdict())
-    pa.reset()
-    pa.destroy()
-    logger.success(pa._asdict())
+    pass

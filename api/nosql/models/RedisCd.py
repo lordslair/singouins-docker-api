@@ -74,11 +74,11 @@ class RedisCd:
                 hash = r.hgetall(f'{self.hkey}:{name}')
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
 
-                self.bearer        = int(hash['bearer'])
+                self.bearer        = hash['bearer']
                 self.duration_base = int(hash['duration_base'])
                 self.duration_left = int(r.ttl(f'{self.hkey}:{name}'))
                 self.name          = hash['name']
-                self.source        = int(hash['source'])
+                self.source        = hash['source']
                 self.type          = hash['type']
 
                 # We convert JSON > dict
@@ -140,7 +140,7 @@ class RedisCd:
                     "extra": extra,
                     "id": int(1 + index / 2),
                     "name": pipeline[index]['name'],
-                    "source": int(pipeline[index]['source']),
+                    "source": pipeline[index]['source'],
                     "type": pipeline[index]['type']
                 }
                 # We update the index for next iteration
@@ -183,13 +183,13 @@ class RedisCd:
                 elif isinstance(pipeline[index]['extra'], str):
                     extra = json.loads(pipeline[index]['extra'])
                 cd = {
-                    "bearer": int(pipeline[index]['bearer']),
+                    "bearer": pipeline[index]['bearer'],
                     "duration_base": int(pipeline[index]['duration_base']),
                     "duration_left": int(pipeline[index + 1]),
                     "extra": extra,
                     "id": int(1 + index / 2),
                     "name": pipeline[index]['name'],
-                    "source": int(pipeline[index]['source']),
+                    "source": pipeline[index]['source'],
                     "type": pipeline[index]['type']
                 }
                 # We update the index for next iteration
