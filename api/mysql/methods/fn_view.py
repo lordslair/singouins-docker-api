@@ -10,49 +10,6 @@ from mysql.models               import Creature
 from nosql.models.RedisStats    import RedisStats
 
 
-def fn_creature_view_get(creature):
-    session = Session()
-    h       = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    view_final = []
-    try:
-        # We check if we have the data in redis
-        creature_stats  = RedisStats(creature)._asdict()
-
-        range = 4 + round(creature_stats['base']['p'] / 50)
-        maxx  = creature.x + range
-        minx  = creature.x - range
-        maxy  = creature.y + range
-        miny  = creature.y - range
-
-        view  = session.query(Creature)\
-                       .filter(Creature.instance == creature.instance)\
-                       .filter(Creature.x.between(minx, maxx))\
-                       .filter(Creature.y.between(miny, maxy))\
-                       .all()
-
-        for creature in view:
-            # Lets convert to a dataclass then a dict
-            creature       = dataclasses.asdict(creature)
-            # We define the default diplomacy title
-            creature['diplo'] = 'neutral'
-            # We try to define the diplomacy based on tests
-            if creature['race'] >= 11:
-                creature['diplo'] = 'enemy'
-
-            view_final.append(creature)
-    except Exception as e:
-        msg = f'{h} View Query KO [{e}]'
-        logger.error(msg)
-        return None
-    else:
-        msg = f'{h} View Query OK'
-        logger.trace(msg)
-        return view_final
-    finally:
-        session.close()
-
-
 def fn_creature_squad_view_get(creature):
     session = Session()
     h       = f'[Creature.id:{creature.id}]'  # Header for logging
