@@ -3,8 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
 
 from variables                  import API_INTERNAL_TOKEN
@@ -17,8 +16,23 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/effect/{effect_name}
 def creature_effect_add(creatureid, effect_name):
+    Creature = RedisCreature().get(creatureid)
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = f'{h} Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -28,7 +42,7 @@ def creature_effect_add(creatureid, effect_name):
             }
         ), 403
     if not request.is_json:
-        msg = 'Missing JSON in request'
+        msg = f'{h} Missing JSON in request'
         logger.warning(msg)
         return jsonify(
             {
@@ -43,7 +57,7 @@ def creature_effect_add(creatureid, effect_name):
     source      = request.json.get('source')
 
     if not isinstance(duration, int):
-        msg = f'Duration should be an INT (duration:{duration})'
+        msg = f'{h} Duration should be an INT (duration:{duration})'
         logger.warning(msg)
         return jsonify(
             {
@@ -53,7 +67,7 @@ def creature_effect_add(creatureid, effect_name):
             }
         ), 200
     if not isinstance(source, int):
-        msg = f'Source should be an INT (source:{source})'
+        msg = f'{h} Source should be an INT (source:{source})'
         logger.warning(msg)
         return jsonify(
             {
@@ -63,31 +77,16 @@ def creature_effect_add(creatureid, effect_name):
             }
         ), 200
 
-    # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    # Cd add
+    # Effect add
     try:
-        redis_effect = RedisEffect(creature)
+        redis_effect = RedisEffect(Creature)
         # This returns True if the HASH is properly stored in Redis
-        stored_effect = redis_effect.add(duration_base=duration,
-                                         extra=extra,
-                                         name=effect_name,
-                                         source=source
-                                         )
+        stored_effect = redis_effect.add(
+            duration_base=duration,
+            extra=extra,
+            name=effect_name,
+            source=source
+            )
         creature_effects = redis_effect.get_all()
     except Exception as e:
         msg = f'{h} Effect Query KO [{e}]'
@@ -101,7 +100,7 @@ def creature_effect_add(creatureid, effect_name):
         ), 200
     else:
         if stored_effect and creature_effects:
-            msg = f'{h} Effect Query OK (creatureid:{creature.id})'
+            msg = f'{h} Effect Query OK'
             logger.debug(msg)
             return jsonify(
                 {
@@ -109,12 +108,12 @@ def creature_effect_add(creatureid, effect_name):
                     "msg": msg,
                     "payload": {
                         "effects": creature_effects,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
         else:
-            msg = f'{h} Effect Query KO (creatureid:{creature.id})'
+            msg = f'{h} Effect Query KO'
             logger.warning(msg)
             return jsonify(
                 {
@@ -127,22 +126,10 @@ def creature_effect_add(creatureid, effect_name):
 
 # API: DELETE /internal/creature/{creatureid}/effect/{effect_name}
 def creature_effect_del(creatureid, effect_name):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -152,11 +139,22 @@ def creature_effect_del(creatureid, effect_name):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    # Cd del
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
+
+    # Effect del
     try:
-        redis_effect      = RedisEffect(creature)
+        redis_effect      = RedisEffect(Creature)
         deleted_effect    = redis_effect.destroy(effect_name)
         creature_effects  = redis_effect.get_all()
     except Exception as e:
@@ -179,7 +177,7 @@ def creature_effect_del(creatureid, effect_name):
                     "msg": msg,
                     "payload": {
                         "effects": creature_effects,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
@@ -197,21 +195,10 @@ def creature_effect_del(creatureid, effect_name):
 
 # API: GET /internal/creature/{creatureid}/effect/{effect_name}
 def creature_effect_get_one(creatureid, effect_name):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -221,14 +208,25 @@ def creature_effect_get_one(creatureid, effect_name):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    # Cd get
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
+
+    # Effect get
     try:
-        redis_effect    = RedisEffect(creature)
+        redis_effect    = RedisEffect(Creature)
         creature_effect = redis_effect.get(effect_name)
     except Exception as e:
-        msg = f'Cd Query KO [{e}]'
+        msg = f'Effect Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -257,7 +255,7 @@ def creature_effect_get_one(creatureid, effect_name):
                     "msg": msg,
                     "payload": {
                         "effect": creature_effect,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
@@ -275,22 +273,10 @@ def creature_effect_get_one(creatureid, effect_name):
 
 # API: GET /internal/creature/{creatureid}/effects
 def creature_effect_get_all(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -300,11 +286,22 @@ def creature_effect_get_all(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     # Effects get
     try:
-        redis_effect      = RedisEffect(creature)
+        redis_effect      = RedisEffect(Creature)
         creature_effects  = redis_effect.get_all()
     except Exception as e:
         msg = f'{h} Effects Query KO [{e}]'
@@ -326,7 +323,7 @@ def creature_effect_get_all(creatureid):
                     "msg": msg,
                     "payload": {
                         "effects": creature_effects,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200

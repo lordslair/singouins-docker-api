@@ -7,29 +7,26 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
-from mysql.methods.fn_korp      import (fn_korp_add_one,
-                                        fn_korp_delete_one,
-                                        fn_korp_get_one,
-                                        fn_korp_get_one_by_name,
-                                        fn_korp_set_rank)
-
+from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisKorp     import RedisKorp
+from nosql.models.RedisUser     import RedisUser
 from nosql.queue                import yqueue_put
 
 
 #
 # Routes /mypc/{pcid}/korp
 #
-# API: POST /mypc/<int:pcid>/korp/<int:korpid>/accept
+# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/accept
 @jwt_required()
 def korp_accept(pcid, korpid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -39,10 +36,9 @@ def korp_accept(pcid, korpid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -51,7 +47,8 @@ def korp_accept(pcid, korpid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -61,7 +58,7 @@ def korp_accept(pcid, korpid):
                 "payload": None,
             }
         ), 200
-    if creature.korp_rank != 'Pending':
+    if Creature.korp_rank != 'Pending':
         msg = f'{h} Korp pending is required (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -73,7 +70,8 @@ def korp_accept(pcid, korpid):
         ), 200
 
     try:
-        fn_korp_set_rank(creature, korpid, 'Member')
+        Creature.korp = None
+        Creature.korp_rank = 'Member'
     except Exception as e:
         msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -86,7 +84,7 @@ def korp_accept(pcid, korpid):
         ), 200
     else:
         try:
-            korp = fn_korp_get_one(korpid)
+            Korp = RedisKorp().get(korpid)
         except Exception as e:
             msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
             logger.error(msg)
@@ -101,14 +99,14 @@ def korp_accept(pcid, korpid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": (f':information_source: '
-                                f'**[{creature.id}] {creature.name}** '
+                                f'**{Creature.name}** '
                                 f'joined this Korp'),
                     "embed": None,
-                    "scope": f'Korp-{creature.korp}'}
+                    "scope": f'Korp-{Creature.korp}'}
             yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
             yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
@@ -119,20 +117,33 @@ def korp_accept(pcid, korpid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                 }
             ), 200
 
 
-# API: POST /mypc/<int:pcid>/korp
+# API: POST /mypc/<uuid:pcid>/korp
 @jwt_required()
 def korp_create(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
     if not request.is_json:
-        msg = 'Missing JSON in request'
+        msg = f'{h} Missing JSON in request'
         logger.warning(msg)
         return jsonify(
             {
@@ -143,7 +154,7 @@ def korp_create(pcid):
         ), 400
     korpname = request.json.get('name', None)
     if korpname is None:
-        msg = f'Korpname not found (korpname:{korpname})'
+        msg = f'{h} Korpname not found (korpname:{korpname})'
         logger.warning(msg)
         return jsonify(
             {
@@ -157,7 +168,7 @@ def korp_create(pcid):
     korpname = ''.join([c for c in korpname if c.isalnum() or c in [" ", "'"]])
     # Size check
     if len(korpname) > 16:
-        msg = f'Korp name too long (korpname:{korpname})'
+        msg = f'{h} Korp name too long (korpname:{korpname})'
         logger.warning(msg)
         return jsonify(
             {
@@ -167,9 +178,8 @@ def korp_create(pcid):
             }
         ), 200
 
-    # Unicity test
-    if fn_korp_get_one_by_name(korpname):
-        msg = f'Korp already exists (korpname:{korpname})'
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -179,32 +189,8 @@ def korp_create(pcid):
             }
         ), 409
 
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
-    if creature.korp is not None:
-        msg = f'{h} PC already in a Korp (korpid:{creature.korp})'
+    if Creature.korp is not None:
+        msg = f'{h} PC already in a Korp (korpid:{Creature.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -215,33 +201,17 @@ def korp_create(pcid):
         ), 200
 
     try:
-        newkorp = fn_korp_add_one(creature, korpname)
+        Korp = RedisKorp().new(Creature, korpname)
     except Exception as e:
         msg = f'{h} Korp Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
-
-    # Korp created, let's assign the team creator in the korp
-    try:
-        fn_korp_set_rank(creature, newkorp.id, 'Leader')
-    except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{newkorp.id}) [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
     else:
-        try:
-            korp = fn_korp_get_one(newkorp.id)
-        except Exception as e:
-            msg = f'{h} Korp Query KO (korpid:{newkorp.id}) [{e}]'
-            logger.error(msg)
+        if Korp is False:
+            msg = f'{h} Korp Query KO - Already exists'
+            logger.warning(msg)
             return jsonify(
                 {
                     "success": False,
@@ -249,42 +219,59 @@ def korp_create(pcid):
                     "payload": None,
                 }
             ), 200
-        else:
-            # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**[{creature.id}] {creature.name}** '
-                                f'created this Korp'),
-                    "embed": None,
-                    "scope": f'Korp-{creature.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
-                    "payload": korp,
-                    "route": 'mypc/{id1}/korp',
-                    "scope": 'korp'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
-            msg = f'{h} Korp create OK (korpid:{creature.korp})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": korp,
-                }
-            ), 201
+    # Korp created, let's assign the team creator in the korp
+    try:
+        Creature.korp = Korp.id
+        Creature.korp_rank = 'Leader'
+    except Exception as e:
+        msg = f'{h} Korp Query KO (korpid:{Korp.id}) [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        # We put the info in queue for ws
+        qmsg = {"ciphered": False,
+                "payload": (f':information_source: '
+                            f'**{Creature.name}** '
+                            f'created this Korp'),
+                "embed": None,
+                "scope": f'Korp-{Creature.korp}'}
+        yqueue_put('yarqueue:discord', qmsg)
+        # We put the info in queue for ws Front
+        qmsg = {"ciphered": False,
+                "payload": Korp._asdict(),
+                "route": 'mypc/{id1}/korp',
+                "scope": 'korp'}
+        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+
+        msg = f'{h} Korp create OK (korpid:{Creature.korp})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": Korp._asdict(),
+            }
+        ), 201
 
 
-# API: POST /mypc/<int:pcid>/korp/<int:korpid>/decline
+# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/decline
 @jwt_required()
 def korp_decline(pcid, korpid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -294,10 +281,9 @@ def korp_decline(pcid, korpid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -306,7 +292,8 @@ def korp_decline(pcid, korpid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -316,7 +303,7 @@ def korp_decline(pcid, korpid):
                 "payload": None,
             }
         ), 200
-    if creature.korp_rank == 'Leader':
+    if Creature.korp_rank == 'Leader':
         msg = f'{h} PC cannot be the korp Leader (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -328,7 +315,8 @@ def korp_decline(pcid, korpid):
         ), 200
 
     try:
-        fn_korp_set_rank(creature, None, None)
+        Creature.korp_rank = None
+        Creature.korp = None
     except Exception as e:
         msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -341,7 +329,7 @@ def korp_decline(pcid, korpid):
         ), 200
     else:
         try:
-            korp = fn_korp_get_one(korpid)
+            Korp = RedisKorp().get(korpid)
         except Exception as e:
             msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
             logger.error(msg)
@@ -357,7 +345,7 @@ def korp_decline(pcid, korpid):
             qname = 'yarqueue:discord'
             qmsg  = {"ciphered": False,
                      "payload": (f':information_source: '
-                                 f'**[{creature.id}] {creature.name}** '
+                                 f'**{Creature.name}** '
                                  f'declined this Korp'),
                      "embed": None,
                      "scope": f'Korp-{korpid}'}
@@ -366,7 +354,7 @@ def korp_decline(pcid, korpid):
             # We put the info in queue for ws Front
             qname = 'broadcast'
             qmsg = {"ciphered": False,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
             logger.trace(f'{qname}:{qmsg}')
@@ -378,20 +366,22 @@ def korp_decline(pcid, korpid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                 }
             ), 200
 
 
-# API: DELETE /mypc/<int:pcid>/korp/<int:korpid>
+# API: DELETE /mypc/<uuid:pcid>/korp/<uuid:korpid>
 @jwt_required()
 def korp_delete(pcid, korpid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -401,10 +391,9 @@ def korp_delete(pcid, korpid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -413,7 +402,8 @@ def korp_delete(pcid, korpid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -423,8 +413,8 @@ def korp_delete(pcid, korpid):
                 "payload": None,
             }
         ), 200
-    if creature.korp_rank != 'Leader':
-        msg = f'{h} PC is not the korp Leader (korpid:{creature.korp_rank})'
+    if Creature.korp_rank != 'Leader':
+        msg = f'{h} PC is not the korp Leader (korpid:{Creature.korp_rank})'
         logger.warning(msg)
         return jsonify(
             {
@@ -435,9 +425,10 @@ def korp_delete(pcid, korpid):
         ), 200
 
     try:
-        korp = fn_korp_get_one(korpid)
+        korp = Creature.korp.replace('-', ' ')
+        Members = RedisCreature().search(f"@korp:{korp}")
     except Exception as e:
-        msg = f'Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'Creature Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -447,7 +438,7 @@ def korp_delete(pcid, korpid):
             }
         ), 200
 
-    count = len(korp['members']) + len(korp['pending'])
+    count = len(Members)
     if count > 1:
         msg = f'Korp not empty (korpid:{korpid},members:{count})'
         logger.error(msg)
@@ -460,8 +451,9 @@ def korp_delete(pcid, korpid):
         ), 200
 
     try:
-        fn_korp_delete_one(korp['korp'].id)   # We delete the Korp
-        fn_korp_set_rank(creature, None, None)  # We empty Leader Korp fields
+        RedisKorp().destroy(korpid)
+        Creature.korp = None
+        Creature.korp_rank = None
     except Exception as e:
         msg = f'Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -476,7 +468,7 @@ def korp_delete(pcid, korpid):
         # We put the info in queue for ws
         qmsg = {"ciphered": False,
                 "payload": (f':information_source: '
-                            f'**[{creature.id}] {creature.name}** '
+                            f'**{Creature.name}** '
                             f'deleted this Korp'),
                 "embed": None,
                 "scope": f'Korp-{korpid}'}
@@ -502,12 +494,14 @@ def korp_delete(pcid, korpid):
 # API: GET /mypc/{pcid}/korp/{korpid}
 @jwt_required()
 def korp_get_one(pcid, korpid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -517,10 +511,9 @@ def korp_get_one(pcid, korpid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -529,7 +522,8 @@ def korp_get_one(pcid, korpid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -541,25 +535,40 @@ def korp_get_one(pcid, korpid):
         ), 200
 
     try:
-        korp = fn_korp_get_one(korpid)
+        Korp = RedisKorp().get(korpid)
+        korp = Creature.korp.replace('-', ' ')
+        KorpMembers = RedisCreature().search(
+            f"(@korp:{korp}) & (@korp_rank:-Pending)"
+            )
+        KorpPending = RedisCreature().search(
+            f"(@korp:{korp}) & (@korp_rank:Pending)"
+            )
     except Exception as e:
         msg = f'Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
-        if korp:
+        if Korp:
             msg = f'{h} Korp Query OK (korpid:{korpid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": {
+                        "members": KorpMembers,
+                        "pending": KorpPending,
+                        "korp": Korp._asdict(),
+                        }
                 }
             ), 200
-        elif korp is False:
+        elif Korp is False:
             msg = f'{h} Korp Query KO - Not Found (korpid:{korpid})'
             logger.warning(msg)
             return jsonify(
@@ -581,16 +590,18 @@ def korp_get_one(pcid, korpid):
             ), 200
 
 
-# API: POST /mypc/<int:pcid>/korp/<int:korpid>/invite/<int:targetid>
+# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/invite/<int:targetid>
 @jwt_required()
 def korp_invite(pcid, korpid, targetid):
-    target   = fn_creature_get(None, targetid)[3]
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    CreatureTarget = RedisCreature().get(targetid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None or target is None:
-        msg = f'Creature not found (creatureid:{pcid},target:({targetid}))'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -600,10 +611,9 @@ def korp_invite(pcid, korpid, targetid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -612,7 +622,8 @@ def korp_invite(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -622,7 +633,7 @@ def korp_invite(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 200
-    if creature.korp_rank != 'Leader':
+    if Creature.korp_rank != 'Leader':
         msg = f'{h} PC should be the korp Leader (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -632,8 +643,11 @@ def korp_invite(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 200
-    if target.korp is not None:
-        msg = f'{h} Already in Korp (pcid:{target.id},korpid:{target.korp})'
+    if CreatureTarget.korp is not None:
+        msg = (
+            f'{h} Already in Korp '
+            f'(pcid:{CreatureTarget.id},korpid:{CreatureTarget.korp})'
+            )
         logger.warning(msg)
         return jsonify(
             {
@@ -645,7 +659,8 @@ def korp_invite(pcid, korpid, targetid):
 
     # Korp population check
     try:
-        korp = fn_korp_get_one(korpid)
+        korp = Creature.korp.replace('-', ' ')
+        Members = RedisCreature().search(f"@korp:{korp}")
     except Exception as e:
         msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -657,7 +672,7 @@ def korp_invite(pcid, korpid, targetid):
             }
         ), 200
 
-    count      = len(korp['members']) + len(korp['pending'])
+    count      = len(Members)
     maxmembers = 100
     if count == maxmembers:
         members = f'{count}/{maxmembers}'
@@ -672,7 +687,8 @@ def korp_invite(pcid, korpid, targetid):
         ), 200
 
     try:
-        fn_korp_set_rank(target, korpid, 'Pending')  # We set Target Korp
+        CreatureTarget.korp = korpid
+        CreatureTarget.korp_rank = 'Pending'
     except Exception as e:
         msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -685,7 +701,7 @@ def korp_invite(pcid, korpid, targetid):
         ), 200
     else:
         try:
-            korp = fn_korp_get_one(korpid)
+            Korp = RedisKorp().get(korpid)
         except Exception as e:
             msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
             logger.error(msg)
@@ -700,16 +716,16 @@ def korp_invite(pcid, korpid, targetid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": (f':information_source: '
-                                f'**[{creature.id}] {creature.name}** '
+                                f'**{Creature.name}** '
                                 f'invited '
-                                f'**[{target.id}] {target.name}** '
+                                f'**{CreatureTarget.name}** '
                                 f'in this Korp'),
                     "embed": None,
-                    "scope": f'Korp-{creature.korp}'}
+                    "scope": f'Korp-{Creature.korp}'}
             yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
             yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
@@ -720,21 +736,23 @@ def korp_invite(pcid, korpid, targetid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                 }
             ), 200
 
 
-# API: POST /mypc/<int:pcid>/korp/<int:korpid>/kick/<int:targetid>
+# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/kick/<int:targetid>
 @jwt_required()
 def korp_kick(pcid, korpid, targetid):
-    target   = fn_creature_get(None, targetid)[3]
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    CreatureTarget = RedisCreature().get(targetid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None or target is None:
-        msg = f'Creature not found (creatureid:{pcid},target:({targetid}))'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -744,10 +762,9 @@ def korp_kick(pcid, korpid, targetid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -756,7 +773,8 @@ def korp_kick(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -766,7 +784,7 @@ def korp_kick(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 200
-    if creature.korp_rank != 'Leader':
+    if Creature.korp_rank != 'Leader':
         msg = f'{h} PC should be the korp Leader (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -776,8 +794,8 @@ def korp_kick(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 200
-    if target.korp is None:
-        msg = f'{h} Should be in Korp (korpid:{target.korp})'
+    if CreatureTarget.korp is None:
+        msg = f'{h} Should be in Korp (korpid:{CreatureTarget.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -786,8 +804,8 @@ def korp_kick(pcid, korpid, targetid):
                 "payload": None,
             }
         ), 200
-    if target.id == creature.id:
-        msg = f'{h} Cannot kick yourself (korpid:{target.korp})'
+    if CreatureTarget.id == Creature.id:
+        msg = f'{h} Cannot kick yourself (korpid:{CreatureTarget.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -798,7 +816,8 @@ def korp_kick(pcid, korpid, targetid):
         ), 200
 
     try:
-        fn_korp_set_rank(target, None, None)  # We empty Target Korp fields
+        CreatureTarget.korp = None
+        CreatureTarget.korp_rank = None
     except Exception as e:
         msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -811,7 +830,7 @@ def korp_kick(pcid, korpid, targetid):
         ), 200
     else:
         try:
-            korp = fn_korp_get_one(korpid)
+            Korp = RedisKorp().get(korpid)
         except Exception as e:
             msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
             logger.error(msg)
@@ -826,16 +845,16 @@ def korp_kick(pcid, korpid, targetid):
             # We put the info in queue for ws Discord
             qmsg = {"ciphered": False,
                     "payload": (f':information_source: '
-                                f'**[{creature.id}] {creature.name}** '
+                                f'**{Creature.name}** '
                                 f'kicked '
-                                f'**[{target.id}] {target.name}** '
+                                f'**{CreatureTarget.name}** '
                                 f'from this Korp'),
                     "embed": None,
-                    "scope": f'Korp-{creature.korp}'}
+                    "scope": f'Korp-{Creature.korp}'}
             yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
             yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
@@ -846,20 +865,22 @@ def korp_kick(pcid, korpid, targetid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                 }
             ), 200
 
 
-# API: /mypc/<int:pcid>/korp/<int:korpid>/leave
+# API: /mypc/<uuid:pcid>/korp/<uuid:korpid>/leave
 @jwt_required()
 def korp_leave(pcid, korpid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    korpid = str(korpid)
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -869,10 +890,9 @@ def korp_leave(pcid, korpid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -881,7 +901,8 @@ def korp_leave(pcid, korpid):
                 "payload": None,
             }
         ), 409
-    if creature.korp != korpid:
+
+    if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -891,7 +912,7 @@ def korp_leave(pcid, korpid):
                 "payload": None,
             }
         ), 200
-    if creature.korp_rank == 'Leader':
+    if Creature.korp_rank == 'Leader':
         msg = f'{h} PC cannot be the korp Leader (korpid:{korpid})'
         logger.warning(msg)
         return jsonify(
@@ -903,7 +924,8 @@ def korp_leave(pcid, korpid):
         ), 200
 
     try:
-        fn_korp_set_rank(creature, None, None)  # We empty Member Korp fields
+        Creature.korp = None
+        Creature.korp_rank = None
     except Exception as e:
         msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
         logger.error(msg)
@@ -916,7 +938,7 @@ def korp_leave(pcid, korpid):
         ), 200
     else:
         try:
-            korp = fn_korp_get_one(korpid)
+            Korp = RedisKorp().get(korpid)
         except Exception as e:
             msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
             logger.error(msg)
@@ -931,14 +953,14 @@ def korp_leave(pcid, korpid):
             # We put the info in queue for ws
             qmsg = {"ciphered": False,
                     "payload": (f':information_source: '
-                                f'**[{creature.id}] {creature.name}** '
+                                f'**{Creature.name}** '
                                 f'left this Korp'),
                     "embed": None,
                     "scope": f'Korp-{korpid}'}
             yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
             qmsg = {"ciphered": False,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp'}
             yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
@@ -949,6 +971,6 @@ def korp_leave(pcid, korpid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                 }
             ), 200

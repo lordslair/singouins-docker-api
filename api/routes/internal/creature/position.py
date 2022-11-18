@@ -3,8 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import (fn_creature_get,
-                                        fn_creature_position_set)
+from nosql.models.RedisCreature import RedisCreature
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -16,21 +15,10 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/position/{x}/{y}
 def creature_position_set(creatureid, x, y):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -40,10 +28,22 @@ def creature_position_set(creatureid, x, y):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     try:
-        creature    = fn_creature_position_set(creature.id, x, y)
+        Creature.x = x
+        Creature.y = y
     except Exception as e:
         msg = f'{h} Position Query KO [{e}]'
         logger.error(msg)
@@ -55,23 +55,12 @@ def creature_position_set(creatureid, x, y):
             }
         ), 200
     else:
-        if creature:
-            msg = f'{h} Position Query OK'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": creature,
-                }
-            ), 200
-        else:
-            msg = f'{h} Position Query KO - NotFound'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'{h} Position Query OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": Creature._asdict(),
+            }
+        ), 200

@@ -72,17 +72,17 @@ class RedisStats:
             self.p_class = 0
             self.b_class = 0
 
-            if classid == '1':
+            if classid == 1:
                 self.m_class = 10
-            if classid == '2':
+            if classid == 2:
                 self.r_class = 10
-            if classid == '3':
+            if classid == 3:
                 self.g_class = 10
-            if classid == '4':
+            if classid == 4:
                 self.v_class = 10
-            if classid == '5':
+            if classid == 5:
                 self.p_class = 10
-            if classid == '6':
+            if classid == 6:
                 self.b_class = 10
 
             # We got Creature base stats - Just consolidate

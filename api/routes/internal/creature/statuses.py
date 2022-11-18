@@ -3,8 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStatus   import RedisStatus
 
 from variables                  import API_INTERNAL_TOKEN
@@ -17,8 +16,23 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/status/{status_name}
 def creature_status_add(creatureid, status_name):
+    Creature = RedisCreature().get(creatureid)
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = f'{h} Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -28,7 +42,7 @@ def creature_status_add(creatureid, status_name):
             }
         ), 403
     if not request.is_json:
-        msg = 'Missing JSON in request'
+        msg = f'{h} Missing JSON in request'
         logger.warning(msg)
         return jsonify(
             {
@@ -63,30 +77,16 @@ def creature_status_add(creatureid, status_name):
             }
         ), 200
 
-    # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    # Cd add
+    # Status add
     try:
-        redis_status = RedisStatus(creature)
+        redis_status = RedisStatus(Creature)
         # This returns True if the HASH is properly stored in Redis
-        stored_status = redis_status.add(duration_base=duration,
-                                         extra=extra,
-                                         name=status_name,
-                                         source=source
-                                         )
+        stored_status = redis_status.add(
+            duration_base=duration,
+            extra=extra,
+            name=status_name,
+            source=source
+            )
         creature_statuses = redis_status.get_all()
     except Exception as e:
         msg = f'{h} Status Query KO [{e}]'
@@ -100,7 +100,7 @@ def creature_status_add(creatureid, status_name):
         ), 200
     else:
         if stored_status and creature_statuses:
-            msg = f'{h} Status Query OK (creatureid:{creature.id})'
+            msg = f'{h} Status Query OK'
             logger.debug(msg)
             return jsonify(
                 {
@@ -108,12 +108,12 @@ def creature_status_add(creatureid, status_name):
                     "msg": msg,
                     "payload": {
                         "statuses": creature_statuses,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
         else:
-            msg = f'{h} Status Query KO (creatureid:{creature.id})'
+            msg = f'{h} Status Query KO'
             logger.warning(msg)
             return jsonify(
                 {
@@ -126,22 +126,10 @@ def creature_status_add(creatureid, status_name):
 
 # API: DELETE /internal/creature/{creatureid}/status/{status_name}
 def creature_status_del(creatureid, status_name):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -151,11 +139,22 @@ def creature_status_del(creatureid, status_name):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     # Cd del
     try:
-        redis_status      = RedisStatus(creature)
+        redis_status      = RedisStatus(Creature)
         deleted_status    = redis_status.destroy(status_name)
         creature_statuses = redis_status.get_all()
     except Exception as e:
@@ -178,7 +177,7 @@ def creature_status_del(creatureid, status_name):
                     "msg": msg,
                     "payload": {
                         "statuses": creature_statuses,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
@@ -196,22 +195,10 @@ def creature_status_del(creatureid, status_name):
 
 # API: GET /internal/creature/{creatureid}/status/{status_name}
 def creature_status_get_one(creatureid, status_name):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -221,11 +208,22 @@ def creature_status_get_one(creatureid, status_name):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     # Cd get
     try:
-        redis_status    = RedisStatus(creature)
+        redis_status    = RedisStatus(Creature)
         creature_status = redis_status.get(status_name)
     except Exception as e:
         msg = f'Cd Query KO [{e}]'
@@ -257,7 +255,7 @@ def creature_status_get_one(creatureid, status_name):
                     "msg": msg,
                     "payload": {
                         "status": creature_status,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
@@ -275,22 +273,10 @@ def creature_status_get_one(creatureid, status_name):
 
 # API: GET /internal/creature/{creatureid}/statuses
 def creature_status_get_all(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -300,11 +286,22 @@ def creature_status_get_all(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
 
     # Statuses get
     try:
-        redis_status      = RedisStatus(creature)
+        redis_status      = RedisStatus(Creature)
         creature_statuses = redis_status.get_all()
     except Exception as e:
         msg = f'{h} Statuses Query KO [{e}]'
@@ -326,7 +323,7 @@ def creature_status_get_all(creatureid):
                     "msg": msg,
                     "payload": {
                         "statuses": creature_statuses,
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200

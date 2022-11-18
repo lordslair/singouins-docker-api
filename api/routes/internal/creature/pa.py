@@ -3,8 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisPa       import RedisPa
 
 from variables                  import API_INTERNAL_TOKEN
@@ -18,7 +17,7 @@ from variables                  import API_INTERNAL_TOKEN
 # API: GET /internal/creature/{creatureid}/pa
 def creature_pa_get(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -28,10 +27,10 @@ def creature_pa_get(creatureid):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -41,10 +40,10 @@ def creature_pa_get(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        creature_pa = RedisPa(creature)
+        Pa = RedisPa(Creature)
     except Exception as e:
         msg = f'{h} PA Query KO [{e}]'
         logger.error(msg)
@@ -56,7 +55,7 @@ def creature_pa_get(creatureid):
             }
         ), 200
     else:
-        if creature_pa:
+        if Pa:
             msg = f'{h} PA Query OK'
             logger.debug(msg)
             return jsonify(
@@ -64,8 +63,8 @@ def creature_pa_get(creatureid):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "pa": creature_pa._asdict(),
-                        "creature": creature,
+                        "pa": Pa._asdict(),
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
@@ -84,7 +83,7 @@ def creature_pa_get(creatureid):
 # API: PUT /internal/creature/{creatureid}/pa/consume/{redpa}/{bluepa}
 def creature_pa_consume(creatureid, redpa, bluepa):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -94,10 +93,10 @@ def creature_pa_consume(creatureid, redpa, bluepa):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -107,7 +106,7 @@ def creature_pa_consume(creatureid, redpa, bluepa):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     if redpa > 16 or bluepa > 8:
         msg = (f'{h} Cannot consume more than max PA '
@@ -131,8 +130,8 @@ def creature_pa_consume(creatureid, redpa, bluepa):
             }
         ), 200
 
-    creature_pa = RedisPa(creature)
-    if redpa > creature_pa.redpa or bluepa > creature_pa.bluepa:
+    Pa = RedisPa(Creature)
+    if redpa > Pa.redpa or bluepa > Pa.bluepa:
         msg = (f'{h} Cannot consume that amount of PA '
                f'(redpa:{redpa},bluepa:{bluepa})')
         logger.warning(msg)
@@ -145,7 +144,7 @@ def creature_pa_consume(creatureid, redpa, bluepa):
         ), 200
 
     try:
-        ret = creature_pa.consume(redpa=redpa, bluepa=bluepa)
+        ret = Pa.consume(redpa=redpa, bluepa=bluepa)
     except Exception as e:
         msg = f'{h} PA Query KO (redpa:{redpa},bluepa:{bluepa}) [{e}]'
         logger.error(msg)
@@ -165,8 +164,8 @@ def creature_pa_consume(creatureid, redpa, bluepa):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "pa": creature_pa._asdict(),
-                        "creature": creature,
+                        "pa": Pa._asdict(),
+                        "creature": Creature._asdict(),
                         },
                 }
             ), 200
@@ -185,7 +184,7 @@ def creature_pa_consume(creatureid, redpa, bluepa):
 # API: POST /internal/creature/{creatureid}/pa/reset
 def creature_pa_reset(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -195,10 +194,10 @@ def creature_pa_reset(creatureid):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -208,11 +207,11 @@ def creature_pa_reset(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        creature_pa = RedisPa(creature)
-        ret         = creature_pa.reset()
+        Pa = RedisPa(Creature)
+        Pa.reset()
     except Exception as e:
         msg = f'{h} PA Query KO [{e}]'
         logger.error(msg)
@@ -224,26 +223,15 @@ def creature_pa_reset(creatureid):
             }
         ), 200
     else:
-        if ret:
-            msg = f'{h} PA Query OK'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": {
-                        "pa": creature_pa._asdict(),
-                        "creature": creature,
-                        },
-                }
-            ), 200
-        else:
-            msg = f'{h} PA Query KO'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'{h} PA Query OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "pa": Pa._asdict(),
+                    "creature": Creature._asdict(),
+                    },
+            }
+        ), 200

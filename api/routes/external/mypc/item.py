@@ -5,13 +5,12 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
-
 from nosql.models.RedisCosmetic import RedisCosmetic
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
+from nosql.models.RedisUser     import RedisUser
 
 
 #
@@ -20,12 +19,12 @@ from nosql.models.RedisWallet   import RedisWallet
 # API: GET /mypc/{pcid}/item
 @jwt_required()
 def item_get(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -34,9 +33,10 @@ def item_get(pcid):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creatureid:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -47,18 +47,19 @@ def item_get(pcid):
         ), 409
 
     try:
-        creature_inventory = RedisItem(creature).search(
-            field='bearer', query=f'[{creature.id} {creature.id}]'
+        bearer = Creature.id.replace('-', ' ')
+        creature_inventory = RedisItem(Creature).search(
+            field='bearer', query=f'{bearer}'
             )
 
         armor = [x for x in creature_inventory if x['metatype'] == 'armor']
         weapon = [x for x in creature_inventory if x['metatype'] == 'weapon']
 
-        creature_slots = RedisSlots(creature)
-        creature_cosmetics = RedisCosmetic(creature).get_all()
-        creature_wallet = RedisWallet(creature)
+        creature_slots = RedisSlots(Creature)
+        creature_cosmetics = RedisCosmetic(Creature).get_all()
+        creature_wallet = RedisWallet(Creature)
     except Exception as e:
-        msg = f'Items Query KO (pcid:{creature.id}) [{e}]'
+        msg = f'{h} Items Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -68,7 +69,7 @@ def item_get(pcid):
             }
         ), 200
     else:
-        msg = f'Equipment query successed (pcid:{creature.id})'
+        msg = f'{h} Items Query OK'
         logger.debug(msg)
         return jsonify(
             {

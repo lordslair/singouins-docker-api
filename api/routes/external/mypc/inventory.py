@@ -2,16 +2,14 @@
 
 import json
 
-from flask                               import jsonify
-from flask_jwt_extended                  import (jwt_required,
-                                                 get_jwt_identity)
-from loguru                              import logger
-
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
+from flask                      import jsonify
+from flask_jwt_extended         import (jwt_required,
+                                        get_jwt_identity)
+from loguru                     import logger
 
 from nosql.metas                import metaArmors, metaWeapons
 from nosql.queue                import yqueue_put
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisHS       import RedisHS
@@ -19,6 +17,7 @@ from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
+from nosql.models.RedisUser     import RedisUser
 
 
 #
@@ -27,11 +26,11 @@ from nosql.models.RedisWallet   import RedisWallet
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle
 @jwt_required()
 def inventory_item_dismantle(pcid, itemid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -42,10 +41,10 @@ def inventory_item_dismantle(pcid, itemid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'Token/username mismatch '
+               f'(creatureid:{Creature.id},username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -54,7 +53,8 @@ def inventory_item_dismantle(pcid, itemid):
                 "payload": None,
             }
         ), 409
-    if RedisPa(creature).bluepa < 1:
+
+    if RedisPa(Creature).bluepa < 1:
         msg = f'{h} Not enough PA'
         logger.warning(msg)
         return jsonify(
@@ -66,7 +66,7 @@ def inventory_item_dismantle(pcid, itemid):
         ), 200
 
     try:
-        item = RedisItem(creature).get(itemid)
+        item = RedisItem(Creature).get(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -91,7 +91,7 @@ def inventory_item_dismantle(pcid, itemid):
 
     try:
         # We add the shards in the wallet
-        creature_wallet = RedisWallet(creature)
+        creature_wallet = RedisWallet(Creature)
         if item.rarity == 'Broken':
             creature_wallet.incr(item.rarity.lower(), 6)
         elif item.rarity == 'Common':
@@ -117,9 +117,9 @@ def inventory_item_dismantle(pcid, itemid):
 
     try:
         # We destroy the item
-        RedisItem(creature).destroy(itemid)
+        RedisItem(Creature).destroy(itemid)
     except Exception as e:
-        msg = f'{h} Item Query KO (pcid:{creature.id}) [{e}]'
+        msg = f'{h} Item Query KO (pcid:{Creature.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -131,11 +131,11 @@ def inventory_item_dismantle(pcid, itemid):
 
     try:
         # We consume the blue PA (1)
-        RedisPa(creature).consume(bluepa=1)
+        RedisPa(Creature).consume(bluepa=1)
         # We add HighScore
-        RedisHS(creature).incr('action_dismantle')
+        RedisHS(Creature).incr('action_dismantle')
     except Exception as e:
-        msg = f'{h} Redis Query KO (pcid:{creature.id}) [{e}]'
+        msg = f'{h} Redis Query KO (pcid:{Creature.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -146,14 +146,14 @@ def inventory_item_dismantle(pcid, itemid):
         ), 200
     else:
         # JOB IS DONE
-        msg = f'{h} Item dismantle OK (pcid:{creature.id})'
+        msg = f'{h} Item dismantle OK (pcid:{Creature.id})'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "creature": creature,
+                    "creature": Creature._asdict(),
                     "wallet": creature_wallet._asdict(),
                 },
             }
@@ -163,11 +163,11 @@ def inventory_item_dismantle(pcid, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_equip(pcid, type, slotname, itemid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -178,10 +178,10 @@ def inventory_item_equip(pcid, type, slotname, itemid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'Token/username mismatch '
+               f'(creatureid:{Creature.id},username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -192,7 +192,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         ), 409
 
     try:
-        creature_stats = RedisStats(creature)._asdict()
+        creature_stats = RedisStats(Creature)._asdict()
     except Exception as e:
         msg = f'{h} Stats Query KO - failed [{e}]'
         logger.error(msg)
@@ -216,7 +216,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
             ), 200
 
     try:
-        item = RedisItem(creature).get(itemid)
+        item = RedisItem(Creature).get(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -258,9 +258,9 @@ def inventory_item_equip(pcid, type, slotname, itemid):
 
     sizex, sizey = itemmeta['size'].split("x")
     costpa       = round(int(sizex) * int(sizey) / 2)
-    if RedisPa(creature).redpa < costpa:
+    if RedisPa(Creature).redpa < costpa:
         msg = (f"{h} Not enough PA "
-               f"(redpa:{RedisPa(creature).redpa},cost:{costpa})")
+               f"(redpa:{RedisPa(Creature).redpa},cost:{costpa})")
         logger.warning(msg)
         return jsonify(
             {
@@ -339,7 +339,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         ), 200
 
     try:
-        creature_slots = RedisSlots(creature)
+        creature_slots = RedisSlots(Creature)
     except Exception as e:
         msg = f'{h} Slots Query KO - failed [{e}]'
         logger.error(msg)
@@ -382,7 +382,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         elif slotname == 'righthand':
             if creature_slots.righthand:
                 # Something is already equipped in RH
-                equipped = RedisItem(creature).get(creature_slots.righthand)
+                equipped = RedisItem(Creature).get(creature_slots.righthand)
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
                     if metaWeapons[equipped.metaid - 1]['onehanded'] is True:
@@ -439,7 +439,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
     # Here everything should be OK with the equip
     try:
         # We consume the red PA (costpa) right now
-        RedisPa(creature).consume(redpa=costpa)
+        RedisPa(Creature).consume(redpa=costpa)
     except Exception as e:
         msg = f'{h} Redis Query KO [{e}]'
         logger.error(msg)
@@ -455,7 +455,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
         yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
         # We create the Creature Event
-        RedisEvent(creature).add(creature.id,
+        RedisEvent(Creature).add(Creature.id,
                                  None,
                                  'item',
                                  'Equipped something',
@@ -468,8 +468,8 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "red": RedisPa(creature)._asdict()['red'],
-                    "blue": RedisPa(creature)._asdict()['blue'],
+                    "red": RedisPa(Creature)._asdict()['red'],
+                    "blue": RedisPa(Creature)._asdict()['blue'],
                     "equipment": creature_slots._asdict(),
                 },
             }
@@ -479,11 +479,11 @@ def inventory_item_equip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_unequip(pcid, type, slotname, itemid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -494,10 +494,10 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'Token/username mismatch '
+               f'(creatureid:{Creature.id},username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -508,7 +508,7 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
         ), 409
 
     try:
-        creature_slots = RedisSlots(creature)
+        creature_slots = RedisSlots(Creature)
     except Exception as e:
         msg = f'{h} Slots Query KO - failed [{e}]'
         logger.error(msg)
@@ -577,8 +577,8 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "red": RedisPa(creature)._asdict()['red'],
-                    "blue": RedisPa(creature)._asdict()['blue'],
+                    "red": RedisPa(Creature)._asdict()['red'],
+                    "blue": RedisPa(Creature)._asdict()['blue'],
                     "equipment": creature_slots._asdict(),
                 },
             }
@@ -588,11 +588,11 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety> # noqa
 @jwt_required()
 def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -603,10 +603,10 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch '
-               f'(username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'Token/username mismatch '
+               f'(creatureid:{Creature.id},username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -617,7 +617,7 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
         ), 409
 
     try:
-        item = RedisItem(creature).get(itemid)
+        item = RedisItem(Creature).get(itemid)
     except Exception as e:
         msg = f'{h} Item Query KO - failed (itemid:{itemid}) [{e}]'
         logger.error(msg)
@@ -654,14 +654,15 @@ def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
             }
         ), 200
     else:
-        creature_inventory = RedisItem(creature).search(
-            field='bearer', query=f'[{creature.id} {creature.id}]'
+        bearer = Creature.id.replace('-', ' ')
+        creature_inventory = RedisItem(Creature).search(
+            field='bearer', query=f'{bearer}'
             )
 
         armor = [x for x in creature_inventory if x['metatype'] == 'armor']
         weapon = [x for x in creature_inventory if x['metatype'] == 'weapon']
 
-        creature_slots = RedisSlots(creature)
+        creature_slots = RedisSlots(Creature)
 
         # JOB IS DONE
         msg = f'{h} Offset Query OK (itemid:{itemid})'

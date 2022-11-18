@@ -5,10 +5,9 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisUser     import RedisUser
 
 
 #
@@ -17,12 +16,12 @@ from nosql.models.RedisEvent    import RedisEvent
 # API: GET /mypc/{pcid}/event
 @jwt_required()
 def mypc_event_get_all(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -31,9 +30,10 @@ def mypc_event_get_all(pcid):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creature.id:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -44,9 +44,9 @@ def mypc_event_get_all(pcid):
         ), 409
 
     try:
-        creature_events = RedisEvent(creature).get()
+        creature_events = RedisEvent(Creature).get()
     except Exception as e:
-        msg = f'Event Query KO (creature.id:{creature.id}) [{e}]'
+        msg = f'{h} Event Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -56,7 +56,7 @@ def mypc_event_get_all(pcid):
             }
         ), 200
     else:
-        msg = f'Event Query OK (creature.id:{creature.id})'
+        msg = f'{h} Event Query OK'
         logger.debug(msg)
         return jsonify(
             {

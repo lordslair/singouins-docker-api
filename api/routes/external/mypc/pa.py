@@ -5,10 +5,9 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisPa       import RedisPa
+from nosql.models.RedisUser     import RedisUser
 
 
 #
@@ -17,12 +16,12 @@ from nosql.models.RedisPa       import RedisPa
 # API: GET /mypc/{pcid}/pa
 @jwt_required()
 def pa_get(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -31,9 +30,10 @@ def pa_get(pcid):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creatureid:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -44,9 +44,9 @@ def pa_get(pcid):
         ), 409
 
     try:
-        creature_pa = RedisPa(creature)._asdict()
+        creature_pa = RedisPa(Creature)._asdict()
     except Exception as e:
-        msg = f'PA Query KO (pcid:{creature.id}) [{e}]'
+        msg = f'{h} PA Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -56,7 +56,7 @@ def pa_get(pcid):
             }
         ), 200
     else:
-        msg = f'PA Query OK (pcid:{creature.id})'
+        msg = f'{h} PA Query OK'
         logger.debug(msg)
         return jsonify(
             {

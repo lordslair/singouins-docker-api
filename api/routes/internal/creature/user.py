@@ -3,8 +3,8 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get_from_creature
+from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisUser     import RedisUser
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -17,7 +17,7 @@ from variables                  import API_INTERNAL_TOKEN
 # API: GET /internal/creature/{creatureid}/user
 def creature_user(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -27,10 +27,10 @@ def creature_user(creatureid):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -40,12 +40,18 @@ def creature_user(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        user = fn_user_get_from_creature(creature)
+        User = RedisUser().search(
+            field='id',
+            # GruikFix
+            # We need to do the replace as the [-] is seen as separator
+            # Would need to baclslash it, but easier that way
+            query=Creature.account.replace('-', ' ')
+            )
     except Exception as e:
-        msg = f'User Query KO - Failed (accountid:{creature.account}) [{e}]'
+        msg = f'{h} User Query KO (accountid:{Creature.account}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -55,15 +61,17 @@ def creature_user(creatureid):
             }
         ), 200
     else:
-        if user:
+        if User:
             msg = f'{h} User Query OK'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": {"user":     user,
-                                "creature": creature},
+                    "payload": {
+                        "user": User,
+                        "creature": Creature._asdict(),
+                        },
                 }
             ), 200
         else:

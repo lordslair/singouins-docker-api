@@ -4,14 +4,12 @@ import json
 import requests
 
 from variables import (API_URL,
-                       HEADERS,
-                       SQUAD_ID)
+                       HEADERS)
 
 
 def test_singouins_internal_squad():
-    squadid   = SQUAD_ID
-    url       = f'{API_URL}/internal/squad/{squadid}'
-    response  = requests.get(url, headers=HEADERS)
+    url = f'{API_URL}/internal/squad/11111111-babe-babe-babe-111111111111'
+    response = requests.get(url, headers=HEADERS)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is False
@@ -19,8 +17,8 @@ def test_singouins_internal_squad():
 
 
 def test_singouins_internal_squads():
-    url       = f'{API_URL}/internal/squads'
-    response  = requests.get(url, headers=HEADERS)
+    url = f'{API_URL}/internal/squads'
+    response = requests.get(url, headers=HEADERS)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True

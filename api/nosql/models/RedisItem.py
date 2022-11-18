@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import re
 import uuid
 
 from datetime                    import datetime
@@ -9,40 +8,7 @@ from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.metas                 import metaWeapons
-
-
-def str2typed(string):
-    # BOOLEAN False
-    if string == 'False':
-        return False
-    # BOOLEAN True
-    elif string == 'True':
-        return True
-    # None
-    elif string == 'None':
-        return None
-    # Date
-    elif re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', string):
-        return string
-    # INT
-    elif string.isdigit():
-        return int(string)
-    else:
-        return string
-
-
-def typed2str(string):
-    # None
-    if string is None:
-        return 'None'
-    # BOOLEAN True
-    elif string is True:
-        return 'True'
-    # BOOLEAN False
-    elif string is False:
-        return 'False'
-    else:
-        return string
+from nosql.variables             import str2typed, typed2str
 
 
 class RedisItem:
@@ -320,8 +286,6 @@ class RedisItem:
 
 
 if __name__ == '__main__':
-    from mysql.methods.fn_creature  import fn_creature_get
-
     item_caracs = {
         "metatype": 'weapon',
         "metaid": 32,
@@ -333,28 +297,6 @@ if __name__ == '__main__':
         "rarity": 'Common'
     }
 
-    creature = fn_creature_get(None, 1)[3]
-    item = RedisItem(creature).new(item_caracs)
-
-    logger.success(RedisItem().get(item.id)._asdict())
-    logger.info(RedisItem(creature).search(field='bearer', query='[1 1]'))
-    logger.info(RedisItem().search(field='rarity', query='Common'))
-
-    logger.success(RedisItem().get(item.id)._asdict())
-    item.ammo = 3
-    logger.success(RedisItem().get(item.id)._asdict())
-    item.ammo = 6
-    logger.success(item._asdict())
-    logger.success(RedisItem().get(item.id)._asdict())
-    item.bearer = 4
-    logger.success(item._asdict())
-    logger.success(RedisItem().get(item.id)._asdict())
-    logger.info(RedisItem(creature).search(field='bearer', query='[4 4]'))
-
-    item.offsetx = 4
-    item.offsety = 6
-    logger.success(item._asdict())
-    logger.success(RedisItem().get(item.id)._asdict())
     """
     FT.CREATE item_idx PREFIX 1 "items:"
         LANGUAGE english

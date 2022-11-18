@@ -63,7 +63,6 @@ import routes.external.mypc.instance
 import routes.external.mypc.item
 import routes.external.mypc.inventory
 import routes.external.mypc.korp
-import routes.external.mypc.mp
 import routes.external.mypc.pa
 import routes.external.mypc.squad
 import routes.external.mypc.stats
@@ -135,15 +134,15 @@ app.add_url_rule('/meta/item/<string:metatype>',
 #
 # Routes: /pc
 #
-app.add_url_rule('/pc/<int:creatureid>',
+app.add_url_rule('/pc/<uuid:creatureid>',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_get_one)
 
-app.add_url_rule('/pc/<int:creatureid>/item',
+app.add_url_rule('/pc/<uuid:creatureid>/item',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_item_get_all)
 
-app.add_url_rule('/pc/<int:creatureid>/event',
+app.add_url_rule('/pc/<uuid:creatureid>/event',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_event_get_all)
 #
@@ -155,21 +154,21 @@ app.add_url_rule('/mypc',
 app.add_url_rule('/mypc',
                  methods=['GET'],
                  view_func=routes.external.mypc.mypc_get_all)
-app.add_url_rule('/mypc/<int:pcid>',
+app.add_url_rule('/mypc/<uuid:pcid>',
                  methods=['DELETE'],
                  view_func=routes.external.mypc.mypc_del)
 
 #
 # Routes: /pa
 #
-app.add_url_rule('/mypc/<int:pcid>/pa',
+app.add_url_rule('/mypc/<uuid:pcid>/pa',
                  methods=['GET'],
                  view_func=routes.external.mypc.pa.pa_get)
 
 #
 # Routes: /stats
 #
-app.add_url_rule('/mypc/<int:pcid>/stats',
+app.add_url_rule('/mypc/<uuid:pcid>/stats',
                  methods=['GET'],
                  view_func=routes.external.mypc.stats.stats_get)
 
@@ -178,119 +177,119 @@ app.add_url_rule('/mypc/<int:pcid>/stats',
 #         /effects
 #         /statuses
 #
-app.add_url_rule('/mypc/<int:pcid>/cds',
+app.add_url_rule('/mypc/<uuid:pcid>/cds',
                  methods=['GET'],
                  view_func=routes.external.mypc.cds.cds_get)
-app.add_url_rule('/mypc/<int:pcid>/effects',
+app.add_url_rule('/mypc/<uuid:pcid>/effects',
                  methods=['GET'],
                  view_func=routes.external.mypc.effects.effects_get)
-app.add_url_rule('/mypc/<int:pcid>/statuses',
+app.add_url_rule('/mypc/<uuid:pcid>/statuses',
                  methods=['GET'],
                  view_func=routes.external.mypc.statuses.statuses_get)
 
 #
 # Routes: /view
 #
-app.add_url_rule('/mypc/<int:pcid>/view',
+app.add_url_rule('/mypc/<uuid:pcid>/view',
                  methods=['GET'],
                  view_func=routes.external.mypc.view.view_get)
 
 #
 # Routes /item
 #
-app.add_url_rule('/mypc/<int:pcid>/item',
+app.add_url_rule('/mypc/<uuid:pcid>/item',
                  methods=['GET'],
                  view_func=routes.external.mypc.item.item_get)
 
 #
 # Routes /inventory/item
 #
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/dismantle',
+app.add_url_rule('/mypc/<uuid:pcid>/inventory/item/<uuid:itemid>/dismantle',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_dismantle)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/equip/<string:type>/<string:slotname>',
+app.add_url_rule('/mypc/<uuid:pcid>/inventory/item/<uuid:itemid>/equip/<string:type>/<string:slotname>',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_equip)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/offset/<int:offsetx>/<int:offsety>',
+app.add_url_rule('/mypc/<uuid:pcid>/inventory/item/<uuid:itemid>/offset/<int:offsetx>/<int:offsety>',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_offset)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/offset',
+app.add_url_rule('/mypc/<uuid:pcid>/inventory/item/<uuid:itemid>/offset',
                  methods=['DELETE'],
                  view_func=routes.external.mypc.inventory.inventory_item_offset)
-app.add_url_rule('/mypc/<int:pcid>/inventory/item/<uuid:itemid>/unequip/<string:type>/<string:slotname>',
+app.add_url_rule('/mypc/<uuid:pcid>/inventory/item/<uuid:itemid>/unequip/<string:type>/<string:slotname>',
                  methods=['POST'],
                  view_func=routes.external.mypc.inventory.inventory_item_unequip)
 
 #
 # Routes: /instance
 #
-app.add_url_rule('/mypc/<int:pcid>/instance',
+app.add_url_rule('/mypc/<uuid:pcid>/instance',
                  methods=['PUT'],
                  view_func=routes.external.mypc.instance.instance_add)
-app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>',
+app.add_url_rule('/mypc/<uuid:pcid>/instance/<uuid:instanceid>',
                  methods=['GET'],
                  view_func=routes.external.mypc.instance.instance_get)
-app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>/join',
+app.add_url_rule('/mypc/<uuid:pcid>/instance/<uuid:instanceid>/join',
                  methods=['POST'],
                  view_func=routes.external.mypc.instance.instance_join)
-app.add_url_rule('/mypc/<int:pcid>/instance/<int:instanceid>/leave',
+app.add_url_rule('/mypc/<uuid:pcid>/instance/<uuid:instanceid>/leave',
                  methods=['POST'],
                  view_func=routes.external.mypc.instance.instance_leave)
 #
 # Routes: /action/resolver
 #
-app.add_url_rule('/mypc/<int:pcid>/action/resolver/context',
+app.add_url_rule('/mypc/<uuid:pcid>/action/resolver/context',
                  methods=['POST'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_context)
-app.add_url_rule('/mypc/<int:pcid>/action/resolver/move',
+app.add_url_rule('/mypc/<uuid:pcid>/action/resolver/move',
                  methods=['POST'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_move)
-app.add_url_rule('/mypc/<int:pcid>/action/resolver/skill/<string:skill_name>',
+app.add_url_rule('/mypc/<uuid:pcid>/action/resolver/skill/<string:skill_name>',
                  methods=['PUT'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_skill)
 
 #
 # Routes: /action
 #
-app.add_url_rule('/mypc/<int:pcid>/action/reload/<uuid:weaponid>',
+app.add_url_rule('/mypc/<uuid:pcid>/action/reload/<uuid:weaponid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.action.action_weapon_reload)
-app.add_url_rule('/mypc/<int:pcid>/action/unload/<uuid:weaponid>',
+app.add_url_rule('/mypc/<uuid:pcid>/action/unload/<uuid:weaponid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.action.action_weapon_unload)
 
 #
 # Routes: /events
 #
-app.add_url_rule('/mypc/<int:pcid>/event',
+app.add_url_rule('/mypc/<uuid:pcid>/event',
                  methods=['GET'],
                  view_func=routes.external.mypc.events.mypc_event_get_all)
 
 #
 # Routes /korp
 #
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>',
                  methods=['GET'],
                  view_func=routes.external.mypc.korp.korp_get_one)
-app.add_url_rule('/mypc/<int:pcid>/korp',
+app.add_url_rule('/mypc/<uuid:pcid>/korp',
                  methods=['POST'],
                  view_func=routes.external.mypc.korp.korp_create)
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>',
                  methods=['DELETE'],
                  view_func=routes.external.mypc.korp.korp_delete)
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/invite/<int:targetid>',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>/invite/<uuid:targetid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.korp.korp_invite)
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/kick/<int:targetid>',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>/kick/<uuid:targetid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.korp.korp_kick)
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/accept',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>/accept',
                  methods=['POST'],
                  view_func=routes.external.mypc.korp.korp_accept)
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/leave',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>/leave',
                  methods=['POST'],
                  view_func=routes.external.mypc.korp.korp_leave)
-app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/decline',
+app.add_url_rule('/mypc/<uuid:pcid>/korp/<uuid:korpid>/decline',
                  methods=['POST'],
                  view_func=routes.external.mypc.korp.korp_decline)
 
@@ -298,28 +297,28 @@ app.add_url_rule('/mypc/<int:pcid>/korp/<int:korpid>/decline',
 # Routes /squad
 #
 
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>',
                  methods=['GET'],
                  view_func=routes.external.mypc.squad.squad_get_one)
-app.add_url_rule('/mypc/<int:pcid>/squad',
+app.add_url_rule('/mypc/<uuid:pcid>/squad',
                  methods=['POST'],
                  view_func=routes.external.mypc.squad.squad_create)
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>',
                  methods=['DELETE'],
                  view_func=routes.external.mypc.squad.squad_delete)
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/invite/<int:targetid>',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>/invite/<uuid:targetid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.squad.squad_invite)
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/kick/<int:targetid>',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>/kick/<uuid:targetid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.squad.squad_kick)
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/accept',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>/accept',
                  methods=['POST'],
                  view_func=routes.external.mypc.squad.squad_accept)
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/leave',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>/leave',
                  methods=['POST'],
                  view_func=routes.external.mypc.squad.squad_leave)
-app.add_url_rule('/mypc/<int:pcid>/squad/<int:squadid>/decline',
+app.add_url_rule('/mypc/<uuid:pcid>/squad/<uuid:squadid>/decline',
                  methods=['POST'],
                  view_func=routes.external.mypc.squad.squad_decline)
 
@@ -343,125 +342,125 @@ app.add_url_rule('/internal/creature',
                  methods=['PUT'],
                  view_func=routes.internal.creature.creature_add)
 # Routes /internal/creature/{creatureid}
-app.add_url_rule('/internal/creature/<int:creatureid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>',
                  methods=['GET'],
                  view_func=routes.internal.creature.creature_get_one)
-app.add_url_rule('/internal/creature/<int:creatureid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
 # Routes /internal/creature/{creatureid}/auction/*
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
                  methods=['POST'],
                  view_func=routes.internal.creature.auction.creature_auction_buy)
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
                  methods=['GET'],
                  view_func=routes.internal.creature.auction.creature_auction_get)
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.auction.creature_auction_sell)
-app.add_url_rule('/internal/creature/<int:creatureid>/auction/<uuid:itemid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.auction.creature_auction_remove)
 # Routes /internal/creature/{creatureid}/auction/*
-app.add_url_rule('/internal/creature/<int:creatureid>/auctions',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/auctions',
                  methods=['POST'],
                  view_func=routes.internal.creature.auction.creature_auctions_search)
 # Routes /internal/creature/{creatureid}/cd/*
-app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.cds.creature_cd_add)
-app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.cds.creature_cd_del)
-app.add_url_rule('/internal/creature/<int:creatureid>/cd/<string:skill_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
                  methods=['GET'],
                  view_func=routes.internal.creature.cds.creature_cd_get_one)
-app.add_url_rule('/internal/creature/<int:creatureid>/cds',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/cds',
                  methods=['GET'],
                  view_func=routes.internal.creature.cds.creature_cd_get_all)
 # Routes /internal/creature/{creatureid}/context/*
-app.add_url_rule('/internal/creature/<int:creatureid>/context',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/context',
                  methods=['GET'],
                  view_func=routes.internal.creature.context.creature_context_get)
 # Routes /internal/creature/{creatureid}/equipment/*
-app.add_url_rule('/internal/creature/<int:creatureid>/equipment',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/equipment',
                  methods=['GET'],
                  view_func=routes.internal.creature.equipment.creature_equipment)
-app.add_url_rule('/internal/creature/<int:creatureid>/equipment/<uuid:itemid>/ammo/<string:operation>/<int:count>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/equipment/<uuid:itemid>/ammo/<string:operation>/<int:count>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.equipment.creature_equipment_modifiy)
 # Routes /internal/creature/{creatureid}/effect/*
-app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_name>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.effects.creature_effect_add)
-app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_name>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.effects.creature_effect_del)
-app.add_url_rule('/internal/creature/<int:creatureid>/effect/<string:effect_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_name>',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_one)
-app.add_url_rule('/internal/creature/<int:creatureid>/effects',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_all)
 # Routes /internal/creature/{creatureid}/highscore/*
-app.add_url_rule('/internal/creature/<int:creatureid>/highscore',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/highscore',
                  methods=['GET'],
                  view_func=routes.internal.creature.highscore.creature_highscore_get)
 # Routes /internal/creature/{creatureid}/inventory/*
-app.add_url_rule('/internal/creature/<int:creatureid>/inventory',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/inventory',
                  methods=['GET'],
                  view_func=routes.internal.creature.inventory.creature_inventory_get)
 # Routes /internal/creature/{creatureid}/kill/*
-app.add_url_rule('/internal/creature/<int:creatureid>/kill/<int:victimid>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/kill/<uuid:victimid>',
                  methods=['POST'],
                  view_func=routes.internal.creature.kill.creature_kill)
 # Routes /internal/creature/{creatureid}/pa/*
-app.add_url_rule('/internal/creature/<int:creatureid>/pa',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/pa',
                  methods=['GET'],
                  view_func=routes.internal.creature.pa.creature_pa_get)
-app.add_url_rule('/internal/creature/<int:creatureid>/pa/consume/<int:redpa>/<int:bluepa>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/pa/consume/<int:redpa>/<int:bluepa>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.pa.creature_pa_consume)
-app.add_url_rule('/internal/creature/<int:creatureid>/pa/reset',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/pa/reset',
                  methods=['PUT'],
                  view_func=routes.internal.creature.pa.creature_pa_reset)
 # Routes /internal/creature/{creatureid}/position/*
-app.add_url_rule('/internal/creature/<int:creatureid>/position/<int:x>/<int:y>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/position/<int:x>/<int:y>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.position.creature_position_set)
 # Routes /internal/creature/{creatureid}/status/*
-app.add_url_rule('/internal/creature/<int:creatureid>/status/<string:status_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/status/<string:status_name>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.statuses.creature_status_add)
-app.add_url_rule('/internal/creature/<int:creatureid>/status/<string:status_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/status/<string:status_name>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.statuses.creature_status_del)
-app.add_url_rule('/internal/creature/<int:creatureid>/status/<string:status_name>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/status/<string:status_name>',
                  methods=['GET'],
                  view_func=routes.internal.creature.statuses.creature_status_get_one)
-app.add_url_rule('/internal/creature/<int:creatureid>/statuses',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/statuses',
                  methods=['GET'],
                  view_func=routes.internal.creature.statuses.creature_status_get_all)
 # Routes /internal/creature/{creatureid}/stats/*
-app.add_url_rule('/internal/creature/<int:creatureid>/stats',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/stats',
                  methods=['GET'],
                  view_func=routes.internal.creature.stats.creature_stats)
-app.add_url_rule('/internal/creature/<int:creatureid>/stats/hp/<string:operation>/<int:count>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/stats/hp/<string:operation>/<int:count>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.stats.creature_stats_hp_modify)
 # Routes /internal/creature/{creatureid}/wallet/*
-app.add_url_rule('/internal/creature/<int:creatureid>/wallet',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/wallet',
                  methods=['GET'],
                  view_func=routes.internal.creature.wallet.creature_wallet)
-app.add_url_rule('/internal/creature/<int:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.wallet.creature_wallet_modify)
 # Routes /internal/creature/{creatureid}/user/*
-app.add_url_rule('/internal/creature/<int:creatureid>/user',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/user',
                  methods=['GET'],
                  view_func=routes.internal.creature.user.creature_user)
 # Routes /internal/creature/{creatureid}/view/*
-app.add_url_rule('/internal/creature/<int:creatureid>/view',
+app.add_url_rule('/internal/creature/<uuid:creatureid>/view',
                  methods=['GET'],
                  view_func=routes.internal.creature.view.creature_view_get)
 # Routes /internal/creatures/*
@@ -482,7 +481,7 @@ app.add_url_rule('/internal/discord/user',
                  methods=['POST'],
                  view_func=routes.internal.discord.discord_user)
 # Routes /internal/korp/*
-app.add_url_rule('/internal/korp/<int:korpid>',
+app.add_url_rule('/internal/korp/<uuid:korpid>',
                  methods=['GET'],
                  view_func=routes.internal.korp.internal_korp_get_one)
 app.add_url_rule('/internal/korps',
@@ -493,7 +492,7 @@ app.add_url_rule('/internal/meta/<string:metatype>',
                  methods=['GET'],
                  view_func=routes.internal.meta.internal_meta_get_one)
 # Routes /internal/squad/*
-app.add_url_rule('/internal/squad/<int:squadid>',
+app.add_url_rule('/internal/squad/<uuid:squadid>',
                  methods=['GET'],
                  view_func=routes.internal.squad.internal_squad_get_one)
 app.add_url_rule('/internal/squads',

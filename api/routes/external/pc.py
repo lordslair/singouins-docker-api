@@ -4,9 +4,8 @@ from flask                      import jsonify
 from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-
 from nosql.models.RedisCosmetic import RedisCosmetic
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
@@ -18,21 +17,41 @@ from nosql.models.RedisSlots    import RedisSlots
 # API: GET /pc/{pcid}
 @jwt_required()
 def pc_get_one(creatureid):
-    (code, success, msg, payload) = fn_creature_get(None, creatureid)
-    if isinstance(code, int):
-        return jsonify({"success": success,
-                        "msg": msg,
-                        "payload": payload}), code
+    h = f'[Creature.id:{creatureid}]'  # Header for logging
+    try:
+        Creature = RedisCreature().get(creatureid)
+    except Exception as e:
+        msg = f'{h} Creature Query KO [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        msg = f'{h} Creature Query OK'
+        logger.trace(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": Creature._asdict(),
+            }
+        ), 200
 
 
 # API: GET /pc/{pcid}/item
 @jwt_required()
 def pc_item_get_all(creatureid):
-    creature = fn_creature_get(None, creatureid)[3]
+    Creature = RedisCreature().get(creatureid)
+
+    logger.success(Creature._asdict())
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -42,23 +61,23 @@ def pc_item_get_all(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        creature_slots = RedisSlots(creature)
+        creature_slots = RedisSlots(Creature)
 
-        feet      = RedisItem(creature).get(creature_slots.feet)
-        hands     = RedisItem(creature).get(creature_slots.hands)
-        head      = RedisItem(creature).get(creature_slots.head)
-        holster   = RedisItem(creature).get(creature_slots.holster)
-        lefthand  = RedisItem(creature).get(creature_slots.lefthand)
-        righthand = RedisItem(creature).get(creature_slots.righthand)
-        shoulders = RedisItem(creature).get(creature_slots.shoulders)
-        torso     = RedisItem(creature).get(creature_slots.torso)
-        legs      = RedisItem(creature).get(creature_slots.legs)
+        feet      = RedisItem(Creature).get(creature_slots.feet)
+        hands     = RedisItem(Creature).get(creature_slots.hands)
+        head      = RedisItem(Creature).get(creature_slots.head)
+        holster   = RedisItem(Creature).get(creature_slots.holster)
+        lefthand  = RedisItem(Creature).get(creature_slots.lefthand)
+        righthand = RedisItem(Creature).get(creature_slots.righthand)
+        shoulders = RedisItem(Creature).get(creature_slots.shoulders)
+        torso     = RedisItem(Creature).get(creature_slots.torso)
+        legs      = RedisItem(Creature).get(creature_slots.legs)
 
         # We publicly anounce the cosmetics owned by a PC
-        creature_cosmetics = RedisCosmetic(creature).get_all()
+        creature_cosmetics = RedisCosmetic(Creature).get_all()
     except Exception as e:
         msg = f'{h} Equipment Query KO [{e}]'
         logger.error(msg)
@@ -160,11 +179,11 @@ def pc_item_get_all(creatureid):
 # API: GET /pc/{pcid}/event
 @jwt_required()
 def pc_event_get_all(creatureid):
-    creature = fn_creature_get(None, creatureid)[3]
+    Creature = RedisCreature().get(creatureid)
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -174,10 +193,10 @@ def pc_event_get_all(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        creature_events = RedisEvent(creature).get()
+        creature_events = RedisEvent(Creature).get()
     except Exception as e:
         msg = f'{h} Event Query KO [{e}]'
         logger.error(msg)

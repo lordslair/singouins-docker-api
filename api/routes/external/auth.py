@@ -1,18 +1,16 @@
 # -*- coding: utf8 -*-
 
+import string
+
 from flask                  import jsonify, request
-from flask_bcrypt           import check_password_hash
+from flask_bcrypt           import check_password_hash, generate_password_hash
 from flask_jwt_extended     import (jwt_required,
                                     create_access_token,
                                     create_refresh_token,
                                     get_jwt_identity)
 from loguru                 import logger
+from random                 import choice
 
-from mysql.methods.fn_user import (fn_forgot_password,
-                                   fn_user_add,
-                                   fn_user_confirm,
-                                   fn_user_del,
-                                   fn_user_get)
 from utils.mail            import send
 from utils.token           import (confirm_token,
                                    generate_confirmation_token)
@@ -20,6 +18,9 @@ from utils.token           import (confirm_token,
 from variables             import (API_URL,
                                    DATA_PATH,
                                    DISCORD_URL)
+
+
+from nosql.models.RedisUser   import RedisUser
 
 
 #
@@ -50,13 +51,8 @@ def auth_login():
             }
         ), 400
 
-    if fn_user_get(username):
-        pass_db    = fn_user_get(username).hash
-        pass_check = check_password_hash(pass_db, password)
-    else:
-        pass_check = None
-
-    if not fn_user_get(username) or not pass_check:
+    User = RedisUser().get(username)
+    if not User or not check_password_hash(User.hash, password):
         msg = "Bad username or password"
         logger.warning(msg)
         return jsonify(
@@ -112,8 +108,25 @@ def auth_register():
             }
         ), 400
 
-    code = fn_user_add(mail, password)
-    if code == 201:
+    # Check User existence
+    h = '[User.id:None]'  # Header for logging
+    try:
+        User = RedisUser().get(mail)
+    except Exception as e:
+        msg = f'{h} User Query KO (mail:{mail}) [{e}]'
+        logger.error(msg)
+    else:
+        if User:
+            msg = f"User already exists (mail:{mail})"
+            logger.trace(msg)
+            return jsonify(
+                {
+                    "msg": msg,
+                }
+            ), 409
+
+    User = RedisUser().new(mail, password)
+    if User:
         subject = '[🐒&🐖] Bienvenue chez le Singouins !'
         token   = generate_confirmation_token(mail)
         url     = f'{API_URL}/auth/confirm/{token}'
@@ -129,7 +142,7 @@ def auth_register():
                 {
                     "msg": msg,
                 }
-            ), code
+            ), 201
         else:
             msg = "User successfully added | mail KO"
             logger.warning(msg)
@@ -137,35 +150,22 @@ def auth_register():
                 {
                     "msg": msg,
                 }
-            ), code
-    elif code == 409:
-        msg = "User or Email already exists"
-        logger.trace(msg)
-        return jsonify(
-            {
-                "msg": msg,
-            }
-        ), code
-    else:
-        msg = "Oops!"
-        logger.error(msg)
-        return jsonify(
-            {
-                "msg": msg,
-            }
-        ), 422
+            ), 200
 
 
 # API: GET /auth/confirm/{token}
 def auth_confirm(token):
     username = confirm_token(token)
     if username:
-        if fn_user_confirm(username):
-            msg = f'User Confirmation OK (username:{username})'
-            logger.trace(msg)
-        else:
-            msg = f'User Confirmation KO (username:{username})'
+        try:
+            User = RedisUser().get(username)
+            User.active = True
+        except Exception as e:
+            msg = f'User confirmation KO (username:{username}) [{e}]'
             logger.error(msg)
+        else:
+            msg = f'User confirmation OK (username:{username})'
+            logger.trace(msg)
     else:
         msg = "Confirmation link invalid or has expired"
         logger.warning(msg)
@@ -204,31 +204,20 @@ def auth_delete():
             }
         ), 400
 
-    code = fn_user_del(username)
-    if code == 200:
-        msg = "User successfully deleted"
-        logger.trace(msg)
-        return jsonify(
-            {
-                "msg": msg,
-            }
-        ), code
-    if code == 404:
-        msg = "Bad username"
-        logger.warning(msg)
-        return jsonify(
-            {
-                "msg": msg,
-            }
-        ), code
-    else:
-        msg = "Oops!"
+    try:
+        RedisUser().destroy(username)
+    except Exception as e:
+        msg = f'User deletion KO (username:{username}) [{e}]'
         logger.error(msg)
-        return jsonify(
-            {
-                "msg": msg,
-            }
-        ), 422
+    else:
+        msg = f'User deletion OK (username:{username})'
+        logger.trace(msg)
+
+    return jsonify(
+        {
+            "msg": msg,
+        }
+    ), 200
 
 
 # API: POST /auth/forgotpassword
@@ -240,40 +229,61 @@ def auth_forgotpassword():
             }
         ), 400
 
-    mail             = request.json.get('mail', None)
-    (code, password) = fn_forgot_password(mail)
+    mail = request.json.get('mail', None)
+    User = RedisUser().get(mail)
 
-    if code == 200:
-        subject = '[🐒&🐖] Mot de passe oublié'
-        body    = open(f"{DATA_PATH}/forgot_password.html", "r").read()
-        if send(mail,
-                subject,
-                body.format(urllogo='[INSERT LOGO HERE]',
-                            password=password,
-                            urldiscord=DISCORD_URL)):
-            msg = "Password successfully replaced | mail OK"
-            logger.trace(msg)
-            return jsonify(
-                {
-                    "msg": msg,
-                }
-            ), code
-        else:
-            msg = "Password successfully replaced | mail KO"
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "msg": msg,
-                }
-            ), code
-    else:
-        msg = "Oops!"
+    # We setup necessary to generate a new random password
+    length    = 12
+    letterset = string.ascii_letters + string.digits
+    password  = ''.join((choice(letterset) for i in range(length)))
+
+    try:
+        User.hash = generate_password_hash(password, rounds=10)
+    except Exception as e:
+        msg = f"Password replacement KO [{e}]"
         logger.error(msg)
         return jsonify(
             {
                 "msg": msg,
             }
-        ), 422
+        ), 200
+    else:
+        if User.hash.decode("utf-8") != RedisUser().get(mail).hash:
+            # If hashes are != we screwed up the update
+            msg = "Password replacement KO"
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "msg": msg,
+                }
+            ), 200
+
+        # Everything went fine
+        try:
+            subject = '[🐒&🐖] Mot de passe oublié'
+            body    = open(f"{DATA_PATH}/forgot_password.html", "r").read()
+
+            send(
+                mail,
+                subject,
+                body.format(
+                    urllogo='[INSERT LOGO HERE]',
+                    password=password,
+                    urldiscord=DISCORD_URL,
+                    ),
+                )
+        except Exception as e:
+            msg = f"Password replacement OK | mail KO [{e}]"
+            logger.error(msg)
+        else:
+            msg = "Password replacement OK | mail OK"
+            logger.trace(msg)
+
+        return jsonify(
+            {
+                "msg": msg,
+            }
+        ), 200
 
 
 # API: POST /auth/infos

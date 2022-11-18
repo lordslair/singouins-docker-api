@@ -6,7 +6,8 @@ import requests
 
 from variables import (API_URL,
                        CREATURE_ID,
-                       HEADERS)
+                       HEADERS,
+                       ITEM_ID)
 
 
 def test_singouins_internal_creature_auction_sell():
@@ -16,7 +17,7 @@ def test_singouins_internal_creature_auction_sell():
         # For now, unable to test this in GitHub
         return True
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # PUT # noqa
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/{ITEM_ID}'  # PUT # noqa
     response  = requests.put(
         url,
         headers=HEADERS,
@@ -34,7 +35,7 @@ def test_singouins_internal_creature_auction_remove():
         # For now, unable to test this in GitHub
         return True
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # DELETE # noqa
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/{ITEM_ID}'  # DELETE # noqa
     response  = requests.delete(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -48,7 +49,7 @@ def test_singouins_internal_creature_auction_resell():
         # For now, unable to test this in GitHub
         return True
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # PUT # noqa
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/{ITEM_ID}'  # PUT # noqa
     response  = requests.put(
         url,
         headers=HEADERS,
@@ -66,7 +67,7 @@ def test_singouins_internal_creature_auction_get():
         # For now, unable to test this in GitHub
         return True
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # GET # noqa
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/{ITEM_ID}'  # GET # noqa
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -80,7 +81,7 @@ def test_singouins_internal_creature_auction_buy():
         # For now, unable to test this in GitHub
         return True
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # POST # noqa
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/{ITEM_ID}'  # POST # noqa
     response  = requests.post(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -94,7 +95,7 @@ def test_singouins_internal_creature_auction_reremove():
         # For now, unable to test this in GitHub
         return True
 
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/8ac53305-b889-4410-a3f5-daccbeaa0f01'  # DELETE # noqa
+    url       = f'{API_URL}/internal/creature/{CREATURE_ID}/auction/{ITEM_ID}'  # DELETE # noqa
     response  = requests.delete(url, headers=HEADERS)
 
     assert response.status_code                 == 200

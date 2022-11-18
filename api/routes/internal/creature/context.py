@@ -3,13 +3,11 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_creatures import fn_creatures_in_instance
-
 from variables                  import API_INTERNAL_TOKEN
 
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisCd       import RedisCd
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
 from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisStatus   import RedisStatus
@@ -33,10 +31,10 @@ def creature_context_get(creatureid):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -46,10 +44,10 @@ def creature_context_get(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        creatures_effect  = RedisEffect(creature)
+        creatures_effect  = RedisEffect(Creature)
         creatures_effects = creatures_effect.get_all_instance()
     except Exception as e:
         msg = f'{h} RedisEffect Query KO [{e}]'
@@ -63,7 +61,7 @@ def creature_context_get(creatureid):
         ), 200
 
     try:
-        creatures_status   = RedisStatus(creature)
+        creatures_status   = RedisStatus(Creature)
         creatures_statuses = creatures_status.get_all_instance()
     except Exception as e:
         msg = f'{h} RedisStatus Query KO [{e}]'
@@ -77,7 +75,7 @@ def creature_context_get(creatureid):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(creature)
+        creatures_cd  = RedisCd(Creature)
         creatures_cds = creatures_cd.get_all_instance()
     except Exception as e:
         msg = f'{h} RedisCd Query KO [{e}]'
@@ -91,7 +89,7 @@ def creature_context_get(creatureid):
         ), 200
 
     try:
-        creature_pa = RedisPa(creature)
+        creature_pa = RedisPa(Creature)
     except Exception as e:
         msg = f'{h} RedisCd Query KO [{e}]'
         logger.error(msg)
@@ -104,8 +102,8 @@ def creature_context_get(creatureid):
         ), 200
 
     try:
-        instance = RedisInstance(creature=creature)
-        map      = instance.map
+        Instance = RedisInstance().get(Creature.instance)
+        map      = Instance.map
     except Exception as e:
         msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
@@ -118,7 +116,8 @@ def creature_context_get(creatureid):
         ), 200
 
     try:
-        creatures = fn_creatures_in_instance(creature.instance)
+        instance = Instance.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} Creature Query Query KO [{e}]'
         logger.error(msg)
@@ -139,8 +138,8 @@ def creature_context_get(creatureid):
             "msg": msg,
             "payload": {
                 "map": map,
-                "instance": creature.instance,
-                "creatures": creatures,
+                "instance": Creature.instance,
+                "creatures": Creatures,
                 "effects": creatures_effects,
                 "status": creatures_statuses,
                 "cd": creatures_cds,

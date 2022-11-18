@@ -5,10 +5,9 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_user      import fn_user_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStats    import RedisStats
+from nosql.models.RedisUser     import RedisUser
 
 
 #
@@ -17,12 +16,12 @@ from nosql.models.RedisStats    import RedisStats
 # API: GET /mypc/{pcid}/stats
 @jwt_required()
 def stats_get(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
-        msg = f'Creature not found (pcid:{pcid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -31,9 +30,10 @@ def stats_get(pcid):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creature.id:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -44,21 +44,20 @@ def stats_get(pcid):
         ), 409
 
     try:
-        # We check if we have the data in redis
-        creature_stats  = RedisStats(creature)
+        Stats = RedisStats(Creature)
     except Exception as e:
-        msg = f'Stats Query KO (creature.id:{creature.id}) [{e}]'
+        msg = f'{h} Stats Query KO [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg": msg,
                         "payload": None}), 200
     else:
-        msg = f'Stats Query OK (creature.id:{creature.id})'
+        msg = f'{h} Stats Query OK'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
-                "payload": creature_stats._asdict(),
+                "payload": Stats._asdict(),
             }
         ), 200

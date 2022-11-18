@@ -3,10 +3,8 @@
 from flask                     import jsonify, request
 from loguru                    import logger
 
-from mysql.methods.fn_user     import (fn_user_get_from_discord,
-                                       fn_user_link_from_discord)
-from mysql.methods.fn_creature import (fn_creature_get_all,
-                                       fn_creature_get)
+from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisUser    import RedisUser
 
 from variables                 import API_INTERNAL_TOKEN
 
@@ -64,7 +62,9 @@ def discord_link():
         ), 200
 
     try:
-        user = fn_user_link_from_discord(discordname, usermail)
+        User = RedisUser().get(usermail)
+        User.d_name = discordname
+        User.d_ack = True
     except Exception as e:
         msg = f'Query KO (discordname:{discordname}) [{e}]'
         logger.error(msg)
@@ -76,14 +76,14 @@ def discord_link():
             }
         ), 200
     else:
-        if user:
+        if User:
             msg = f'Query OK (discordname:{discordname})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": user,
+                    "payload": User._asdict(),
                 }
             ), 200
         else:
@@ -145,10 +145,10 @@ def discord_creature_get_one():
             }
         ), 200
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -157,9 +157,12 @@ def discord_creature_get_one():
                 "payload": None,
             }
         ), 200
-    user        = fn_user_get_from_discord(discordname)
-    if user is None:
-        msg = f'Query KO - NotFound (discordname:{discordname})'
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+    User = RedisUser().search(field='d_name', query=discordname)
+    if User is None:
+        msg = f'{h} Query KO - NotFound (discordname:{discordname})'
         logger.warning(msg)
         return jsonify(
             {
@@ -169,24 +172,23 @@ def discord_creature_get_one():
             }
         ), 200
 
-    if creature.account == user.id:
+    if Creature.account == User.id:
         # The Discord user owns the Creature
-        msg = f'Query OK (discordname:{discordname},creatureid:{creatureid})'
+        msg = f'{h} Query OK (discordname:{discordname})'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "user": user,
-                    "creature": creature,
+                    "user": User._asdict(),
+                    "creature": Creature._asdict(),
                     },
             }
         ), 200
     else:
         # The Discord user do NOT own the Creature
-        msg = (f'Query KO - Not Yours '
-               f'(discordname:{discordname},creatureid:{creatureid})')
+        msg = f'{h} Query KO - Not Yours (discordname:{discordname}'
         logger.warning(msg)
         return jsonify(
             {
@@ -234,7 +236,7 @@ def discord_creature_get_all():
         ), 200
 
     try:
-        user = fn_user_get_from_discord(discordname)
+        User = RedisUser().search(field='d_name', query=discordname)
     except Exception as e:
         msg = f'Query KO (discordname:{discordname}) [{e}]'
         logger.error(msg)
@@ -246,7 +248,7 @@ def discord_creature_get_all():
             }
         ), 200
     else:
-        if user is None:
+        if User is None:
             msg = f'Query KO - NotFound (discordname:{discordname})'
             logger.warning(msg)
             return jsonify(
@@ -258,9 +260,10 @@ def discord_creature_get_all():
             ), 200
 
     try:
-        pcs = fn_creature_get_all(user.id)
+        account = User.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@account:{account}')
     except Exception as e:
-        msg = f'Query KO (userid:{user.id}) [{e}]'
+        msg = f'Query KO (userid:{User.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -272,22 +275,18 @@ def discord_creature_get_all():
     else:
         msg = f'Query OK (discordname:{discordname})'
         logger.debug(msg)
-        if len(pcs) > 0:
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": pcs,
-                }
-            ), 200
+        if len(Creatures) > 0:
+            code = 200
         else:
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": pcs,
-                }
-            ), 404
+            code = 404
+
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": Creatures,
+            }
+        ), code
 
 
 # /internal/discord/user
@@ -327,7 +326,7 @@ def discord_user():
         ), 200
 
     try:
-        user = fn_user_get_from_discord(discordname)
+        User = RedisUser().search(field='d_name', query=discordname)
     except Exception as e:
         msg = f'Query KO (discordname:{discordname}) [{e}]'
         logger.error(msg)
@@ -339,14 +338,14 @@ def discord_user():
             }
         ), 200
     else:
-        if user:
+        if User:
             msg = f'Query OK (discordname:{discordname})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": user,
+                    "payload": User._asdict(),
                 }
             ), 200
         else:

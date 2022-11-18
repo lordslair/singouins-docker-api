@@ -3,8 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 
@@ -19,7 +18,7 @@ from variables                  import API_INTERNAL_TOKEN
 # API: GET /internal/creature/{creatureid}/equipment
 def creature_equipment(creatureid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -29,10 +28,10 @@ def creature_equipment(creatureid):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -42,10 +41,10 @@ def creature_equipment(creatureid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        creature_slots = RedisSlots(creature)
+        Slots = RedisSlots(Creature)
     except Exception as e:
         msg = f'{h} Slots Query KO [{e}]'
         logger.error(msg)
@@ -64,13 +63,13 @@ def creature_equipment(creatureid):
             'holster', 'lefthand', 'righthand',
             'shoulders', 'torso', 'legs'
         ]:
-            itemuuid = getattr(creature_slots, slot)
+            itemuuid = getattr(Slots, slot)
             if itemuuid is None:
                 # If the Slot is empty, let's put None directly
                 equipment[slot] = None
             else:
                 # An item is equipped in this slot, lets gather info
-                item = RedisItem(creature).get(itemuuid)
+                item = RedisItem(Creature).get(itemuuid)
                 if item:
                     equipment[slot] = item._asdict()
                 else:
@@ -94,7 +93,7 @@ def creature_equipment(creatureid):
                 "msg": msg,
                 "payload": {
                     "equipment": equipment,
-                    "creature": creature,
+                    "creature": Creature._asdict(),
                     },
             }
         ), 200
@@ -103,7 +102,7 @@ def creature_equipment(creatureid):
 # API: GET /internal/creature/{creatureid}/equipment/{itemid}/ammo/{operation}/{count} # noqa
 def creature_equipment_modifiy(creatureid, itemid, operation, count):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -113,8 +112,23 @@ def creature_equipment_modifiy(creatureid, itemid, operation, count):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
     if operation not in ['add', 'consume']:
-        msg = (f"Operation should be in "
+        msg = (f"{h} Operation should be in "
                f"['add','consume'] (operation:{operation})")
         logger.warning(msg)
         return jsonify(
@@ -125,28 +139,13 @@ def creature_equipment_modifiy(creatureid, itemid, operation, count):
             }
         ), 200
 
-    # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-
     try:
-        item = RedisItem(creature).get(itemid)
-        if item and item.ammo > 0:
+        Item = RedisItem(Creature).get(itemid)
+        if Item and Item.ammo > 0:
             if operation == 'consume':
-                item.ammo -= count
+                Item.ammo -= count
             else:
-                item.ammo += count
+                Item.ammo += count
         else:
             msg = f'{h} Item Query KO (itemid:{itemid})'
             logger.error(msg)
@@ -175,8 +174,8 @@ def creature_equipment_modifiy(creatureid, itemid, operation, count):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "item": item._asdict(),
-                    "creature": creature,
+                    "item": Item._asdict(),
+                    "creature": Creature._asdict(),
                     },
             }
         ), 200

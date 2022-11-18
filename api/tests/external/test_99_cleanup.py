@@ -17,23 +17,24 @@ def test_singouins_pc_delete():
     response = requests.get(url, headers=headers)
     pclist   = json.loads(response.text)['payload']
 
-    for pc in pclist:
-        pcid       = pc['id']
-        instanceid = pc['instance']
-        if instanceid is not None:
-            # We need to leave the instance
-            url      = f'{API_URL}/mypc/{pcid}/instance/{instanceid}/leave'
-            response = requests.post(url, headers=headers)
+    if pclist is not None:
+        for pc in pclist:
+            pcid       = pc['id']
+            instanceid = pc['instance']
+            if instanceid is not None:
+                # We need to leave the instance
+                url      = f'{API_URL}/mypc/{pcid}/instance/{instanceid}/leave'
+                response = requests.post(url, headers=headers)
+
+                assert response.status_code == 200
+                assert json.loads(response.text)['success'] is True
+
+            # We delete the PC
+            url        = f'{API_URL}/mypc/{pcid}'  # DELETE
+            response   = requests.delete(url, headers=headers)
 
             assert response.status_code == 200
             assert json.loads(response.text)['success'] is True
-
-        # We delete the PC
-        url        = f'{API_URL}/mypc/{pcid}'  # DELETE
-        response   = requests.delete(url, headers=headers)
-
-        assert response.status_code == 200
-        assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_auth_delete():
@@ -48,7 +49,7 @@ def test_singouins_auth_delete():
                              headers=headers)
 
     assert response.status_code == 200
-    assert 'Password successfully replaced' in json.loads(response.text)['msg']
+    assert 'Password replacement OK' in json.loads(response.text)['msg']
 
     url      = f'{API_URL}/auth/delete'  # DELETE
     response = requests.delete(url,
@@ -56,4 +57,4 @@ def test_singouins_auth_delete():
                                headers=headers)
 
     assert response.status_code == 200
-    assert 'User successfully deleted' in json.loads(response.text)['msg']
+    assert 'User deletion OK' in json.loads(response.text)['msg']

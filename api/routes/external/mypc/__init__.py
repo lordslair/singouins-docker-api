@@ -5,20 +5,14 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import (fn_creature_add,
-                                        fn_creature_del,
-                                        fn_creature_get,
-                                        fn_creature_get_all,
-                                        fn_creature_stats_add,
-                                        fn_creature_stats_del)
-from mysql.methods.fn_user      import fn_user_get
-
 from nosql.metas                import metaRaces
 from nosql.models.RedisCosmetic import RedisCosmetic
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
+from nosql.models.RedisUser     import RedisUser
 from nosql.models.RedisWallet   import RedisWallet
 
 
@@ -29,6 +23,8 @@ from nosql.models.RedisWallet   import RedisWallet
 @jwt_required()
 def mypc_add():
     username = get_jwt_identity()
+    User = RedisUser().get(get_jwt_identity())
+    h = f'[User.id:{User.id}]'
 
     pcclass      = request.json.get('class', None)
     pccosmetic   = request.json.get('cosmetic', None)
@@ -53,8 +49,8 @@ def mypc_add():
             ), 200
     """
 
-    if fn_creature_get(pcname, None)[1]:
-        msg = f'PC already exists (username:{username},pcname:{pcname})'
+    if len(RedisCreature().search(query=f'@name:{pcname}')) != 0:
+        msg = f'{h} Creature already exists (Creature.name:{pcname})'
         logger.error(msg)
         return jsonify(
             {
@@ -68,7 +64,7 @@ def mypc_add():
         metaRace = dict(list(filter(lambda x: x["id"] == pcrace,
                                     metaRaces))[0])  # Gruikfix
         if metaRace is None:
-            msg = f'MetaRace not found (race:{pcrace})'
+            msg = f'{h} MetaRace not found (race:{pcrace})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -78,12 +74,14 @@ def mypc_add():
                 }
             ), 200
         try:
-            pc = fn_creature_add(pcname,
-                                 pcrace,
-                                 pcgender,
-                                 fn_user_get(username).id)
+            Creature = RedisCreature().new(
+                pcname,
+                pcrace,
+                pcgender,
+                RedisUser().get(username).id
+                )
         except Exception as e:
-            msg = f'PC creation KO (username:{username},pcname:{pcname}) [{e}]'
+            msg = f'{h} PC creation KO (pcname:{pcname}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -93,8 +91,8 @@ def mypc_add():
                 }
             ), 200
         else:
-            if pc is None:
-                msg = f'PC creation KO (username:{username},pcname:{pcname})'
+            if Creature is None:
+                msg = f'{h} PC creation KO (pcname:{pcname})'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -104,11 +102,11 @@ def mypc_add():
                     }
                 ), 200
             else:
-                h = f'[Creature.id:{pc.id}]'  # Header for logging
+                h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
             try:
                 # We initialize a fresh wallet
-                creature_wallet = RedisWallet(pc)
+                creature_wallet = RedisWallet(Creature)
             except Exception as e:
                 msg = f'{h} RedisWallet creation KO [{e}]'
                 logger.error(msg)
@@ -126,16 +124,12 @@ def mypc_add():
                     logger.warning(f'{h} RedisWallet creation KO')
 
             try:
-                if RedisCosmetic(pc).new(pccosmetic):
+                if RedisCosmetic(Creature).new(pccosmetic):
                     logger.trace(f'{h} Cosmetic creation OK')
                 else:
                     logger.warning(f'{h} Cosmetic creation KO')
-                if fn_creature_stats_add(pc, metaRace, pcclass):
-                    logger.trace(f'{h} Stats creation OK (MySQL)')
-                else:
-                    logger.warning(f'{h} Stats creation KO (MySQL)')
             except Exception as e:
-                msg = f'{h} PC Cosmetics/Slots/Stats creation KO [{e}]'
+                msg = f'{h} PC Cosmetics creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -162,7 +156,7 @@ def mypc_add():
                                 "state": 100,
                                 "rarity": 'Common'
                             }
-                            RedisItem(pc).new(rh_caracs)
+                            RedisItem(Creature).new(rh_caracs)
 
                         if pcequipment['lefthand'] is not None:
                             lh_caracs = {
@@ -177,7 +171,7 @@ def mypc_add():
                                 "state": 100,
                                 "rarity": 'Common'
                             }
-                            RedisItem(pc).new(lh_caracs)
+                            RedisItem(Creature).new(lh_caracs)
 
                     except Exception as e:
                         msg = f'{h} Weapons creation KO [{e}]'
@@ -195,7 +189,7 @@ def mypc_add():
                         logger.trace(msg)
                         try:
                             # We initialize a fresh stats
-                            RedisStats(pc)
+                            RedisStats(Creature).new(pcclass)
                         except Exception as e:
                             msg = f'{h} RedisStats creation KO [{e}]'
                             logger.error(msg)
@@ -216,7 +210,7 @@ def mypc_add():
                     {
                         "success": True,
                         "msg": msg,
-                        "payload": pc,
+                        "payload": Creature._asdict(),
                     }
                 ), 201
 
@@ -225,12 +219,14 @@ def mypc_add():
 @jwt_required()
 def mypc_get_all():
     username = get_jwt_identity()
+    User = RedisUser().get(username)
+    h = f'[User.id:{User.id}]'
 
     try:
-        userid = fn_user_get(username).id
-        pcs    = fn_creature_get_all(userid)
+        account = User.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@account:{account}')
     except Exception as e:
-        msg = f'[SQL] PCs query KO (username:{username}) [{e}]'
+        msg = f'Creatures query KO (username:{username}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -240,18 +236,18 @@ def mypc_get_all():
             }
         ), 200
     else:
-        if pcs:
-            msg = f'PCs Query OK (username:{username})'
+        if Creatures:
+            msg = f'{h} Creatures Query OK'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": pcs,
+                    "payload": Creatures,
                 }
             ), 200
         else:
-            msg = f'No PC found for this user (username:{username})'
+            msg = f'{h} Creatures Query KO - NotFound'
             logger.warning(msg)
             return jsonify(
                 {
@@ -265,10 +261,10 @@ def mypc_get_all():
 # API: DELETE /mypc/<int:pcid>
 @jwt_required()
 def mypc_del(pcid):
-    creature = fn_creature_get(None, pcid)[3]
+    Creature = RedisCreature().get(pcid)
 
-    if creature is None:
-        msg = f'Creature({pcid}) does not exist'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -278,10 +274,10 @@ def mypc_del(pcid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    if creature.instance:
-        msg = f'{h} Creature should not be in an Instance({creature.instance})'
+    if Creature.instance:
+        msg = f'{h} Creature should not be in an Instance({Creature.instance})'
         logger.debug(msg)
         return jsonify(
             {
@@ -293,37 +289,22 @@ def mypc_del(pcid):
 
     try:
         # We start do delete PC elements
-        if RedisCosmetic(creature).destroy_all():
+        if RedisCosmetic(Creature).destroy_all():
             logger.trace(f'{h} RedisCosmetic delete OK')
-
-        if fn_creature_stats_del(creature):
-            logger.trace(f'{h} Stats delete OK (MySQL)')
-        if RedisStats(creature).destroy():
+        if RedisStats(Creature).destroy():
             logger.trace(f'{h} RedisStats delete OK (Redis)')
-
-        if RedisWallet(creature).destroy():
+        if RedisWallet(Creature).destroy():
             logger.trace(f'{h} RedisWallet delete OK')
-        if RedisSlots(creature).destroy():
+        if RedisSlots(Creature).destroy():
             logger.trace(f'{h} RedisSlots delete OK')
-        if RedisHS(creature).destroy():
+        if RedisHS(Creature).destroy():
             logger.trace(f'{h} RedisHS delete OK')
 
-        """
-        # We leave the instance if we are in one
-        if creature.instance:
-            if len(fn_creatures_in_instance(creature.instance)) == 1:
-                # The creature is the last in Instance, we destroy it quickly
-                if RedisInstance(creature).destroy():
-                    logger.trace(f'{h} Instance leave OK')
-                else:
-                    logger.trace(f'{h} Instance leave KO')
-                    """
-
-        # Now we can delete tue PC itself
-        if fn_creature_del(creature):
-            logger.trace(f'{h} Creature delete OK (MySQL)')
+        # Now we can delete tte Creature itself
+        if RedisCreature().destroy(Creature.id):
+            logger.trace(f'{h} Creature delete OK')
         else:
-            logger.warning(f'{h} Creature delete KO (MySQL)')
+            logger.warning(f'{h} Creature delete KO')
 
         # TODO: For now we do NOT delete items on PC deletion
     except Exception as e:

@@ -8,10 +8,12 @@ API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
 HEADERS            = {"Authorization": f"Bearer {API_INTERNAL_TOKEN}"}
 
 # Creature ID variables
-CREATURE_ID     = 1
-KORP_ID         = 0
+CREATURE_ID     = '00000000-cafe-cafe-cafe-000000000000'
+KORP_ID         = '00000000-babe-babe-babe-000000000000'
 METAS           = ['armor', 'weapon', 'race']
 SQUAD_ID        = 0
+USER_ID         = '00000000-beef-beef-beef-000000000000'
+ITEM_ID         = '00000000-deed-deed-deed-000000000000'
 
 # Effect
 EFFECT_NAME     = 'EffectOne'

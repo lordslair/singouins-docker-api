@@ -3,9 +3,8 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-
 from nosql.models.RedisAuction  import RedisAuction
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -19,8 +18,23 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_sell(creatureid, itemid):
+    Creature = RedisCreature().get(creatureid)
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = f'{h} Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -30,7 +44,7 @@ def creature_auction_sell(creatureid, itemid):
             }
         ), 403
     if not request.is_json:
-        msg = 'Missing JSON in request'
+        msg = f'{h} Missing JSON in request'
         logger.warning(msg)
         return jsonify(
             {
@@ -44,7 +58,7 @@ def creature_auction_sell(creatureid, itemid):
     price    = request.json.get('price')
 
     if not isinstance(duration, int):
-        msg = f'Duration should be an INT (duration:{duration})'
+        msg = f'{h} Duration should be an INT (duration:{duration})'
         logger.warning(msg)
         return jsonify(
             {
@@ -54,7 +68,7 @@ def creature_auction_sell(creatureid, itemid):
             }
         ), 200
     if not isinstance(price, int):
-        msg = f'Price should be an INT (price:{price})'
+        msg = f'{h} Price should be an INT (price:{price})'
         logger.warning(msg)
         return jsonify(
             {
@@ -64,10 +78,9 @@ def creature_auction_sell(creatureid, itemid):
             }
         ), 200
 
-    # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    Item = RedisItem(Creature).get(itemid)
+    if Item is None:
+        msg = f'{h} Item Query KO - NotFound (Item.id:{itemid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -76,12 +89,8 @@ def creature_auction_sell(creatureid, itemid):
                 "payload": None,
             }
         ), 200
-    else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-
-    item = RedisItem(creature).get(itemid)
-    if item is None:
-        msg = f'{h} Item not found (itemid:{itemid})'
+    if Item.bearer != Creature.id:
+        msg = f'{h} Item does not belong to you (Item.id:{Item.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -90,18 +99,8 @@ def creature_auction_sell(creatureid, itemid):
                 "payload": None,
             }
         ), 200
-    if item.bearer != creature.id:
-        msg = f'{h} Item does not belong to you (itemid:{itemid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if item.bound_type is False:
-        msg = f'{h} Item should not be bound (itemid:{itemid})'
+    if Item.bound_type is False:
+        msg = f'{h} Item should not be bound (Item.id:{Item.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -113,7 +112,7 @@ def creature_auction_sell(creatureid, itemid):
 
     # We add the Item into the Auctions
     try:
-        sell = RedisAuction().sell(creature, item, price, duration)
+        Auction = RedisAuction().sell(Creature, Item, price, duration)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -125,7 +124,7 @@ def creature_auction_sell(creatureid, itemid):
             }
         ), 200
     else:
-        if sell is False:
+        if Auction is False:
             msg = f'{h} Auction Query KO - Already Exists'
             logger.warning(msg)
             return jsonify(
@@ -135,7 +134,7 @@ def creature_auction_sell(creatureid, itemid):
                     "payload": None,
                 }
             ), 409
-        elif sell:
+        elif Auction:
             msg = f'{h} Auction Query OK'
             logger.debug(msg)
             return jsonify(
@@ -143,17 +142,17 @@ def creature_auction_sell(creatureid, itemid):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "creature": creature,
+                        "creature": Creature._asdict(),
                         "auction": {
-                            "duration_base": sell.duration_base,
-                            "duration_left": sell.duration_base,
-                            "id": sell.id,
-                            "meta_id": sell.meta.id,
-                            "meta_name": sell.meta.name,
-                            "price": sell.price,
-                            "rarity": sell.item.rarity,
-                            "seller_id": sell.seller.id,
-                            "seller_name": sell.seller.name,
+                            "duration_base": Auction.duration_base,
+                            "duration_left": Auction.duration_base,
+                            "id": Auction.id,
+                            "meta_id": Auction.meta.id,
+                            "meta_name": Auction.meta.name,
+                            "price": Auction.price,
+                            "rarity": Auction.item.rarity,
+                            "seller_id": Auction.seller.id,
+                            "seller_name": Auction.seller.name,
                             },
                         },
                 }
@@ -172,21 +171,10 @@ def creature_auction_sell(creatureid, itemid):
 
 # API: DELETE /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_remove(creatureid, itemid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -196,11 +184,22 @@ def creature_auction_remove(creatureid, itemid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    item = RedisItem(creature).get(itemid)
-    if item is None:
-        msg = f'{h} Item not found (itemid:{itemid})'
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
+
+    Item = RedisItem(Creature).get(itemid)
+    if Item is None:
+        msg = f'{h} Item Query KO - NotFound (Item.id:{itemid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -209,8 +208,8 @@ def creature_auction_remove(creatureid, itemid):
                 "payload": None,
             }
         ), 200
-    if item.bearer != creature.id:
-        msg = f'{h} Item does not belong to you (itemid:{itemid})'
+    if Item.bearer != Creature.id:
+        msg = f'{h} Item does not belong to you (Item.id:{Item.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -222,7 +221,7 @@ def creature_auction_remove(creatureid, itemid):
 
     # We remove the Item into the Auctions
     try:
-        remove = RedisAuction().destroy(item)
+        remove = RedisAuction().destroy(Item)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -258,21 +257,10 @@ def creature_auction_remove(creatureid, itemid):
 
 # API: POST /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_buy(creatureid, itemid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -282,11 +270,22 @@ def creature_auction_buy(creatureid, itemid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    item = RedisItem(creature).get(itemid)
-    if item is None:
-        msg = f'{h} Item not found (itemid:{itemid})'
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
+
+    Item = RedisItem(Creature).get(itemid)
+    if Item is None:
+        msg = f'{h} Item Query KO - NotFound (Item.id:{itemid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -298,7 +297,7 @@ def creature_auction_buy(creatureid, itemid):
 
     # We remove the Item into the Auctions
     try:
-        auction = RedisAuction().get(item)
+        Auction = RedisAuction().get(Item)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -310,8 +309,8 @@ def creature_auction_buy(creatureid, itemid):
             }
         ), 200
     else:
-        if auction is False:
-            msg = f'Auction not found (itemid:{itemid})'
+        if Auction is False:
+            msg = f'{h} Auction Query KO - NotFound (Item.id:{itemid})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -321,9 +320,9 @@ def creature_auction_buy(creatureid, itemid):
                 }
             ), 404
 
-        seller = fn_creature_get(None, auction.seller_id)[3]
-        if seller is None:
-            msg = f'Creature not found (seller_id:{auction.seller_id})'
+        CreatureSeller = RedisCreature().get(Auction.seller_id)
+        if CreatureSeller is None:
+            msg = f'Creature not found (seller_id:{Auction.seller_id})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -333,23 +332,23 @@ def creature_auction_buy(creatureid, itemid):
                 }
             ), 200
 
-        if auction:
+        if Auction:
             # We delete the auction
-            RedisAuction().destroy(item)
+            RedisAuction().destroy(Item)
             # We do the financial transaction
-            buyer_wallet = RedisWallet(creature)
+            buyer_wallet = RedisWallet(Creature)
             buyer_wallet.incr(
                 'bananas',
-                count=(auction.price * (-1))
+                count=(Auction.price * (-1))
                 )
-            seller_wallet = RedisWallet(seller)
+            seller_wallet = RedisWallet(CreatureSeller)
             seller_wallet.incr(
                 'bananas',
-                count=round(auction.price * 0.9)
+                count=round(Auction.price * 0.9)
                 )
             # We change the Item owner
             try:
-                item.bearer = creature.id
+                Item.bearer = Creature.id
             except Exception as e:
                 msg = f'{h} Auction Query KO [{e}]'
                 logger.warning(msg)
@@ -369,18 +368,18 @@ def creature_auction_buy(creatureid, itemid):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "creature": creature,
-                        "item": item._asdict(),
+                        "creature": Creature._asdict(),
+                        "item": Item._asdict(),
                         "auction": {
-                            "duration_base": auction.duration_base,
+                            "duration_base": Auction.duration_base,
                             "duration_left": 0,
-                            "id": auction.id,
-                            "meta_id": auction.meta_id,
-                            "meta_name": auction.meta_name,
-                            "price": auction.price,
-                            "rarity": auction.rarity,
-                            "seller_id": auction.seller_id,
-                            "seller_name": auction.seller_name,
+                            "id": Auction.id,
+                            "meta_id": Auction.meta_id,
+                            "meta_name": Auction.meta_name,
+                            "price": Auction.price,
+                            "rarity": Auction.rarity,
+                            "seller_id": Auction.seller_id,
+                            "seller_name": Auction.seller_name,
                             }
                     },
                 }
@@ -399,21 +398,10 @@ def creature_auction_buy(creatureid, itemid):
 
 # API: GET /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_get(creatureid, itemid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -423,11 +411,22 @@ def creature_auction_get(creatureid, itemid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    item = RedisItem(creature).get(itemid)
-    if item is None:
-        msg = f'{h} Item not found (itemid:{itemid})'
+    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
+        msg = f'{h} Token not authorized'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 403
+
+    Item = RedisItem(Creature).get(itemid)
+    if Item is None:
+        msg = f'{h} Item Query KO - NotFound (Item.id:{itemid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -439,7 +438,7 @@ def creature_auction_get(creatureid, itemid):
 
     # We get the Item from the Auctions
     try:
-        auction = RedisAuction().get(item)
+        Auction = RedisAuction().get(Item)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -451,7 +450,7 @@ def creature_auction_get(creatureid, itemid):
             }
         ), 200
     else:
-        if auction:
+        if Auction:
             # We are done
             msg = f'{h} Auction Query OK'
             logger.debug(msg)
@@ -460,18 +459,18 @@ def creature_auction_get(creatureid, itemid):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "creature": creature,
-                        "item": item._asdict(),
+                        "creature": Creature._asdict(),
+                        "item": Item._asdict(),
                         "auction": {
-                            "duration_base": auction.duration_base,
+                            "duration_base": Auction.duration_base,
                             "duration_left": 0,
-                            "id": auction.id,
-                            "meta_id": auction.meta_id,
-                            "meta_name": auction.meta_name,
-                            "price": auction.price,
-                            "rarity": auction.rarity,
-                            "seller_id": auction.seller_id,
-                            "seller_name": auction.seller_name,
+                            "id": Auction.id,
+                            "meta_id": Auction.meta_id,
+                            "meta_name": Auction.meta_name,
+                            "price": Auction.price,
+                            "rarity": Auction.rarity,
+                            "seller_id": Auction.seller_id,
+                            "seller_name": Auction.seller_name,
                             }
                     },
                 }
@@ -490,8 +489,23 @@ def creature_auction_get(creatureid, itemid):
 
 # API: POST /internal/creature/{creatureid}/auctions
 def creature_auctions_search(creatureid):
+    Creature = RedisCreature().get(creatureid)
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = f'{h} Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -501,7 +515,7 @@ def creature_auctions_search(creatureid):
             }
         ), 403
     if not request.is_json:
-        msg = 'Missing JSON in request'
+        msg = f'{h} Missing JSON in request'
         logger.warning(msg)
         return jsonify(
             {
@@ -546,21 +560,6 @@ def creature_auctions_search(creatureid):
             }
         ), 200
 
-    # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-
     # We get the Item from the Auctions
     try:
         auctions = RedisAuction().search(metaid=metaid, metatype=metatype)
@@ -583,7 +582,7 @@ def creature_auctions_search(creatureid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "creature": creature,
+                    "creature": Creature._asdict(),
                     "auctions": auctions,
                 },
             }

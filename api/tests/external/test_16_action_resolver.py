@@ -5,7 +5,8 @@ import requests
 import os
 
 from variables import (AUTH_PAYLOAD,
-                       API_URL)
+                       API_URL,
+                       PC_NAME)
 
 
 def test_singouins_action_resolver_context():
@@ -46,12 +47,17 @@ def test_singouins_action_resolver_context():
     url        = f'{API_URL}/mypc/{pcid}/action/resolver/context'  # POST
     response   = requests.post(url, headers=headers, json=RESOLVER_JSON)
 
+    assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert response.status_code                 == 200
 
-    context    = json.loads(response.text)['payload']['internal']['context']
-    assert context['creatures'][0]['name'] == 'PJTest'
-    assert context['pa']['blue']['pa']     > 0
+    context = json.loads(response.text)['payload']['internal']['context']
+
+    assert isinstance(context['creatures'], list)
+    assert len(context['creatures']) > 0
+    assert [x for x in context['creatures'] if x['id'] == pcid][0] is not None
+
+    assert context['pa']['blue']['pa'] > 0
+
     assert isinstance(context['cd'], list)
     assert isinstance(context['effects'], list)
     assert isinstance(context['status'], list)
@@ -71,9 +77,12 @@ def test_singouins_action_resolver_move():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    x        = json.loads(response.text)['payload'][0]['x']
-    y        = json.loads(response.text)['payload'][0]['y']
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+
+    payload = json.loads(response.text)['payload']
+    pc = [x for x in payload if x['name'] == PC_NAME][0]
 
     RESOLVER_JSON = {
         "name": "RegularMovesFightClass",
@@ -82,13 +91,13 @@ def test_singouins_action_resolver_move():
             "type": "target",
             "destinationType": "tile",
             "destination": None,
-            "options": {"path": [{"x": x + 1, "y": y - 1}]}
+            "options": {"path": [{"x": pc['x'] + 1, "y": pc['y'] - 1}]}
         },
-        "actor": pcid
+        "actor": pc['id']
     }
 
-    url        = f'{API_URL}/mypc/{pcid}/action/resolver/move'  # POST
+    url        = f"{API_URL}/mypc/{pc['id']}/action/resolver/move"  # POST
     response   = requests.post(url, headers=headers, json=RESOLVER_JSON)
 
+    assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert response.status_code                 == 200

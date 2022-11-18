@@ -3,7 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from mysql.methods.fn_korp      import fn_korp_get_all, fn_korp_get_one
+from nosql.models.RedisKorp     import RedisKorp
 
 from variables                  import API_INTERNAL_TOKEN
 
@@ -15,7 +15,7 @@ from variables                  import API_INTERNAL_TOKEN
 # API: GET /internal/korp/{korpid}
 def internal_korp_get_one(korpid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -26,9 +26,9 @@ def internal_korp_get_one(korpid):
         ), 403
 
     try:
-        korp = fn_korp_get_one(korpid)
+        Korp = RedisKorp().get(korpid)
     except Exception as e:
-        msg = f'Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'[Korp.id:{korpid}] Korp Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -38,18 +38,18 @@ def internal_korp_get_one(korpid):
             }
         ), 200
     else:
-        if korp:
-            msg = f'Korp Query OK (korpid:{korpid})'
+        if Korp:
+            msg = f'[Korp.id:{Korp.id}] Korp Query OK'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": korp,
+                    "payload": Korp._asdict(),
                 }
             ), 200
-        elif korp is False:
-            msg = f'Korp Query KO - NotFound (korpid:{korpid})'
+        elif Korp is False:
+            msg = f'[Korp.id:{korpid}] Korp Query KO - NotFound'
             logger.warning(msg)
             return jsonify(
                 {
@@ -59,7 +59,7 @@ def internal_korp_get_one(korpid):
                 }
             ), 200
         else:
-            msg = f'Korp Query KO (korpid:{korpid})'
+            msg = f'[Korp.id:{korpid}] Korp Query KO'
             logger.warning(msg)
             return jsonify(
                 {
@@ -73,7 +73,7 @@ def internal_korp_get_one(korpid):
 # API: GET /internal/korps
 def internal_korp_get_all():
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -84,9 +84,9 @@ def internal_korp_get_all():
         ), 403
 
     try:
-        korps = fn_korp_get_all()
+        Korps = RedisKorp().search(query='-(@instance:None)')
     except Exception as e:
-        msg = f'Korps Query KO [{e}]'
+        msg = f'[Korp.id:None] Korps Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -96,12 +96,12 @@ def internal_korp_get_all():
             }
         ), 200
     else:
-        msg = 'Korps Query OK'
+        msg = '[Korp.id:None] Korps Query OK'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
-                "payload": korps,
+                "payload": Korps,
             }
         ), 200

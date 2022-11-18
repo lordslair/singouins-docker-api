@@ -8,23 +8,7 @@ from variables import (API_URL,
                        HEADERS)
 
 
-def test_singouins_internal_creature():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}'
-    response  = requests.get(url, headers=HEADERS)
-
-    assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_internal_creatures():
-    url       = f'{API_URL}/internal/creatures'
-    response  = requests.get(url, headers=HEADERS)
-
-    assert response.status_code                 == 200
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_internal_creature_pop_n_delete():
+def test_singouins_internal_creature_pop_n_kill():
     url       = f'{API_URL}/internal/creature'  # PUT
     payload   = {"raceid": 11,
                  "gender": True,
@@ -41,8 +25,8 @@ def test_singouins_internal_creature_pop_n_delete():
     assert response.status_code                 == 201
     assert json.loads(response.text)['success'] is True
 
-    url       = f"{API_URL}/internal/creature/{creature['id']}"  # DELETE
-    response  = requests.delete(url, headers=HEADERS, json=payload)
+    url       = f"{API_URL}/internal/creature/{CREATURE_ID}/kill/{creature['id']}" # POST # noqa
+    response  = requests.post(url, headers=HEADERS, json=payload)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] is True

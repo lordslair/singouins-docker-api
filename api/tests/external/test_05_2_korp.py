@@ -8,7 +8,7 @@ from variables import (AUTH_PAYLOAD,
 
 # To reuse in many calls
 payload_pjtest = {
-    'name': 'PJTestSquadInvite',
+    'name': 'PJTestKorpInvite',
     'gender': True,
     'race': 2,
     'class': 3,
@@ -33,7 +33,7 @@ payload_pjtest = {
 }
 
 
-def test_singouins_squad_create():
+def test_singouins_korp_create():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -43,16 +43,16 @@ def test_singouins_squad_create():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
 
-    url       = f'{API_URL}/mypc/{pcid}/squad'  # POST
-    payload_s = {"name": 'SquadTest'}
+    url       = f'{API_URL}/mypc/{pcid}/korp'  # POST
+    payload_s = {"name": 'KorpTest'}
     response  = requests.post(url, json=payload_s, headers=headers)
 
     assert response.status_code == 201
     assert json.loads(response.text)['success'] is True
-    assert 'Squad create OK' in json.loads(response.text)['msg']
+    assert 'Korp create OK' in json.loads(response.text)['msg']
 
 
-def test_singouins_squad_get():
+def test_singouins_korp_get():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -60,20 +60,25 @@ def test_singouins_squad_get():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid   = pc['korp']
 
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}'  # GET
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    squad_r  = json.loads(response.text)['payload']['members'][0]['squad_rank']
-    assert squad_r == 'Leader'
-    assert 'Squad Query OK' in json.loads(response.text)['msg']
+    members = json.loads(response.text)['payload']['members']
+    # We need the PC (name:PJTest)
+    pc  = [x for x in members if x['name'] == 'PJTest'][0]
+    assert pc['korp_rank'] == 'Leader'
+    assert 'Korp Query OK' in json.loads(response.text)['msg']
 
 
-def test_singouins_squad_invite():
+def test_singouins_korp_invite():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -81,27 +86,33 @@ def test_singouins_squad_invite():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid   = pc['korp']
 
-    # We create a PJTestSquadInvite
-    payload_pjtest['name'] = 'PJTestSquadInvite'
+    # We create a PJTestKorpInvite
+    payload_pjtest['name'] = 'PJTestKorpInvite'
 
     url      = f'{API_URL}/mypc'  # POST
     response = requests.post(url, json=payload_pjtest, headers=headers)
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    targetid = json.loads(response.text)['payload'][1]['id']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTestKorpInvite)
+    target   = [x for x in pcs if x['name'] == 'PJTestKorpInvite'][0]
+    targetid = target['id']
 
-    # We invite PJTestSquadInvite
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    # We invite PJTestKorpInvite
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad invite OK' in json.loads(response.text)['msg']
+    assert 'Korp invite OK' in json.loads(response.text)['msg']
 
-    # We cleanup the PJTestSquadInvite
+    # We cleanup the PJTestKorpInvite
     url      = f'{API_URL}/mypc/{targetid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
@@ -109,7 +120,7 @@ def test_singouins_squad_invite():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_squad_kick():
+def test_singouins_korp_kick():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -117,35 +128,41 @@ def test_singouins_squad_kick():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid  = pc['korp']
 
-    # We create a PJTestSquadKick
-    payload_pjtest['name'] = 'PJTestSquadInvite'
+    # We create a PJTestKorpKick
+    payload_pjtest['name'] = 'PJTestKorpInvite'
 
     url      = f'{API_URL}/mypc'  # POST
     response = requests.post(url, json=payload_pjtest, headers=headers)
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    targetid = json.loads(response.text)['payload'][1]['id']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTestKorpInvite)
+    target   = [x for x in pcs if x['name'] == 'PJTestKorpInvite'][0]
+    targetid = target['id']
 
-    # We invite PJTestSquadKick
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    # We invite PJTestKorpKick
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad invite OK' in json.loads(response.text)['msg']
+    assert 'Korp invite OK' in json.loads(response.text)['msg']
 
-    # We kick PJTestSquadKick
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/kick/{targetid}'  # POST
+    # We kick PJTestKorpKick
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/kick/{targetid}'  # POST
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad kick OK' in json.loads(response.text)['msg']
+    assert 'Korp kick OK' in json.loads(response.text)['msg']
 
-    # We cleanup the PJTestSquadKick
+    # We cleanup the PJTestKorpKick
     url      = f'{API_URL}/mypc/{targetid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
@@ -153,7 +170,7 @@ def test_singouins_squad_kick():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_squad_accept():
+def test_singouins_korp_accept():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -161,35 +178,41 @@ def test_singouins_squad_accept():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid  = pc['korp']
 
-    # We create a PJTestSquadAccept
-    payload_pjtest['name'] = 'PJTestSquadAccept'
+    # We create a PJTestKorpAccept
+    payload_pjtest['name'] = 'PJTestKorpAccept'
 
     url      = f'{API_URL}/mypc'  # POST
     response = requests.post(url, json=payload_pjtest, headers=headers)
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    targetid = json.loads(response.text)['payload'][1]['id']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTestKorpAccept)
+    target   = [x for x in pcs if x['name'] == 'PJTestKorpAccept'][0]
+    targetid = target['id']
 
-    # We invite PJTestSquadAccept
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST# noqa
+    # We invite PJTestKorpAccept
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST# noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad invite OK' in json.loads(response.text)['msg']
+    assert 'Korp invite OK' in json.loads(response.text)['msg']
 
-    # PJTestSquadAccept accepts the request
-    url      = f'{API_URL}/mypc/{targetid}/squad/{squadid}/accept'  # POST
+    # PJTestKorpAccept accepts the request
+    url      = f'{API_URL}/mypc/{targetid}/korp/{korpid}/accept'  # POST
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad accept OK' in json.loads(response.text)['msg']
+    assert 'Korp accept OK' in json.loads(response.text)['msg']
 
-    # We cleanup the PJTestSquadAccept
+    # We cleanup the PJTestKorpAccept
     url      = f'{API_URL}/mypc/{targetid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
@@ -197,7 +220,7 @@ def test_singouins_squad_accept():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_squad_decline():
+def test_singouins_korp_decline():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -205,35 +228,41 @@ def test_singouins_squad_decline():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid  = pc['korp']
 
-    # We create a PJTestSquadDecline
-    payload_pjtest['name'] = 'PJTestSquadDecline'
+    # We create a PJTestKorpDecline
+    payload_pjtest['name'] = 'PJTestKorpDecline'
 
     url      = f'{API_URL}/mypc'  # POST
     response = requests.post(url, json=payload_pjtest, headers=headers)
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    targetid = json.loads(response.text)['payload'][1]['id']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTestKorpAccept)
+    target   = [x for x in pcs if x['name'] == 'PJTestKorpDecline'][0]
+    targetid = target['id']
 
-    # We invite PJTestSquadDecline
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    # We invite PJTestKorpDecline
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad invite OK' in json.loads(response.text)['msg']
+    assert 'Korp invite OK' in json.loads(response.text)['msg']
 
-    # PJTestSquadDecline declines the request
-    url      = f'{API_URL}/mypc/{targetid}/squad/{squadid}/decline'  # POST
+    # PJTestKorpDecline declines the request
+    url      = f'{API_URL}/mypc/{targetid}/korp/{korpid}/decline'  # POST
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad decline OK' in json.loads(response.text)['msg']
+    assert 'Korp decline OK' in json.loads(response.text)['msg']
 
-    # We cleanup the PJTestSquadDecline
+    # We cleanup the PJTestKorpDecline
     url      = f'{API_URL}/mypc/{targetid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
@@ -241,7 +270,7 @@ def test_singouins_squad_decline():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_squad_leave():
+def test_singouins_korp_leave():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -249,35 +278,41 @@ def test_singouins_squad_leave():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid  = pc['korp']
 
-    # We create a PJTestSquadLeave
-    payload_pjtest['name'] = 'PJTestSquadLeave'
+    # We create a PJTestKorpLeave
+    payload_pjtest['name'] = 'PJTestKorpLeave'
 
     url      = f'{API_URL}/mypc'  # POST
     response = requests.post(url, json=payload_pjtest, headers=headers)
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    targetid = json.loads(response.text)['payload'][1]['id']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTestKorpAccept)
+    target   = [x for x in pcs if x['name'] == 'PJTestKorpLeave'][0]
+    targetid = target['id']
 
-    # We invite PJTestSquadLeave
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    # We invite PJTestKorpLeave
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad invite OK' in json.loads(response.text)['msg']
+    assert 'Korp invite OK' in json.loads(response.text)['msg']
 
-    # PJTestSquadLeave leave the request
-    url      = f'{API_URL}/mypc/{targetid}/squad/{squadid}/leave'  # POST
+    # PJTestKorpLeave leave the request
+    url      = f'{API_URL}/mypc/{targetid}/korp/{korpid}/leave'  # POST
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad leave OK' in json.loads(response.text)['msg']
+    assert 'Korp leave OK' in json.loads(response.text)['msg']
 
-    # We cleanup the PJTestSquadLeave
+    # We cleanup the PJTestKorpLeave
     url      = f'{API_URL}/mypc/{targetid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
@@ -285,7 +320,7 @@ def test_singouins_squad_leave():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_squad_delete():
+def test_singouins_korp_delete():
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
     token    = json.loads(response.text)['access_token']
@@ -293,12 +328,15 @@ def test_singouins_squad_delete():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-    squadid  = json.loads(response.text)['payload'][0]['squad']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
+    pcid     = pc['id']
+    korpid  = pc['korp']
 
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}'  # DELETE
+    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert 'Squad delete OK' in json.loads(response.text)['msg']
+    assert 'Korp delete OK' in json.loads(response.text)['msg']

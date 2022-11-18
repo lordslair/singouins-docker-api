@@ -8,16 +8,14 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from mysql.methods.fn_creature  import fn_creature_get
-from mysql.methods.fn_creatures import fn_creatures_in_instance
-from mysql.methods.fn_user      import fn_user_get
-
-from nosql.models.RedisPa       import RedisPa
-from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisCd       import RedisCd
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
+from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisInstance import RedisInstance
+from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisStatus   import RedisStatus
+from nosql.models.RedisUser     import RedisUser
 
 from variables                  import RESOLVER_URL
 
@@ -28,8 +26,8 @@ from variables                  import RESOLVER_URL
 # API: POST /mypc/{pcid}/action/resolver/skill/{skill_name}
 @jwt_required()
 def action_resolver_skill(pcid, skill_name):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
     if not request.is_json:
@@ -42,8 +40,10 @@ def action_resolver_skill(pcid, skill_name):
                 "payload": None,
             }
         ), 400
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -52,9 +52,10 @@ def action_resolver_skill(pcid, skill_name):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creature.id:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -63,8 +64,8 @@ def action_resolver_skill(pcid, skill_name):
                 "payload": None,
             }
         ), 409
-    if creature.instance is None:
-        msg = f'Creature not in an instance (creature.id:{creature.id})'
+    if Creature.instance is None:
+        msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
             {
@@ -75,10 +76,10 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        redis_cd    = RedisStatus(creature)
+        redis_cd    = RedisStatus(Creature)
         creature_cd = redis_cd.get(skill_name)
     except Exception as e:
-        msg = f'CDs Query KO (pcid:{creature.id}) [{e}]'
+        msg = f'{h} CDs Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -90,8 +91,7 @@ def action_resolver_skill(pcid, skill_name):
     else:
         if creature_cd:
             # The skill was already used, and still on CD
-            msg = (f'Skill already on CD '
-                   f'(pcid:{creature.id},skill_name:{skill_name})')
+            msg = f'{h} Skill already on CD (skill_name:{skill_name})'
             logger.debug(msg)
             return jsonify(
                 {
@@ -102,10 +102,10 @@ def action_resolver_skill(pcid, skill_name):
             ), 200
 
     try:
-        creatures_effect  = RedisEffect(creature)
+        creatures_effect  = RedisEffect(Creature)
         creatures_effects = creatures_effect.get_all_instance()
     except Exception as e:
-        msg = f'RedisEffect Query KO [{e}]'
+        msg = f'{h} RedisEffect Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -116,10 +116,10 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        creatures_status   = RedisStatus(creature)
+        creatures_status   = RedisStatus(Creature)
         creatures_statuses = creatures_status.get_all_instance()
     except Exception as e:
-        msg = f'RedisStatus Query KO [{e}]'
+        msg = f'{h} RedisStatus Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -130,10 +130,10 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(creature)
+        creatures_cd  = RedisCd(Creature)
         creatures_cds = creatures_cd.get_all_instance()
     except Exception as e:
-        msg = f'RedisCd Query KO [{e}]'
+        msg = f'{h} RedisCd Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -144,9 +144,9 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        creature_pa = RedisPa(creature)
+        creature_pa = RedisPa(Creature)
     except Exception as e:
-        msg = f'RedisPa Query KO [{e}]'
+        msg = f'{h} RedisPa Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -157,10 +157,10 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        instance = RedisInstance(creature=creature)
-        map      = instance.map
+        Instance = RedisInstance().get(Creature.instance)
+        map      = Instance.map
     except Exception as e:
-        msg = f'RedisInstance Query KO [{e}]'
+        msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -175,9 +175,11 @@ def action_resolver_skill(pcid, skill_name):
         fightEventtype     = request.json.get('type', None)
         fightEventactor    = request.json.get('actor', None)
         fightEventparams   = request.json.get('params', None)
-        creatures          = fn_creatures_in_instance(creature.instance)
+
+        instance = Instance.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@instance:{instance}')
     except Exception as e:
-        msg = f'ResolverInfo Query KO [{e}]'
+        msg = f'{h} ResolverInfo Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -192,8 +194,8 @@ def action_resolver_skill(pcid, skill_name):
     payload = {
         "context": {
             "map": map,
-            "instance": creature.instance,
-            "creatures": creatures,
+            "instance": Creature.instance,
+            "creatures": Creatures,
             "effects": creatures_effects,
             "status": creatures_statuses,
             "cd": creatures_cds,
@@ -211,8 +213,7 @@ def action_resolver_skill(pcid, skill_name):
         logger.trace(payload)
         response  = requests.post(f'{RESOLVER_URL}/', json=payload)
     except Exception as e:
-        msg = (f'Resolver Query KO '
-               f'(pcid:{creature.id},skill_name:{skill_name}) [{e}]')
+        msg = f'{h} Resolver Query KO (skill_name:{skill_name}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -223,12 +224,12 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
     else:
         # We create the Creature Event
-        RedisEvent(creature).add(creature.id,
+        RedisEvent(Creature).add(Creature.id,
                                  None,
                                  'skill',
                                  f'Used a Skill ({skill_name})',
                                  30 * 86400)
-        msg = f'Resolver Query OK (pcid:{creature.id})'
+        msg = f'{h} Resolver Query OK (pcid:{Creature.id})'
         logger.debug(msg)
         return jsonify(
             {
@@ -243,8 +244,8 @@ def action_resolver_skill(pcid, skill_name):
 # API: POST /mypc/{pcid}/action/resolver/move
 @jwt_required()
 def action_resolver_move(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
     if not request.is_json:
@@ -257,8 +258,10 @@ def action_resolver_move(pcid):
                 "payload": None,
             }
         ), 400
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -267,9 +270,10 @@ def action_resolver_move(pcid):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creature.id:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -278,8 +282,8 @@ def action_resolver_move(pcid):
                 "payload": None,
             }
         ), 409
-    if creature.instance is None:
-        msg = f'Creature not in an instance (creature.id:{creature.id})'
+    if Creature.instance is None:
+        msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
             {
@@ -290,10 +294,10 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        creatures_effect  = RedisEffect(creature)
+        creatures_effect  = RedisEffect(Creature)
         creatures_effects = creatures_effect.get_all_instance()
     except Exception as e:
-        msg = f'RedisEffect Query KO [{e}]'
+        msg = f'{h} RedisEffect Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -304,10 +308,10 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        creatures_status   = RedisStatus(creature)
+        creatures_status   = RedisStatus(Creature)
         creatures_statuses = creatures_status.get_all_instance()
     except Exception as e:
-        msg = f'RedisStatus Query KO [{e}]'
+        msg = f'{h} RedisStatus Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -318,10 +322,10 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(creature)
+        creatures_cd  = RedisCd(Creature)
         creatures_cds = creatures_cd.get_all_instance()
     except Exception as e:
-        msg = f'RedisCd Query KO [{e}]'
+        msg = f'{h} RedisCd Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -332,9 +336,9 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        creature_pa = RedisPa(creature)
+        creature_pa = RedisPa(Creature)
     except Exception as e:
-        msg = f'RedisPa Query KO [{e}]'
+        msg = f'{h} RedisPa Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -345,10 +349,10 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        instance = RedisInstance(creature=creature)
-        map      = instance.map
+        Instance = RedisInstance().get(Creature.instance)
+        map      = Instance.map
     except Exception as e:
-        msg = f'RedisInstance Query KO [{e}]'
+        msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -363,9 +367,11 @@ def action_resolver_move(pcid):
         fightEventtype     = request.json.get('type', None)
         fightEventactor    = request.json.get('actor', None)
         fightEventparams   = request.json.get('params', None)
-        creatures          = fn_creatures_in_instance(creature.instance)
+
+        instance = Instance.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@instance:{instance}')
     except Exception as e:
-        msg = f'ResolverInfo Query KO [{e}]'
+        msg = f'{h} ResolverInfo Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -379,8 +385,8 @@ def action_resolver_move(pcid):
     payload = {
         "context": {
             "map": map,
-            "instance": creature.instance,
-            "creatures": creatures,
+            "instance": Creature.instance,
+            "creatures": Creatures,
             "effects": creatures_effects,
             "status": creatures_statuses,
             "cd": creatures_cds,
@@ -397,7 +403,7 @@ def action_resolver_move(pcid):
     try:
         response  = requests.post(f'{RESOLVER_URL}/', json=payload)
     except Exception as e:
-        msg = f'Resolver Query KO - Failed (pcid:{creature.id}) [{e}]'
+        msg = f'{h} Resolver Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -408,12 +414,12 @@ def action_resolver_move(pcid):
         ), 200
     else:
         # We create the Creature Event
-        RedisEvent(creature).add(creature.id,
+        RedisEvent(Creature).add(Creature.id,
                                  None,
                                  'action',
                                  'Moved',
                                  30 * 86400)
-        msg = f'Resolver Query OK (pcid:{creature.id})'
+        msg = f'{h} Resolver Query OK'
         logger.debug(msg)
         return jsonify(
             {
@@ -428,8 +434,8 @@ def action_resolver_move(pcid):
 # API: POST /mypc/{pcid}/action/resolver/context
 @jwt_required()
 def action_resolver_context(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
     if not request.is_json:
@@ -442,8 +448,10 @@ def action_resolver_context(pcid):
                 "payload": None,
             }
         ), 400
-    if creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
+
+    # Pre-flight checks
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -452,9 +460,10 @@ def action_resolver_context(pcid):
                 "payload": None,
             }
         ), 200
-    if creature.account != user.id:
-        msg = (f'Token/username mismatch '
-               f'(creature.id:{creature.id},username:{user})')
+    else:
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -463,8 +472,8 @@ def action_resolver_context(pcid):
                 "payload": None,
             }
         ), 409
-    if creature.instance is None:
-        msg = f'Creature not in an instance (creature.id:{creature.id})'
+    if Creature.instance is None:
+        msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
             {
@@ -475,10 +484,10 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        creatures_effect  = RedisEffect(creature)
+        creatures_effect  = RedisEffect(Creature)
         creatures_effects = creatures_effect.get_all_instance()
     except Exception as e:
-        msg = f'RedisEffect Query KO [{e}]'
+        msg = f'{h} RedisEffect Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -489,10 +498,10 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        creatures_status   = RedisStatus(creature)
+        creatures_status   = RedisStatus(Creature)
         creatures_statuses = creatures_status.get_all_instance()
     except Exception as e:
-        msg = f'RedisStatus Query KO [{e}]'
+        msg = f'{h} RedisStatus Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -503,10 +512,10 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(creature)
+        creatures_cd  = RedisCd(Creature)
         creatures_cds = creatures_cd.get_all_instance()
     except Exception as e:
-        msg = f'RedisCd Query KO [{e}]'
+        msg = f'{h} RedisCd Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -517,9 +526,9 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        creature_pa = RedisPa(creature)
+        creature_pa = RedisPa(Creature)
     except Exception as e:
-        msg = f'RedisPa Query KO [{e}]'
+        msg = f'{h} RedisPa Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -530,10 +539,10 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        instance = RedisInstance(creature=creature)
-        map      = instance.map
+        Instance = RedisInstance().get(Creature.instance)
+        map      = Instance.map
     except Exception as e:
-        msg = f'RedisInstance Query KO [{e}]'
+        msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -548,9 +557,11 @@ def action_resolver_context(pcid):
         fightEventtype     = request.json.get('type', None)
         fightEventactor    = request.json.get('actor', None)
         fightEventparams   = request.json.get('params', None)
-        creatures          = fn_creatures_in_instance(creature.instance)
+
+        instance = Instance.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@instance:{instance}')
     except Exception as e:
-        msg = f'ResolverInfo Query KO [{e}]'
+        msg = f'{h} ResolverInfo Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -564,8 +575,8 @@ def action_resolver_context(pcid):
     payload = {
         "context": {
             "map": map,
-            "instance": creature.instance,
-            "creatures": creatures,
+            "instance": Creature.instance,
+            "creatures": Creatures,
             "effects": creatures_effects,
             "status": creatures_statuses,
             "cd": creatures_cds,
@@ -579,7 +590,7 @@ def action_resolver_context(pcid):
         }
     }
 
-    msg = 'Context Query OK'
+    msg = f'{h} Context Query OK'
     logger.debug(msg)
     return jsonify(
         {

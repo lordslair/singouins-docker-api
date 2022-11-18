@@ -1,21 +1,14 @@
 # -*- coding: utf8 -*-
 
-import dataclasses
-import datetime
-
 from flask                      import jsonify, request
 from loguru                     import logger
 from random                     import randint, choices
 
-from mysql.methods.fn_creature  import (fn_creature_get,
-                                        fn_creature_kill,
-                                        fn_creature_xp_add)
-
-from mysql.methods.fn_squad     import fn_squad_get_one
-
 from nosql.metas                import metaArmors, metaWeapons
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisWallet   import RedisWallet
+from nosql.publish              import publish
 from nosql.queue                import yqueue_put
 
 from variables                  import API_INTERNAL_TOKEN
@@ -54,7 +47,7 @@ color_dis['Legendary'] = ':purple_square:'
 # API: POST /internal/creature/{creatureid}/kill/{victimid}
 def creature_kill(creatureid, victimid):
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
+        msg = '[Creature.id:None] Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -64,10 +57,10 @@ def creature_kill(creatureid, victimid):
             }
         ), 403
 
+    Creature = RedisCreature().get(creatureid)
     # Pre-flight checks
-    creature    = fn_creature_get(None, creatureid)[3]
-    if creature is None:
-        msg = f'Creature not found (creatureid:{creatureid})'
+    if Creature is None:
+        msg = '[Creature.id:None] Creature NotFound'
         logger.warning(msg)
         return jsonify(
             {
@@ -77,10 +70,10 @@ def creature_kill(creatureid, victimid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
-    victim      = fn_creature_get(None, victimid)[3]
-    if victim is None:
+    CreatureVictim = RedisCreature().get(victimid)
+    if CreatureVictim is None:
         msg = f'{h} Victim not found (victimid:{victimid})'
         logger.warning(msg)
         return jsonify(
@@ -94,7 +87,7 @@ def creature_kill(creatureid, victimid):
     # We generate the drops
     # Currency
     try:
-        currency = get_currency(victim)
+        currency = get_currency(CreatureVictim)
     except Exception as e:
         msg = f'{h} Currency Generation KO [{e}]'
         logger.error(msg)
@@ -107,7 +100,7 @@ def creature_kill(creatureid, victimid):
             logger.debug(msg)
     # Loots
     try:
-        loots = get_loots(victim)
+        loots = get_loots(CreatureVictim)
     except Exception as e:
         msg = f'{h} Loot Generation KO [{e}]'
         logger.error(msg)
@@ -120,12 +113,12 @@ def creature_kill(creatureid, victimid):
             logger.debug(msg)
 
     # We check if the killer is in a Squad or not
-    if creature.squad is None:
+    if Creature.squad is None:
         try:
             try:
                 # We add loot only to the killer
-                creature_wallet = RedisWallet(creature)
-                if creature.race <= 4:
+                creature_wallet = RedisWallet(Creature)
+                if Creature.race <= 4:
                     # It is a Singouin, we add bananas
                     creature_wallet.incr('bananas', currency)
                 else:
@@ -143,8 +136,8 @@ def creature_kill(creatureid, victimid):
 
             # XP is generated
             try:
-                xp_gained = victim.level
-                fn_creature_xp_add(creature, xp_gained)
+                xp_gained = CreatureVictim.level
+                Creature.xp += xp_gained
             except Exception as e:
                 msg = f'{h} XP add KO [{e}]'
                 logger.error(msg)
@@ -158,7 +151,7 @@ def creature_kill(creatureid, victimid):
             for loot in loots:
                 # Items are added
                 try:
-                    item = RedisItem(creature).new(loot)
+                    Item = RedisItem(Creature).new(loot)
                 except Exception as e:
                     msg = f'{h} Loot Add KO (loot:{loot}) [{e}]'
                     logger.error(msg)
@@ -166,7 +159,7 @@ def creature_kill(creatureid, victimid):
                                     "msg":     msg,
                                     "payload": None}), 200
                 else:
-                    if item:
+                    if Item:
                         msg = f'{h} Loot Add OK (loot:{loot})'
                         logger.debug(msg)
 
@@ -176,7 +169,7 @@ def creature_kill(creatureid, victimid):
             qmsg = {
                 "ciphered": False,
                 "payload": {
-                    "id": creature.id,
+                    "id": Creature.id,
                     "loot": {
                          "currency": currency,
                          "items": loots,
@@ -206,56 +199,63 @@ def creature_kill(creatureid, victimid):
         try:
             # We need to get the squad members list
             try:
-                squad = fn_squad_get_one(creature.squad)
-                members = squad['members']
+                squad = Creature.squad.replace('-', ' ')
+                instance = Creature.instance.replace('-', ' ')
+                SquadMembers = RedisCreature().search(
+                    f"(@squad:{squad}) & "
+                    f"(@squad_rank:-Pending) & "
+                    f"(@instance:{instance})"
+                    )
             except Exception as e:
-                msg = f'{h} Squad Query KO (squadid:{creature.squad}) [{e}]'
+                msg = f'{h} Squad Query KO (squadid:{Creature.squad}) [{e}]'
                 logger.error(msg)
                 return jsonify({"success": False,
                                 "msg":     msg,
                                 "payload": None}), 200
             else:
-                if members:
-                    msg = f'{h} Squad Query OK (members:{len(members)})'
+                if SquadMembers:
+                    msg = f'{h} Squad Query OK (members:{len(SquadMembers)})'
                     logger.debug(msg)
 
             # We loop over the members
-            for member in members:
+            for SquadMember in SquadMembers:
+                CreatureMember = RedisCreature().get(SquadMember['id'])
+                h = f'[Creature.id:{CreatureMember.id}]'
                 try:
                     # We add loot only to the killer
-                    creature_wallet = RedisWallet(member)
-                    if creature.race <= 4:
+                    creature_wallet = RedisWallet(CreatureMember)
+                    if Creature.race <= 4:
                         # It is a Singouin, we add bananas
                         creature_wallet.incr('bananas',
-                                             int(currency/len(members)))
+                                             int(currency/len(SquadMembers)))
                     else:
                         creature_wallet.incr('sausages',
-                                             int(currency/len(members)))
+                                             int(currency/len(SquadMembers)))
                 except Exception as e:
-                    msg = f'{h} Currency Add KO (creatureid:{member.id}) [{e}]'
+                    msg = (
+                        f'{h} Currency Add KO '
+                        f'(creatureid:{CreatureMember.id}) [{e}]'
+                        )
                     logger.error(msg)
                     return jsonify({"success": False,
                                     "msg":     msg,
                                     "payload": None}), 200
                 else:
                     if currency:
-                        h = f'[Creature.id:{member.id}]'  # Header for logging
                         msg = f'{h} Currency Add OK (currency:{currency})'
                         logger.debug(msg)
 
                 # XP is generated
                 try:
-                    xp_gained = int(victim.level/len(members))
-                    fn_creature_xp_add(member, xp_gained)
+                    xp_gained = int(CreatureVictim.level/len(SquadMembers))
+                    Creature.xp += xp_gained
                 except Exception as e:
-                    h = f'[Creature.id:{member.id}]'  # Header for logging
                     msg = f'{h} XP add KO (xp:{xp_gained}) [{e}]'
                     logger.error(msg)
                     return jsonify({"success": False,
                                     "msg":     msg,
                                     "payload": None}), 200
                 else:
-                    h = f'[Creature.id:{member.id}]'  # Header for logging
                     msg = f'{h} XP add OK (xp:{xp_gained})'
                     logger.debug(msg)
 
@@ -263,13 +263,10 @@ def creature_kill(creatureid, victimid):
                 # Items are added
                 try:
                     # We need to pick who wins the item in the squad
-                    winner = choices(members, k=1)[0]
-                    item = RedisItem(winner).new(loot)
-                    # If needed we convert the date
-                    if isinstance(item.date, datetime.date):
-                        item.date = item.date.strftime('%Y-%m-%d %H:%M:%S')
-                    if isinstance(winner.date, datetime.date):
-                        winner.date = winner.date.strftime('%Y-%m-%d %H:%M:%S')
+                    winner = choices(SquadMembers, k=1)[0]
+                    CreatureWinner = RedisCreature().get(winner['id'])
+                    h = f'[Creature.id:{CreatureWinner.id}]'
+                    Item = RedisItem(CreatureWinner).new(loot)
 
                     # Now we send the WS messages for loot/drops
                     # Broadcast Queue
@@ -277,7 +274,7 @@ def creature_kill(creatureid, victimid):
                     qmsg = {
                         "ciphered": False,
                         "payload": {
-                            "id": winner.id,
+                            "id": CreatureWinner.id,
                             "loot": {
                                  "currency": currency,
                                  "items": loots,
@@ -294,41 +291,42 @@ def creature_kill(creatureid, victimid):
                     yqueue_put(queue, qmsg)
 
                     # We put the info in queue for ws Discord
-                    if item.metatype == 'weapon':
-                        result = filter(lambda x: x["id"] == item.metaid,
+                    if Item.metatype == 'weapon':
+                        result = filter(lambda x: x["id"] == Item.metaid,
                                         metaWeapons)
                         itemmeta = dict(list(result)[0])  # Gruikfix
-                    elif item.metatype == 'armor':
-                        result = filter(lambda x: x["id"] == item.metaid,
+                    elif Item.metatype == 'armor':
+                        result = filter(lambda x: x["id"] == Item.metaid,
                                         metaArmors)
                         itemmeta = dict(list(result)[0])  # Gruikfix
                     else:
-                        logger.warning(f'Metatype unknown ({item.metatype})')
+                        logger.warning(f'Metatype unknown ({Item.metatype})')
+
+                    logger.success(CreatureWinner)
+                    logger.success(CreatureWinner._asdict())
 
                     queue = 'yarqueue:discord'
                     qmsg = {
                         "ciphered": False,
                         "payload": {
-                            "color_int": color_int[item.rarity],
-                            "item":      dataclasses.asdict(item),
+                            "color_int": color_int[Item.rarity],
+                            "item":      Item._asdict(),
                             "meta":      itemmeta,
-                            "winner":    dataclasses.asdict(winner),
+                            "winner":    CreatureWinner._asdict(),
                             },
                         "embed": True,
-                        "scope": f'Squad-{winner.squad}',
+                        "scope": f'Squad-{CreatureWinner.squad}',
                         }
                     yqueue_put(queue, qmsg)
 
                 except Exception as e:
-                    h = f'[Creature.id:{winner.id}]'  # Header for logging
                     msg = f'{h} Loot Add KO (loot:{loot}) [{e}]'
                     logger.error(msg)
                     return jsonify({"success": False,
                                     "msg":     msg,
                                     "payload": None}), 200
                 else:
-                    if item:
-                        h = f'[Creature.id:{winner.id}]'  # Header for logging
+                    if Item:
                         msg = f'{h} Loot Add OK (loot:{loot})'
                         logger.debug(msg)
 
@@ -344,23 +342,87 @@ def creature_kill(creatureid, victimid):
 
     # Now we can REALLY kill the victim
     try:
-        kill = fn_creature_kill(creature, victim, None)
+        RedisCreature().destroy(victimid)
+        # Now we send the WS messages
+        # Broadcast Queue
+        queue = 'broadcast'
+        qmsg = {
+            "ciphered": False,
+            "payload": {
+                "id": Creature.id,
+                "target": {
+                    "id": CreatureVictim.id,
+                    "name": CreatureVictim.name
+                },
+                "action": None
+            },
+            "route": "mypc/{id1}/action/resolver/skill/{id2}",
+            "scope": {
+                "id": None,
+                "scope": 'broadcast'
+            }
+        }
+        try:
+            yqueue_put(queue, qmsg)
+        except Exception as e:
+            msg = f'Queue PUT KO (queue:{queue}) [{e}]'
+            logger.error(msg)
+        else:
+            msg = f'Queue PUT OK (queue:{queue})'
+            logger.trace(msg)
+
+        # Discord Queue
+        queue = 'yarqueue:discord'
+        if Creature.squad is not None:
+            scope = f'Squad-{Creature.squad}'
+        else:
+            scope = None
+        qmsg = {
+            "ciphered": False,
+            "payload":
+                (
+                    f':pirate_flag: **{Creature.name}** '
+                    'killed **{CreatureVictim.name}**'
+                ),
+            "embed": None,
+            "scope": scope,
+        }
+        try:
+            yqueue_put(queue, qmsg)
+        except Exception as e:
+            msg = f'Queue PUT KO (queue:{queue}) [{e}]'
+            logger.error(msg)
+        else:
+            msg = f'Queue PUT OK (queue:{queue})'
+            logger.trace(msg)
+
+        # We put the info in pubsub channel for IA to regulate the instance
+        try:
+            pmsg     = {"action": 'kill',
+                        "instance": None,
+                        "creature": CreatureVictim._asdict()}
+            pchannel = 'ai-creature'
+            publish(pchannel, jsonify(pmsg).get_data())
+        except Exception as e:
+            msg = f'Publish({pchannel}) KO [{e}]'
+            logger.error(msg)
+        else:
+            logger.trace(f'Publish({pchannel}) OK')
+
+        msg = f'Creature Kill OK ([{CreatureVictim.id}] {CreatureVictim.name})'
+        logger.trace(msg)
     except Exception as e:
-        msg = f'{h} Kill Creature KO (victimid:{victimid}) [{e}]'
+        msg = f'{h} Kill Creature KO (victimid:{CreatureVictim.id}) [{e}]'
         logger.error(msg)
         return jsonify({"success": False,
                         "msg":     msg,
                         "payload": None}), 200
     else:
-        if kill:
-            msg = f'{h} Kill Creature OK (victimid:{victimid})'
-            logger.debug(msg)
-            return jsonify({"success": True,
-                            "msg":     msg,
-                            "payload": creature}), 200
-        else:
-            msg = f'{h} Kill Creature KO (victimid:{victimid})'
-            logger.error(msg)
+        msg = f'{h} Kill Creature OK (victimid:{CreatureVictim.id})'
+        logger.debug(msg)
+        return jsonify({"success": True,
+                        "msg":     msg,
+                        "payload": Creature._asdict()}), 200
 
 #
 # Sub fonctions

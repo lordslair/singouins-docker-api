@@ -6,18 +6,13 @@ from flask_jwt_extended                  import (jwt_required,
 from loguru                              import logger
 from random                              import choices, randint
 
-from mysql.methods.fn_creature           import (fn_creature_get,
-                                                 fn_creature_add,
-                                                 fn_creature_del,
-                                                 fn_creature_stats_del)
-from mysql.methods.fn_creatures          import fn_creatures_in_instance
-from mysql.methods.fn_user               import fn_user_get
-from mysql.methods.fn_creature_instance  import fn_creature_instance_set
-
 from nosql.maps                          import get_map
 from nosql.publish                       import publish
 from nosql.queue                         import yqueue_put
+from nosql.models.RedisCreature          import RedisCreature
 from nosql.models.RedisInstance          import RedisInstance
+from nosql.models.RedisStats             import RedisStats
+from nosql.models.RedisUser              import RedisUser
 
 
 #
@@ -26,8 +21,8 @@ from nosql.models.RedisInstance          import RedisInstance
 # API: PUT /mypc/{pcid}/instance
 @jwt_required()
 def instance_add(pcid):
-    creature = fn_creature_get(None, pcid)[3]
-    user     = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     if not request.is_json:
         msg = 'Missing JSON in request'
@@ -46,7 +41,7 @@ def instance_add(pcid):
     public   = request.json.get('public', None)
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -57,9 +52,9 @@ def instance_add(pcid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch (username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -68,7 +63,7 @@ def instance_add(pcid):
                 "payload": None,
             }
         ), 409
-    if creature.instance is not None:
+    if Creature.instance is not None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
@@ -136,29 +131,15 @@ def instance_add(pcid):
     # Create the new instance
     try:
         instance_dict = {
-            "creator": creature.id,
+            "creator": Creature.id,
             "fast": fast,
             "hardcore": hardcore,
             "map": mapid,
             "public": public
         }
-        instance = RedisInstance(creature=creature)
+        instance = RedisInstance().new(instance_dict)
     except Exception as e:
         msg = f"{h} Instance Query KO [{e}]"
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    # Generate a new instance for this Creature
-    try:
-        instance.new(instance_dict)
-    except Exception as e:
-        msg = f"{h} Instance create KO [{e}]"
         logger.error(msg)
         return jsonify(
             {
@@ -171,7 +152,7 @@ def instance_add(pcid):
     # Everything went well so far
     try:
         # Assign the PC into the instance
-        ret = fn_creature_instance_set(creature, instance.id)
+        Creature.instance = instance.id
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instance.id}) [{e}]'
         logger.error(msg)
@@ -183,29 +164,20 @@ def instance_add(pcid):
             }
         ), 200
     else:
-        if ret is None:
-            msg = f'{h} Instance set KO (instanceid:{instance.id})'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        pass
 
     # Everything went well, creation DONE
     # We put the info in queue for Discord
     scopes = []
-    if ret.korp is not None:
-        scopes.append(f'Korp-{ret.korp}')
-    if ret.squad is not None:
-        scopes.append(f'Squad-{ret.squad}')
+    if Creature.korp is not None:
+        scopes.append(f'Korp-{Creature.korp}')
+    if Creature.squad is not None:
+        scopes.append(f'Squad-{Creature.squad}')
     for scope in scopes:
         try:
             qmsg = {
                 "ciphered": False,
-                "payload": (f':map: **[{ret.id}] {ret.name}** '
+                "payload": (f':map: **[{Creature.id}] {Creature.name}** '
                             f'opened an Instance ({instance.id})'),
                 "embed": None,
                 "scope": scope,
@@ -241,31 +213,34 @@ def instance_add(pcid):
                                  k=1)[0]
                 x = randint(1, int(mapx))
                 y = randint(1, int(mapy))
-                mob = fn_creature_add('Will be replaced later',
-                                      race,
-                                      gender,
-                                      None,
-                                      rarity,
-                                      x,
-                                      y,
-                                      instance.id)
+
+                Monster = RedisCreature().new(
+                    'Will be replaced later',
+                    race,
+                    gender,
+                    None,
+                    rarity,
+                    x,
+                    y,
+                    instance.id,
+                    )
             except Exception as e:
                 msg = (f'{h} Population in Instance KO for mob '
                        f'#{mobs_nbr} [{e}]')
                 logger.error(msg)
             else:
-                if mob is None:
+                if Monster is None:
                     msg = (f'{h} Population in Instance KO for mob '
                            f'#{mobs_nbr}')
                     logger.warning(msg)
                 else:
-                    mobs_generated.append(mob)
+                    mobs_generated.append(Monster)
                     # We put the info in pubsub channel
                     # for IA to populate the instance
                     try:
                         pmsg     = {"action": 'pop',
                                     "instance": instance._asdict(),
-                                    "creature": mob}
+                                    "creature": Monster._asdict()}
                         pchannel = 'ai-creature'
                         publish(pchannel, jsonify(pmsg).get_data())
                     except Exception as e:
@@ -301,11 +276,11 @@ def instance_add(pcid):
 # API: GET /mypc/{pcid}/instance/{instanceid}
 @jwt_required()
 def instance_get(pcid, instanceid):
-    creature    = fn_creature_get(None, pcid)[3]
-    user        = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -316,9 +291,9 @@ def instance_get(pcid, instanceid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch (username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -327,7 +302,7 @@ def instance_get(pcid, instanceid):
                 "payload": None,
             }
         ), 409
-    if creature.instance is None:
+    if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
@@ -337,20 +312,21 @@ def instance_get(pcid, instanceid):
                 "payload": None,
             }
         ), 200
-    if creature.instance != instanceid:
+    # We need to convert instanceid to STR as it is UUID type
+    if Creature.instance != str(instanceid):
         msg = f'{h} Creature is not in this instance (instanceid:{instanceid})'
         logger.warning(msg)
         return jsonify(
             {
                 "success": False,
                 "msg": msg,
-                "payload": None,
+                "payload": Creature._asdict(),
             }
         ), 200
 
     # Check if the instance exists
     try:
-        instance = RedisInstance(creature=creature)
+        instance = RedisInstance().get(Creature.instance)
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instanceid}) [{e}]'
         logger.error(msg)
@@ -387,11 +363,13 @@ def instance_get(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/join
 @jwt_required()
 def instance_join(pcid, instanceid):
-    creature    = fn_creature_get(None, pcid)[3]
-    user        = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    instanceid = str(instanceid)
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -402,9 +380,9 @@ def instance_join(pcid, instanceid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch (username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -413,7 +391,7 @@ def instance_join(pcid, instanceid):
                 "payload": None,
             }
         ), 409
-    if creature.instance is not None:
+    if Creature.instance is not None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
@@ -426,7 +404,7 @@ def instance_join(pcid, instanceid):
 
     # Check if the instance exists
     try:
-        instance = RedisInstance(creature=None, instanceid=instanceid)
+        instance = RedisInstance().get(instanceid)
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instanceid}) [{e}]'
         logger.error(msg)
@@ -447,7 +425,7 @@ def instance_join(pcid, instanceid):
 
     # We add the Creature into the instance
     try:
-        ret = fn_creature_instance_set(creature, instance.id)
+        Creature.instance = instance.id
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instanceid}) [{e}]'
         logger.error(msg)
@@ -455,26 +433,16 @@ def instance_join(pcid, instanceid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if ret is None:
-            msg = f"{h} Instance join KO (instanceid:{instance['id']})"
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
         # We put the info in queue for Discord
         scopes = []
-        if ret.korp is not None:
-            scopes.append(f'Korp-{ret.korp}')
-        if ret.squad is not None:
-            scopes.append(f'Squad-{ret.squad}')
+        if Creature.korp is not None:
+            scopes.append(f'Korp-{Creature.korp}')
+        if Creature.squad is not None:
+            scopes.append(f'Squad-{Creature.squad}')
         for scope in scopes:
             qmsg = {
                 "ciphered": False,
-                "payload": (f':map: **[{ret.id}] {ret.name}** '
+                "payload": (f':map: **[{Creature.id}] {Creature.name}** '
                             f'joined an Instance ({instance.id})'),
                 "embed": None,
                 "scope": scope
@@ -493,7 +461,7 @@ def instance_join(pcid, instanceid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": ret,
+                "payload": Creature._asdict(),
             }
         ), 200
 
@@ -501,11 +469,13 @@ def instance_join(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/leave
 @jwt_required()
 def instance_leave(pcid, instanceid):
-    creature    = fn_creature_get(None, pcid)[3]
-    user        = fn_user_get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    User = RedisUser().get(get_jwt_identity())
+    # We need to convert instanceid to STR as it is UUID type
+    instanceid = str(instanceid)
 
     # Pre-flight checks
-    if creature is None:
+    if Creature is None:
         msg = f'Creature not found (creatureid:{pcid})'
         logger.warning(msg)
         return jsonify(
@@ -516,9 +486,9 @@ def instance_leave(pcid, instanceid):
             }
         ), 200
     else:
-        h = f'[Creature.id:{creature.id}]'  # Header for logging
-    if creature.account != user.id:
-        msg = (f'{h} Token/username mismatch (username:{user})')
+        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    if Creature.account != User.id:
+        msg = (f'{h} Token/username mismatch (username:{User.name})')
         logger.warning(msg)
         return jsonify(
             {
@@ -527,7 +497,7 @@ def instance_leave(pcid, instanceid):
                 "payload": None,
             }
         ), 409
-    if creature.instance is None:
+    if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
         return jsonify(
@@ -537,7 +507,8 @@ def instance_leave(pcid, instanceid):
                 "payload": None,
             }
         ), 200
-    if creature.instance != instanceid:
+
+    if Creature.instance != instanceid:
         msg = f'{h} Creature is not in Instance({instanceid})'
         logger.warning(msg)
         return jsonify(
@@ -550,7 +521,7 @@ def instance_leave(pcid, instanceid):
 
     # Check if the instance exists
     try:
-        instance = RedisInstance(creature=creature)
+        Instance = RedisInstance().get(Creature.instance)
     except Exception as e:
         msg = f'{h} Instance({instanceid}) Query KO [{e}]'
         logger.error(msg)
@@ -562,7 +533,7 @@ def instance_leave(pcid, instanceid):
             }
         ), 200
     else:
-        if instance.id is None:
+        if Instance.id is None:
             msg = f'{h} Instance({instanceid}) not found'
             logger.warning(msg)
             return jsonify(
@@ -575,13 +546,14 @@ def instance_leave(pcid, instanceid):
 
     # Check if PC is the last inside the instance
     try:
-        pcs = fn_creatures_in_instance(instanceid)
+        instance = Instance.id.replace('-', ' ')
+        Creatures = RedisCreature().search(query=f'@instance:{instance}')
 
         # Check if they are players or monsters left
-        if len(pcs) > 1:
+        if len(Creatures) > 1:
             pc_in_instance = 0
-            for creature_in_instance in pcs:
-                if creature_in_instance['account']:
+            for creature_in_instance in Creatures:
+                if creature_in_instance['account'] is not None:
                     # This is a PC
                     pc_in_instance += 1
     except Exception as e:
@@ -595,13 +567,13 @@ def instance_leave(pcid, instanceid):
             }
         ), 200
 
-    if len(pcs) == 1 or pc_in_instance == 1:
+    if len(Creatures) == 1 or pc_in_instance == 1:
         logger.trace(f'{h} PC is the last inside OR the last player inside')
         # The PC is the last inside OR the last player inside
         # We delete the instance
         try:
-            # SQL data update
-            ret = fn_creature_instance_set(creature, None)
+            Creature.instance = None
+            Instance.destroy(Instance.id)
         except Exception as e:
             msg = f'{h} Instance({instanceid}) leave KO [{e}]'
             logger.error(msg)
@@ -613,45 +585,34 @@ def instance_leave(pcid, instanceid):
                 }
             ), 200
         else:
-            if ret is None:
-                msg = f'{h} Instance({instanceid}) leave KO'
-                logger.warning(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
+            pass
 
         try:
             # We need to kill all NPC inside the instance
-            for creature_inside in pcs:
-                if creature_inside['id'] == creature.id:
+            for creature_inside in Creatures:
+                if creature_inside['id'] == Creature.id:
                     # We do nothing, it is a Player Creature
                     pass
                 else:
-                    logger.trace(f'{h} Leaving EMPTY Instance({instanceid})')
-                    creature_to_kill = fn_creature_get(None,
-                                                       creature_inside['id']
-                                                       )[3]
+                    logger.trace(f'{h} Leaving EMPTY Instance({Instance.id})')
+                    Monster = RedisCreature().get(
+                        creature_inside['id']
+                        )
                     # We delete Stats
                     try:
-                        fn_creature_stats_del(creature_to_kill)
+                        RedisStats(Creature).destroy()
                     except Exception as e:
-                        msg = (f'{h} CreatureStats({creature_to_kill.id}) '
-                               f'delete KO (MySQL) [{e}]')
+                        msg = f'{h} CreatureStats delete KO [{e}]'
                         logger.error(msg)
                     else:
-                        msg = (f'{h} CreatureStats({creature_to_kill.id}) '
-                               f'delete OK (MySQL)')
+                        msg = f'{h} CreatureStats delete OK'
                         logger.trace(msg)
                     # We put the info in pubsub channel
                     # for IA to regulate the instance
                     try:
                         pmsg     = {"action": 'kill',
-                                    "instance": instance._asdict(),
-                                    "creature": creature_to_kill}
+                                    "instance": Instance._asdict(),
+                                    "creature": Monster._asdict()}
                         pchannel = 'ai-creature'
                         publish(pchannel, jsonify(pmsg).get_data())
                     except Exception as e:
@@ -662,29 +623,17 @@ def instance_leave(pcid, instanceid):
                     # We kill it
                     # ALWAYS KILL CREATURE THE LAST
                     try:
-                        fn_creature_del(creature_to_kill)
+                        RedisCreature().destroy(Monster.id)
                     except Exception as e:
-                        msg = (f'{h} Creature({creature_to_kill.id}) '
-                               f'delete KO (MySQL) [{e}]')
+                        msg = f'{h} Creature delete KO [{e}]'
                         logger.error(msg)
                     else:
-                        msg = (f'{h} Creature({creature_to_kill.id}) '
-                               f'delete OK (MySQL)')
+                        msg = f'{h} Creature delete OK'
                         logger.trace(msg)
 
             # Redis Object deletion
             try:
-                if instance.destroy() is None:
-                    # Delete keys failed, or keys not found
-                    msg = f'{h} Instance({instanceid}) destroy KO'
-                    logger.error(msg)
-                    return jsonify(
-                        {
-                            "success": False,
-                            "msg": msg,
-                            "payload": None,
-                        }
-                    ), 200
+                RedisInstance().destroy(instanceid)
             except Exception as e:
                 logger.error(f'{h} Instance({instanceid}) destroy KO [{e}]')
             else:
@@ -703,14 +652,14 @@ def instance_leave(pcid, instanceid):
             # Everything went well, deletion DONE
             # We put the info in queue for Discord
             scopes = []
-            if ret.korp is not None:
-                scopes.append(f'Korp-{ret.korp}')
-            if ret.squad is not None:
-                scopes.append(f'Squad-{ret.squad}')
+            if Creature.korp is not None:
+                scopes.append(f'Korp-{Creature.korp}')
+            if Creature.squad is not None:
+                scopes.append(f'Squad-{Creature.squad}')
             for scope in scopes:
                 qmsg = {
                     "ciphered": False,
-                    "payload": (f':map: **[{ret.id}] {ret.name}** '
+                    "payload": (f':map: **[{Creature.id}] {Creature.name}** '
                                 f'closed an Instance ({instanceid})'),
                     "embed": None,
                     "scope": scope,
@@ -731,15 +680,14 @@ def instance_leave(pcid, instanceid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": creature,
+                    "payload": Creature._asdict(),
                 }
             ), 200
     else:
         # Other PC are still in the instance
         logger.trace(f'{h} Not the last in Instance (pcs:{pc_in_instance})')
         try:
-            # We just update Creature.instance
-            ret = fn_creature_instance_set(creature, None)
+            Creature.instance = None
         except Exception as e:
             msg = f'{h} Instance({instanceid}) leave KO [{e}]'
             logger.error(msg)
@@ -751,27 +699,17 @@ def instance_leave(pcid, instanceid):
                 }
             ), 200
         else:
-            if ret is None:
-                msg = f"{h} Instance({instanceid}) leave KO"
-                logger.warning(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
             # We put the info in queue for Discord
             scopes = []
-            if ret.korp is not None:
-                scopes.append(f'Korp-{ret.korp}')
-            if ret.squad is not None:
-                scopes.append(f'Squad-{ret.squad}')
+            if Creature.korp is not None:
+                scopes.append(f'Korp-{Creature.korp}')
+            if Creature.squad is not None:
+                scopes.append(f'Squad-{Creature.squad}')
             for scope in scopes:
                 qmsg = {
                     "ciphered": False,
-                    "payload": (f':map: **[{ret.id}] {ret.name}** '
-                                f'left an Instance ({instance.id})'),
+                    "payload": (f':map: **[{Creature.id}] {Creature.name}** '
+                                f'left an Instance ({Instance.id})'),
                     "embed": None,
                     "scope": scope,
                 }
@@ -790,6 +728,6 @@ def instance_leave(pcid, instanceid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": creature,
+                    "payload": Creature._asdict(),
                 }
             ), 200
