@@ -35,7 +35,8 @@ jobs:
       uses: caiomarruda/redisearch-action@v1.0.1
       with:
         redis version: 2.6.0
-    - name: Test with pytest
+    - name: Test with PyTest [EXTERNAL]
+      id: pytestext
       env:
           LOGURU_LEVEL:       DEBUG
           GUNICORN_CHDIR:     ${{ secrets.GUNICORN_CHDIR }}
@@ -55,7 +56,17 @@ jobs:
         sleep 3
         echo "--- Starting PyTest [EXTERNAL]"
         pytest api/tests/external/test_0*.py api/tests/external/test_1*.py
+    - name: Test with PyTest [INTERNAL]
+      if: steps.pytestext.outcome == 'success'
+      id: pytestint
+      env:
+          SEP_INTERNAL_TOKEN: ${{ secrets.SEP_INTERNAL_TOKEN }}
+      run: |
         echo "--- Starting PyTest [INTERNAL]"
         pytest -s api/tests/internal
+  
+    - name: Test with PyTest [EXTERNAL] (Cleaning)
+      if: steps.pytestint.outcome == 'success'
+      run: |
         echo "--- Starting PyTest [EXTERNAL] (Cleaning)"
         pytest api/tests/external/test_99*.py
