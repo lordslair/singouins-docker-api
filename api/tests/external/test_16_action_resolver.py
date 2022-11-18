@@ -3,6 +3,7 @@
 import json
 import requests
 import os
+import pytest
 
 from variables import (AUTH_PAYLOAD,
                        API_URL,
@@ -68,7 +69,7 @@ def test_singouins_action_resolver_move():
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
-        return True
+        pytest.skip('For now, unable to test this in GitHub')
 
     url      = f'{API_URL}/auth/login'  # POST
     response = requests.post(url, json=AUTH_PAYLOAD)
