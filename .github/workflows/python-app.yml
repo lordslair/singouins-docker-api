@@ -32,9 +32,9 @@ jobs:
         pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Start Redis
-      uses: supercharge/redis-github-action@1.4.0
+      uses: caiomarruda/redisearch-action@v1.0.1
       with:
-        redis-version: 6
+        redis version: 6
     - name: Test with pytest
       env:
           LOGURU_LEVEL:       DEBUG
