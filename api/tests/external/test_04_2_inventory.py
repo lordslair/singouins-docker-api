@@ -19,13 +19,15 @@ def test_singouins_inventory_item_get():
 
     url        = f'{API_URL}/mypc/{pcid}/item'  # GET
     response   = requests.get(url, headers=headers)
-    itemmetaid = json.loads(response.text)['payload']['weapon'][0]['metaid']
-    righthand  = json.loads(response.text)['payload']['equipment']['righthand']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert itemmetaid == 34
-    assert righthand  is None
+
+    weapon = json.loads(response.text)['payload']['weapon']
+    assert [x for x in weapon if x['metaid'] == 34][0] is not None
+
+    equipment = json.loads(response.text)['payload']['equipment']
+    assert equipment['righthand'] is None
 
 
 def test_singouins_inventory_item_equip():
@@ -38,17 +40,18 @@ def test_singouins_inventory_item_equip():
     response = requests.get(url, headers=headers)
     pcid     = json.loads(response.text)['payload'][0]['id']
 
-    url        = f'{API_URL}/mypc/{pcid}/item'  # GET
-    response   = requests.get(url, headers=headers)
-    itemid     = json.loads(response.text)['payload']['weapon'][0]['id']
+    url      = f'{API_URL}/mypc/{pcid}/item'  # GET
+    response = requests.get(url, headers=headers)
+    weapon   = json.loads(response.text)['payload']['weapon']
+    item     = [x for x in weapon if x['metaid'] == 34][0]
 
-    url        = f'{API_URL}/mypc/{pcid}/inventory/item/{itemid}/equip/weapon/holster'  # POST # noqa
-    response   = requests.post(url, headers=headers)
-    equipment  = json.loads(response.text)['payload']['equipment']
+    url       = f"{API_URL}/mypc/{pcid}/inventory/item/{item['id']}/equip/weapon/holster"  # POST # noqa
+    response  = requests.post(url, headers=headers)
+    equipment = json.loads(response.text)['payload']['equipment']
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert equipment['holster'] == itemid
+    assert equipment['holster'] == item['id']
 
 
 def test_singouins_inventory_item_unequip():
@@ -122,7 +125,7 @@ def test_singouins_inventory_item_offset_move():
     # We know one weapon is in holster
     holster    = json.loads(response.text)['payload']['equipment']['holster']
     # So we need the other one
-    weapon     = [x for x in weapons if x['id'] != holster][0]
+    weapon     = [x for x in weapons if x['id'] == itemid][0]
     assert weapon['offsetx'] == 1
     assert weapon['offsety'] == 1
 

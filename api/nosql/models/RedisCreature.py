@@ -73,17 +73,32 @@ class RedisCreature:
             y=randint(2, 5),
             instanceid=None):
 
-        self.id = str(uuid.uuid4())
-        self.logh = f'[Creature.id:{self.id}]'
-
         # Checking if Creature exists with the same name
         # FOR A PLAYABLE CREATURE ONLY
+        self.logh = '[Creature.id:None]'
         try:
             if race < 11:
-                logger.trace(f'{self.logh} Method >> (Checking PC uniqueness)')
-                if len(self.search(query=f'@name:{name}')) != 0:
-                    logger.error(f'{self.logh} Method KO - Already Exists')
-                    return False
+                # Checking if it exists
+                logger.trace(
+                    f'{self.logh} Method >> '
+                    f'(Checking uniqueness name:{name})'
+                    )
+                try:
+                    possible_uuid = str(
+                        uuid.uuid3(uuid.NAMESPACE_DNS, name)
+                        )
+                    if r.exists(f'{self.hkey}:{possible_uuid}'):
+                        logger.error(f'{self.logh} Method KO - Already Exists')
+                        return False
+                except Exception as e:
+                    logger.error(f'[Creature.id:None] Method KO [{e}]')
+                    return None
+                else:
+                    self.id = possible_uuid
+            else:
+                self.id = str(uuid.uuid4())
+
+            self.logh = f'[Creature.id:{self.id}]'
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None

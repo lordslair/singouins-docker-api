@@ -7,7 +7,7 @@ import pytest
 
 from variables import (AUTH_PAYLOAD,
                        API_URL,
-                       PC_NAME)
+                       CREATURE_NAME)
 
 
 def test_singouins_action_resolver_context():
@@ -83,7 +83,7 @@ def test_singouins_action_resolver_move():
     assert json.loads(response.text)['success'] is True
 
     payload = json.loads(response.text)['payload']
-    pc = [x for x in payload if x['name'] == PC_NAME][0]
+    pc = [x for x in payload if x['name'] == CREATURE_NAME][0]
 
     RESOLVER_JSON = {
         "name": "RegularMovesFightClass",

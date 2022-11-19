@@ -5,7 +5,7 @@ import requests
 
 from variables import (AUTH_PAYLOAD,
                        API_URL,
-                       PC_NAME)
+                       CREATURE_NAME)
 
 
 def test_singouins_mypc_create():
@@ -14,7 +14,7 @@ def test_singouins_mypc_create():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
     payload     = {
-        'name': PC_NAME,
+        'name': CREATURE_NAME,
         'gender': True,
         'race': 2,
         'class': 3,
@@ -55,7 +55,7 @@ def test_singouins_mypc_infos():
     response = requests.get(url, headers=headers)
     pcname   = json.loads(response.text)['payload'][0]['name']
 
-    assert pcname == PC_NAME
+    assert pcname == CREATURE_NAME
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
