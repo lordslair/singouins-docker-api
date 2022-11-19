@@ -3,7 +3,7 @@
 import json
 import requests
 
-from variables import API_URL, CREATURE_NAME, HEADERS
+from variables import API_URL, CREATURE_ID, HEADERS
 
 
 def test_singouins_internal_creatures():
@@ -15,13 +15,7 @@ def test_singouins_internal_creatures():
 
 
 def test_singouins_internal_creature():
-    url       = f'{API_URL}/internal/creatures'
-    response  = requests.get(url, headers=HEADERS)
-    pcs       = json.loads(response.text)['payload']
-    # We need the PC (name:PJTest)
-    pc        = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-
-    url       = f"{API_URL}/internal/creature/{pc['id']}"
+    url       = f"{API_URL}/internal/creature/{CREATURE_ID}"
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200

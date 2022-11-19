@@ -6,8 +6,16 @@ import requests
 
 from variables import (API_URL,
                        CREATURE_ID,
-                       HEADERS,
-                       ITEM_ID)
+                       HEADERS)
+
+# Init request to know ITEM_ID as the UUID is random in CI/CD tests
+# But we know that PJTest is created handling an Item where Item.metaid == 34
+url       = f'{API_URL}/internal/creature/{CREATURE_ID}/inventory'
+response  = requests.get(url, headers=HEADERS)
+print(json.loads(response.text))
+inventory = json.loads(response.text)['payload']['inventory']
+item      = [x for x in inventory if x['metaid'] == 34][0]
+ITEM_ID   = item['id']
 
 
 def test_singouins_internal_creature_auction_sell():
