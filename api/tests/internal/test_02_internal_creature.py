@@ -3,21 +3,25 @@
 import json
 import requests
 
-from variables import (API_URL,
-                       CREATURE_ID,
-                       HEADERS)
+from variables import API_URL, CREATURE_NAME, HEADERS
 
 
-def test_singouins_internal_creature():
-    url       = f'{API_URL}/internal/creature/{CREATURE_ID}'
+def test_singouins_internal_creatures():
+    url       = f'{API_URL}/internal/creatures'
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_internal_creatures():
+def test_singouins_internal_creature():
     url       = f'{API_URL}/internal/creatures'
+    response  = requests.get(url, headers=HEADERS)
+    pcs       = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc        = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+
+    url       = f"{API_URL}/internal/creature/{pc['id']}"
     response  = requests.get(url, headers=HEADERS)
 
     assert response.status_code                 == 200
@@ -29,7 +33,7 @@ def test_singouins_internal_creature_pop_n_delete():
     payload   = {"raceid": 11,
                  "gender": True,
                  "rarity": "Boss",
-                 "instanceid": 0,
+                 "instanceid": None,
                  "x": 3,
                  "y": 3}
     response  = requests.put(url, headers=HEADERS, json=payload)

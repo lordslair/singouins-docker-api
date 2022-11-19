@@ -9,6 +9,7 @@ HEADERS            = {"Authorization": f"Bearer {API_INTERNAL_TOKEN}"}
 
 # Creature ID variables
 CREATURE_ID     = '00000000-cafe-cafe-cafe-000000000000'
+CREATURE_NAME   = 'PJTest'
 KORP_ID         = '00000000-babe-babe-babe-000000000000'
 METAS           = ['armor', 'weapon', 'race']
 SQUAD_ID        = 0
