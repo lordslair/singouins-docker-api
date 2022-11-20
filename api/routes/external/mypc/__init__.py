@@ -10,6 +10,7 @@ from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisItem     import RedisItem
+from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisUser     import RedisUser
@@ -299,6 +300,8 @@ def mypc_del(pcid):
             logger.trace(f'{h} RedisSlots delete OK')
         if RedisHS(Creature).destroy():
             logger.trace(f'{h} RedisHS delete OK')
+        if RedisPa(Creature).destroy():
+            logger.trace(f'{h} RedisPa delete OK')
 
         # Now we can delete tte Creature itself
         if RedisCreature().destroy(Creature.id):

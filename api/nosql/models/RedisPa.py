@@ -76,7 +76,17 @@ class RedisPa:
             return True
 
     def destroy(self):
-        self.reset()
+        self.logh = f'[Creature.id:{self.creature.id}]'
+        try:
+            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            r.delete(f'{self.hkey}:blue')
+            r.delete(f'{self.hkey}:red')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.logh} Method OK')
+            return True
 
     def refresh(self):
         try:
