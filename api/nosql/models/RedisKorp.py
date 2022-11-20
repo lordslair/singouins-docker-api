@@ -160,5 +160,5 @@ if __name__ == '__main__':
 
     FT.SEARCH korp_idx "YSquad" LIMIT 0 10
 
-    FT.DROPINDEX item_idx
+    FT.DROPINDEX korp_idx
     """
