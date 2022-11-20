@@ -600,7 +600,7 @@ def instance_leave(pcid, instanceid):
                         )
                     # We delete Stats
                     try:
-                        RedisStats(Creature).destroy()
+                        RedisStats(Monster).destroy()
                     except Exception as e:
                         msg = f'{h} CreatureStats delete KO [{e}]'
                         logger.error(msg)
