@@ -301,7 +301,7 @@ def initialize_redis():
                 TextField("active"),
                 TextField("d_ack"),
                 TextField("d_name"),
-                TagField("id"),
+                TextField("id"),
                 TextField("name"),
             )
 
