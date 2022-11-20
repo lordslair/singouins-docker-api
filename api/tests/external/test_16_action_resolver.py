@@ -7,7 +7,9 @@ import pytest
 
 from variables import (AUTH_PAYLOAD,
                        API_URL,
-                       CREATURE_NAME)
+                       CREATURE_ID,
+                       CREATURE_NAME,
+                       )
 
 
 def test_singouins_action_resolver_context():
@@ -18,12 +20,13 @@ def test_singouins_action_resolver_context():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
 
-    instanceid = json.loads(response.text)['payload'][0]['instance']
-    if instanceid is None:
+    if pc['instance'] is None:
         # We need to have the PJ in an instance - we open a new one
-        url      = f'{API_URL}/mypc/{pcid}/instance'  # PUT
+        url      = f"{API_URL}/mypc/{CREATURE_ID}/instance"  # PUT
         payload  = {"mapid": 1,
                     "hardcore": True,
                     "fast": False,
@@ -42,10 +45,10 @@ def test_singouins_action_resolver_context():
             "destination": None,
             "options": {"path": [{"x": 7, "y": 7}]}
         },
-        "actor": pcid
+        "actor": CREATURE_ID
     }
 
-    url        = f'{API_URL}/mypc/{pcid}/action/resolver/context'  # POST
+    url        = f'{API_URL}/mypc/{CREATURE_ID}/action/resolver/context'  # POST # noqa
     response   = requests.post(url, headers=headers, json=RESOLVER_JSON)
 
     assert response.status_code == 200
@@ -55,7 +58,8 @@ def test_singouins_action_resolver_context():
 
     assert isinstance(context['creatures'], list)
     assert len(context['creatures']) > 0
-    assert [x for x in context['creatures'] if x['id'] == pcid][0] is not None
+    creature = [x for x in context['creatures'] if x['id'] == CREATURE_ID][0]
+    assert creature is not None
 
     assert context['pa']['blue']['pa'] > 0
 
@@ -78,12 +82,9 @@ def test_singouins_action_resolver_move():
 
     url      = f'{API_URL}/mypc'  # GET
     response = requests.get(url, headers=headers)
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    payload = json.loads(response.text)['payload']
-    pc = [x for x in payload if x['name'] == CREATURE_NAME][0]
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
 
     RESOLVER_JSON = {
         "name": "RegularMovesFightClass",
@@ -97,7 +98,7 @@ def test_singouins_action_resolver_move():
         "actor": pc['id']
     }
 
-    url        = f"{API_URL}/mypc/{pc['id']}/action/resolver/move"  # POST
+    url        = f"{API_URL}/mypc/{CREATURE_ID}/action/resolver/move"  # POST
     response   = requests.post(url, headers=headers, json=RESOLVER_JSON)
 
     assert response.status_code == 200

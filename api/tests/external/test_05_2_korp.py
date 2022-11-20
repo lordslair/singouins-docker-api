@@ -4,7 +4,9 @@ import json
 import requests
 
 from variables import (AUTH_PAYLOAD,
-                       API_URL)
+                       API_URL,
+                       CREATURE_ID,
+                       )
 
 # To reuse in many calls
 payload_pjtest = {
@@ -39,11 +41,7 @@ def test_singouins_korp_create():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    url       = f'{API_URL}/mypc/{pcid}/korp'  # POST
+    url       = f'{API_URL}/mypc/{CREATURE_ID}/korp'  # POST
     payload_s = {"name": 'KorpTest'}
     response  = requests.post(url, json=payload_s, headers=headers)
 
@@ -63,10 +61,9 @@ def test_singouins_korp_get():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     korpid   = pc['korp']
 
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -89,7 +86,6 @@ def test_singouins_korp_invite():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     korpid   = pc['korp']
 
     # We create a PJTestKorpInvite
@@ -105,7 +101,7 @@ def test_singouins_korp_invite():
     targetid = target['id']
 
     # We invite PJTestKorpInvite
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -131,8 +127,7 @@ def test_singouins_korp_kick():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
-    korpid  = pc['korp']
+    korpid   = pc['korp']
 
     # We create a PJTestKorpKick
     payload_pjtest['name'] = 'PJTestKorpInvite'
@@ -147,7 +142,7 @@ def test_singouins_korp_kick():
     targetid = target['id']
 
     # We invite PJTestKorpKick
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -155,7 +150,7 @@ def test_singouins_korp_kick():
     assert 'Korp invite OK' in json.loads(response.text)['msg']
 
     # We kick PJTestKorpKick
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/kick/{targetid}'  # POST
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/kick/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -181,8 +176,7 @@ def test_singouins_korp_accept():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
-    korpid  = pc['korp']
+    korpid   = pc['korp']
 
     # We create a PJTestKorpAccept
     payload_pjtest['name'] = 'PJTestKorpAccept'
@@ -197,7 +191,7 @@ def test_singouins_korp_accept():
     targetid = target['id']
 
     # We invite PJTestKorpAccept
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST# noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST# noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -231,8 +225,7 @@ def test_singouins_korp_decline():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
-    korpid  = pc['korp']
+    korpid   = pc['korp']
 
     # We create a PJTestKorpDecline
     payload_pjtest['name'] = 'PJTestKorpDecline'
@@ -247,7 +240,7 @@ def test_singouins_korp_decline():
     targetid = target['id']
 
     # We invite PJTestKorpDecline
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -281,8 +274,7 @@ def test_singouins_korp_leave():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
-    korpid  = pc['korp']
+    korpid   = pc['korp']
 
     # We create a PJTestKorpLeave
     payload_pjtest['name'] = 'PJTestKorpLeave'
@@ -297,7 +289,7 @@ def test_singouins_korp_leave():
     targetid = target['id']
 
     # We invite PJTestKorpLeave
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -331,10 +323,9 @@ def test_singouins_korp_delete():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
-    korpid  = pc['korp']
+    korpid   = pc['korp']
 
-    url      = f'{API_URL}/mypc/{pcid}/korp/{korpid}'  # DELETE
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
     assert response.status_code == 200

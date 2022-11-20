@@ -5,6 +5,7 @@ import requests
 
 from variables import (AUTH_PAYLOAD,
                        API_URL,
+                       CREATURE_ID,
                        CREATURE_NAME)
 
 
@@ -66,14 +67,7 @@ def test_singouins_mypc_view():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    url      = f'{API_URL}/mypc/{pcid}/view'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/view'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -86,14 +80,7 @@ def test_singouins_mypc_stats():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    url      = f'{API_URL}/mypc/{pcid}/stats'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/stats'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -106,14 +93,7 @@ def test_singouins_mypc_effects():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    url      = f'{API_URL}/mypc/{pcid}/effects'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/effects'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -128,14 +108,7 @@ def test_singouins_mypc_cds():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    url      = f'{API_URL}/mypc/{pcid}/cds'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/cds'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -150,14 +123,7 @@ def test_singouins_mypc_statuses():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    url      = f'{API_URL}/mypc/{pcid}/statuses'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/statuses'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200

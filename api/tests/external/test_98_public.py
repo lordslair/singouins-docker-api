@@ -14,8 +14,7 @@ def test_singouins_public_pc():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    pcid      = CREATURE_ID
-    url       = f'{API_URL}/pc/{pcid}'  # GET
+    url       = f'{API_URL}/pc/{CREATURE_ID}'  # GET
     response  = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -28,8 +27,7 @@ def test_singouins_public_pc_events():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    pcid      = CREATURE_ID
-    url       = f'{API_URL}/pc/{pcid}/event'  # GET
+    url       = f'{API_URL}/pc/{CREATURE_ID}/event'  # GET
     response  = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -42,8 +40,7 @@ def test_singouins_public_pc_item():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    pcid      = CREATURE_ID
-    url       = f'{API_URL}/pc/{pcid}/item'  # GET
+    url       = f'{API_URL}/pc/{CREATURE_ID}/item'  # GET
     response  = requests.get(url, headers=headers)
 
     assert response.status_code == 200

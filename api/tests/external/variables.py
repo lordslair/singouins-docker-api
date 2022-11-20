@@ -14,6 +14,7 @@ CREATURE_NAME   = 'PJTest'
 CREATURE_ID     = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
 USER_NAME       = 'user@exemple.com'
 USER_ID         = str(uuid.uuid3(uuid.NAMESPACE_DNS, USER_NAME))
+SQUAD_ID        = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
 
 AUTH_PAYLOAD    = {'username': USER_NAME, 'password': 'plop'}
 MAP_ID          = 1

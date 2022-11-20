@@ -4,7 +4,9 @@ import json
 import requests
 
 from variables import (AUTH_PAYLOAD,
-                       API_URL)
+                       API_URL,
+                       CREATURE_ID,
+                       )
 
 
 def test_singouins_action_unload():
@@ -13,18 +15,14 @@ def test_singouins_action_unload():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    url      = f'{API_URL}/mypc/{pcid}/item'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
     response = requests.get(url, headers=headers)
     weapons  = json.loads(response.text)['payload']['weapon']
     # We need the Pistolet (metaid:34)
     weapon   = [x for x in weapons if x['metaid'] == 34][0]
     itemid   = weapon['id']
 
-    url       = f'{API_URL}/mypc/{pcid}/action/unload/{itemid}'  # POST
+    url       = f'{API_URL}/mypc/{CREATURE_ID}/action/unload/{itemid}'  # POST
     response  = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -32,7 +30,7 @@ def test_singouins_action_unload():
     assert 'Unload Query OK' in json.loads(response.text)['msg']
     assert json.loads(response.text)['payload']['weapon']['ammo'] == 0
 
-    url        = f'{API_URL}/mypc/{pcid}/item'  # GET
+    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
     response   = requests.get(url, headers=headers)
     wallet     = json.loads(response.text)['payload']['wallet']
 
@@ -45,18 +43,14 @@ def test_singouins_action_reload():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    url      = f'{API_URL}/mypc/{pcid}/item'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
     response = requests.get(url, headers=headers)
     weapons  = json.loads(response.text)['payload']['weapon']
     # We need the Pistolet (metaid:34)
     weapon   = [x for x in weapons if x['metaid'] == 34][0]
     itemid   = weapon['id']
 
-    url       = f'{API_URL}/mypc/{pcid}/action/reload/{itemid}'  # POST
+    url       = f'{API_URL}/mypc/{CREATURE_ID}/action/reload/{itemid}'  # POST
     response  = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -64,7 +58,7 @@ def test_singouins_action_reload():
     assert 'Reload Query OK' in json.loads(response.text)['msg']
     assert json.loads(response.text)['payload']['weapon']['ammo'] == 6
 
-    url        = f'{API_URL}/mypc/{pcid}/item'  # GET
+    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
     response   = requests.get(url, headers=headers)
     wallet     = json.loads(response.text)['payload']['wallet']
 

@@ -4,7 +4,9 @@ import json
 import requests
 
 from variables import (AUTH_PAYLOAD,
-                       API_URL)
+                       API_URL,
+                       CREATURE_ID,
+                       )
 
 # To reuse in many calls
 payload_pjtest = {
@@ -39,11 +41,7 @@ def test_singouins_squad_create():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    url       = f'{API_URL}/mypc/{pcid}/squad'  # POST
+    url       = f'{API_URL}/mypc/{CREATURE_ID}/squad'  # POST
     payload_s = {"name": 'SquadTest'}
     response  = requests.post(url, json=payload_s, headers=headers)
 
@@ -63,10 +61,9 @@ def test_singouins_squad_get():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}'  # GET
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}'  # GET
     response = requests.get(url, headers=headers)
 
     assert response.status_code == 200
@@ -89,7 +86,6 @@ def test_singouins_squad_invite():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
     # We create a PJTestSquadInvite
@@ -105,7 +101,7 @@ def test_singouins_squad_invite():
     targetid = target['id']
 
     # We invite PJTestSquadInvite
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -131,7 +127,6 @@ def test_singouins_squad_kick():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
     # We create a PJTestSquadKick
@@ -147,7 +142,7 @@ def test_singouins_squad_kick():
     targetid = target['id']
 
     # We invite PJTestSquadKick
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -155,7 +150,7 @@ def test_singouins_squad_kick():
     assert 'Squad invite OK' in json.loads(response.text)['msg']
 
     # We kick PJTestSquadKick
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/kick/{targetid}'  # POST
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}/kick/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -181,7 +176,6 @@ def test_singouins_squad_accept():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
     # We create a PJTestSquadAccept
@@ -197,7 +191,7 @@ def test_singouins_squad_accept():
     targetid = target['id']
 
     # We invite PJTestSquadAccept
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST# noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}/invite/{targetid}'  # POST# noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -231,7 +225,6 @@ def test_singouins_squad_decline():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
     # We create a PJTestSquadDecline
@@ -247,7 +240,7 @@ def test_singouins_squad_decline():
     targetid = target['id']
 
     # We invite PJTestSquadDecline
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -281,7 +274,6 @@ def test_singouins_squad_leave():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
     # We create a PJTestSquadLeave
@@ -297,7 +289,7 @@ def test_singouins_squad_leave():
     targetid = target['id']
 
     # We invite PJTestSquadLeave
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}/invite/{targetid}'  # POST # noqa
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}/invite/{targetid}'  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
@@ -331,10 +323,9 @@ def test_singouins_squad_delete():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    pcid     = pc['id']
     squadid  = pc['squad']
 
-    url      = f'{API_URL}/mypc/{pcid}/squad/{squadid}'  # DELETE
+    url      = f'{API_URL}/mypc/{CREATURE_ID}/squad/{squadid}'  # DELETE
     response = requests.delete(url, headers=headers)
 
     assert response.status_code == 200

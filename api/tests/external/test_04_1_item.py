@@ -4,7 +4,9 @@ import json
 import requests
 
 from variables import (AUTH_PAYLOAD,
-                       API_URL)
+                       API_URL,
+                       CREATURE_ID,
+                       )
 
 
 def test_singouins_item():
@@ -13,11 +15,7 @@ def test_singouins_item():
     token    = json.loads(response.text)['access_token']
     headers  = {"Authorization": f"Bearer {token}"}
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcid     = json.loads(response.text)['payload'][0]['id']
-
-    url       = f'{API_URL}/mypc/{pcid}/item'  # GET
+    url       = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
     response  = requests.get(url, headers=headers)
 
     assert response.status_code == 200
