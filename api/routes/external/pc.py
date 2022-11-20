@@ -47,8 +47,6 @@ def pc_get_one(creatureid):
 def pc_item_get_all(creatureid):
     Creature = RedisCreature().get(creatureid)
 
-    logger.success(Creature._asdict())
-
     # Pre-flight checks
     if Creature is None:
         msg = '[Creature.id:None] Creature NotFound'

@@ -302,9 +302,6 @@ def creature_kill(creatureid, victimid):
                     else:
                         logger.warning(f'Metatype unknown ({Item.metatype})')
 
-                    logger.success(CreatureWinner)
-                    logger.success(CreatureWinner._asdict())
-
                     queue = 'yarqueue:discord'
                     qmsg = {
                         "ciphered": False,
