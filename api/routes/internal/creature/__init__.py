@@ -4,6 +4,7 @@ from flask                      import jsonify, request
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisStats    import RedisStats
 from nosql.publish              import publish
 
 from variables                  import API_INTERNAL_TOKEN
@@ -16,8 +17,9 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature
 def creature_add():
+    h = '[Creature.id:None]'
     if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
+        msg = f'{h} Token not authorized'
         logger.warning(msg)
         return jsonify(
             {
@@ -27,7 +29,7 @@ def creature_add():
             }
         ), 403
     if not request.is_json:
-        msg = '[Creature.id:None] Missing JSON in request'
+        msg = f'{h} Missing JSON in request'
         logger.warning(msg)
         return jsonify(
             {
@@ -38,17 +40,46 @@ def creature_add():
         ), 400
 
     try:
-        Creature = RedisCreature().new(
-            None,
-            request.json.get('raceid'),
-            request.json.get('gender'),
-            None,
-            request.json.get('rarity'),
-            request.json.get('x'),
-            request.json.get('y'),
-            request.json.get('instanceid')
-            )
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+        # We create first the Creature (It will be a monster)
+        try:
+            Creature = RedisCreature().new(
+                None,
+                request.json.get('raceid'),
+                request.json.get('gender'),
+                None,
+                request.json.get('rarity'),
+                request.json.get('x'),
+                request.json.get('y'),
+                request.json.get('instanceid')
+                )
+        except Exception as e:
+            msg = f'{h} Creature Query KO [{e}]'
+            logger.error(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+        else:
+            h = f'[Creature.id:{Creature.id}]'  # Header for logging
+
+        # We add the minimum informations we need in Redis
+        try:
+            Stats = RedisStats(Creature).new(classid=None)
+        except Exception as e:
+            msg = f'{h} Stats Query KO [{e}]'
+            logger.error(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+        else:
+            logger.trace(f'{h} Stats Query OK')
     except Exception as e:
         msg = f'{h} Creature Query KO [{e}]'
         logger.error(msg)
@@ -62,9 +93,12 @@ def creature_add():
     else:
         # We put the info in pubsub channel for IA to populate the instance
         try:
-            pmsg     = {"action": 'pop',
-                        "instance": None,
-                        "creature": Creature._asdict()}
+            pmsg = {
+                "action": 'pop',
+                "instance": None,
+                "creature": Creature._asdict(),
+                "stats": Stats._asdict(),
+                }
             pchannel = 'ai-creature'
             publish(pchannel, jsonify(pmsg).get_data())
         except Exception as e:
