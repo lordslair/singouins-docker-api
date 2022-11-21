@@ -97,18 +97,24 @@ def squad_accept(pcid, squadid):
             ), 200
         else:
             # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'joined this Squad'),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}'}
+            qmsg = {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{Creature.name}** '
+                    f'joined this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{Creature.squad}',
+                }
             yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
-                    "payload": Squad._asdict(),
-                    "route": 'mypc/{id1}/squad',
-                    "scope": 'squad'}
+            qmsg = {
+                "ciphered": False,
+                "payload": Squad._asdict(),
+                "route": 'mypc/{id1}/squad',
+                "scope": 'squad',
+                }
             yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
             msg = f'{h} Squad accept OK (squadid:{squadid})'

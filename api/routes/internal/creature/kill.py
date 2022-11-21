@@ -307,9 +307,9 @@ def creature_kill(creatureid, victimid):
                         "ciphered": False,
                         "payload": {
                             "color_int": color_int[Item.rarity],
-                            "item":      Item._asdict(),
-                            "meta":      itemmeta,
-                            "winner":    CreatureWinner._asdict(),
+                            "item": Item._asdict(),
+                            "meta": itemmeta,
+                            "winner": CreatureWinner._asdict(),
                             },
                         "embed": True,
                         "scope": f'Squad-{CreatureWinner.squad}',
@@ -376,10 +376,9 @@ def creature_kill(creatureid, victimid):
             scope = None
         qmsg = {
             "ciphered": False,
-            "payload":
-                (
-                    f':pirate_flag: **{Creature.name}** '
-                    'killed **{CreatureVictim.name}**'
+            "payload": (
+                f':pirate_flag: **{Creature.name}** '
+                f'killed **{CreatureVictim.name}**'
                 ),
             "embed": None,
             "scope": scope,
@@ -395,9 +394,11 @@ def creature_kill(creatureid, victimid):
 
         # We put the info in pubsub channel for IA to regulate the instance
         try:
-            pmsg     = {"action": 'kill',
-                        "instance": None,
-                        "creature": CreatureVictim._asdict()}
+            pmsg = {
+                "action": 'kill',
+                "instance": None,
+                "creature": CreatureVictim._asdict(),
+                }
             pchannel = 'ai-creature'
             publish(pchannel, jsonify(pmsg).get_data())
         except Exception as e:

@@ -97,18 +97,24 @@ def korp_accept(pcid, korpid):
             ), 200
         else:
             # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'joined this Korp'),
-                    "embed": None,
-                    "scope": f'Korp-{Creature.korp}'}
+            qmsg = {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{Creature.name}** '
+                    f'joined this Korp'
+                    ),
+                "embed": None,
+                "scope": f'Korp-{Creature.korp}',
+                }
             yqueue_put('yarqueue:discord', qmsg)
             # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
-                    "payload": Korp._asdict(),
-                    "route": 'mypc/{id1}/korp',
-                    "scope": 'korp'}
+            qmsg = {
+                "ciphered": False,
+                "payload": Korp._asdict(),
+                "route": 'mypc/{id1}/korp',
+                "scope": 'korp',
+                }
             yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
 
             msg = f'{h} Korp accept OK (korpid:{korpid})'
