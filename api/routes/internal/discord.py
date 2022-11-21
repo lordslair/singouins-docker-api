@@ -235,8 +235,21 @@ def discord_creature_get_all():
             }
         ), 200
 
+    if discordname == 'None':
+        # If we are here, means the request is weird
+        # And probably sent by someone not linked
+        msg = f'Discordname should be defined (discordname:{discordname})'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+
     try:
-        User = RedisUser().search(field='d_name', query=discordname)
+        Users = RedisUser().search(field='d_name', query=discordname)
     except Exception as e:
         msg = f'Query KO (discordname:{discordname}) [{e}]'
         logger.error(msg)
@@ -248,7 +261,7 @@ def discord_creature_get_all():
             }
         ), 200
     else:
-        if User is None:
+        if len(Users) == 0:
             msg = f'Query KO - NotFound (discordname:{discordname})'
             logger.warning(msg)
             return jsonify(
@@ -258,9 +271,11 @@ def discord_creature_get_all():
                     "payload": None,
                 }
             ), 200
+        else:
+            User = Users[0]
 
     try:
-        account = User.id.replace('-', ' ')
+        account = User['id'].replace('-', ' ')
         Creatures = RedisCreature().search(query=f'@account:{account}')
     except Exception as e:
         msg = f'Query KO (userid:{User.id}) [{e}]'
@@ -326,7 +341,7 @@ def discord_user():
         ), 200
 
     try:
-        User = RedisUser().search(field='d_name', query=discordname)
+        Users = RedisUser().search(field='d_name', query=discordname)
     except Exception as e:
         msg = f'Query KO (discordname:{discordname}) [{e}]'
         logger.error(msg)
@@ -338,17 +353,7 @@ def discord_user():
             }
         ), 200
     else:
-        if User:
-            msg = f'Query OK (discordname:{discordname})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": User._asdict(),
-                }
-            ), 200
-        else:
+        if len(Users) == 0:
             msg = f'Query KO - NotFound (discordname:{discordname})'
             logger.warning(msg)
             return jsonify(
@@ -358,3 +363,14 @@ def discord_user():
                     "payload": None,
                 }
             ), 404
+        else:
+            User = Users[0]
+            msg = f'Query OK (discordname:{discordname})'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": User,
+                }
+            ), 200

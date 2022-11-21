@@ -43,13 +43,14 @@ def creature_user(creatureid):
         h = f'[Creature.id:{Creature.id}]'  # Header for logging
 
     try:
-        User = RedisUser().search(
+        Users = RedisUser().search(
             field='id',
             # GruikFix
             # We need to do the replace as the [-] is seen as separator
             # Would need to baclslash it, but easier that way
             query=Creature.account.replace('-', ' ')
             )
+        User = Users[0]
     except Exception as e:
         msg = f'{h} User Query KO (accountid:{Creature.account}) [{e}]'
         logger.error(msg)
