@@ -3,6 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSquad    import RedisSquad
 
 from variables                  import API_INTERNAL_TOKEN
@@ -27,6 +28,13 @@ def internal_squad_get_one(squadid):
 
     try:
         Squad = RedisSquad().get(squadid)
+        squad = Squad.id.replace('-', ' ')
+        SquadMembers = RedisCreature().search(
+            f"(@squad:{squad}) & (@squad_rank:-Pending)"
+            )
+        SquadPending = RedisCreature().search(
+            f"(@squad:{squad}) & (@squad_rank:Pending)"
+            )
     except Exception as e:
         msg = f'[Squad.id:{squadid}] Squad Query KO [{e}]'
         logger.error(msg)
@@ -45,7 +53,11 @@ def internal_squad_get_one(squadid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Squad._asdict(),
+                    "payload": {
+                        "members": SquadMembers,
+                        "pending": SquadPending,
+                        "squad": Squad._asdict(),
+                        }
                 }
             ), 200
         elif Squad is False:

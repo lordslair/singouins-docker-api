@@ -3,6 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
+from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisKorp     import RedisKorp
 
 from variables                  import API_INTERNAL_TOKEN
@@ -27,6 +28,13 @@ def internal_korp_get_one(korpid):
 
     try:
         Korp = RedisKorp().get(korpid)
+        korp = Korp.id.replace('-', ' ')
+        KorpMembers = RedisCreature().search(
+            f"(@korp:{korp}) & (@korp_rank:-Pending)"
+            )
+        KorpPending = RedisCreature().search(
+            f"(@korp:{korp}) & (@korp_rank:Pending)"
+            )
     except Exception as e:
         msg = f'[Korp.id:{korpid}] Korp Query KO [{e}]'
         logger.error(msg)
@@ -45,7 +53,11 @@ def internal_korp_get_one(korpid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Korp._asdict(),
+                    "payload": {
+                        "members": KorpMembers,
+                        "pending": KorpPending,
+                        "korp": Korp._asdict(),
+                        }
                 }
             ), 200
         elif Korp is False:
