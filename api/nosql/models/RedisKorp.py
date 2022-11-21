@@ -127,7 +127,7 @@ class RedisKorp:
             korp = {
                 "created": result.created,
                 "date": result.date,
-                "id": result.id,
+                "id": result.id.removeprefix('korps:'),
                 "name": typed2str(result.name),
                 "leader": result.leader,
                 }

@@ -127,7 +127,7 @@ class RedisSquad:
             squad = {
                 "created": result.created,
                 "date": result.date,
-                "id": result.id,
+                "id": result.id.removeprefix('squads:'),
                 "name": typed2str(result.name),
                 "leader": result.leader,
                 }
