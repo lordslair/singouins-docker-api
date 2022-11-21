@@ -128,12 +128,12 @@ class RedisAuction:
                 auction = {
                     "duration_base": int(pipeline[index]['duration_base']),
                     "duration_left": int(pipeline[index + 1]),
-                    "id": int(pipeline[index]['id']),
+                    "id": pipeline[index]['id'],
                     "meta_id": int(pipeline[index]['meta_id']),
                     "meta_name": pipeline[index]['meta_name'],
                     "price": int(pipeline[index]['price']),
                     "rarity": pipeline[index]['rarity'],
-                    "seller_id": int(pipeline[index]['seller_id']),
+                    "seller_id": pipeline[index]['seller_id'],
                     "seller_name": pipeline[index]['seller_name'],
                 }
                 # We update the index for next iteration
