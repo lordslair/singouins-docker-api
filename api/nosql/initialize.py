@@ -68,7 +68,48 @@ def initialize_redis():
     else:
         logger.info('Redis init: OK system:map:*')
 
+    #
     # RedisSearch INDEX init
+    #
+
+    # RedisAuction
+    try:
+        r.ft("auction_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_auction = IndexDefinition(
+                prefix=["auctions:"],
+                score=0.5,
+                score_field="auction_score"
+                )
+
+            # Schema definition
+            schema = (
+                NumericField("duration_base"),
+                TextField("id"),
+                NumericField("metaid"),
+                TextField("metaname"),
+                TextField("metatype"),
+                NumericField("price"),
+                TextField("rarity"),
+                TextField("sellerid"),
+                TextField("sellername"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("auction_idx").create_index(
+                schema,
+                definition=index_auction
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK auction_idx')
+    else:
+        logger.trace('Redis init: OK auction_idx (already created)')
+
     # RedisCosmetic
     try:
         r.ft("cosmetic_idx").info()

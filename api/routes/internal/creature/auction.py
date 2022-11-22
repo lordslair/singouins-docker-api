@@ -112,7 +112,7 @@ def creature_auction_sell(creatureid, itemid):
 
     # We add the Item into the Auctions
     try:
-        Auction = RedisAuction().sell(Creature, Item, price, duration)
+        Auction = RedisAuction().new(Creature, Item, price, duration)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -143,17 +143,7 @@ def creature_auction_sell(creatureid, itemid):
                     "msg": msg,
                     "payload": {
                         "creature": Creature._asdict(),
-                        "auction": {
-                            "duration_base": Auction.duration_base,
-                            "duration_left": Auction.duration_base,
-                            "id": Auction.id,
-                            "meta_id": Auction.meta.id,
-                            "meta_name": Auction.meta.name,
-                            "price": Auction.price,
-                            "rarity": Auction.item.rarity,
-                            "seller_id": Auction.seller.id,
-                            "seller_name": Auction.seller.name,
-                            },
+                        "auction": Auction._asdict(),
                         },
                 }
             ), 201
@@ -221,7 +211,7 @@ def creature_auction_remove(creatureid, itemid):
 
     # We remove the Item into the Auctions
     try:
-        remove = RedisAuction().destroy(Item)
+        AuctionDeleted = RedisAuction().destroy(Item.id)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -233,14 +223,14 @@ def creature_auction_remove(creatureid, itemid):
             }
         ), 200
     else:
-        if remove is True:
+        if AuctionDeleted:
             msg = f'{h} Auction Query OK'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": None,
+                    "payload": Item._asdict(),
                 }
             ), 200
         else:
@@ -297,7 +287,7 @@ def creature_auction_buy(creatureid, itemid):
 
     # We remove the Item into the Auctions
     try:
-        Auction = RedisAuction().get(Item)
+        Auction = RedisAuction().get(Item.id)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -320,9 +310,9 @@ def creature_auction_buy(creatureid, itemid):
                 }
             ), 404
 
-        CreatureSeller = RedisCreature().get(Auction.seller_id)
+        CreatureSeller = RedisCreature().get(Auction.sellerid)
         if CreatureSeller is None:
-            msg = f'Creature not found (seller_id:{Auction.seller_id})'
+            msg = f'Creature not found (sellerid:{Auction.sellerid})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -334,7 +324,7 @@ def creature_auction_buy(creatureid, itemid):
 
         if Auction:
             # We delete the auction
-            RedisAuction().destroy(Item)
+            RedisAuction().destroy(Item.id)
             # We do the financial transaction
             buyer_wallet = RedisWallet(Creature)
             buyer_wallet.incr(
@@ -370,17 +360,7 @@ def creature_auction_buy(creatureid, itemid):
                     "payload": {
                         "creature": Creature._asdict(),
                         "item": Item._asdict(),
-                        "auction": {
-                            "duration_base": Auction.duration_base,
-                            "duration_left": 0,
-                            "id": Auction.id,
-                            "meta_id": Auction.meta_id,
-                            "meta_name": Auction.meta_name,
-                            "price": Auction.price,
-                            "rarity": Auction.rarity,
-                            "seller_id": Auction.seller_id,
-                            "seller_name": Auction.seller_name,
-                            }
+                        "auction": Auction._asdict(),
                     },
                 }
             ), 200
@@ -438,7 +418,7 @@ def creature_auction_get(creatureid, itemid):
 
     # We get the Item from the Auctions
     try:
-        Auction = RedisAuction().get(Item)
+        Auction = RedisAuction().get(Item.id)
     except Exception as e:
         msg = f'{h} Auction Query KO [{e}]'
         logger.error(msg)
@@ -461,17 +441,7 @@ def creature_auction_get(creatureid, itemid):
                     "payload": {
                         "creature": Creature._asdict(),
                         "item": Item._asdict(),
-                        "auction": {
-                            "duration_base": Auction.duration_base,
-                            "duration_left": 0,
-                            "id": Auction.id,
-                            "meta_id": Auction.meta_id,
-                            "meta_name": Auction.meta_name,
-                            "price": Auction.price,
-                            "rarity": Auction.rarity,
-                            "seller_id": Auction.seller_id,
-                            "seller_name": Auction.seller_name,
-                            }
+                        "auction": Auction._asdict(),
                     },
                 }
             ), 200
@@ -562,7 +532,13 @@ def creature_auctions_search(creatureid):
 
     # We get the Item from the Auctions
     try:
-        auctions = RedisAuction().search(metaid=metaid, metatype=metatype)
+        if metatype and metaid:
+            query = f'(@metatype:{metatype}) & (@metaid:[{metaid} {metaid}])'
+        elif metatype:
+            query = f'@metatype:{metatype}'
+        elif metaid:
+            query = f'@metaid:[{metaid} {metaid}]'
+        Auctions = RedisAuction().search(query=query)
     except Exception as e:
         msg = f'{h} Auctions Query KO [{e}]'
         logger.error(msg)
@@ -583,7 +559,7 @@ def creature_auctions_search(creatureid):
                 "msg": msg,
                 "payload": {
                     "creature": Creature._asdict(),
-                    "auctions": auctions,
+                    "auctions": Auctions,
                 },
             }
         ), 200
