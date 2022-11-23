@@ -6,7 +6,11 @@ from loguru                     import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStatus   import RedisStatus
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    request_json_check,
+    )
 
 #
 # Routes /internal
@@ -16,41 +20,11 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/status/{status_name}
 def creature_status_add(creatureid, status_name):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
+    request_json_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = f'{h} Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     duration    = request.json.get('duration')
     extra       = request.json.get('extra')
@@ -126,31 +100,10 @@ def creature_status_add(creatureid, status_name):
 
 # API: DELETE /internal/creature/{creatureid}/status/{status_name}
 def creature_status_del(creatureid, status_name):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     # Cd del
     try:
@@ -195,31 +148,10 @@ def creature_status_del(creatureid, status_name):
 
 # API: GET /internal/creature/{creatureid}/status/{status_name}
 def creature_status_get_one(creatureid, status_name):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     # Cd get
     try:
@@ -273,31 +205,10 @@ def creature_status_get_one(creatureid, status_name):
 
 # API: GET /internal/creature/{creatureid}/statuses
 def creature_status_get_all(creatureid):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     # Statuses get
     try:

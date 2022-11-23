@@ -6,7 +6,11 @@ from loguru                    import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisUser    import RedisUser
 
-from variables                 import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    request_json_check,
+    )
 
 #
 # Routes /internal
@@ -16,26 +20,8 @@ from variables                 import API_INTERNAL_TOKEN
 # /internal/discord/*
 # /internal/discord/link
 def discord_link():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    request_internal_token_check(request)
+    request_json_check(request)
 
     discordname  = request.json.get('discordname')
     usermail     = request.json.get('usermail')
@@ -100,26 +86,8 @@ def discord_link():
 
 # /internal/discord/creature
 def discord_creature_get_one():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    request_internal_token_check(request)
+    request_json_check(request)
 
     discordname = request.json.get('discordname')
     creatureid  = request.json.get('creatureid')
@@ -146,19 +114,7 @@ def discord_creature_get_one():
         ), 200
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     User = RedisUser().search(field='d_name', query=discordname)
     if User is None:
@@ -201,26 +157,8 @@ def discord_creature_get_one():
 
 # /internal/discord/creatures
 def discord_creature_get_all():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    request_internal_token_check(request)
+    request_json_check(request)
 
     discordname  = request.json.get('discordname')
 
@@ -306,26 +244,8 @@ def discord_creature_get_all():
 
 # /internal/discord/user
 def discord_user():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    request_internal_token_check(request)
+    request_json_check(request)
 
     discordname  = request.json.get('discordname')
 

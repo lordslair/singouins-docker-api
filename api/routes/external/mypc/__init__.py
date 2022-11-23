@@ -16,10 +16,15 @@ from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisUser     import RedisUser
 from nosql.models.RedisWallet   import RedisWallet
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /mypc/*
 #
+
+
 # API: POST /mypc
 @jwt_required()
 def mypc_add():
@@ -219,15 +224,16 @@ def mypc_add():
 # API: GET /mypc
 @jwt_required()
 def mypc_get_all():
-    username = get_jwt_identity()
-    User = RedisUser().get(username)
-    h = f'[User.id:{User.id}]'
-
     try:
+        User = RedisUser().get(get_jwt_identity())
+        h = f'[User.id:{User.id}]'
         account = User.id.replace('-', ' ')
         Creatures = RedisCreature().search(query=f'@account:{account}')
     except Exception as e:
-        msg = f'Creatures query KO (username:{username}) [{e}]'
+        msg = (
+            f'[User.id:None] Creatures query KO '
+            f'(username:{get_jwt_identity()}) [{e}]'
+            )
         logger.error(msg)
         return jsonify(
             {
@@ -263,19 +269,7 @@ def mypc_get_all():
 @jwt_required()
 def mypc_del(pcid):
     Creature = RedisCreature().get(pcid)
-
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     if Creature.instance:
         msg = f'{h} Creature should not be in an Instance({Creature.instance})'

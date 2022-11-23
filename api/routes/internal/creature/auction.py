@@ -8,7 +8,11 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisWallet   import RedisWallet
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    request_json_check,
+    )
 
 #
 # Routes /internal
@@ -18,41 +22,11 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: PUT /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_sell(creatureid, itemid):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
+    request_json_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = f'{h} Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     duration = request.json.get('duration')
     price    = request.json.get('price')
@@ -161,31 +135,10 @@ def creature_auction_sell(creatureid, itemid):
 
 # API: DELETE /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_remove(creatureid, itemid):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     Item = RedisItem(Creature).get(itemid)
     if Item is None:
@@ -247,31 +200,10 @@ def creature_auction_remove(creatureid, itemid):
 
 # API: POST /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_buy(creatureid, itemid):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     Item = RedisItem(Creature).get(itemid)
     if Item is None:
@@ -378,31 +310,10 @@ def creature_auction_buy(creatureid, itemid):
 
 # API: GET /internal/creature/{creatureid}/auction/{itemid}
 def creature_auction_get(creatureid, itemid):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     Item = RedisItem(Creature).get(itemid)
     if Item is None:
@@ -459,41 +370,11 @@ def creature_auction_get(creatureid, itemid):
 
 # API: POST /internal/creature/{creatureid}/auctions
 def creature_auctions_search(creatureid):
-    Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    request_internal_token_check(request)
+    request_json_check(request)
 
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = f'{h} Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
 
     metaid   = request.json.get('metaid', None)
     metatype = request.json.get('metatype', None)

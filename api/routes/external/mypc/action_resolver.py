@@ -18,52 +18,25 @@ from nosql.models.RedisStatus   import RedisStatus
 from nosql.models.RedisUser     import RedisUser
 
 from variables                  import RESOLVER_URL
-
+from utils.routehelper          import (
+    creature_check,
+    request_json_check,
+    )
 
 #
 # Routes /mypc/{pcid}/action/resolver/*
 #
+
+
 # API: POST /mypc/{pcid}/action/resolver/skill/{skill_name}
 @jwt_required()
 def action_resolver_skill(pcid, skill_name):
-    Creature = RedisCreature().get(pcid)
+    request_json_check(request)
+
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
-    # Pre-flight checks
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
@@ -244,44 +217,12 @@ def action_resolver_skill(pcid, skill_name):
 # API: POST /mypc/{pcid}/action/resolver/move
 @jwt_required()
 def action_resolver_move(pcid):
-    Creature = RedisCreature().get(pcid)
+    request_json_check(request)
+
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
-    # Pre-flight checks
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
@@ -434,44 +375,12 @@ def action_resolver_move(pcid):
 # API: POST /mypc/{pcid}/action/resolver/context
 @jwt_required()
 def action_resolver_context(pcid):
-    Creature = RedisCreature().get(pcid)
+    request_json_check(request)
+
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
-    # Pre-flight checks
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)

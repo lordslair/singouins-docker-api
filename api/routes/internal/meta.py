@@ -5,7 +5,9 @@ from loguru                     import logger
 
 from nosql.metas                import get_meta
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    request_internal_token_check,
+    )
 
 #
 # Routes /internal
@@ -14,17 +16,7 @@ from variables                  import API_INTERNAL_TOKEN
 
 # API: GET /internal/meta
 def internal_meta_get_one(metatype):
-    # Pre-flight checks
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     try:
         meta = get_meta(metatype)

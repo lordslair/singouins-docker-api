@@ -6,7 +6,10 @@ from loguru                     import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStats    import RedisStats
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    )
 
 #
 # Routes /internal
@@ -16,31 +19,10 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: GET /internal/creature/{creatureid}/view
 def creature_view_get(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     try:
         if Creature.squad is None:

@@ -12,41 +12,24 @@ from nosql.models.RedisSquad    import RedisSquad
 from nosql.models.RedisUser     import RedisUser
 from nosql.queue                import yqueue_put
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /mypc/{pcid}/squad
 #
+
+
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/accept
 @jwt_required()
 def squad_accept(pcid, squadid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
@@ -131,32 +114,9 @@ def squad_accept(pcid, squadid):
 # API: POST /mypc/<uuid:pcid>/squad
 @jwt_required()
 def squad_create(pcid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     if Creature.squad is not None:
         msg = f'{h} PC already in a Squad (squadid:{Creature.squad})'
@@ -233,34 +193,12 @@ def squad_create(pcid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/decline
 @jwt_required()
 def squad_decline(pcid, squadid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
@@ -343,34 +281,12 @@ def squad_decline(pcid, squadid):
 # API: DELETE /mypc/<uuid:pcid>/squad/<uuid:squadid>
 @jwt_required()
 def squad_delete(pcid, squadid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
@@ -463,34 +379,12 @@ def squad_delete(pcid, squadid):
 # API: GET /mypc/{pcid}/squad/{squadid}
 @jwt_required()
 def squad_get_one(pcid, squadid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
@@ -562,35 +456,13 @@ def squad_get_one(pcid, squadid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/invite/<int:targetid>
 @jwt_required()
 def squad_invite(pcid, squadid, targetid):
-    Creature = RedisCreature().get(pcid)
     CreatureTarget = RedisCreature().get(targetid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
@@ -713,35 +585,13 @@ def squad_invite(pcid, squadid, targetid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/kick/<int:targetid>
 @jwt_required()
 def squad_kick(pcid, squadid, targetid):
-    Creature = RedisCreature().get(pcid)
     CreatureTarget = RedisCreature().get(targetid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
@@ -842,34 +692,12 @@ def squad_kick(pcid, squadid, targetid):
 # API: /mypc/<uuid:pcid>/squad/<uuid:squadid>/leave
 @jwt_required()
 def squad_leave(pcid, squadid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.squad != squadid:
         msg = f'{h} Squad request outside of your scope (squadid:{squadid})'

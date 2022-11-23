@@ -6,7 +6,10 @@ from loguru                     import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisPa       import RedisPa
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    )
 
 #
 # Routes /internal
@@ -16,31 +19,10 @@ from variables                  import API_INTERNAL_TOKEN
 # /internal/creature/*
 # API: GET /internal/creature/{creatureid}/pa
 def creature_pa_get(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     try:
         Pa = RedisPa(Creature)
@@ -82,31 +64,10 @@ def creature_pa_get(creatureid):
 
 # API: PUT /internal/creature/{creatureid}/pa/consume/{redpa}/{bluepa}
 def creature_pa_consume(creatureid, redpa, bluepa):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     if redpa > 16 or bluepa > 8:
         msg = (f'{h} Cannot consume more than max PA '
@@ -183,31 +144,10 @@ def creature_pa_consume(creatureid, redpa, bluepa):
 
 # API: POST /internal/creature/{creatureid}/pa/reset
 def creature_pa_reset(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     try:
         Pa = RedisPa(Creature)

@@ -12,41 +12,25 @@ from nosql.models.RedisKorp     import RedisKorp
 from nosql.models.RedisUser     import RedisUser
 from nosql.queue                import yqueue_put
 
+from utils.routehelper          import (
+    creature_check,
+    request_json_check,
+    )
 
 #
 # Routes /mypc/{pcid}/korp
 #
+
+
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/accept
 @jwt_required()
 def korp_accept(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
@@ -131,34 +115,14 @@ def korp_accept(pcid, korpid):
 # API: POST /mypc/<uuid:pcid>/korp
 @jwt_required()
 def korp_create(pcid):
-    Creature = RedisCreature().get(pcid)
+    request_json_check(request)
+
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-
-    if not request.is_json:
-        msg = f'{h} Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
     korpname = request.json.get('name', None)
+
     if korpname is None:
         msg = f'{h} Korpname not found (korpname:{korpname})'
         logger.warning(msg)
@@ -183,17 +147,6 @@ def korp_create(pcid):
                 "payload": None,
             }
         ), 200
-
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp is not None:
         msg = f'{h} PC already in a Korp (korpid:{Creature.korp})'
@@ -270,34 +223,12 @@ def korp_create(pcid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/decline
 @jwt_required()
 def korp_decline(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
@@ -380,34 +311,12 @@ def korp_decline(pcid, korpid):
 # API: DELETE /mypc/<uuid:pcid>/korp/<uuid:korpid>
 @jwt_required()
 def korp_delete(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
@@ -500,34 +409,12 @@ def korp_delete(pcid, korpid):
 # API: GET /mypc/{pcid}/korp/{korpid}
 @jwt_required()
 def korp_get_one(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
@@ -599,35 +486,14 @@ def korp_get_one(pcid, korpid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/invite/<int:targetid>
 @jwt_required()
 def korp_invite(pcid, korpid, targetid):
-    Creature = RedisCreature().get(pcid)
-    CreatureTarget = RedisCreature().get(targetid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
+    CreatureTarget = RedisCreature().get(targetid)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
@@ -750,35 +616,14 @@ def korp_invite(pcid, korpid, targetid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/kick/<int:targetid>
 @jwt_required()
 def korp_kick(pcid, korpid, targetid):
-    Creature = RedisCreature().get(pcid)
-    CreatureTarget = RedisCreature().get(targetid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
+    CreatureTarget = RedisCreature().get(targetid)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
@@ -879,34 +724,12 @@ def korp_kick(pcid, korpid, targetid):
 # API: /mypc/<uuid:pcid>/korp/<uuid:korpid>/leave
 @jwt_required()
 def korp_leave(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
 
     if Creature.korp != korpid:
         msg = f'{h} Korp request outside of your scope (korpid:{korpid})'

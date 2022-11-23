@@ -14,39 +14,21 @@ from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisWallet   import RedisWallet
 from nosql.models.RedisUser     import RedisUser
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /mypc/{pcid}/action
 #
+
+
 # API: /mypc/{pcid}/action/reload/{weaponid}
 @jwt_required()
 def action_weapon_reload(pcid, weaponid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     # Retrieving weapon stats
     try:
@@ -185,32 +167,9 @@ def action_weapon_reload(pcid, weaponid):
 # API: POST /mypc/{pcid}/action/unload/{weaponid}
 @jwt_required()
 def action_weapon_unload(pcid, weaponid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     # Retrieving weapon stats
     try:

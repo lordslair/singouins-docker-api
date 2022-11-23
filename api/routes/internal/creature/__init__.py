@@ -7,7 +7,11 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStats    import RedisStats
 from nosql.publish              import publish
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    request_json_check,
+    )
 
 #
 # Routes /internal
@@ -18,26 +22,8 @@ from variables                  import API_INTERNAL_TOKEN
 # API: PUT /internal/creature
 def creature_add():
     h = '[Creature.id:None]'
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = f'{h} Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
-    if not request.is_json:
-        msg = f'{h} Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    request_internal_token_check(request)
+    request_json_check(request)
 
     try:
         # We create first the Creature (It will be a monster)
@@ -120,31 +106,10 @@ def creature_add():
 
 # API: DELETE /internal/creature/{creatureid}
 def creature_del(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     # We put the info in pubsub channel for IA to regulate the instance
     try:
@@ -187,54 +152,25 @@ def creature_del(creatureid):
 
 # API: GET /internal/creature/{creatureid}
 def creature_get_one(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-        msg = f'{h} Creature Query OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": Creature._asdict(),
-            }
-        ), 200
+    h = creature_check(Creature)
+
+    msg = f'{h} Creature Query OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": Creature._asdict(),
+        }
+    ), 200
 
 
 # API: GET /internal/creatures
 def creature_get_all():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     try:
         # We search for ALL the Creature in an Instance

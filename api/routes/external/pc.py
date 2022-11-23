@@ -10,56 +10,37 @@ from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /pc
 #
+
+
 # API: GET /pc/{pcid}
 @jwt_required()
 def pc_get_one(creatureid):
-    h = f'[Creature.id:{creatureid}]'  # Header for logging
-    try:
-        Creature = RedisCreature().get(creatureid)
-    except Exception as e:
-        msg = f'{h} Creature Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        msg = f'{h} Creature Query OK'
-        logger.trace(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": Creature._asdict(),
-            }
-        ), 200
+    Creature = RedisCreature().get(creatureid)
+    h = creature_check(Creature)
+
+    msg = f'{h} Creature Query OK'
+    logger.trace(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": Creature._asdict(),
+        }
+    ), 200
 
 
 # API: GET /pc/{pcid}/item
 @jwt_required()
 def pc_item_get_all(creatureid):
     Creature = RedisCreature().get(creatureid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     try:
         creature_slots = RedisSlots(Creature)
@@ -178,20 +159,7 @@ def pc_item_get_all(creatureid):
 @jwt_required()
 def pc_event_get_all(creatureid):
     Creature = RedisCreature().get(creatureid)
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     try:
         creature_events = RedisEvent(Creature).get()

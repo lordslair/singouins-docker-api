@@ -3,14 +3,17 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
-from variables                  import API_INTERNAL_TOKEN
-
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisCd       import RedisCd
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
 from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisStatus   import RedisStatus
+
+from utils.routehelper          import (
+    creature_check,
+    request_internal_token_check,
+    )
 
 #
 # Routes /internal
@@ -20,31 +23,10 @@ from nosql.models.RedisStatus   import RedisStatus
 # /internal/creature/*
 # API: GET /internal/creature/{creatureid}/context
 def creature_context_get(creatureid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = 'Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     Creature = RedisCreature().get(creatureid)
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
+    h = creature_check(Creature)
 
     try:
         creatures_effect  = RedisEffect(Creature)

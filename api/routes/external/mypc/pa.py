@@ -9,39 +9,21 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisUser     import RedisUser
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /mypc/{pcid}/pa/*
 #
+
+
 # API: GET /mypc/{pcid}/pa
 @jwt_required()
 def pa_get(pcid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     try:
         creature_pa = RedisPa(Creature)._asdict()

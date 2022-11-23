@@ -6,7 +6,9 @@ from loguru                     import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSquad    import RedisSquad
 
-from variables                  import API_INTERNAL_TOKEN
+from utils.routehelper          import (
+    request_internal_token_check,
+    )
 
 #
 # Routes /internal
@@ -15,16 +17,7 @@ from variables                  import API_INTERNAL_TOKEN
 
 # API: GET /internal/squad/{squadid}
 def internal_squad_get_one(squadid):
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     try:
         Squad = RedisSquad().get(squadid)
@@ -84,16 +77,7 @@ def internal_squad_get_one(squadid):
 
 # API: GET /internal/squads
 def internal_squad_get_all():
-    if request.headers.get('Authorization') != f'Bearer {API_INTERNAL_TOKEN}':
-        msg = '[Creature.id:None] Token not authorized'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 403
+    request_internal_token_check(request)
 
     try:
         Squads = RedisSquad().search(query='-(@instance:None)')

@@ -19,40 +19,21 @@ from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
 from nosql.models.RedisUser     import RedisUser
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /mypc/{pcid}/inventory/*
 #
+
+
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle
 @jwt_required()
 def inventory_item_dismantle(pcid, itemid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'Token/username mismatch '
-               f'(creatureid:{Creature.id},username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     if RedisPa(Creature).bluepa < 1:
         msg = f'{h} Not enough PA'
@@ -163,33 +144,9 @@ def inventory_item_dismantle(pcid, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_equip(pcid, type, slotname, itemid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'Token/username mismatch '
-               f'(creatureid:{Creature.id},username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     try:
         creature_stats = RedisStats(Creature)._asdict()
@@ -479,33 +436,9 @@ def inventory_item_equip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_unequip(pcid, type, slotname, itemid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'Token/username mismatch '
-               f'(creatureid:{Creature.id},username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     try:
         creature_slots = RedisSlots(Creature)
@@ -588,33 +521,9 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety> # noqa
 @jwt_required()
 def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'Token/username mismatch '
-               f'(creatureid:{Creature.id},username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     try:
         item = RedisItem(Creature).get(itemid)

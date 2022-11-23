@@ -14,55 +14,30 @@ from nosql.models.RedisInstance          import RedisInstance
 from nosql.models.RedisStats             import RedisStats
 from nosql.models.RedisUser              import RedisUser
 
+from utils.routehelper          import (
+    creature_check,
+    request_json_check,
+    )
 
 #
 # Routes /mypc/{pcid}/instance/*
 #
+
+
 # API: PUT /mypc/{pcid}/instance
 @jwt_required()
 def instance_add(pcid):
-    Creature = RedisCreature().get(pcid)
-    User = RedisUser().get(get_jwt_identity())
+    request_json_check(request)
 
-    if not request.is_json:
-        msg = 'Missing JSON in request'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 400
+    User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     hardcore = request.json.get('hardcore', None)
     fast     = request.json.get('fast', None)
     mapid    = request.json.get('mapid', None)
     public   = request.json.get('public', None)
 
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is not None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
@@ -276,32 +251,10 @@ def instance_add(pcid):
 # API: GET /mypc/{pcid}/instance/{instanceid}
 @jwt_required()
 def instance_get(pcid, instanceid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
@@ -363,34 +316,13 @@ def instance_get(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/join
 @jwt_required()
 def instance_join(pcid, instanceid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     instanceid = str(instanceid)
 
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is not None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)
@@ -469,34 +401,13 @@ def instance_join(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/leave
 @jwt_required()
 def instance_leave(pcid, instanceid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
+
     # We need to convert instanceid to STR as it is UUID type
     instanceid = str(instanceid)
 
-    # Pre-flight checks
-    if Creature is None:
-        msg = f'Creature not found (creatureid:{pcid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
         logger.warning(msg)

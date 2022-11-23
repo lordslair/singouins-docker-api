@@ -12,39 +12,21 @@ from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
 from nosql.models.RedisUser     import RedisUser
 
+from utils.routehelper          import (
+    creature_check,
+    )
 
 #
 # Routes /mypc/{pcid}/item/*
 #
+
+
 # API: GET /mypc/{pcid}/item
 @jwt_required()
 def item_get(pcid):
-    Creature = RedisCreature().get(pcid)
     User = RedisUser().get(get_jwt_identity())
-
-    # Pre-flight checks
-    if Creature is None:
-        msg = '[Creature.id:None] Creature NotFound'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        h = f'[Creature.id:{Creature.id}]'  # Header for logging
-    if Creature.account != User.id:
-        msg = (f'{h} Token/username mismatch (username:{User.name})')
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 409
+    Creature = RedisCreature().get(pcid)
+    h = creature_check(Creature, User)
 
     try:
         bearer = Creature.id.replace('-', ' ')
