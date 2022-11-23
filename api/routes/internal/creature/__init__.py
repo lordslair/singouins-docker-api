@@ -149,7 +149,7 @@ def creature_del(creatureid):
     # We put the info in pubsub channel for IA to regulate the instance
     try:
         pmsg     = {"action": 'kill',
-                    "instance": None,
+                    "instance": Creature.instance,
                     "creature": Creature._asdict()}
         pchannel = 'ai-creature'
         publish(pchannel, jsonify(pmsg).get_data())

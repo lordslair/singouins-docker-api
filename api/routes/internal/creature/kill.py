@@ -398,7 +398,7 @@ def creature_kill(creatureid, victimid):
         try:
             pmsg = {
                 "action": 'kill',
-                "instance": None,
+                "instance": CreatureVictim.instance,
                 "creature": CreatureVictim._asdict(),
                 }
             pchannel = 'ai-creature'
