@@ -161,6 +161,7 @@ def creature_del(creatureid):
 
     try:
         # Now we can delete tue PC itself
+        RedisStats(Creature).destroy()
         RedisCreature().destroy(Creature.id)
     except Exception as e:
         msg = f'{h} Creature delete KO [{e}]'

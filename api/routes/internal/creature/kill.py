@@ -7,6 +7,7 @@ from random                     import randint, choices
 from nosql.metas                import metaArmors, metaWeapons
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
+from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
 from nosql.publish              import publish
 from nosql.queue                import yqueue_put
@@ -339,6 +340,7 @@ def creature_kill(creatureid, victimid):
 
     # Now we can REALLY kill the victim
     try:
+        RedisStats(CreatureVictim).destroy()
         RedisCreature().destroy(victimid)
         # Now we send the WS messages
         # Broadcast Queue
