@@ -3,9 +3,10 @@
 import copy
 import uuid
 
-from loguru                     import logger
+from loguru                      import logger
+from redis.commands.search.query import Query
 
-from nosql.connector            import r
+from nosql.connector             import r
 from nosql.variables             import str2typed, typed2str
 
 
@@ -72,6 +73,49 @@ class RedisInstance:
             logger.trace(f'{self.logh} Method OK')
             return self
 
+    def search(self, query, maxpaging=25):
+        self.logh = '[Instance.id:None]'
+        index = 'instance_idx'
+        try:
+            r.ft(index).info()
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(r.ft(index).info())
+            pass
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Searching {query})')
+            # Query("search engine").paging(0, 10)
+            # f"@bearer:[{bearerid} {bearerid}]"
+            results = r.ft(index).search(
+                Query(query).paging(0, maxpaging)
+                )
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(results)
+            pass
+
+        # If we are here, we got results
+        instances = []
+        for result in results.docs:
+            instance = {
+                "creator": result.creator,
+                "fast": str2typed(result.fast),
+                "hardcore": str2typed(result.hardcore),
+                "id": result.id.removeprefix('instances:'),
+                "map": str2typed(result.map),
+                "public": str2typed(result.public),
+                "tick": str2typed(result.tick),
+                }
+            instances.append(instance)
+
+        logger.trace(f'{self.logh} Method OK')
+        return instances
+
     def destroy(self, instanceuuid):
         try:
             self.logh = f'[Instance.id:{instanceuuid}]'
@@ -105,6 +149,9 @@ if __name__ == '__main__':
     logger.success(RedisInstance().get(Instance.id)._asdict())
     logger.success(RedisInstance().destroy(Instance.id))
     logger.success(RedisInstance().get(Instance.id))
+
+    logger.success(RedisInstance().search(query='@instance:None'))
+    logger.success(RedisInstance().search(query='@map:[1 1]'))
 
     """
     FT.CREATE instance_idx PREFIX 1 "instances:"
