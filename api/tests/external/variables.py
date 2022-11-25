@@ -12,7 +12,7 @@ API_URL            = f'http://127.0.0.1:{GUNICORN_PORT}'
 # if not, almost all /internal tests will fail
 CREATURE_NAME   = 'PJTest'
 CREATURE_ID     = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
-USER_NAME       = 'user@exemple.com'
+USER_NAME       = 'user@exemple.net'
 USER_ID         = str(uuid.uuid3(uuid.NAMESPACE_DNS, USER_NAME))
 SQUAD_ID        = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
 

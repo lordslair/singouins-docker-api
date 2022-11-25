@@ -3,13 +3,16 @@
 import json
 import requests
 
-from variables import (AUTH_PAYLOAD,
-                       API_URL)
+from variables import (
+    AUTH_PAYLOAD,
+    API_URL,
+    USER_NAME,
+    )
 
 
 def test_singouins_auth_register():
     url       = f'{API_URL}/auth/register'  # POST
-    payload   = {'password': 'plop', 'mail': 'user@exemple.com'}
+    payload   = {'password': 'plop', 'mail': USER_NAME}
     response  = requests.post(url, json=payload)
 
     assert response.status_code == 201 or \
@@ -35,7 +38,7 @@ def test_singouins_auth_infos():
     infos    = json.loads(response.text)
 
     assert response.status_code == 200
-    assert infos['logged_in_as'] == 'user@exemple.com'
+    assert infos['logged_in_as'] == USER_NAME
 
 
 def test_singouins_auth_refresh():
