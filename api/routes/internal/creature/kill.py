@@ -310,24 +310,11 @@ def creature_kill(creatureid, victimid):
                     yqueue_put(queue, qmsg)
 
                     # We put the info in queue for ws Discord
-                    if Item.metatype == 'weapon':
-                        result = filter(lambda x: x["id"] == Item.metaid,
-                                        metaWeapons)
-                        itemmeta = dict(list(result)[0])  # Gruikfix
-                    elif Item.metatype == 'armor':
-                        result = filter(lambda x: x["id"] == Item.metaid,
-                                        metaArmors)
-                        itemmeta = dict(list(result)[0])  # Gruikfix
-                    else:
-                        logger.warning(f'Metatype unknown ({Item.metatype})')
-
                     queue = 'yarqueue:discord'
                     qmsg = {
                         "ciphered": False,
                         "payload": {
-                            "color_int": color_int[Item.rarity],
                             "item": Item._asdict(),
-                            "meta": itemmeta,
                             "winner": CreatureWinner._asdict(),
                             },
                         "embed": True,

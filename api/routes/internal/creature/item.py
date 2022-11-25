@@ -5,6 +5,7 @@ from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
+from nosql.queue                import yqueue_put
 
 from utils.routehelper          import (
     creature_check,
@@ -50,6 +51,22 @@ def creature_item_add(creatureid):
             }
         ), 200
     else:
+        try:
+            # We try to send the msg in the Discord Queue
+            queue = 'yarqueue:discord'
+            qmsg = {
+                "ciphered": False,
+                "payload": {
+                    "item": Item._asdict(),
+                    "winner": Creature._asdict(),
+                    },
+                "embed": True,
+                "scope": f'Squad-{Creature.squad}',
+                }
+            yqueue_put(queue, qmsg)
+        except Exception:
+            pass
+
         msg = f'{h} Item Query OK'
         logger.debug(msg)
         return jsonify(
