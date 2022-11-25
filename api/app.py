@@ -35,6 +35,7 @@ import routes.internal.creature.effects
 import routes.internal.creature.equipment
 import routes.internal.creature.highscore
 import routes.internal.creature.inventory
+import routes.internal.creature.item
 import routes.internal.creature.kill
 import routes.internal.creature.pa
 import routes.internal.creature.position
@@ -411,6 +412,13 @@ app.add_url_rule('/internal/creature/<uuid:creatureid>/highscore',
 app.add_url_rule('/internal/creature/<uuid:creatureid>/inventory',
                  methods=['GET'],
                  view_func=routes.internal.creature.inventory.creature_inventory_get)
+# Routes /internal/creature/{creatureid}/item/*
+app.add_url_rule('/internal/creature/<uuid:creatureid>/item',
+                 methods=['PUT'],
+                 view_func=routes.internal.creature.item.creature_item_add)
+app.add_url_rule('/internal/creature/<uuid:creatureid>/item/<uuid:itemid>',
+                 methods=['DELETE'],
+                 view_func=routes.internal.creature.item.creature_item_del)
 # Routes /internal/creature/{creatureid}/kill/*
 app.add_url_rule('/internal/creature/<uuid:creatureid>/kill/<uuid:victimid>',
                  methods=['POST'],
