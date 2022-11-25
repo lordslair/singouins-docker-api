@@ -74,9 +74,13 @@ def creature_kill(creatureid, victimid):
     except Exception as e:
         msg = f'{h} Currency Generation KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg":     msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if currency:
             msg = f'{h} Currency Generation OK (currency:{currency})'
@@ -87,9 +91,13 @@ def creature_kill(creatureid, victimid):
     except Exception as e:
         msg = f'{h} Loot Generation KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg":     msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if loots:
             msg = f'{h} Loot Generation OK (loots:{len(loots)})'
@@ -109,9 +117,13 @@ def creature_kill(creatureid, victimid):
             except Exception as e:
                 msg = f'{h} Currency Add KO [{e}]'
                 logger.error(msg)
-                return jsonify({"success": False,
-                                "msg":     msg,
-                                "payload": None}), 200
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
             else:
                 if currency:
                     msg = f'{h} Currency Add OK (currency:{currency})'
@@ -124,9 +136,13 @@ def creature_kill(creatureid, victimid):
             except Exception as e:
                 msg = f'{h} XP add KO [{e}]'
                 logger.error(msg)
-                return jsonify({"success": False,
-                                "msg":     msg,
-                                "payload": None}), 200
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
             else:
                 msg = f'{h} XP add OK (xp:{xp_gained})'
                 logger.debug(msg)
@@ -138,9 +154,13 @@ def creature_kill(creatureid, victimid):
                 except Exception as e:
                     msg = f'{h} Loot Add KO (loot:{loot}) [{e}]'
                     logger.error(msg)
-                    return jsonify({"success": False,
-                                    "msg":     msg,
-                                    "payload": None}), 200
+                    return jsonify(
+                        {
+                            "success": False,
+                            "msg": msg,
+                            "payload": None,
+                        }
+                    ), 200
                 else:
                     if Item:
                         msg = f'{h} Loot Add OK (loot:{loot})'
@@ -171,9 +191,13 @@ def creature_kill(creatureid, victimid):
         except Exception as e:
             msg = f'{h} Solo drops KO (victimid:{victimid}) [{e}]'
             logger.error(msg)
-            return jsonify({"success": False,
-                            "msg":     msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
         else:
             msg = f'{h} Solo drops OK (victimid:{victimid})'
             logger.debug(msg)
@@ -192,9 +216,13 @@ def creature_kill(creatureid, victimid):
             except Exception as e:
                 msg = f'{h} Squad Query KO (squadid:{Creature.squad}) [{e}]'
                 logger.error(msg)
-                return jsonify({"success": False,
-                                "msg":     msg,
-                                "payload": None}), 200
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
             else:
                 if SquadMembers:
                     msg = f'{h} Squad Query OK (members:{len(SquadMembers)})'
@@ -220,9 +248,13 @@ def creature_kill(creatureid, victimid):
                         f'(creatureid:{CreatureMember.id}) [{e}]'
                         )
                     logger.error(msg)
-                    return jsonify({"success": False,
-                                    "msg":     msg,
-                                    "payload": None}), 200
+                    return jsonify(
+                        {
+                            "success": False,
+                            "msg": msg,
+                            "payload": None,
+                        }
+                    ), 200
                 else:
                     if currency:
                         msg = f'{h} Currency Add OK (currency:{currency})'
@@ -235,9 +267,13 @@ def creature_kill(creatureid, victimid):
                 except Exception as e:
                     msg = f'{h} XP add KO (xp:{xp_gained}) [{e}]'
                     logger.error(msg)
-                    return jsonify({"success": False,
-                                    "msg":     msg,
-                                    "payload": None}), 200
+                    return jsonify(
+                        {
+                            "success": False,
+                            "msg": msg,
+                            "payload": None,
+                        }
+                    ), 200
                 else:
                     msg = f'{h} XP add OK (xp:{xp_gained})'
                     logger.debug(msg)
@@ -302,9 +338,13 @@ def creature_kill(creatureid, victimid):
                 except Exception as e:
                     msg = f'{h} Loot Add KO (loot:{loot}) [{e}]'
                     logger.error(msg)
-                    return jsonify({"success": False,
-                                    "msg":     msg,
-                                    "payload": None}), 200
+                    return jsonify(
+                        {
+                            "success": False,
+                            "msg": msg,
+                            "payload": None,
+                        }
+                    ), 200
                 else:
                     if Item:
                         msg = f'{h} Loot Add OK (loot:{loot})'
@@ -313,9 +353,13 @@ def creature_kill(creatureid, victimid):
         except Exception as e:
             msg = f'{h} Squad drops KO (victimid:{victimid}) [{e}]'
             logger.error(msg)
-            return jsonify({"success": False,
-                            "msg":     msg,
-                            "payload": None}), 200
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
         else:
             msg = f'{h} Squad drops OK (victimid:{victimid})'
             logger.debug(msg)
@@ -396,15 +440,23 @@ def creature_kill(creatureid, victimid):
     except Exception as e:
         msg = f'{h} Kill Creature KO (victimid:{CreatureVictim.id}) [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg":     msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         msg = f'{h} Kill Creature OK (victimid:{CreatureVictim.id})'
         logger.debug(msg)
-        return jsonify({"success": True,
-                        "msg":     msg,
-                        "payload": Creature._asdict()}), 200
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": Creature._asdict(),
+            }
+        ), 200
 
 #
 # Sub fonctions
