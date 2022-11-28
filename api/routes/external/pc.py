@@ -42,18 +42,63 @@ def pc_item_get_all(creatureid):
     Creature = RedisCreature().get(creatureid)
     h = creature_check(Creature)
 
+    # Response skeleton
+    metas = {
+        "feet": {
+            "metaid": None,
+            "metatype": None,
+        },
+        "hands": {
+            "metaid": None,
+            "metatype": None
+        },
+        "head": {
+            "metaid": None,
+            "metatype": None
+        },
+        "holster": {
+            "metaid": None,
+            "metatype": None
+        },
+        "lefthand": {
+            "metaid": None,
+            "metatype": None
+        },
+        "righthand": {
+            "metaid": None,
+            "metatype": None
+        },
+        "shoulders": {
+            "metaid": None,
+            "metatype": None
+        },
+        "torso": {
+            "metaid": None,
+            "metatype": None
+        },
+        "legs": {
+            "metaid": None,
+            "metatype": None
+        },
+    }
+
+    # Check to see if the request is for a Monster, and not a player.
+    if Creature.account is None:
+        msg = f'{h} Equipment Query OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "equipment": metas,
+                    "cosmetic": [],
+                    },
+            }
+        ), 200
+
     try:
         creature_slots = RedisSlots(Creature)
-
-        feet      = RedisItem(Creature).get(creature_slots.feet)
-        hands     = RedisItem(Creature).get(creature_slots.hands)
-        head      = RedisItem(Creature).get(creature_slots.head)
-        holster   = RedisItem(Creature).get(creature_slots.holster)
-        lefthand  = RedisItem(Creature).get(creature_slots.lefthand)
-        righthand = RedisItem(Creature).get(creature_slots.righthand)
-        shoulders = RedisItem(Creature).get(creature_slots.shoulders)
-        torso     = RedisItem(Creature).get(creature_slots.torso)
-        legs      = RedisItem(Creature).get(creature_slots.legs)
 
         # We publicly anounce the cosmetics owned by a PC
         creature_cosmetics = RedisCosmetic(Creature).get_all()
@@ -67,81 +112,42 @@ def pc_item_get_all(creatureid):
                 "payload": None,
             }
         ), 200
-    else:
-        pass
 
-    feetmetaid      = feet.metaid      if feet      else None
-    handsmetaid     = hands.metaid     if hands     else None
-    headmetaid      = head.metaid      if head      else None
-    holstermetaid   = holster.metaid   if holster   else None
-    shouldersmetaid = shoulders.metaid if shoulders else None
-    torsometaid     = torso.metaid     if torso     else None
-    legsmetaid      = legs.metaid      if legs      else None
+    try:
+        for slot in [
+            'feet',
+            'hands',
+            'head',
+            'holster',
+            'lefthand',
+            'legs',
+            'righthand',
+            'shoulders',
+            'torso',
+        ]:
+            itemuuid = getattr(creature_slots, slot)
+            Item = RedisItem(Creature).get(itemuuid)
 
-    if righthand and lefthand:
-        # PC has 2 weapons equipped.
-        if righthand.id == lefthand.id:
-            # PC has ONE two-handed weapon equipped.
-            # I send only meta inside RH
-            righthandmetaid = righthand.metaid
-            lefthandmetaid  = None
-        else:
-            # PC has TWO different weapons equipped.
-            righthandmetaid = righthand.metaid
-            lefthandmetaid  = lefthand.metaid
-    else:
-        # PC has 1 or 0 weapons equipped.
-        righthandmetaid = righthand.metaid if righthand else None
-        lefthandmetaid  = lefthand.metaid  if lefthand  else None
+            if Item:
+                metas[slot]['metaid'] = Item.metaid
+                metas[slot]['metatype'] = Item.metatype
 
-    feetmetatype      = feet.metatype      if feet      else None
-    handsmetatype     = hands.metatype     if hands     else None
-    headmetatype      = head.metatype      if head      else None
-    holstermetatype   = holster.metatype   if holster   else None
-    lefthandmetatype  = lefthand.metatype  if lefthand  else None
-    righthandmetatype = righthand.metatype if righthand else None
-    shouldersmetatype = shoulders.metatype if shoulders else None
-    torsometatype     = torso.metatype     if torso     else None
-    legsmetatype      = legs.metatype      if legs      else None
-
-    metas = {
-        "feet": {
-            "metaid": feetmetaid,
-            "metatype": feetmetatype,
-        },
-        "hands": {
-            "metaid": handsmetaid,
-            "metatype": handsmetatype
-        },
-        "head": {
-            "metaid": headmetaid,
-            "metatype": headmetatype
-        },
-        "holster": {
-            "metaid": holstermetaid,
-            "metatype": holstermetatype
-        },
-        "lefthand": {
-            "metaid": lefthandmetaid,
-            "metatype": lefthandmetatype
-        },
-        "righthand": {
-            "metaid": righthandmetaid,
-            "metatype": righthandmetatype
-        },
-        "shoulders": {
-            "metaid": shouldersmetaid,
-            "metatype": shouldersmetatype
-        },
-        "torso": {
-            "metaid": torsometaid,
-            "metatype": torsometatype
-        },
-        "legs": {
-            "metaid": legsmetaid,
-            "metatype": legsmetatype
-        },
-    }
+        # We need to clean some shit for 2H weapons
+        # Ugly
+        # Gruik
+        if metas['lefthand']['metaid'] == metas['righthand']['metaid']:
+            metas['lefthand']['metaid'] = None
+            metas['lefthand']['metatype'] = None
+    except Exception as e:
+        msg = f'{h} Items Query KO [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
 
     msg = f'{h} Equipment Query OK'
     logger.debug(msg)
@@ -149,8 +155,10 @@ def pc_item_get_all(creatureid):
         {
             "success": True,
             "msg": msg,
-            "payload": {"equipment": metas,
-                        "cosmetic": creature_cosmetics},
+            "payload": {
+                "equipment": metas,
+                "cosmetic": creature_cosmetics,
+                },
         }
     ), 200
 
