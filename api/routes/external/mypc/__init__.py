@@ -297,11 +297,29 @@ def mypc_del(pcid):
         if RedisPa(Creature).destroy():
             logger.trace(f'{h} RedisPa delete OK')
 
-        # Now we can delete tte Creature itself
-        if RedisCreature().destroy(Creature.id):
-            logger.trace(f'{h} Creature delete OK')
+        # We delete all the items belonging to the Creature
+        try:
+            # Finding all Creature items to loop on
+            bearer = Creature.id.replace('-', ' ')
+            Items = RedisItem().search(
+                field='bearer',
+                query=f'{bearer}',
+                maxpaging=100,
+                )
+        except Exception as e:
+            logger.error(f'{h} Items Query KO [{e}]')
         else:
-            logger.warning(f'{h} Creature delete KO')
+            if Items and len(Items) > 0:
+                try:
+                    for Item in Items:
+                        RedisItem().destroy(Item['id'])
+                except Exception as e:
+                    logger.error(f'{h} RedisItem(s) delete KO [{e}]')
+                else:
+                    logger.trace(f'{h} RedisItem(s) delete OK')
+
+        # Now we can delete the Creature itself
+        RedisCreature().destroy(Creature.id)
 
         # TODO: For now we do NOT delete items on PC deletion
     except Exception as e:
