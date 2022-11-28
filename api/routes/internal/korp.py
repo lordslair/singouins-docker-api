@@ -21,6 +21,29 @@ def internal_korp_get_one(korpid):
 
     try:
         Korp = RedisKorp().get(korpid)
+    except Exception as e:
+        msg = f'[Korp.id:{korpid}] Korp Query KO [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        if Korp is False or Korp is None:
+            msg = f'[Korp.id:{korpid}] Korp Query KO - NotFound'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 404
+
+    try:
         korp = Korp.id.replace('-', ' ')
         KorpMembers = RedisCreature().search(
             f"(@korp:{korp}) & (@korp_rank:-Pending)"
@@ -39,7 +62,7 @@ def internal_korp_get_one(korpid):
             }
         ), 200
     else:
-        if Korp:
+        if KorpMembers and KorpPending:
             msg = f'[Korp.id:{Korp.id}] Korp Query OK'
             logger.debug(msg)
             return jsonify(
@@ -51,16 +74,6 @@ def internal_korp_get_one(korpid):
                         "pending": KorpPending,
                         "korp": Korp._asdict(),
                         }
-                }
-            ), 200
-        elif Korp is False:
-            msg = f'[Korp.id:{korpid}] Korp Query KO - NotFound'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
                 }
             ), 200
         else:

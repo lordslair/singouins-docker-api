@@ -4,14 +4,16 @@ import json
 import requests
 
 from variables import (API_URL,
-                       HEADERS)
+                       HEADERS,
+                       SQUAD_ID,
+                       )
 
 
 def test_singouins_internal_squad():
-    url = f'{API_URL}/internal/squad/11111111-babe-babe-babe-111111111111'
+    url = f'{API_URL}/internal/squad/{SQUAD_ID}'
     response = requests.get(url, headers=HEADERS)
 
-    assert response.status_code == 200
+    assert response.status_code == 404
     assert json.loads(response.text)['success'] is False
     assert 'Squad Query KO' in json.loads(response.text)['msg']
 

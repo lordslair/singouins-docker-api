@@ -21,6 +21,29 @@ def internal_squad_get_one(squadid):
 
     try:
         Squad = RedisSquad().get(squadid)
+    except Exception as e:
+        msg = f'[Squad.id:{squadid}] Squad Query KO [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+    else:
+        if Squad is False or Squad is None:
+            msg = f'[Squad.id:{squadid}] Squad Query KO - NotFound'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 404
+
+    try:
         squad = Squad.id.replace('-', ' ')
         SquadMembers = RedisCreature().search(
             f"(@squad:{squad}) & (@squad_rank:-Pending)"
@@ -39,7 +62,7 @@ def internal_squad_get_one(squadid):
             }
         ), 200
     else:
-        if Squad:
+        if SquadMembers and SquadPending:
             msg = f'[Squad.id:{Squad.id}] Squad Query OK'
             logger.debug(msg)
             return jsonify(
@@ -51,16 +74,6 @@ def internal_squad_get_one(squadid):
                         "pending": SquadPending,
                         "squad": Squad._asdict(),
                         }
-                }
-            ), 200
-        elif Squad is False:
-            msg = f'[Squad.id:{squadid}] Squad Query KO - NotFound'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
                 }
             ), 200
         else:

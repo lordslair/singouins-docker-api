@@ -47,7 +47,7 @@ class RedisSquad:
                 logger.trace(f'{self.logh} Method OK')
                 return self
         else:
-            logger.error(f'{self.logh} Method KO - NotFound')
+            logger.warning(f'{self.logh} Method KO - NotFound')
             return False
 
     def new(self, creature):
