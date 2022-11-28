@@ -32,32 +32,23 @@ metaArmors = get_meta('armor')
 metaRaces = get_meta('race')
 metaWeapons = get_meta('weapon')
 
-if __name__ == '__main__':
+# META varlables
+"""
+This is a HUGE Dictionary to manipulate pore easiliy all the metas
+Without having to query Redis all the time internally
+"""
 
-    for meta in metaArmors:
-        for k, v in meta.items():
-            if v is None:
-                meta[k] = 'None'
-            elif v is False:
-                meta[k] = 'False'
-            elif v is True:
-                meta[k] = 'True'
-        r.hset(f"metas:armor:{meta['id']}", mapping=meta)
-    for meta in metaRaces:
-        for k, v in meta.items():
-            if v is None:
-                meta[k] = 'None'
-            elif v is False:
-                meta[k] = 'False'
-            elif v is True:
-                meta[k] = 'True'
-        r.hset(f"metas:race:{meta['id']}", mapping=meta)
-    for meta in metaWeapons:
-        for k, v in meta.items():
-            if v is None:
-                meta[k] = 'None'
-            elif v is False:
-                meta[k] = 'False'
-            elif v is True:
-                meta[k] = 'True'
-        r.hset(f"metas:weapon:{meta['id']}", mapping=meta)
+metaNames = {
+    "weapon": {
+        },
+    "armor": {
+        },
+    "race": {
+        },
+}
+for meta in metaWeapons:
+    metaNames['weapon'][meta['id']] = meta
+for meta in metaArmors:
+    metaNames['armor'][meta['id']] = meta
+for meta in metaRaces:
+    metaNames['race'][meta['id']] = meta

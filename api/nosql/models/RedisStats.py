@@ -6,7 +6,7 @@ from loguru                     import logger
 
 from nosql.connector            import r
 
-from nosql.metas                import metaRaces
+from nosql.metas                import metaNames
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.variables            import str2typed
@@ -56,10 +56,7 @@ class RedisStats:
         logger.trace(f'{self.logh} Method >> (HASH Creating)')
 
         try:
-            metaRace = dict(list(filter(
-                lambda x: x["id"] == self.creature.race,
-                metaRaces))[0]
-                )  # Gruikfix
+            metaRace = metaNames['race'][self.creature.race]
 
             # This is base stats
             self.m_race = metaRace['min_m']
@@ -116,14 +113,6 @@ class RedisStats:
         else:
             logger.trace(f'{self.logh} Method >> (Building from Caracs)')
 
-        # Get the metaWeapons
-        if r.exists('system:meta:weapon'):
-            metaWeapons = json.loads(r.get('system:meta:weapon'))
-            logger.trace(f'{self.logh} Method >> metaWeapons OK')
-        else:
-            logger.warning(f'{self.logh} Method >> metaWeapons KO')
-            return False
-
         try:
             # Working to find armor from equipped items
             self.arm_b = 0
@@ -141,11 +130,9 @@ class RedisStats:
 
                 for armor in armors:
                     if armor:
-                        result = filter(lambda x: x["id"] == armor.metaid,
-                                        metaWeapons)
-                        metaWeapon = dict(list(result)[0])  # Gruikfix
-                        self.arm_b += metaWeapon['arm_b']
-                        self.arm_p += metaWeapon['arm_p']
+                        metaArmor = metaNames[armor.metatype][armor.metaid]
+                        self.arm_b += metaArmor['arm_b']
+                        self.arm_p += metaArmor['arm_p']
             else:
                 logger.warning(f'{self.logh} Method >> Slots Not Found')
         except Exception as e:

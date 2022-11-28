@@ -7,7 +7,7 @@ from loguru                      import logger
 from redis.commands.search.query import Query
 
 from nosql.connector             import r
-from nosql.metas                 import metaWeapons
+from nosql.metas                 import metaNames
 from nosql.variables             import str2typed, typed2str
 
 
@@ -90,11 +90,10 @@ class RedisItem:
             """
 
             if self.metatype == 'weapon':
-                metaWeapon = dict(list(filter(lambda x: x["id"] == self.metaid,
-                                              metaWeapons))[0])  # Gruikfix
+                itemmeta = metaNames[self.metatype][self.metaid]
                 # item.ammo is by default None, we initialize it here
-                if metaWeapon['ranged'] is True:
-                    self._ammo = metaWeapon['max_ammo']
+                if itemmeta['ranged'] is True:
+                    self._ammo = itemmeta['max_ammo']
 
             """
             # TODO: Delete the block above for poduction

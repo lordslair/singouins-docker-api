@@ -7,7 +7,7 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from nosql.metas                import metaArmors, metaWeapons
+from nosql.metas                import metaNames
 from nosql.queue                import yqueue_put
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
@@ -196,14 +196,9 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 }
             ), 200
 
-    if type == 'weapon':
-        itemmeta = dict(list(filter(lambda x: x["id"] == item.metaid,
-                                    metaWeapons))[0])  # GruikFix
-    elif type == 'armor':
-        itemmeta = dict(list(filter(lambda x: x["id"] == item.metaid,
-                                    metaArmors))[0])  # Gruikfix
+    itemmeta = metaNames[type][item.metaid]
     if itemmeta is None:
-        msg = f'{h} ItemMeta Query KO - Not found (itemid:{itemid})'
+        msg = f'{h} metaNames Query KO - NotFound (itemid:{itemid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -211,7 +206,9 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 "msg": msg,
                 "payload": None,
             }
-        ), 200
+        ), 404
+    else:
+        logger.trace(f'{h} metaNames: {itemmeta}')
 
     sizex, sizey = itemmeta['size'].split("x")
     costpa       = round(int(sizex) * int(sizey) / 2)
@@ -342,10 +339,11 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                 equipped = RedisItem(Creature).get(creature_slots.righthand)
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
-                    if metaWeapons[equipped.metaid - 1]['onehanded'] is True:
+                    equippedMeta = metaNames['weapon'][equipped.metaid]
+                    if equippedMeta['onehanded'] is True:
                         # A 1H weapons is in RH : we replace
                         creature_slots.righthand = item.id
-                    if metaWeapons[equipped.metaid - 1]['onehanded'] is False:
+                    if equippedMeta['onehanded'] is False:
                         # A 2H weapons is in RH & LH
                         # We replace RH and clean LH
                         creature_slots.righthand = item.id

@@ -5,7 +5,7 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from nosql.metas                import metaWeapons
+from nosql.metas                import metaNames
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisItem     import RedisItem
@@ -55,10 +55,9 @@ def action_weapon_reload(pcid, weaponid):
                 }
             ), 200
 
-    itemmeta = dict(list(filter(lambda x: x["id"] == item.metaid,
-                                metaWeapons))[0])
+    itemmeta = metaNames[item.metatype][item.metaid]
     if itemmeta is None:
-        msg = f'{h} ItemMeta not found (weaponid:{item.id})'
+        msg = f'{h} metaNames Query KO - NotFound (weaponid:{weaponid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -66,7 +65,10 @@ def action_weapon_reload(pcid, weaponid):
                 "msg": msg,
                 "payload": None,
             }
-        ), 200
+        ), 404
+    else:
+        logger.trace(f'{h} metaNames: {itemmeta}')
+
     if itemmeta['pas_reload'] is None:
         msg = f'{h} Item is not reloadable (weaponid:{item.id})'
         logger.warning(msg)
@@ -221,10 +223,9 @@ def action_weapon_unload(pcid, weaponid):
             }
         ), 200
 
-    itemmeta = dict(list(filter(lambda x: x["id"] == item.metaid,
-                                metaWeapons))[0])
+    itemmeta = metaNames[item.metatype][item.metaid]
     if itemmeta is None:
-        msg = f'{h} ItemMeta not found (weaponid:{item.id})'
+        msg = f'{h} metaNames Query KO - NotFound (weaponid:{weaponid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -232,7 +233,9 @@ def action_weapon_unload(pcid, weaponid):
                 "msg": msg,
                 "payload": None,
             }
-        ), 200
+        ), 404
+    else:
+        logger.trace(f'{h} metaNames: {itemmeta}')
 
     try:
         # We add the shards in the wallet
