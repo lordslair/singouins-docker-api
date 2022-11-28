@@ -169,26 +169,20 @@ class RedisItem:
             pass
 
         # If we are here, we got results
+        # We loop over them to build the DICT to return
+        # No more objects
         items = []
         for result in results.docs:
-            item = {
-                "ammo": str2typed(result.ammo),
-                "bearer": result.bearer,
-                "bound": str2typed(result.bound),
-                "bound_type": result.bound_type,
-                "date": result.date,
-                "id": result.id.removeprefix('items:'),
-                "metatype": result.metatype,
-                "metaid": int(result.metaid),
-                "modded": str2typed(result.modded),
-                "mods": str2typed(result.mods),
-                "rarity": result.rarity,
-                "offsetx": str2typed(result.offsetx),
-                "offsety": str2typed(result.offsety),
-                "state": int(result.state),
-                }
-            items.append(item)
+            item = {}
+            for attr, value in result.__dict__.items():
+                if attr == 'payload':
+                    continue
+                item[attr] = str2typed(value)
 
+            # We need to scrape the ID value
+            item['id'] = item['id'].removeprefix('items:')
+            # We add the item in the items list
+            items.append(item)
         logger.trace(f'{self.logh} Method OK')
         return items
 
