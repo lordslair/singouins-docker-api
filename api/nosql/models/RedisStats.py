@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import copy
 import json
 
 from loguru                     import logger
@@ -10,6 +9,7 @@ from nosql.connector            import r
 from nosql.metas                import metaRaces
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
+from nosql.variables            import str2typed
 
 
 class RedisStats:
@@ -25,10 +25,15 @@ class RedisStats:
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
 
                 for k, v in hashdict.items():
-                    # We create the object attribute with converted INT
-                    setattr(self, k, int(v))
-                # We need to do that as it is stored as 'hp' due to the Setter
-                self._hp   = getattr(self, 'hp')
+                    # We create the object attribute with converted types
+                    # But we skip some of them as they have @setters
+                    # Note: any is like many 'or', all is like many 'and'.
+                    if any([
+                        k == 'hp',
+                    ]):
+                        setattr(self, f'_{k}', str2typed(v))
+                    else:
+                        setattr(self, k, str2typed(v))
 
                 logger.trace(f'{self.logh} Method >> (HASH Loaded)')
             except Exception as e:
@@ -100,7 +105,6 @@ class RedisStats:
 
             self.hpmax = 100 + self.m + round(self.creature.level / 2)
             self._hp   = self.hpmax
-            self.hp    = self.hpmax
 
             self.dodge = self.r
             newg       = (self.g - 100) / 50
@@ -154,16 +158,34 @@ class RedisStats:
         try:
             # We push data in final dict
             logger.trace(f'{self.logh} Method >> (Storing HASH)')
-            clone = copy.deepcopy(self)
-            if clone.creature:
-                del clone.creature
-            if clone.hkey:
-                del clone.hkey
-            if clone.logh:
-                del clone.logh
-            if clone._hp:
-                del clone._hp
-            hashdict = clone.__dict__
+            hashdict = {
+                "b": self.b,
+                "b_race": self.b_race,
+                "b_class": self.b_class,
+                "g": self.g,
+                "g_race": self.g_race,
+                "g_class": self.g_class,
+                "m": self.m,
+                "m_race": self.m_race,
+                "m_class": self.m_class,
+                "p": self.p,
+                "p_race": self.p_race,
+                "p_class": self.p_class,
+                "r": self.r,
+                "r_race": self.r_race,
+                "r_class": self.r_class,
+                "v": self.v,
+                "v_race": self.v_race,
+                "v_class": self.v_class,
+                "capcom": self.capcom,
+                "capsho": self.capsho,
+                "arm_p": self.arm_p,
+                "arm_b": self.arm_b,
+                "hpmax": self.hpmax,
+                "hp": self.hp,
+                "dodge": self.r,
+                "parry": self.parry,
+                }
 
             r.hset(self.hkey, mapping=hashdict)
         except Exception as e:
@@ -192,7 +214,7 @@ class RedisStats:
                     "b": self.arm_b,
                 },
                 "hpmax": self.hpmax,
-                "hp": self._hp,
+                "hp": self.hp,
                 "dodge": self.r,
                 "parry": self.parry,
             }
@@ -213,7 +235,7 @@ class RedisStats:
     def hp(self, hp):
         self._hp = hp
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) HP')
+            logger.trace(f'{self.logh} Method >> (Setting HASH) Stats.hp')
             r.hset(self.hkey, 'hp', self._hp)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')

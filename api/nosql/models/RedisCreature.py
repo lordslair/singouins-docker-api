@@ -48,6 +48,10 @@ class RedisCreature:
                 # Note: any is like many 'or', all is like many 'and'.
                 if any([
                     k == 'instance',
+                    k == 'korp',
+                    k == 'korp_rank',
+                    k == 'squad',
+                    k == 'squad_rank',
                     k == 'x',
                     k == 'xp',
                     k == 'y',

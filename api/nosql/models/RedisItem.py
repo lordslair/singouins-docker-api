@@ -69,7 +69,7 @@ class RedisItem:
             self.id = str(uuid.uuid4())
             self.logh = f'[Item.id:{self.id}]'
 
-            self.ammo = None
+            self._ammo = None
             self._bearer = self.creature.id
             self.bound = item_caracs['bound']
             self.bound_type = item_caracs['bound_type']
@@ -94,7 +94,7 @@ class RedisItem:
                                               metaWeapons))[0])  # Gruikfix
                 # item.ammo is by default None, we initialize it here
                 if metaWeapon['ranged'] is True:
-                    self.ammo = metaWeapon['max_ammo']
+                    self._ammo = metaWeapon['max_ammo']
 
             """
             # TODO: Delete the block above for poduction
