@@ -135,7 +135,7 @@ def mypc_add():
                 else:
                     logger.warning(f'{h} Cosmetic creation KO')
             except Exception as e:
-                msg = f'{h} PC Cosmetics creation KO [{e}]'
+                msg = f'{h} Cosmetics creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -144,43 +144,85 @@ def mypc_add():
                         "payload": None,
                     }
                 ), 200
-
             else:
-                if pcequipment:
+                logger.trace(f'{h} Cosmetics creation OK')
+
+            try:
+                Slots = RedisSlots(Creature)
+                Slots.feet = None
+                Slots.hands = None
+                Slots.head = None
+                Slots.holster = None
+                Slots.lefthand = None
+                Slots.legs = None
+                Slots.righthand = None
+                Slots.shoulders = None
+                Slots.torso = None
+            except Exception as e:
+                msg = f'{h} RedisSlots creation KO [{e}]'
+                logger.error(msg)
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
+            else:
+                logger.trace(f'{h} RedisSlots creation OK')
+
+            if pcequipment:
+                try:
+                    # Items are added
+                    if pcequipment['righthand'] is not None:
+                        rh_caracs = {
+                            "metatype":
+                                pcequipment['righthand']['metatype'],
+                            "metaid":
+                                pcequipment['righthand']['metaid'],
+                            "bound": True,
+                            "bound_type": 'BoP',
+                            "modded": False,
+                            "mods": None,
+                            "state": 100,
+                            "rarity": 'Common'
+                        }
+                        RedisItem(Creature).new(rh_caracs)
+
+                    if pcequipment['lefthand'] is not None:
+                        lh_caracs = {
+                            "metatype":
+                                pcequipment['lefthand']['metatype'],
+                            "metaid":
+                                pcequipment['lefthand']['metaid'],
+                            "bound": True,
+                            "bound_type": 'BoP',
+                            "modded": False,
+                            "mods": None,
+                            "state": 100,
+                            "rarity": 'Common'
+                        }
+                        RedisItem(Creature).new(lh_caracs)
+
+                except Exception as e:
+                    msg = f'{h} Weapons creation KO [{e}]'
+                    logger.error(msg)
+                    return jsonify(
+                        {
+                            "success": False,
+                            "msg": msg,
+                            "payload": None,
+                        }
+                    ), 200
+                else:
+                    # Everything has been populated. Stats can be done
+                    msg = f'{h} Weapons creation OK'
+                    logger.trace(msg)
                     try:
-                        # Items are added
-                        if pcequipment['righthand'] is not None:
-                            rh_caracs = {
-                                "metatype":
-                                    pcequipment['righthand']['metatype'],
-                                "metaid":
-                                    pcequipment['righthand']['metaid'],
-                                "bound": True,
-                                "bound_type": 'BoP',
-                                "modded": False,
-                                "mods": None,
-                                "state": 100,
-                                "rarity": 'Common'
-                            }
-                            RedisItem(Creature).new(rh_caracs)
-
-                        if pcequipment['lefthand'] is not None:
-                            lh_caracs = {
-                                "metatype":
-                                    pcequipment['lefthand']['metatype'],
-                                "metaid":
-                                    pcequipment['lefthand']['metaid'],
-                                "bound": True,
-                                "bound_type": 'BoP',
-                                "modded": False,
-                                "mods": None,
-                                "state": 100,
-                                "rarity": 'Common'
-                            }
-                            RedisItem(Creature).new(lh_caracs)
-
+                        # We initialize a fresh stats
+                        RedisStats(Creature).new(pcclass)
                     except Exception as e:
-                        msg = f'{h} Weapons creation KO [{e}]'
+                        msg = f'{h} RedisStats creation KO [{e}]'
                         logger.error(msg)
                         return jsonify(
                             {
@@ -190,35 +232,18 @@ def mypc_add():
                             }
                         ), 200
                     else:
-                        # Everything has been populated. Stats can be done
-                        msg = f'{h} Weapons creation OK'
-                        logger.trace(msg)
-                        try:
-                            # We initialize a fresh stats
-                            RedisStats(Creature).new(pcclass)
-                        except Exception as e:
-                            msg = f'{h} RedisStats creation KO [{e}]'
-                            logger.error(msg)
-                            return jsonify(
-                                {
-                                    "success": False,
-                                    "msg": msg,
-                                    "payload": None,
-                                }
-                            ), 200
-                        else:
-                            logger.trace(f'{h} RedisStats creation OK')
+                        logger.trace(f'{h} RedisStats creation OK')
 
-                # Everything went well
-                msg = f'{h} Creature creation OK'
-                logger.debug(msg)
-                return jsonify(
-                    {
-                        "success": True,
-                        "msg": msg,
-                        "payload": Creature._asdict(),
-                    }
-                ), 201
+            # Everything went well
+            msg = f'{h} Creature creation OK'
+            logger.debug(msg)
+            return jsonify(
+                {
+                    "success": True,
+                    "msg": msg,
+                    "payload": Creature._asdict(),
+                }
+            ), 201
 
 
 # API: GET /mypc

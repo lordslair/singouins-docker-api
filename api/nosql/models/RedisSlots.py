@@ -10,54 +10,35 @@ class RedisSlots:
     def __init__(self, creature):
         self.creature = creature
         self.hkey     = f'slots:{creature.id}'
-        self.logh     = f'[Creature.id:{self.creature.id}]'
-        self.refresh()
+        self.hlog     = f'[Creature.id:{self.creature.id}]'
 
-    def destroy(self):
-        try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            r.delete(self.hkey)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return True
-
-    def refresh(self):
         if r.exists(self.hkey):
             try:
-                logger.trace(f'{self.logh} Method >> (KEY Loading)')
+                logger.trace(f'{self.hlog} Method >> (KEY Loading)')
                 hashdict = r.hgetall(self.hkey)
 
                 for k, v in hashdict.items():
                     setattr(self, f'_{k}', str2typed(v))
 
-                logger.trace(f'{self.logh} Method >> (KEY Loaded)')
+                logger.trace(f'{self.hlog} Method >> (KEY Loaded)')
             except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
+                logger.error(f'{self.hlog} Method KO [{e}]')
                 return None
             else:
-                logger.trace(f'{self.logh} Method OK')
-                return True
+                logger.trace(f'{self.hlog} Method OK')
         else:
-            try:
-                logger.trace(f'{self.logh} Method >> Initialization')
-                self.feet      = None
-                self.hands     = None
-                self.head      = None
-                self.holster   = None
-                self.lefthand  = None
-                self.legs      = None
-                self.righthand = None
-                self.shoulders = None
-                self.torso     = None
-            except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
-                return None
-            else:
-                logger.trace(f'{self.logh} Method OK')
-                return True
+            logger.trace(f'{self.hlog} Method KO (HASH NotFound)')
+
+    def destroy(self):
+        try:
+            logger.trace(f'{self.hlog} Method >> (Destroying HASH)')
+            r.delete(self.hkey)
+        except Exception as e:
+            logger.error(f'{self.hlog} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.hlog} Method OK')
+            return True
 
     def _asdict(self):
         hashdict = {
@@ -86,12 +67,12 @@ class RedisSlots:
     def feet(self, feet):
         self._feet = feet
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.feet')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.feet')
             r.hset(self.hkey, 'feet', typed2str(self._feet))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def hands(self):
@@ -101,12 +82,12 @@ class RedisSlots:
     def hands(self, hands):
         self._hands = hands
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.hands')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.hands')
             r.hset(self.hkey, 'hands', typed2str(self._hands))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def head(self):
@@ -116,12 +97,12 @@ class RedisSlots:
     def head(self, head):
         self._head = head
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.head')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.head')
             r.hset(self.hkey, 'head', typed2str(self._head))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def holster(self):
@@ -131,12 +112,12 @@ class RedisSlots:
     def holster(self, holster):
         self._holster = holster
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.holster')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.holster')
             r.hset(self.hkey, 'holster', typed2str(self._holster))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def lefthand(self):
@@ -146,12 +127,12 @@ class RedisSlots:
     def lefthand(self, lefthand):
         self._lefthand = lefthand
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.lefthand')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.lefthand')
             r.hset(self.hkey, 'lefthand', typed2str(self._lefthand))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def legs(self):
@@ -161,12 +142,12 @@ class RedisSlots:
     def legs(self, legs):
         self._legs = legs
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.legs')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.legs')
             r.hset(self.hkey, 'legs', typed2str(self._legs))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def righthand(self):
@@ -177,13 +158,13 @@ class RedisSlots:
         self._righthand = righthand
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Slot.righthand'
+                f'{self.hlog} Method >> (Setting HASH) Slot.righthand'
                 )
             r.hset(self.hkey, 'righthand', typed2str(self._righthand))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def shoulders(self):
@@ -194,13 +175,13 @@ class RedisSlots:
         self._shoulders = shoulders
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Slot.shoulders'
+                f'{self.hlog} Method >> (Setting HASH) Slot.shoulders'
                 )
             r.hset(self.hkey, 'shoulders', typed2str(self._shoulders))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
     @property
     def torso(self):
@@ -210,12 +191,12 @@ class RedisSlots:
     def torso(self, torso):
         self._torso = torso
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Slot.torso')
+            logger.trace(f'{self.hlog} Method >> (Setting HASH) Slot.torso')
             r.hset(self.hkey, 'torso', typed2str(self._torso))
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
 
 
 if __name__ == '__main__':
