@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
-
 from loguru                     import logger
 
 from nosql.connector            import r
@@ -117,24 +115,28 @@ class RedisStats:
             # Working to find armor from equipped items
             self.arm_b = 0
             self.arm_p = 0
-            creature_slots = RedisSlots(self.creature)
-            if creature_slots:
-                armors = [
-                    RedisItem(self.creature).get(creature_slots.feet),
-                    RedisItem(self.creature).get(creature_slots.hands),
-                    RedisItem(self.creature).get(creature_slots.head),
-                    RedisItem(self.creature).get(creature_slots.shoulders),
-                    RedisItem(self.creature).get(creature_slots.torso),
-                    RedisItem(self.creature).get(creature_slots.legs),
-                    ]
 
-                for armor in armors:
-                    if armor:
-                        metaArmor = metaNames[armor.metatype][armor.metaid]
-                        self.arm_b += metaArmor['arm_b']
-                        self.arm_p += metaArmor['arm_p']
+            if self.creature.account is not None:
+                creature_slots = RedisSlots(self.creature)
+                if creature_slots:
+                    armors = [
+                        RedisItem(self.creature).get(creature_slots.feet),
+                        RedisItem(self.creature).get(creature_slots.hands),
+                        RedisItem(self.creature).get(creature_slots.head),
+                        RedisItem(self.creature).get(creature_slots.shoulders),
+                        RedisItem(self.creature).get(creature_slots.torso),
+                        RedisItem(self.creature).get(creature_slots.legs),
+                        ]
+
+                    for armor in armors:
+                        if armor:
+                            metaArmor = metaNames[armor.metatype][armor.metaid]
+                            self.arm_b += metaArmor['arm_b']
+                            self.arm_p += metaArmor['arm_p']
+                else:
+                    logger.warning(f'{self.logh} Method >> Slots NotFound')
             else:
-                logger.warning(f'{self.logh} Method >> Slots Not Found')
+                logger.trace(f'{self.logh} Method >> Slots Query skipped')
         except Exception as e:
             logger.error(f'{self.logh} Method KO '
                          f'(Building from Equipment) [{e}]')
