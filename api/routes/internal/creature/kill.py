@@ -6,6 +6,7 @@ from random                     import randint, choices
 
 from nosql.metas                import metaArmors, metaWeapons
 from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
@@ -103,8 +104,9 @@ def creature_kill(creatureid, victimid):
             msg = f'{h} Loot Generation OK (loots:{len(loots)})'
             logger.debug(msg)
 
-    # We check if the killer is in a Squad or not
-    if Creature.squad is None:
+    if Creature.account is not None and Creature.squad is None:
+        # We want Playable Creatures NOT in Squad
+        # (Solo players)
         try:
             try:
                 # We add loot only to the killer
@@ -202,7 +204,8 @@ def creature_kill(creatureid, victimid):
             msg = f'{h} Solo drops OK (victimid:{victimid})'
             logger.debug(msg)
 
-    else:
+    elif Creature.account is not None and Creature.squad is not None:
+        # We want Playable Creatures in Squad
         try:
             # We need to get the squad members list
             try:
@@ -351,10 +354,36 @@ def creature_kill(creatureid, victimid):
             msg = f'{h} Squad drops OK (victimid:{victimid})'
             logger.debug(msg)
 
+    else:
+        # Here are the Creatures (AI) who killed Players
+        # They are here as they don't deserve loots
+        pass
+
+    # We set the HighScores
+    # If the Victim is a Player > HighScore
+    if CreatureVictim.account is not None:
+        RedisHS(CreatureVictim).incr('global_deaths')
+    # If the Victim is a Player > HighScore
+    if Creature.account is not None:
+        RedisHS(Creature).incr('global_kills')
+
     # Now we can REALLY kill the victim
     try:
-        RedisStats(CreatureVictim).destroy()
-        RedisCreature().destroy(victimid)
+        if CreatureVictim.account is None:
+            # It is a NON playable Creature (Monster)
+            # We destroy the RedisStats
+            RedisStats(CreatureVictim).destroy()
+            # We destroy the Creature
+            RedisCreature().destroy(victimid)
+        else:
+            # It is a playable Creature (Singouin)
+            # We DO NOT delete it
+            # We set his HP to 50% of hp_max
+            Stats = RedisStats(CreatureVictim)
+            Stats.hp = round(Stats.hpmax / 2)
+            # We push him out of the Instance
+            CreatureVictim.instance = None
+
         # Now we send the WS messages
         # Broadcast Queue
         queue = 'broadcast'

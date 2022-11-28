@@ -26,7 +26,7 @@ def creature_highscore_get(creatureid):
 
     # We fetch the HighScores
     try:
-        hs = RedisHS(Creature)
+        HighScores = RedisHS(Creature)
     except Exception as e:
         msg = f'{h} HighScores Query KO [{e}]'
         logger.error(msg)
@@ -38,7 +38,7 @@ def creature_highscore_get(creatureid):
             }
         ), 200
     else:
-        if hs:
+        if HighScores:
             msg = f'{h} HighScores Query OK'
             logger.debug(msg)
             return jsonify(
@@ -46,7 +46,7 @@ def creature_highscore_get(creatureid):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "highscore": hs._asdict(),
+                        "highscore": HighScores._asdict(),
                         "creature": Creature._asdict(),
                         },
                 }
@@ -60,4 +60,4 @@ def creature_highscore_get(creatureid):
                     "msg": msg,
                     "payload": None,
                 }
-            ), 200
+            ), 404

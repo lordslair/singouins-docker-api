@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 
-import copy
-
 from loguru                     import logger
 
 from nosql.connector            import r
@@ -11,95 +9,89 @@ class RedisHS:
     def __init__(self, creature):
         self.creature = creature
         self.hkey     = f'highscores:{creature.id}'
-        self.logh     = f'[Creature.id:{self.creature.id}]'
-        logger.trace(f'{self.logh} Method >> Initialization')
-
-        try:
-            hashdict = {
-                "action_reload": 0,
-                "action_unload": 0,
-                "action_dismantle": 0,
-                "action_move": 0,
-            }
-
-            for k, v in hashdict.items():
-                setattr(self, k, v)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            pass
+        self.hlog     = f'[Creature.id:{self.creature.id}]'
 
         if r.exists(self.hkey):
-            # The pre-generated stats does already exist in redis
+            # The HighScores does already exist in redis
             try:
                 hashdict = r.hgetall(self.hkey)
-                logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                logger.trace(f'{self.hlog} Method >> (HASH Loading)')
 
                 for k, v in hashdict.items():
                     # We create the object attribute with converted INT
                     setattr(self, k, int(v))
 
-                logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+                logger.trace(f'{self.hlog} Method >> (HASH Loaded)')
             except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
+                logger.error(f'{self.hlog} Method KO [{e}]')
             else:
-                logger.trace(f'{self.logh} Method OK')
+                logger.trace(f'{self.hlog} Method OK')
         else:
-            # The pre-generated stats does not already exist in redis
-            logger.trace(f'{self.logh} Method >> (HASH Creating)')
-            try:
-                r.hset(self.hkey, mapping=hashdict)
-            except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
-            else:
-                logger.trace(f'{self.logh} Method OK')
+            # The HighScores does not already exist in redis
+            logger.trace(f'{self.hlog} Method >> (HASH NotFound)')
+            pass
 
     def incr(self, key, count=1):
         try:
-            logger.trace(f'{self.logh} Method >> (HASH Incrementing)')
+            logger.trace(f'{self.hlog} Method >> (HASH Incrementing)')
+            logger.debug(self.__dict__)
             # We increment the object attribute
-            setattr(self, key, getattr(self, key) + count)
-            # We increment the hash key
-            r.hincrby(self.hkey, key, count)
+            if hasattr(self, key):
+                setattr(self, key, getattr(self, key) + count)
+                # We increment the hash key
+                r.hincrby(self.hkey, key, count)
+            else:
+                setattr(self, key, count)
+                # We create the hash key
+                r.hset(self.hkey, key, count)
+
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
             return True
-
-    def get(self):
-        try:
-            hashdict = r.hgetall(self.hkey)
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-
-            for k, v in hashdict.items():
-                # We create the object attribute with converted INT
-                setattr(self, k, int(v))
-
-            logger.trace(f'{self.logh} Method >> (HASH Loaded)')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method OK')
 
     def destroy(self):
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            logger.trace(f'{self.hlog} Method >> (Destroying HASH)')
             r.delete(self.hkey)
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
             return True
 
     def _asdict(self):
-        clone = copy.deepcopy(self)
-        if clone.hkey:
-            del clone.hkey
-        if clone.creature:
-            del clone.creature
-        if clone.logh:
-            del clone.logh
-        return clone.__dict__
+        tree = {}
+        for key, val in self.__dict__.items():
+            if any([
+                key == 'creature',
+                key == 'hkey',
+                key == 'hlog',
+            ]):
+                pass
+            else:
+                """Return nested dict by splitting the keys on a delimiter."""
+                t = tree
+                prev = None
+                for part in key.split('_'):
+                    if prev is not None:
+                        t = t.setdefault(prev, {})
+                    prev = part
+                else:
+                    t.setdefault(prev, val)
+        return tree
+
+
+if __name__ == '__main__':
+    from nosql.models.RedisCreature import RedisCreature
+    Creature = RedisCreature().get('20671520-85fb-35ad-861a-e8ccebe1ebb9')
+    HS = RedisHS(Creature)
+    logger.success(HS)
+    logger.success(HS._asdict())
+    HS.incr('global_kills', 1)
+    logger.success(HS._asdict())
+    HS.incr('plop', 1)
+    logger.success(HS._asdict())
