@@ -148,6 +148,26 @@ def mypc_add():
                 logger.trace(f'{h} Cosmetics creation OK')
 
             try:
+                HighScores = RedisHS(Creature)
+                HighScores.incr('action_dismantle')
+                HighScores.incr('action_unload')
+                HighScores.incr('action_reload')
+                HighScores.incr('global_kills')
+                HighScores.incr('global_deaths')
+            except Exception as e:
+                msg = f'{h} RedisHS creation KO [{e}]'
+                logger.error(msg)
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
+            else:
+                logger.trace(f'{h} RedisHS creation OK')
+
+            try:
                 Slots = RedisSlots(Creature)
                 Slots.feet = None
                 Slots.hands = None

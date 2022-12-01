@@ -93,5 +93,3 @@ if __name__ == '__main__':
     logger.success(HS._asdict())
     HS.incr('global_kills', 1)
     logger.success(HS._asdict())
-    HS.incr('plop', 1)
-    logger.success(HS._asdict())
