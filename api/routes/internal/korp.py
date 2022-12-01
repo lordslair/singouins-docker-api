@@ -62,30 +62,19 @@ def internal_korp_get_one(korpid):
             }
         ), 200
     else:
-        if KorpMembers and KorpPending:
-            msg = f'[Korp.id:{Korp.id}] Korp Query OK'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": {
-                        "members": KorpMembers,
-                        "pending": KorpPending,
-                        "korp": Korp._asdict(),
-                        }
-                }
-            ), 200
-        else:
-            msg = f'[Korp.id:{korpid}] Korp Query KO'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'[Korp.id:{Korp.id}] Korp Query OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "members": KorpMembers,
+                    "pending": KorpPending,
+                    "korp": Korp._asdict(),
+                    }
+            }
+        ), 200
 
 
 # API: GET /internal/korps

@@ -62,30 +62,19 @@ def internal_squad_get_one(squadid):
             }
         ), 200
     else:
-        if SquadMembers and SquadPending:
-            msg = f'[Squad.id:{Squad.id}] Squad Query OK'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": {
-                        "members": SquadMembers,
-                        "pending": SquadPending,
-                        "squad": Squad._asdict(),
-                        }
-                }
-            ), 200
-        else:
-            msg = f'[Squad.id:{squadid}] Squad Query KO'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'[Squad.id:{Squad.id}] Squad Query OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "members": SquadMembers,
+                    "pending": SquadPending,
+                    "squad": Squad._asdict(),
+                    }
+            }
+        ), 200
 
 
 # API: GET /internal/squads
