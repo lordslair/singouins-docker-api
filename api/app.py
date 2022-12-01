@@ -50,6 +50,7 @@ import routes.internal.instance
 import routes.internal.korp
 import routes.internal.meta
 import routes.internal.squad
+import routes.internal.statistics
 import routes.internal.up
 
 import routes.external.auth
@@ -523,6 +524,10 @@ app.add_url_rule('/internal/squad/<uuid:squadid>',
 app.add_url_rule('/internal/squads',
                  methods=['GET'],
                  view_func=routes.internal.squad.internal_squad_get_all)
+# Routes /internal/statistics/*
+app.add_url_rule('/internal/statistics/highscores',
+                 methods=['GET'],
+                 view_func=routes.internal.statistics.statistics_highscores)
 # Routes /internal/up/*
 app.add_url_rule('/internal/up',
                  methods=['GET'],
