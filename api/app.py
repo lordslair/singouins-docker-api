@@ -2,8 +2,9 @@
 # -*- coding: utf8 -*-
 
 import sys
+import time
 
-from flask                         import Flask, jsonify
+from flask                         import Flask, jsonify, g
 from flask_jwt_extended            import JWTManager
 from flask_cors                    import CORS
 from flask_uuid                    import FlaskUUID
@@ -91,6 +92,17 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
 jwt = JWTManager(app)
+
+
+@app.before_request
+def before_request_time():
+    g.start = time.time()
+
+
+@app.after_request
+def after_request_time(response):
+    response.headers["X-Custom-Elapsed"] = time.time() - g.start
+    return response
 
 
 #
