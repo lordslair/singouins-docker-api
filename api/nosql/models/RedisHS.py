@@ -1,17 +1,21 @@
 # -*- coding: utf8 -*-
 
-from loguru                     import logger
+from loguru                      import logger
+from redis.commands.search.query import Query
 
-from nosql.connector            import r
+from nosql.connector             import r
 
 
 class RedisHS:
-    def __init__(self, creature):
-        self.creature = creature
-        self.hkey     = f'highscores:{creature.id}'
-        self.hlog     = f'[Creature.id:{self.creature.id}]'
+    def __init__(self, creature=None):
+        if creature is not None:
+            self.creature = creature
+            self.hlog = f'[Creature.id:{self.creature.id}]'
+            self.hkey = f'highscores:{creature.id}'
+        else:
+            self.hlog = '[Creature.id:None]'
 
-        if r.exists(self.hkey):
+        if hasattr(self, 'hkey') and r.exists(self.hkey):
             # The HighScores does already exist in redis
             try:
                 hashdict = r.hgetall(self.hkey)
@@ -63,6 +67,48 @@ class RedisHS:
             logger.trace(f'{self.hlog} Method OK')
             return True
 
+    def search(self, query, maxpaging=25):
+        self.hlog = '[Creature.id:None]'
+        index = 'highscore_idx'
+        try:
+            r.ft(index).info()
+        except Exception as e:
+            logger.error(f'{self.hlog} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(r.ft(index).info())
+            pass
+
+        try:
+            logger.trace(f'{self.hlog} Method >> (Searching {query})')
+            # Query("search engine").paging(0, 10)
+            # f"@bearer:[{bearerid} {bearerid}]"
+            results = r.ft(index).search(
+                Query(query).paging(0, maxpaging)
+                )
+        except Exception as e:
+            logger.error(f'{self.hlog} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(results)
+            pass
+
+        # If we are here, we got results
+        highscores = list()
+        for result in results.docs:
+            highscore = dict()
+            for key, val in result.__dict__.items():
+                if key == 'id':
+                    highscore[key] = val.removeprefix('highscores:')
+                elif val is not None:
+                    highscore[key] = int(val)
+                else:
+                    highscore[key] = None
+            highscores.append(highscore)
+
+        logger.trace(f'{self.hlog} Method OK')
+        return highscores
+
     def _asdict(self):
         tree = {}
         for key, val in self.__dict__.items():
@@ -93,3 +139,4 @@ if __name__ == '__main__':
     logger.success(HS._asdict())
     HS.incr('global_kills', 1)
     logger.success(HS._asdict())
+    logger.warning(HS.search(query='*'))
