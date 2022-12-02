@@ -12,7 +12,7 @@
     {
         "craftable":true,
         "hp":25,
-        "id":1,
+        "id":2,
         "name":"Banana Milkshake II",
         "tradable":true,
         "size":"1x1",
@@ -22,7 +22,7 @@
     {
         "craftable":true,
         "hp":100,
-        "id":1,
+        "id":3,
         "name":"Banana Milkshake III",
         "tradable":true,
         "size":"1x1",

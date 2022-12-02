@@ -37,7 +37,6 @@ def initialize_redis():
         for metatype, file in META_FILES.items():
             metas = json.loads(r.get(f'system:meta:{metatype}'))
             logger.debug(f'Redis init: creating metas:{metatype}:*')
-            metas = json.loads(content)
             for meta in metas:
                 for k, v in meta.items():
                     if v is None:
