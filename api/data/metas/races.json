@@ -264,5 +264,43 @@
         "min_r":3,
         "min_v":3,
         "name":"Maître Salamandre"
+    },
+    {
+        "id":15,
+        "lootable":true,
+        "max_b":50,
+        "max_g":50,
+        "max_level":5,
+        "max_m":100,
+        "max_p":100,
+        "max_r":50,
+        "max_v":0,
+        "min_b":50,
+        "min_g":50,
+        "min_level":1,
+        "min_m":50,
+        "min_p":100,
+        "min_r":50,
+        "min_v":0,
+        "name":"Fungus Normalus"
+    },
+    {
+        "id":16,
+        "lootable":true,
+        "max_b":50,
+        "max_g":50,
+        "max_level":10,
+        "max_m":100,
+        "max_p":100,
+        "max_r":50,
+        "max_v":0,
+        "min_b":50,
+        "min_g":50,
+        "min_level":3,
+        "min_m":50,
+        "min_p":100,
+        "min_r":50,
+        "min_v":0,
+        "name":"Fungus Toxicus"
     }
 ]
