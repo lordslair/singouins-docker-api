@@ -28,22 +28,24 @@ def statistics_highscores():
     # We fetch the HighScores
     try:
         maxhs_score = dict()
-        for HighScore in RedisHS().search(query='*'):
-            for key, val in HighScore.items():
-                if key == 'payload':
-                    pass
-                elif key == 'id':
-                    creatureuuid = val
-                else:
-                    if key not in maxhs_score:
-                        maxhs_score[key] = {
-                            "value": 0,
-                            "creature": None,
-                            }
+        HighScores = RedisHS().search(query='*')
+        if len(HighScores) > 0:
+            for HighScore in HighScores:
+                for key, val in HighScore.items():
+                    if key == 'payload':
+                        pass
+                    elif key == 'id':
+                        creatureuuid = val
+                    else:
+                        if key not in maxhs_score:
+                            maxhs_score[key] = {
+                                "value": 0,
+                                "creature": None,
+                                }
 
-                    if val and val >= maxhs_score[key]['value']:
-                        maxhs_score[key]['value'] = val
-                        maxhs_score[key]['creature'] = creatureuuid
+                        if val and val >= maxhs_score[key]['value']:
+                            maxhs_score[key]['value'] = val
+                            maxhs_score[key]['creature'] = creatureuuid
 
     except Exception as e:
         msg = f'{h} HighScores Query KO [{e}]'

@@ -38,7 +38,6 @@ class RedisHS:
     def incr(self, key, count=1):
         try:
             logger.trace(f'{self.hlog} Method >> (HASH Incrementing)')
-            logger.debug(self.__dict__)
             # We increment the object attribute
             if hasattr(self, key):
                 setattr(self, key, getattr(self, key) + count)
