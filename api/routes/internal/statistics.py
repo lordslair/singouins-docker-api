@@ -29,7 +29,7 @@ def statistics_highscores():
     try:
         maxhs_score = dict()
         HighScores = RedisHS().search(query='*')
-        if len(HighScores) > 0:
+        if HighScores and len(HighScores) > 0:
             for HighScore in HighScores:
                 for key, val in HighScore.items():
                     if key == 'payload':
