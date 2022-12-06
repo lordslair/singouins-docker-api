@@ -330,6 +330,10 @@ def creature_kill(creatureid, victimid):
                         }
                     )
                 # Discord Queue
+                if CreatureWinner.squad is not None:
+                    scope = f'Squad-{CreatureWinner.squad}'
+                else:
+                    scope = None
                 yqueue_put(
                     YQ_DISCORD,
                     {
@@ -339,7 +343,7 @@ def creature_kill(creatureid, victimid):
                             "winner": CreatureWinner._asdict(),
                             },
                         "embed": True,
-                        "scope": f'Squad-{CreatureWinner.squad}',
+                        "scope": scope,
                         }
                     )
 

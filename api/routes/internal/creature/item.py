@@ -54,6 +54,10 @@ def creature_item_add(creatureid):
         ), 200
     else:
         # Discord Queue
+        if Creature.squad is not None:
+            scope = f'Squad-{Creature.squad}'
+        else:
+            scope = None
         yqueue_put(
             YQ_DISCORD,
             {
@@ -63,7 +67,7 @@ def creature_item_add(creatureid):
                     "winner": Creature._asdict(),
                     },
                 "embed": True,
-                "scope": f'Squad-{Creature.squad}',
+                "scope": scope,
                 }
             )
 
