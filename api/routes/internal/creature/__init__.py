@@ -3,6 +3,7 @@
 from flask                      import jsonify, request
 from loguru                     import logger
 
+from nosql.metas                import metaNames
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStats    import RedisStats
 from nosql.publish              import publish
@@ -29,7 +30,7 @@ def creature_add():
         # We create first the Creature (It will be a monster)
         try:
             Creature = RedisCreature().new(
-                None,
+                metaNames['race'][request.json.get('raceid')]['name'],
                 request.json.get('raceid'),
                 request.json.get('gender'),
                 None,

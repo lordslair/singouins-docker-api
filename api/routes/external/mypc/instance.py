@@ -9,6 +9,7 @@ from random                              import choices, randint
 from nosql.maps                          import get_map
 from nosql.publish                       import publish
 from nosql.queue                         import yqueue_put
+from nosql.metas                         import metaNames
 from nosql.models.RedisCreature          import RedisCreature
 from nosql.models.RedisInstance          import RedisInstance
 from nosql.models.RedisStats             import RedisStats
@@ -180,7 +181,7 @@ def instance_add(pcid):
         while mobs_nbr < 4:
             try:
                 #
-                race   = randint(11, 14)
+                raceid = randint(11, 16)
                 gender = randint(0, 1)
                 rarity = choices(rarities,
                                  weights=(20, 30, 20, 10, 15, 5),
@@ -189,8 +190,8 @@ def instance_add(pcid):
                 y = randint(1, int(mapy))
 
                 Monster = RedisCreature().new(
-                    'Will be replaced later',
-                    race,
+                    metaNames['race'][raceid]['name'],
+                    raceid,
                     gender,
                     None,
                     rarity,
