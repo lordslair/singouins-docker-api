@@ -18,6 +18,8 @@ from utils.routehelper          import (
     request_internal_token_check,
     )
 
+from variables                  import YQ_BROADCAST, YQ_DISCORD
+
 # We define color lists for embeds, messages, etc
 color_int              = {}
 color_int['Broken']    = 10197915
@@ -170,25 +172,26 @@ def creature_kill(creatureid, victimid):
 
             # Now we send the WS messages for loot/drops
             # Broadcast Queue
-            queue = 'broadcast'
-            qmsg = {
-                "ciphered": False,
-                "payload": {
-                    "id": Creature.id,
-                    "loot": {
-                         "currency": currency,
-                         "items": loots,
-                         "xp": xp_gained,
-                    },
-                    "action": "loot",
-                },
-                "route": "mypc/{id1}/action/resolver/skill/{id2}",
-                "scope": {
-                    "id": None,
-                    "scope": "broadcast"
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
+                    "payload": {
+                        "id": Creature.id,
+                        "loot": {
+                             "currency": currency,
+                             "items": loots,
+                             "xp": xp_gained,
+                             },
+                        "action": "loot",
+                        },
+                    "route": "mypc/{id1}/action/resolver/skill/{id2}",
+                    "scope": {
+                        "id": None,
+                        "scope": "broadcast"
+                        },
                     }
-                }
-            yqueue_put(queue, qmsg)
+                )
 
         except Exception as e:
             msg = f'{h} Solo drops KO (victimid:{victimid}) [{e}]'
@@ -289,42 +292,6 @@ def creature_kill(creatureid, victimid):
                     CreatureWinner = RedisCreature().get(winner['id'])
                     h = f'[Creature.id:{CreatureWinner.id}]'
                     Item = RedisItem(CreatureWinner).new(loot)
-
-                    # Now we send the WS messages for loot/drops
-                    # Broadcast Queue
-                    queue = 'broadcast'
-                    qmsg = {
-                        "ciphered": False,
-                        "payload": {
-                            "id": CreatureWinner.id,
-                            "loot": {
-                                 "currency": currency,
-                                 "items": loots,
-                                 "xp": xp_gained,
-                            },
-                            "action": "loot",
-                        },
-                        "route": "mypc/{id1}/action/resolver/skill/{id2}",
-                        "scope": {
-                            "id": None,
-                            "scope": "broadcast"
-                            }
-                        }
-                    yqueue_put(queue, qmsg)
-
-                    # We put the info in queue for ws Discord
-                    queue = 'yarqueue:discord'
-                    qmsg = {
-                        "ciphered": False,
-                        "payload": {
-                            "item": Item._asdict(),
-                            "winner": CreatureWinner._asdict(),
-                            },
-                        "embed": True,
-                        "scope": f'Squad-{CreatureWinner.squad}',
-                        }
-                    yqueue_put(queue, qmsg)
-
                 except Exception as e:
                     msg = f'{h} Loot Add KO (loot:{loot}) [{e}]'
                     logger.error(msg)
@@ -336,9 +303,45 @@ def creature_kill(creatureid, victimid):
                         }
                     ), 200
                 else:
-                    if Item:
-                        msg = f'{h} Loot Add OK (loot:{loot})'
-                        logger.debug(msg)
+                    if Item is None:
+                        msg = f'{h} Loot Add KO (loot:{loot})'
+                        logger.warning(msg)
+
+                # Now we send the WS messages
+                # Broadcast Queue
+                yqueue_put(
+                    YQ_BROADCAST,
+                    {
+                        "ciphered": False,
+                        "payload": {
+                            "id": CreatureWinner.id,
+                            "loot": {
+                                 "currency": currency,
+                                 "items": loots,
+                                 "xp": xp_gained,
+                                 },
+                            "action": "loot",
+                            },
+                        "route": "mypc/{id1}/action/resolver/skill/{id2}",
+                        "scope": {
+                            "id": None,
+                            "scope": "broadcast"
+                            },
+                        }
+                    )
+                # Discord Queue
+                yqueue_put(
+                    YQ_DISCORD,
+                    {
+                        "ciphered": False,
+                        "payload": {
+                            "item": Item._asdict(),
+                            "winner": CreatureWinner._asdict(),
+                            },
+                        "embed": True,
+                        "scope": f'Squad-{CreatureWinner.squad}',
+                        }
+                    )
 
         except Exception as e:
             msg = f'{h} Squad drops KO (victimid:{victimid}) [{e}]'
@@ -386,55 +389,42 @@ def creature_kill(creatureid, victimid):
 
         # Now we send the WS messages
         # Broadcast Queue
-        queue = 'broadcast'
-        qmsg = {
-            "ciphered": False,
-            "payload": {
-                "id": Creature.id,
-                "target": {
-                    "id": CreatureVictim.id,
-                    "name": CreatureVictim.name
-                },
-                "action": None
-            },
-            "route": "mypc/{id1}/action/resolver/skill/{id2}",
-            "scope": {
-                "id": None,
-                "scope": 'broadcast'
-            }
-        }
-        try:
-            yqueue_put(queue, qmsg)
-        except Exception as e:
-            msg = f'Queue PUT KO (queue:{queue}) [{e}]'
-            logger.error(msg)
-        else:
-            msg = f'Queue PUT OK (queue:{queue})'
-            logger.trace(msg)
-
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": {
+                    "id": Creature.id,
+                    "target": {
+                        "id": CreatureVictim.id,
+                        "name": CreatureVictim.name
+                        },
+                    "action": None
+                    },
+                "route": "mypc/{id1}/action/resolver/skill/{id2}",
+                "scope": {
+                    "id": None,
+                    "scope": 'broadcast'
+                    },
+                }
+            )
         # Discord Queue
-        queue = 'yarqueue:discord'
         if Creature.squad is not None:
             scope = f'Squad-{Creature.squad}'
         else:
             scope = None
-        qmsg = {
-            "ciphered": False,
-            "payload": (
-                f':pirate_flag: **{Creature.name}** '
-                f'killed **{CreatureVictim.name}**'
-                ),
-            "embed": None,
-            "scope": scope,
-        }
-        try:
-            yqueue_put(queue, qmsg)
-        except Exception as e:
-            msg = f'Queue PUT KO (queue:{queue}) [{e}]'
-            logger.error(msg)
-        else:
-            msg = f'Queue PUT OK (queue:{queue})'
-            logger.trace(msg)
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':pirate_flag: **{Creature.name}** '
+                    f'killed **{CreatureVictim.name}**'
+                    ),
+                "embed": None,
+                "scope": scope,
+            }
+            )
 
         # We put the info in pubsub channel for IA to regulate the instance
         try:

@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
-
 from flask                      import jsonify
 from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
@@ -15,6 +13,8 @@ from nosql.queue                import yqueue_put
 from utils.routehelper          import (
     creature_check,
     )
+
+from variables                  import YQ_BROADCAST, YQ_DISCORD
 
 #
 # Routes /mypc/{pcid}/squad
@@ -79,27 +79,30 @@ def squad_accept(pcid, squadid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qmsg = {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: '
-                    f'**{Creature.name}** '
-                    f'joined this Squad'
-                    ),
-                "embed": None,
-                "scope": f'Squad-{Creature.squad}',
-                }
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {
-                "ciphered": False,
-                "payload": Squad._asdict(),
-                "route": 'mypc/{id1}/squad',
-                "scope": 'squad',
-                }
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
-
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
+                    "payload": Squad._asdict(),
+                    "route": 'mypc/{id1}/squad',
+                    "scope": 'squad',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'joined this Squad'
+                        ),
+                    "embed": None,
+                    "scope": f'Squad-{Creature.squad}',
+                    }
+                )
             msg = f'{h} Squad accept OK (squadid:{squadid})'
             logger.debug(msg)
             return jsonify(
@@ -164,20 +167,30 @@ def squad_create(pcid):
             }
         ), 200
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": (f':information_source: '
-                            f'**{Creature.name}** '
-                            f'created this Squad'),
-                "embed": None,
-                "scope": f'Squad-{Creature.squad}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
                 "payload": Squad._asdict(),
                 "route": 'mypc/{id1}/squad',
-                "scope": 'squad'}
-        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                "scope": 'squad',
+                }
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{Creature.name}** '
+                    f'created this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{Creature.squad}',
+                }
+            )
 
         msg = f'{h} Squad create OK (squadid:{Creature.squad})'
         logger.debug(msg)
@@ -248,24 +261,30 @@ def squad_decline(pcid, squadid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qname = 'yarqueue:discord'
-            qmsg  = {"ciphered": False,
-                     "payload": (f':information_source: '
-                                 f'**{Creature.name}** '
-                                 f'declined this Squad'),
-                     "embed": None,
-                     "scope": f'Squad-{squadid}'}
-            logger.trace(f'{qname}:{qmsg}')
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qname = 'broadcast'
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Squad._asdict(),
                     "route": 'mypc/{id1}/squad',
-                    "scope": 'squad'}
-            logger.trace(f'{qname}:{qmsg}')
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'squad',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'declined this Squad'
+                        ),
+                    "embed": None,
+                    "scope": f'Squad-{Creature.squad}',
+                    }
+                )
 
             msg = f'{h} Squad decline OK (squadid:{squadid})'
             logger.debug(msg)
@@ -350,20 +369,30 @@ def squad_delete(pcid, squadid):
             }
         ), 200
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": (f':information_source: '
-                            f'**{Creature.name}** '
-                            f'deleted this Squad'),
-                "embed": None,
-                "scope": f'Squad-{squadid}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
                 "payload": None,
                 "route": 'mypc/{id1}/squad',
-                "scope": 'squad'}
-        yqueue_put('broadcast', qmsg)
+                "scope": 'squad',
+                }
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{Creature.name}** '
+                    f'deleted this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{Creature.squad}',
+                }
+            )
 
         msg = f'{h} Squad delete OK (squadid:{squadid})'
         logger.debug(msg)
@@ -456,10 +485,11 @@ def squad_get_one(pcid, squadid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/invite/<int:targetid>
 @jwt_required()
 def squad_invite(pcid, squadid, targetid):
-    CreatureTarget = RedisCreature().get(targetid)
     User = RedisUser().get(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
+
+    CreatureTarget = RedisCreature().get(targetid)
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
@@ -554,22 +584,32 @@ def squad_invite(pcid, squadid, targetid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'invited '
-                                f'**{CreatureTarget.name}** '
-                                f'in this Squad'),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Squad._asdict(),
                     "route": 'mypc/{id1}/squad',
-                    "scope": 'squad'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'squad',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'invited '
+                        f'**{CreatureTarget.name}** '
+                        f'in this Squad'
+                        ),
+                    "embed": None,
+                    "scope": f'Squad-{Creature.squad}',
+                    }
+                )
 
             msg = f'{h} Squad invite OK (squadid:{squadid})'
             logger.debug(msg)
@@ -585,10 +625,11 @@ def squad_invite(pcid, squadid, targetid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/kick/<int:targetid>
 @jwt_required()
 def squad_kick(pcid, squadid, targetid):
-    CreatureTarget = RedisCreature().get(targetid)
     User = RedisUser().get(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
+
+    CreatureTarget = RedisCreature().get(targetid)
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
@@ -661,22 +702,32 @@ def squad_kick(pcid, squadid, targetid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws Discord
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'kicked '
-                                f'**{CreatureTarget.name}** '
-                                f'from this Squad'),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Squad._asdict(),
                     "route": 'mypc/{id1}/squad',
-                    "scope": 'squad'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'squad',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'kicked '
+                        f'**{CreatureTarget.name}** '
+                        f'from this Squad'
+                        ),
+                    "embed": None,
+                    "scope": f'Squad-{Creature.squad}',
+                    }
+                )
 
             msg = f'{h} Squad kick OK (squadid:{squadid})'
             logger.debug(msg)
@@ -747,20 +798,30 @@ def squad_leave(pcid, squadid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'left this Squad'),
-                    "embed": None,
-                    "scope": f'Squad-{squadid}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Squad._asdict(),
                     "route": 'mypc/{id1}/squad',
-                    "scope": 'squad'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'squad',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'left this Squad'
+                        ),
+                    "embed": None,
+                    "scope": f'Squad-{Creature.squad}',
+                    }
+                )
 
             msg = f'{h} Squad leave OK (squadid:{squadid})'
             logger.debug(msg)

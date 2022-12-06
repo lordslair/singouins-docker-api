@@ -4,11 +4,14 @@ from flask                      import jsonify, request
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
+from nosql.queue                import yqueue_put
 
 from utils.routehelper          import (
     creature_check,
     request_internal_token_check,
     )
+
+from variables                  import YQ_BROADCAST
 
 #
 # Routes /internal
@@ -39,6 +42,26 @@ def creature_position_set(creatureid, x, y):
     else:
         msg = f'{h} Position Query OK'
         logger.debug(msg)
+
+        # Now we send the WS messages
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": {
+                    "id": Creature.id,
+                    "x": Creature.x,
+                    "y": Creature.y,
+                    },
+                "route": "mypc/{id1}/action/move",
+                "scope": {
+                    "id": None,
+                    "scope": 'broadcast'
+                    },
+                }
+            )
+
         return jsonify(
             {
                 "success": True,

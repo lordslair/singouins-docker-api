@@ -25,8 +25,9 @@ def yqueue_put(yqueue_name, msg):
     try:
         yqueue.put(json.dumps(msg))
     except Exception as e:
-        logger.error(f'Queue Query KO (queue:{yqueue_name},msg:<{msg}>) [{e}]')
+        logger.error(f'Queue PUT KO (queue:{yqueue_name},msg:<{msg}>) [{e}]')
     else:
+        logger.trace(f'Queue PUT OK (queue:{yqueue_name})')
         pass
 
 

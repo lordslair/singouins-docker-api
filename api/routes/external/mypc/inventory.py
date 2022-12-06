@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
-
 from flask                      import jsonify
 from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
@@ -22,6 +20,8 @@ from nosql.models.RedisUser     import RedisUser
 from utils.routehelper          import (
     creature_check,
     )
+
+from variables                  import YQ_BROADCAST
 
 #
 # Routes /mypc/{pcid}/inventory/*
@@ -403,11 +403,18 @@ def inventory_item_equip(pcid, type, slotname, itemid):
                         "payload": None}), 200
     else:
         # We put the info in queue for ws
-        qmsg = {"ciphered": False,
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
                 "payload": creature_slots._asdict(),
                 "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
-                "scope": {"id": None, "scope": 'broadcast'}}
-        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                "scope": {
+                    "id": None,
+                    "scope": 'broadcast',
+                    },
+                }
+            )
 
         # We create the Creature Event
         RedisEvent(Creature).add(Creature.id,
@@ -494,11 +501,18 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
     # Here everything should be OK with the unequip
     else:
         # We put the info in queue for ws
-        qmsg = {"ciphered": False,
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
                 "payload": creature_slots._asdict(),
                 "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
-                "scope": {"id": None, "scope": 'broadcast'}}
-        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                "scope": {
+                    "id": None,
+                    "scope": 'broadcast',
+                    },
+                }
+            )
 
         # JOB IS DONE
         msg = f'{h} Unequip Query OK (itemid:{itemid})'

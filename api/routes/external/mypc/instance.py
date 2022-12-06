@@ -19,6 +19,8 @@ from utils.routehelper          import (
     request_json_check,
     )
 
+from variables                           import YQ_DISCORD
+
 #
 # Routes /mypc/{pcid}/instance/*
 #
@@ -149,22 +151,19 @@ def instance_add(pcid):
     if Creature.squad is not None:
         scopes.append(f'Squad-{Creature.squad}')
     for scope in scopes:
-        try:
-            qmsg = {
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
                 "ciphered": False,
-                "payload": (f':map: **[{Creature.id}] {Creature.name}** '
-                            f'opened an Instance ({instance.id})'),
+                "payload": (
+                    f':map: **[{Creature.id}] {Creature.name}** '
+                    f'opened an Instance ({instance.id})'
+                    ),
                 "embed": None,
                 "scope": scope,
-            }
-            yqueue_put('yarqueue:discord', qmsg)
-        except Exception as e:
-            msg = (f'{h} Queue Query KO '
-                   f'(Queue:yarqueue:discord,qmsg:{qmsg}) [{e}]')
-            logger.error(msg)
-        else:
-            logger.trace(f'{h} Queue Query OK '
-                         f'(Queue:yarqueue:discord,qmsg:{qmsg})')
+                }
+            )
     # We need to create the mobs to populate the instance
     try:
         (mapx, mapy) = map['size'].split('x')
@@ -372,20 +371,19 @@ def instance_join(pcid, instanceid):
         if Creature.squad is not None:
             scopes.append(f'Squad-{Creature.squad}')
         for scope in scopes:
-            qmsg = {
-                "ciphered": False,
-                "payload": (f':map: **[{Creature.id}] {Creature.name}** '
-                            f'joined an Instance ({instance.id})'),
-                "embed": None,
-                "scope": scope
-            }
-            try:
-                yqueue_put('yarqueue:discord', qmsg)
-            except Exception as e:
-                logger.error(f'{h} Queue Query KO '
-                             f'(yarqueue:discord,qmsg:{qmsg}) [{e}]')
-            else:
-                pass
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':map: **[{Creature.id}] {Creature.name}** '
+                        f'joined an Instance ({instance.id})'
+                        ),
+                    "embed": None,
+                    "scope": scope,
+                    }
+                )
         # Everything went well
         msg = f'{h} Instance join OK (instanceid:{instance.id})'
         logger.debug(msg)
@@ -568,22 +566,19 @@ def instance_leave(pcid, instanceid):
             if Creature.squad is not None:
                 scopes.append(f'Squad-{Creature.squad}')
             for scope in scopes:
-                qmsg = {
-                    "ciphered": False,
-                    "payload": (f':map: **[{Creature.id}] {Creature.name}** '
-                                f'closed an Instance ({instanceid})'),
-                    "embed": None,
-                    "scope": scope,
-                }
-                try:
-                    yqueue_put('yarqueue:discord', qmsg)
-                except Exception as e:
-                    msg = (f'{h} Queue(yarqueue:discord) '
-                           f'Query KO (qmsg:{qmsg}) [{e}]')
-                    logger.error(msg)
-                else:
-                    logger.trace(f'{h} Queue(yarqueue:discord) '
-                                 f'Query OK (qmsg:{qmsg})')
+                # Discord Queue
+                yqueue_put(
+                    YQ_DISCORD,
+                    {
+                        "ciphered": False,
+                        "payload": (
+                            f':map: **[{Creature.id}] {Creature.name}** '
+                            f'closed an Instance ({instance.id})'
+                            ),
+                        "embed": None,
+                        "scope": scope,
+                        }
+                    )
             # Finally everything is done
             msg = f'{h} Instance({instanceid}) leave OK'
             logger.debug(msg)
@@ -617,21 +612,19 @@ def instance_leave(pcid, instanceid):
             if Creature.squad is not None:
                 scopes.append(f'Squad-{Creature.squad}')
             for scope in scopes:
-                qmsg = {
-                    "ciphered": False,
-                    "payload": (f':map: **[{Creature.id}] {Creature.name}** '
-                                f'left an Instance ({Instance.id})'),
-                    "embed": None,
-                    "scope": scope,
-                }
-                try:
-                    yqueue_put('yarqueue:discord', qmsg)
-                except Exception as e:
-                    logger.error(f'{h} Queue(yarqueue:discord) '
-                                 f'Query KO (qmsg:{qmsg}) [{e}]')
-                else:
-                    logger.trace(f'{h} Queue(yarqueue:discord) '
-                                 f'Query OK (qmsg:{qmsg})')
+                # Discord Queue
+                yqueue_put(
+                    YQ_DISCORD,
+                    {
+                        "ciphered": False,
+                        "payload": (
+                            f':map: **[{Creature.id}] {Creature.name}** '
+                            f'left an Instance ({Instance.id})'
+                            ),
+                        "embed": None,
+                        "scope": scope,
+                        }
+                    )
 
             msg = f'{h} Instance({instanceid}) leave OK'
             logger.debug(msg)

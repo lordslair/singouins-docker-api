@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
-
 from flask                      import jsonify, request
 from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
@@ -16,6 +14,8 @@ from utils.routehelper          import (
     creature_check,
     request_json_check,
     )
+
+from variables                  import YQ_BROADCAST, YQ_DISCORD
 
 #
 # Routes /mypc/{pcid}/korp
@@ -80,27 +80,30 @@ def korp_accept(pcid, korpid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qmsg = {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: '
-                    f'**{Creature.name}** '
-                    f'joined this Korp'
-                    ),
-                "embed": None,
-                "scope": f'Korp-{Creature.korp}',
-                }
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {
-                "ciphered": False,
-                "payload": Korp._asdict(),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp',
-                }
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
-
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
+                    "payload": Korp._asdict(),
+                    "route": 'mypc/{id1}/korp',
+                    "scope": 'korp',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'joined this Korp'
+                        ),
+                    "embed": None,
+                    "scope": f'Korp-{Creature.korp}',
+                    }
+                )
             msg = f'{h} Korp accept OK (korpid:{korpid})'
             logger.debug(msg)
             return jsonify(
@@ -194,20 +197,30 @@ def korp_create(pcid):
             }
         ), 200
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": (f':information_source: '
-                            f'**{Creature.name}** '
-                            f'created this Korp'),
-                "embed": None,
-                "scope": f'Korp-{Creature.korp}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
                 "payload": Korp._asdict(),
                 "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                "scope": 'korp',
+                }
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{Creature.name}** '
+                    f'created this Korp'
+                    ),
+                "embed": None,
+                "scope": f'Korp-{Creature.korp}',
+                }
+            )
 
         msg = f'{h} Korp create OK (korpid:{Creature.korp})'
         logger.debug(msg)
@@ -278,24 +291,30 @@ def korp_decline(pcid, korpid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qname = 'yarqueue:discord'
-            qmsg  = {"ciphered": False,
-                     "payload": (f':information_source: '
-                                 f'**{Creature.name}** '
-                                 f'declined this Korp'),
-                     "embed": None,
-                     "scope": f'Korp-{korpid}'}
-            logger.trace(f'{qname}:{qmsg}')
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qname = 'broadcast'
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
-                    "scope": 'korp'}
-            logger.trace(f'{qname}:{qmsg}')
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'korp',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'declined this Korp'
+                        ),
+                    "embed": None,
+                    "scope": f'Korp-{Creature.korp}',
+                    }
+                )
 
             msg = f'{h} Korp decline OK (korpid:{korpid})'
             logger.debug(msg)
@@ -380,20 +399,30 @@ def korp_delete(pcid, korpid):
             }
         ), 200
     else:
-        # We put the info in queue for ws
-        qmsg = {"ciphered": False,
-                "payload": (f':information_source: '
-                            f'**{Creature.name}** '
-                            f'deleted this Korp'),
-                "embed": None,
-                "scope": f'Korp-{korpid}'}
-        yqueue_put('yarqueue:discord', qmsg)
-        # We put the info in queue for ws Front
-        qmsg = {"ciphered": False,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
                 "payload": None,
                 "route": 'mypc/{id1}/korp',
-                "scope": 'korp'}
-        yqueue_put('broadcast', qmsg)
+                "scope": 'korp',
+                }
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{Creature.name}** '
+                    f'deleted this Korp'
+                    ),
+                "embed": None,
+                "scope": f'Korp-{Creature.korp}',
+                }
+            )
 
         msg = f'{h} Korp delete OK (korpid:{korpid})'
         logger.debug(msg)
@@ -585,22 +614,32 @@ def korp_invite(pcid, korpid, targetid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'invited '
-                                f'**{CreatureTarget.name}** '
-                                f'in this Korp'),
-                    "embed": None,
-                    "scope": f'Korp-{Creature.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
-                    "scope": 'korp'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'korp',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'invited '
+                        f'**{CreatureTarget.name}** '
+                        f'in this Korp'
+                        ),
+                    "embed": None,
+                    "scope": f'Korp-{Creature.korp}',
+                    }
+                )
 
             msg = f'{h} Korp invite OK (korpid:{korpid})'
             logger.debug(msg)
@@ -693,22 +732,32 @@ def korp_kick(pcid, korpid, targetid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws Discord
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'kicked '
-                                f'**{CreatureTarget.name}** '
-                                f'from this Korp'),
-                    "embed": None,
-                    "scope": f'Korp-{Creature.korp}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
-                    "scope": 'korp'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'korp',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'kicked '
+                        f'**{CreatureTarget.name}** '
+                        f'from this Korp'
+                        ),
+                    "embed": None,
+                    "scope": f'Korp-{Creature.korp}',
+                    }
+                )
 
             msg = f'{h} Korp kick OK (korpid:{korpid})'
             logger.debug(msg)
@@ -779,20 +828,30 @@ def korp_leave(pcid, korpid):
                 }
             ), 200
         else:
-            # We put the info in queue for ws
-            qmsg = {"ciphered": False,
-                    "payload": (f':information_source: '
-                                f'**{Creature.name}** '
-                                f'left this Korp'),
-                    "embed": None,
-                    "scope": f'Korp-{korpid}'}
-            yqueue_put('yarqueue:discord', qmsg)
-            # We put the info in queue for ws Front
-            qmsg = {"ciphered": False,
+            # Broadcast Queue
+            yqueue_put(
+                YQ_BROADCAST,
+                {
+                    "ciphered": False,
                     "payload": Korp._asdict(),
                     "route": 'mypc/{id1}/korp',
-                    "scope": 'korp'}
-            yqueue_put('broadcast', json.loads(jsonify(qmsg).get_data()))
+                    "scope": 'korp',
+                    }
+                )
+            # Discord Queue
+            yqueue_put(
+                YQ_DISCORD,
+                {
+                    "ciphered": False,
+                    "payload": (
+                        f':information_source: '
+                        f'**{Creature.name}** '
+                        f'left this Korp'
+                        ),
+                    "embed": None,
+                    "scope": f'Korp-{Creature.korp}',
+                    }
+                )
 
             msg = f'{h} Korp leave OK (korpid:{korpid})'
             logger.debug(msg)

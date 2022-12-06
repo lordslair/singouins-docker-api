@@ -50,6 +50,10 @@ GUNICORN_WORKERS = os.environ.get("GUNICORN_WORKERS", 1)
 GUNICORN_THREADS = os.environ.get("GUNICORN_THREADS", 2)
 GUNICORN_RELOAD  = os.environ.get("GUNICORN_RELOAD", True)
 
+# YarQueue variables
+YQ_BROADCAST = os.environ.get("SEP_YQ_BROADCAST", 'yarqueue:broadcast')
+YQ_DISCORD   = os.environ.get("SEP_YQ_DISCORD", 'yarqueue:discord')
+
 # GitHub check to position relative paths correctly
 if os.environ.get("CI"):
     # Here we are inside GitHub CI process
