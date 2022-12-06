@@ -146,7 +146,7 @@ class RedisUser:
                 "active": str2typed(result.active),
                 "created": result.created,
                 "d_ack": str2typed(result.d_ack),
-                "d_name": result.d_name,
+                "d_name": str2typed(result.d_name),
                 "date": result.date,
                 "hash": result.hash,
                 "id": result.id.removeprefix('users:'),
