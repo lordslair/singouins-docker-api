@@ -112,9 +112,10 @@ def creature_wallet_modify(creatureid, caliber, operation, count):
     try:
         Wallet = RedisWallet(Creature)
         if operation == 'consume' and count > 0:
-            Wallet.incr(caliber, count * (-1))
+            wallet_value = getattr(Wallet, caliber)
+            setattr(Wallet, caliber, wallet_value - count)
         else:
-            Wallet.incr(caliber, count)
+            setattr(Wallet, caliber, count)
     except Exception as e:
         msg = f'{h} Wallet Query KO [{e}]'
         logger.error(msg)

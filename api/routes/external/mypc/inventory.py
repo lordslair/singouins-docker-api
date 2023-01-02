@@ -74,17 +74,23 @@ def inventory_item_dismantle(pcid, itemid):
         # We add the shards in the wallet
         creature_wallet = RedisWallet(Creature)
         if item.rarity == 'Broken':
-            creature_wallet.incr(item.rarity.lower(), 6)
+            wallet_value = getattr(creature_wallet, item.rarity.lower())
+            setattr(creature_wallet, item.rarity.lower(), wallet_value + 6)
         elif item.rarity == 'Common':
-            creature_wallet.incr(item.rarity.lower(), 5)
+            wallet_value = getattr(creature_wallet, item.rarity.lower())
+            setattr(creature_wallet, item.rarity.lower(), wallet_value + 5)
         elif item.rarity == 'Uncommon':
-            creature_wallet.incr(item.rarity.lower(), 4)
+            wallet_value = getattr(creature_wallet, item.rarity.lower())
+            setattr(creature_wallet, item.rarity.lower(), wallet_value + 4)
         elif item.rarity == 'Rare':
-            creature_wallet.incr(item.rarity.lower(), 3)
+            wallet_value = getattr(creature_wallet, item.rarity.lower())
+            setattr(creature_wallet, item.rarity.lower(), wallet_value + 3)
         elif item.rarity == 'Epic':
-            creature_wallet.incr(item.rarity.lower(), 2)
+            wallet_value = getattr(creature_wallet, item.rarity.lower())
+            setattr(creature_wallet, item.rarity.lower(), wallet_value + 2)
         elif item.rarity == 'Legendary':
-            creature_wallet.incr(item.rarity.lower(), 1)
+            wallet_value = getattr(creature_wallet, item.rarity.lower())
+            setattr(creature_wallet, item.rarity.lower(), wallet_value + 1)
     except Exception as e:
         msg = f'{h} Wallet/Shards Query KO [{e}]'
         logger.error(msg)

@@ -129,7 +129,7 @@ def action_weapon_reload(pcid, weaponid):
         # We reload the weapon
         item.ammo = neededammo
         # We remove the ammo from wallet
-        creature_wallet.incr(itemmeta['caliber'], neededammo * (-1))
+        setattr(creature_wallet, itemmeta['caliber'], walletammo - neededammo)
         # We consume the PA
         RedisPa(Creature).consume(redpa=itemmeta['pas_reload'])
         # Wa add HighScore
@@ -241,7 +241,8 @@ def action_weapon_unload(pcid, weaponid):
         # We add the shards in the wallet
         creature_wallet = RedisWallet(Creature)
         # We add the ammo to wallet
-        creature_wallet.incr(itemmeta['caliber'], item.ammo)
+        walletammo = getattr(creature_wallet, itemmeta['caliber'])
+        setattr(creature_wallet, itemmeta['caliber'], walletammo + item.ammo)
         # We unload the weapon
         item.ammo = 0
         # We consume the PA

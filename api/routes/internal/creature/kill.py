@@ -113,11 +113,15 @@ def creature_kill(creatureid, victimid):
             try:
                 # We add loot only to the killer
                 creature_wallet = RedisWallet(Creature)
-                if Creature.race <= 4:
-                    # It is a Singouin, we add bananas
-                    creature_wallet.incr('bananas', currency)
+                if Creature.race in [1, 2, 3, 4]:
+                    # Creature is a Singouin, we remove bananas
+                    creature_wallet.bananas += currency
+                elif Creature.race in [5, 6, 7, 8]:
+                    # Creature is a Pourchon, we remove sausages
+                    creature_wallet.sausages += currency
                 else:
-                    creature_wallet.incr('sausages', currency)
+                    # We fucked up
+                    pass
             except Exception as e:
                 msg = f'{h} Currency Add KO [{e}]'
                 logger.error(msg)
@@ -241,13 +245,16 @@ def creature_kill(creatureid, victimid):
                 try:
                     # We add loot only to the killer
                     creature_wallet = RedisWallet(CreatureMember)
-                    if Creature.race <= 4:
-                        # It is a Singouin, we add bananas
-                        creature_wallet.incr('bananas',
-                                             int(currency/len(SquadMembers)))
+                    amount = int(currency/len(SquadMembers))
+                    if Creature.race in [1, 2, 3, 4]:
+                        # Creature is a Singouin, we remove bananas
+                        creature_wallet.bananas += amount
+                    elif Creature.race in [5, 6, 7, 8]:
+                        # Creature is a Pourchon, we remove sausages
+                        creature_wallet.sausages += amount
                     else:
-                        creature_wallet.incr('sausages',
-                                             int(currency/len(SquadMembers)))
+                        # We fucked up
+                        pass
                 except Exception as e:
                     msg = (
                         f'{h} Currency Add KO '

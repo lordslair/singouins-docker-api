@@ -259,15 +259,10 @@ def creature_auction_buy(creatureid, itemid):
             RedisAuction().destroy(Item.id)
             # We do the financial transaction
             buyer_wallet = RedisWallet(Creature)
-            buyer_wallet.incr(
-                'bananas',
-                count=(Auction.price * (-1))
-                )
+            buyer_wallet.bananas -= Auction.price
+
             seller_wallet = RedisWallet(CreatureSeller)
-            seller_wallet.incr(
-                'bananas',
-                count=round(Auction.price * 0.9)
-                )
+            seller_wallet.bananas -= round(Auction.price * 0.9)
             # We change the Item owner
             try:
                 Item.bearer = Creature.id
