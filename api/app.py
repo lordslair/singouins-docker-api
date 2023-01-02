@@ -59,6 +59,7 @@ import routes.external.map
 import routes.external.meta
 import routes.external.mypc
 import routes.external.mypc.action
+import routes.external.mypc.action_craft
 import routes.external.mypc.action_resolver
 import routes.external.mypc.cds
 import routes.external.mypc.effects
@@ -272,6 +273,9 @@ app.add_url_rule('/mypc/<uuid:pcid>/action/reload/<uuid:weaponid>',
 app.add_url_rule('/mypc/<uuid:pcid>/action/unload/<uuid:weaponid>',
                  methods=['POST'],
                  view_func=routes.external.mypc.action.action_weapon_unload)
+app.add_url_rule('/mypc/<uuid:pcid>/action/craft/consumable/<int:recipeid>',
+                 methods=['PUT'],
+                 view_func=routes.external.mypc.action_craft.action_craft_consumable)
 
 #
 # Routes: /events
