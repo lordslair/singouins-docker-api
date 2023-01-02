@@ -12,6 +12,15 @@ class RedisHS:
             self.creature = creature
             self.hlog = f'[Creature.id:{self.creature.id}]'
             self.hkey = f'highscores:{creature.id}'
+
+            # Intialize HighScore
+            self.action_dismantle = 0
+            self.action_reload = 0
+            self.action_unload = 0
+            self.craft_potion = 0
+            self.global_deaths = 0
+            self.global_kills = 0
+
         else:
             self.hlog = '[Creature.id:None]'
 
