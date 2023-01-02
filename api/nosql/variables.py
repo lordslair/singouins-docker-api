@@ -28,6 +28,7 @@ META_FILES = {
     'armor': f'{DATA_PATH}/metas/armors.json',
     'consumable': f'{DATA_PATH}/metas/consumables.json',
     'race': f'{DATA_PATH}/metas/races.json',
+    'recipe': f'{DATA_PATH}/metas/recipes.json',
     'weapon': f'{DATA_PATH}/metas/weapons.json',
 }
 # Mapfiles location for Redis init

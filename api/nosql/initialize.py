@@ -45,6 +45,8 @@ def initialize_redis():
                         meta[k] = 'False'
                     elif v is True:
                         meta[k] = 'True'
+                    elif isinstance(v, dict):
+                        meta[k] = str(v)
                 r.hset(f"metas:{metatype}:{meta['id']}", mapping=meta)
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')

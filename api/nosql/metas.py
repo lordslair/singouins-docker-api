@@ -30,7 +30,9 @@ def get_meta(metatype):
 # Loading the Meta for later use
 metaArmors = get_meta('armor')
 metaRaces = get_meta('race')
+metaRecipes = get_meta('recipe')
 metaWeapons = get_meta('weapon')
+metaConsumables = get_meta('consumable')
 
 # META varlables
 """
