@@ -16,7 +16,6 @@ from .variables                  import MAP_FILES, META_FILES
 def initialize_redis():
     try:
         logger.info('Redis init: start')
-        r.set('system:startup', datetime.now().isoformat())
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
