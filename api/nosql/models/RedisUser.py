@@ -3,7 +3,6 @@
 import uuid
 
 from datetime                    import datetime
-from flask_bcrypt                import generate_password_hash
 from loguru                      import logger
 from redis.commands.search.query import Query
 
@@ -64,7 +63,7 @@ class RedisUser:
             logger.trace(f'{self.logh} Method OK')
             return self
 
-    def new(self, username, password):
+    def new(self, username, hash):
         self.logh = f'[User.id:{username}]'
         # Checking if it exists
         logger.trace(f'{self.logh} Method >> (Checking uniqueness)')
@@ -86,7 +85,7 @@ class RedisUser:
             self._d_ack = False
             self._d_name = None
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            self._hash = generate_password_hash(password, rounds=10)
+            self._hash = hash
             self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, username))
             self.name = username
         except Exception as e:

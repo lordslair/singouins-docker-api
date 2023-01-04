@@ -125,7 +125,11 @@ def auth_register():
                 }
             ), 409
 
-    User = RedisUser().new(mail, password)
+    User = RedisUser().new(
+        mail,
+        generate_password_hash(password, rounds=10),
+        )
+
     if User:
         subject = '[🐒&🐖] Bienvenue chez le Singouins !'
         token   = generate_confirmation_token(mail)
