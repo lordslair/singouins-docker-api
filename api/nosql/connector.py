@@ -6,9 +6,9 @@ import redis
 from loguru import logger
 
 # Redis variables
-REDIS_HOST = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST")
-REDIS_PORT = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT")
-REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB")
+REDIS_HOST = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
+REDIS_PORT = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
+REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
 
 try:
     r = redis.StrictRedis(
