@@ -1,8 +1,8 @@
 # -*- coding: utf8 -*-
 
 import json
+import os.path
 
-from datetime                    import datetime
 from loguru                      import logger
 from redis                       import ResponseError
 from redis.commands.search.field import NumericField, TagField, TextField
@@ -13,20 +13,14 @@ from nosql.connector             import r
 from .variables                  import MAP_FILES, META_FILES
 
 
-def initialize_redis():
-    try:
-        logger.info('Redis init: start')
-    except Exception as e:
-        logger.error(f'Redis init: KO [{e}]')
-    else:
-        logger.info('Redis init: OK system:startup')
-
+def initialize_redis_meta():
     try:
         for meta, file in META_FILES.items():
-            with open(file) as f:
-                content = f.read()
-                logger.debug(f'Redis init: creating system:meta:{meta}')
-                r.set(f'system:meta:{meta}', content)
+            if os.path.exists(file):
+                with open(file) as f:
+                    content = f.read()
+                    logger.debug(f'Redis init: creating system:meta:{meta}')
+                    r.set(f'system:meta:{meta}', content)
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
@@ -54,20 +48,25 @@ def initialize_redis():
 
     try:
         for map, file in MAP_FILES.items():
-            with open(file) as f:
-                content = f.read()
-                data = json.loads(content)
-                logger.debug(f'Redis init: creating system:map:{map}')
-                r.set(f'system:map:{map}:data', content)
-                r.set(f'system:map:{map}:type', 'Instance')
-                r.set(f'system:map:{map}:mode', 'Normal')
-                r.set(f'system:map:{map}:size',
-                      f"{data['height']}x{data['width']}")
+            if os.path.exists(file):
+                with open(file) as f:
+                    content = f.read()
+                    data = json.loads(content)
+                    logger.debug(f'Redis init: creating system:map:{map}')
+                    r.set(f'system:map:{map}:data', content)
+                    r.set(f'system:map:{map}:type', 'Instance')
+                    r.set(f'system:map:{map}:mode', 'Normal')
+                    r.set(
+                        f'system:map:{map}:size',
+                        f"{data['height']}x{data['width']}"
+                        )
     except Exception as e:
         logger.error(f'Redis init: KO [{e}]')
     else:
         logger.info('Redis init: OK system:map:*')
 
+
+def initialize_redis_indexes():
     #
     # RedisSearch INDEX init
     #

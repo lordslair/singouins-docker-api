@@ -1,5 +1,9 @@
 # -*- coding: utf8 -*-
 
-from .initialize                import initialize_redis
+from .initialize import (
+    initialize_redis_indexes,
+    initialize_redis_meta,
+    )
 
-initialize_redis()
+initialize_redis_indexes()
+initialize_redis_meta()
