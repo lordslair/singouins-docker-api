@@ -17,6 +17,7 @@ ENV PYTHONIOENCODING='UTF-8'
 
 COPY                 requirements.txt /requirements.txt
 COPY --chown=api:api /api             /code
+COPY --chown=api:api /nosql           /code/nosql
 
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
