@@ -50,6 +50,8 @@ jobs:
           SEP_SMTP_PASS:      ${{ secrets.SEP_SMTP_PASS }}
           SEP_SMTP_HOSTNAME:  ${{ secrets.SEP_SMTP_HOSTNAME }}
       run: |
+        echo "--- Moving nosql lib where it belongs"
+        cp -a nosql api/
         echo "--- Starting app in background"
         python3 api/app.py &
         echo "--- Sleep(3)"
