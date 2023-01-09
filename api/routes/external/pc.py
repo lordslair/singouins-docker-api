@@ -10,10 +10,6 @@ from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 
-from utils.routehelper          import (
-    creature_check,
-    )
-
 #
 # Routes /pc
 #
@@ -23,7 +19,20 @@ from utils.routehelper          import (
 @jwt_required()
 def pc_get_one(creatureid):
     Creature = RedisCreature().get(creatureid)
-    h = creature_check(Creature)
+    h = '[Creature.id:None]'
+
+    if Creature is None or Creature is False:
+        msg = f'{h} Creature Query KO - Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 404
+    else:
+        h = f'[Creature.id:{Creature.id}]'
 
     msg = f'{h} Creature Query OK'
     logger.trace(msg)
@@ -40,7 +49,20 @@ def pc_get_one(creatureid):
 @jwt_required()
 def pc_item_get_all(creatureid):
     Creature = RedisCreature().get(creatureid)
-    h = creature_check(Creature)
+    h = '[Creature.id:None]'
+
+    if Creature is None or Creature is False:
+        msg = f'{h} Equipment Query KO - Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 404
+    else:
+        h = f'[Creature.id:{Creature.id}]'
 
     # Response skeleton
     metas = {
@@ -167,7 +189,20 @@ def pc_item_get_all(creatureid):
 @jwt_required()
 def pc_event_get_all(creatureid):
     Creature = RedisCreature().get(creatureid)
-    h = creature_check(Creature)
+    h = '[Creature.id:None]'
+
+    if Creature is None or Creature is False:
+        msg = f'{h} Event Query KO - Creature NotFound'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 404
+    else:
+        h = f'[Creature.id:{Creature.id}]'
 
     try:
         action_src = Creature.id.replace('-', ' ')
