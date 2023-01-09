@@ -24,7 +24,7 @@ ENV TZ="Europe/Paris"
 
 RUN apk update --no-cache \
     && apk add --no-cache python3=~3.9 \
-                          tzdata=2022 \
+                          tzdata=~2022 \
     && su ai -c "python3 -m ensurepip --upgrade \
                   && pip3 install --user -U -r /requirements.txt" \
     && apk del .build-deps \
