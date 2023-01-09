@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI (API)
 
 on:
   push:
@@ -36,7 +36,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v3
       with:
-        context: .
+        context: ./api
+        file: ./api/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
