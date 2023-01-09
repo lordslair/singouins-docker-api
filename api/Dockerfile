@@ -15,9 +15,8 @@ ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
 ENV PYTHONUNBUFFERED='True'
 ENV PYTHONIOENCODING='UTF-8'
 
-COPY                 requirements.txt /requirements.txt
-COPY --chown=api:api /api             /code
-COPY --chown=api:api /nosql           /code/nosql
+COPY --chown=api:api /api   /code
+COPY --chown=api:api /nosql /code/nosql
 
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
@@ -33,9 +32,9 @@ RUN apk update --no-cache \
                                     libffi-dev=~3.4 \
                                     python3-dev=~3.9 \
     && su api -c "python3 -m ensurepip --upgrade \
-                  && pip3 install --user -U -r /requirements.txt" \
-    && apk del .build-deps \
-    && rm /requirements.txt
+                  && pip3 install --user -U -r requirements.txt \
+                  && rm requirements.txt" \
+    && apk del .build-deps
 
 USER api
 
