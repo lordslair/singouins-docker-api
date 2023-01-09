@@ -78,14 +78,13 @@ if __name__ == '__main__':
                 # Like a lazy ass, we publish it into the channel
                 # to be treated in the listen() code
                 try:
+                    pmsg = {
+                        "action": 'pop',
+                        "creatureuuid": creature['id'],
+                        }
+                    r_no_decode.publish('ai-creature', json.dumps(pmsg))
+
                     name = f"[{creature['id']}] {creature['name']}"
-                    r_no_decode.publish(
-                        'ai-creature',
-                        {
-                            "action": 'pop',
-                            "creatureuuid": creature['id'],
-                        },
-                        )
                 except Exception as e:
                     logger.error(f"Creature publish KO | {name} [{e}]")
                 else:
