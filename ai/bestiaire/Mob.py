@@ -5,22 +5,33 @@ import threading
 from abc                         import ABC, abstractmethod
 from loguru                      import logger
 
-from bestiaire.utils.requests    import (
-    api_internal_generic_request_get,
-    resolver_move,
-    )
+from utils.requests              import resolver_move
 
-from bestiaire.utils.computation import (
+from utils.computation import (
     closest_creature_from_creature,
     next_coords_to_creature,
     )
+
+from nosql.models.RedisCreature  import RedisCreature
+from nosql.models.RedisStats     import RedisStats
+from nosql.models.RedisPa        import RedisPa
 
 
 class Mob(ABC, threading.Thread):
 
     @abstractmethod
-    def __init__(self):
+    def __init__(self, creatureuuid):
         super(threading.Thread, self).__init__()
+
+        Creature = RedisCreature().get(creatureuuid)
+        Stats = RedisStats(Creature)
+
+        # We replicate Creature attibutes into Salamander
+        self.creature = Creature
+        # We add the HP/HPmax from Stats attributes
+        self.stats = Stats
+        # Addind Logging headers
+        self.logh = f'[{self.creature.id}] {self.creature.name:20}'
 
     @abstractmethod
     def run(self):
@@ -36,23 +47,13 @@ class Mob(ABC, threading.Thread):
 
     def get_pos(self):
         try:
-            ret = api_internal_generic_request_get(
-                path=f"/creature/{self.id}"
-            )
+            Creature = RedisCreature().get(self.creature.id)
         except Exception as e:
-            logger.error(f'{self.logh} | Request KO [{e}]')
+            logger.error(f'{self.logh} | RedisCreature Request KO [{e}]')
         else:
-            profile = ret['payload']
-
-        if profile:
-            self.x = profile['x']
-            self.y = profile['y']
-        else:
-            self.x = None
-            self.y = None
-            logger.warning(f'{self.logh} | Query position KO')
-
-        return (self.x, self.y)
+            if Creature is not None and Creature is not False:
+                self.creature = Creature
+            logger.trace(f'{self.logh} | RedisCreature Request OK')
 
     def set_pos(self):
         (closest, coords) = closest_creature_from_creature(self)
@@ -64,35 +65,44 @@ class Mob(ABC, threading.Thread):
             return None
 
         if (targetx, targety) and \
-           (self.x, self.y) == (targetx, targety):
-            logger.debug(f"{self.logh} | Should not move "
-                         f"(Already close to "
-                         f"[{closest['id']}] {closest['name']} "
-                         f"@({closest['x']},{closest['y']}))")
+           (self.creature.x, self.creature.y) == (targetx, targety):
+            logger.debug(
+                f"{self.logh} | Should not move "
+                f"(Already close to "
+                f"[{closest['id']}] {closest['name']} "
+                f"@({closest['x']},{closest['y']}))"
+                )
         elif (targetx, targety) in coords:
             # Collision check
             # There is an NPC on the path
-            logger.debug(f"{self.logh} | Should not move "
-                         f"(Path obstructed "
-                         f"@({targetx, targety}))")
+            logger.debug(
+                f"{self.logh} | Should not move "
+                f"(Path obstructed @({targetx, targety}))"
+                )
         else:
             # Lets call the resolver for move now
-            logger.debug(f"{self.logh} | Move >> "
-                         f"from (x:{self.x},y:{self.y}) "
-                         f"to (x:{targetx},y:{targety}))")
+            logger.debug(
+                f"{self.logh} | Move >> "
+                f"from (x:{self.creature.x},y:{self.creature.y}) "
+                f"to (x:{targetx},y:{targety}))"
+                )
             try:
                 payload = resolver_move(self, targetx, targety)
             except Exception as e:
                 logger.error(f'{self.logh} | Request KO [{e}]')
             else:
                 if payload['result']['success']:
-                    logger.debug(f"{self.logh} | Move OK "
-                                 f"from (x:{self.x},y:{self.y}) "
-                                 f"to (x:{targetx},y:{targety}))")
+                    logger.debug(
+                        f"{self.logh} | Move OK "
+                        f"from (x:{self.creature.x},y:{self.creature.y}) "
+                        f"to (x:{targetx},y:{targety}))"
+                        )
                 else:
-                    logger.warning(f"{self.logh} | Move KO "
-                                   f"from (x:{self.x},y:{self.y}) "
-                                   f"to (x:{targetx},y:{targety}))")
+                    logger.warning(
+                        f"{self.logh} | Move KO "
+                        f"from (x:{self.creature.x},y:{self.creature.y}) "
+                        f"to (x:{targetx},y:{targety}))"
+                        )
 
     @abstractmethod
     def get_life(self):
@@ -104,24 +114,13 @@ class Mob(ABC, threading.Thread):
 
     def get_pa(self):
         try:
-            ret = api_internal_generic_request_get(
-                path=f"/creature/{self.id}/pa"
-            )
+            Pa = RedisPa(self.creature)
         except Exception as e:
-            logger.error(f'{self.logh} | Request KO [{e}]')
+            logger.error(f'{self.logh} | RedisPa Request KO [{e}]')
         else:
-            payload = ret['payload']
-            self.blue = 0
-            self.red  = 0
-
-        if isinstance(payload['pa']['blue']['pa'], int) and \
-           isinstance(payload['pa']['red']['pa'], int):
-            self.blue = payload['pa']['blue']['pa']
-            self.red  = payload['pa']['red']['pa']
-        else:
-            logger.warning(f'{self.logh} | Query PA KO')
-
-        return (self.blue, self.red)
+            if Pa is not False and Pa is not None:
+                self.pa = Pa
+            logger.trace(f'{self.logh} | RedisPa Request OK')
 
     # @abstractmethod
     # def move(self, dest):

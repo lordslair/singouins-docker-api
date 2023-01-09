@@ -9,71 +9,36 @@ from bestiaire.Mob               import Mob
 
 
 class Fungus(Mob):
-    def __init__(self, creature={}, stats={}, internal_name="default"):
+    def __init__(self, creatureuuid, internal_name="default"):
         super(Mob, self).__init__()
-        Mob.__init__(self)
-        """
-        {
-            'account': None,
-            'created': '2022-12-05 15:38:18',
-            'date': '2022-12-05 15:38:18',
-            'gender': True,
-            'id': 'dcfe3118-8bd6-4ceb-b392-80bc09b0b35f',
-            'instance': 'f128cf79-c9c3-4fe3-a227-29b960aa4cbf',
-            'korp': None,
-            'korp_rank': None,
-            'level': 1,
-            'name': 'Fungus Toxicus',
-            'race': 16,
-            'rarity': 'Unique',
-            'squad': None,
-            'squad_rank': None,
-            'targeted_by': None,
-            'x': 4,
-            'xp': 0,
-            'y': 4,
-        }
-        """
-        self.gender = creature['gender']
-        self.hp = stats['def']['hp']
-        self.hp_max = stats['def']['hpmax']
-        self.id = creature['id']
-        self.instance = creature['instance']
-        self.level = creature['level']
-        self.name = creature['name']
-        self.race = creature['race']
-        self.rarity = creature['rarity']
-        self.targeted_by = creature['targeted_by']
-        self.x = creature['x']
-        self.xp = creature['xp']
-        self.y = creature['y']
-        # Addind Logging headers
-        self.logh = f'[{self.id}] {self.name:20}'
+        Mob.__init__(self, creatureuuid)
 
     def run(self):
         SLEEP_TIME = 10
 
-        while self.hp > 0:
+        while self.stats.hp > 0:
             self.get_pa()
             self.get_pos()
 
-            logger.debug(f'{self.logh} | Alive ({self.hp}HP) '
-                         f'[🔴 :{self.red},🔵 :{self.blue}] '
-                         f'@(x:{self.x},y:{self.y})')
+            logger.debug(
+                f'{self.logh} | Alive ({self.stats.hp}HP) '
+                f'[🔴 :{self.pa.redpa},🔵 :{self.pa.bluepa}] '
+                f'@(x:{self.creature.x},y:{self.creature.y})'
+                )
 
             # MOVE
-            if self.blue > 4 and randint(0, 1):
+            if self.pa.bluepa > 4 and randint(0, 1):
                 self.set_pos()
 
             """
             # BASIC ATTACK
-            if self.red > 8 and randint(0, 1):
+            if self.pa.redpa > 8 and randint(0, 1):
                 # We check if something is nearby
                 (closest, coords) = closest_creature_from_creature(self)
                 if (self.x - 1 <= closest['x'] <= self.x + 1 and
                         self.y - 1 <= closest['y'] <= self.y + 1):
                     # The closest creature is in range for basic attack
-                    logger.debug(f"{h} | Attack >> "
+                    logger.debug(f"{self.logh} | Attack >> "
                                  f"([{closest['id']}] {closest['name']} "
                                  f"@({closest['x']},{closest['y']}))")
                     try:
@@ -111,7 +76,7 @@ class Fungus(Mob):
         pass
 
     def get_life(self):
-        return self.hp
+        return self.stats.hp
 
     def get_name(self):
         return self.internal_name
