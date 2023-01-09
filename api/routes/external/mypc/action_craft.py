@@ -175,12 +175,12 @@ def action_craft_consumable(pcid, recipeid):
     HighScores.incr(metaRecipe['hs'])
 
     # We create the Creature Event
-    RedisEvent(Creature).add(
-        Creature.id,
-        None,
-        'action/craft',
-        'Crafted something',
-        30 * 86400
+    RedisEvent().new(
+        action_src=Creature.id,
+        action_dst=None,
+        action_type='action/craft',
+        action_text='Crafted something',
+        action_ttl=30 * 86400
         )
 
     # TODO:

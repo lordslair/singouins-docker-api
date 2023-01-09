@@ -197,11 +197,13 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
     else:
         # We create the Creature Event
-        RedisEvent(Creature).add(Creature.id,
-                                 None,
-                                 'skill',
-                                 f'Used a Skill ({skill_name})',
-                                 30 * 86400)
+        RedisEvent().new(
+            action_src=Creature.id,
+            action_dst=None,
+            action_type='skill',
+            action_text=f'Used a Skill ({skill_name})',
+            action_ttl=30 * 86400
+            )
         msg = f'{h} Resolver Query OK (pcid:{Creature.id})'
         logger.debug(msg)
         return jsonify(
@@ -355,11 +357,13 @@ def action_resolver_move(pcid):
         ), 200
     else:
         # We create the Creature Event
-        RedisEvent(Creature).add(Creature.id,
-                                 None,
-                                 'action',
-                                 'Moved',
-                                 30 * 86400)
+        RedisEvent().new(
+            action_src=Creature.id,
+            action_dst=None,
+            action_type='action/move',
+            action_text='Moved',
+            action_ttl=30 * 86400
+            )
         msg = f'{h} Resolver Query OK'
         logger.debug(msg)
         return jsonify(

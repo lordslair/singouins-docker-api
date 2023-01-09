@@ -1,97 +1,105 @@
 # -*- coding: utf8 -*-
 
 import time
+import uuid
 
-from datetime                   import datetime
-from loguru                     import logger
+from datetime                    import datetime
+from loguru                      import logger
+from redis.commands.search.query import Query
 
-from nosql.connector            import r
+from nosql.connector             import r
+from nosql.variables             import str2typed, typed2str
 
 
 class RedisEvent:
-    def __init__(self, creature):
-        self.creature = creature
-        self.logh     = f'[Creature.id:{self.creature.id}]'
-        self.hkey     = f'events:{self.creature.id}'
-        logger.trace(f'{self.logh} Method >> Initialization')
+    def __init__(self):
+        self.hlog = '[Event.id:None]'
+        logger.trace(f'{self.hlog} Method >> Initialization')
 
-    def get(self):
-        path      = f'{self.hkey}:*'
-        #                         └────> Wildcard for {ts}
-        events    = []
-
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            # We get the list of keys for all the events
-            keys               = r.keys(path)
-            sorted_keys        = sorted(keys)
-            # We loop over the events keys to build the data
-            for key in sorted_keys:
-                hashdict = r.hgetall(key)
-                # We need to convert empty strings into None for Redis
-                if hashdict['src'] == '':
-                    src = None
-                else:
-                    src = hashdict['src']
-                if hashdict['dst'] == '':
-                    dst = None
-                else:
-                    dst = hashdict['dst']
-                # We build the event item
-                event = {
-                    "src": src,
-                    "action": hashdict['action'],
-                    "date":
-                        datetime.fromtimestamp(int(hashdict['ts']) // 1000),
-                    "dst": dst,
-                    "id": sorted_keys.index(key) + 1,
-                    "type": hashdict['type'],
-                }
-                # We add the event into events list
-                events.append(event)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return events
-
-    def add(self, src, dst, type, action, ttl=None):
+    def new(
+        self,
+        action_src,
+        action_dst,
+        action_type,
+        action_text,
+        action_ttl=None,
+    ):
         ts  = time.time_ns() // 1000000  # Time in milliseconds
+        eventuuid = str(uuid.uuid4())
+        self.hlog = f'[Event.id:{eventuuid}]'
 
         try:
-            logger.trace(f'{self.logh} Method >> (HASH Creating)')
-            # We need to convert None into empty strings for Redis
-            if src is None:
-                src = ''
-            if dst is None:
-                dst = ''
+            logger.trace(f'{self.hlog} Method >> (HASH Creating)')
+
             hashdict = {
-                "action": action,
-                "dst": dst,
-                "src": src,
-                "ts": ts,
-                "type": type,
+                "dst": typed2str(action_dst),
+                "src": typed2str(action_src),
+                "action": typed2str(action_text),
+                "type": typed2str(action_type),
+                "id": eventuuid,
+                "date": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                "timestamp": ts,
             }
-            if ttl is None:
-                r.hset(f'{self.hkey}:{ts}', mapping=hashdict)
-            else:
-                r.hset(f'{self.hkey}:{ts}', mapping=hashdict)
-                r.expire(f'{self.hkey}:{ts}', ttl)
+            r.hset(f'events:{eventuuid}', mapping=hashdict)
+            if action_ttl is not None:
+                r.expire(f'events:{eventuuid}', action_ttl)
         except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
+            logger.error(f'{self.hlog} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.hlog} Method OK')
             return True
 
-    def destroy(self):
+    def destroy(self, eventuuid):
+        self.hlog = f'[Event.id:{eventuuid}]'
         try:
-            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
-            r.delete(self.hkey)
+            logger.trace(f'{self.hlog} Method >> (HASH Destroying)')
+            r.delete(f'events:{eventuuid}')
+        except Exception as e:
+            logger.error(f'{self.hlog} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.hlog} Method OK')
+            return True
+
+    def search(self, query, maxpaging=25):
+        self.logh = '[Event.id:None]'
+        index = 'event_idx'
+        try:
+            r.ft(index).info()
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
-            return True
+            # logger.trace(r.ft(index).info())
+            pass
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Searching {query})')
+            # Query("search engine").paging(0, 10)
+            # f"@bearer:[{bearerid} {bearerid}]"
+            results = r.ft(index).search(
+                Query(query).paging(0, maxpaging)
+                )
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(results)
+            pass
+
+        # If we are here, we got results
+        self._asdict = []
+        for result in results.docs:
+            result_dict = {}
+            del result.payload
+            result.id = result.id.removeprefix('events:')
+            for attr, value in result.__dict__.items():
+                setattr(result, attr, str2typed(value))
+                result_dict[attr] = getattr(result, attr)
+            self._asdict.append(result_dict)
+
+        self.results = results.docs
+
+        logger.trace(f'{self.logh} Method OK')
+        return self

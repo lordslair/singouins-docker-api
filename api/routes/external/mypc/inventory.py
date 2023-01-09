@@ -423,11 +423,13 @@ def inventory_item_equip(pcid, type, slotname, itemid):
             )
 
         # We create the Creature Event
-        RedisEvent(Creature).add(Creature.id,
-                                 None,
-                                 'item',
-                                 'Equipped something',
-                                 30 * 86400)
+        RedisEvent().new(
+            action_src=Creature.id,
+            action_dst=None,
+            action_type='action/equip',
+            action_text='Equipped something',
+            action_ttl=30 * 86400
+            )
         # JOB IS DONE
         msg = f'{h} Equip Query OK (itemid:{itemid})'
         logger.debug(msg)
@@ -520,6 +522,14 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
                 }
             )
 
+        # We create the Creature Event
+        RedisEvent().new(
+            action_src=Creature.id,
+            action_dst=None,
+            action_type='action/unequip',
+            action_text='Unequipped something',
+            action_ttl=30 * 86400
+            )
         # JOB IS DONE
         msg = f'{h} Unequip Query OK (itemid:{itemid})'
         logger.debug(msg)

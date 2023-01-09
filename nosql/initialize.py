@@ -184,6 +184,42 @@ def initialize_redis_indexes():
     else:
         logger.trace('Redis init: OK creature_idx (already created)')
 
+    # RedisEvent
+    try:
+        r.ft("event_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_event = IndexDefinition(
+                prefix=["events:"],
+                score=0.5,
+                score_field="event_score"
+                )
+
+            # Schema definition
+            schema = (
+                TextField("dst"),
+                TextField("action"),
+                TextField("type"),
+                TextField("src"),
+                TextField("date"),
+                TextField("id"),
+                NumericField("timestamp"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("event_idx").create_index(
+                schema,
+                definition=index_event
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK event_idx')
+    else:
+        logger.trace('Redis init: OK event_idx (already created)')
+
     # RedisHS
     try:
         r.ft("highscore_idx").info()

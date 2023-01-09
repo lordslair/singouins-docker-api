@@ -26,7 +26,12 @@ def mypc_event_get_all(pcid):
     h = creature_check(Creature, User)
 
     try:
-        creature_events = RedisEvent(Creature).get()
+        action_src = Creature.id.replace('-', ' ')
+        action_dst = Creature.id.replace('-', ' ')
+        creature_events = RedisEvent().search(
+            query=f'(@src:{action_src}) | (@dst:{action_dst})',
+            maxpaging=100,
+            )
     except Exception as e:
         msg = f'{h} Event Query KO [{e}]'
         logger.error(msg)
@@ -44,6 +49,6 @@ def mypc_event_get_all(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": creature_events,
+                "payload": creature_events._asdict,
             }
         ), 200

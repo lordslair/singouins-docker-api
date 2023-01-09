@@ -135,11 +135,13 @@ def action_weapon_reload(pcid, weaponid):
         # Wa add HighScore
         RedisHS(Creature).incr('action_reload')
         # We create the Creature Event
-        RedisEvent(Creature).add(Creature.id,
-                                 None,
-                                 'action',
-                                 'Reloaded a weapon',
-                                 30 * 86400)
+        RedisEvent().new(
+            action_src=Creature.id,
+            action_dst=None,
+            action_type='action/reload',
+            action_text='Reloaded a weapon',
+            action_ttl=30 * 86400
+            )
     except Exception as e:
         msg = f'{h} Reload Query KO (weaponid:{item.id}) [{e}]'
         logger.error(msg)
@@ -250,11 +252,13 @@ def action_weapon_unload(pcid, weaponid):
         # We add HighScore
         RedisHS(Creature).incr('action_unload')
         # We create the Creature Event
-        RedisEvent(Creature).add(Creature.id,
-                                 None,
-                                 'action',
-                                 'Unloaded a weapon',
-                                 30 * 86400)
+        RedisEvent().new(
+            action_src=Creature.id,
+            action_dst=None,
+            action_type='action/unload',
+            action_text='Unloaded a weapon',
+            action_ttl=30 * 86400
+            )
     except Exception as e:
         msg = f'{h} Unload Query KO (weaponid:{item.id}) [{e}]'
         logger.error(msg)
