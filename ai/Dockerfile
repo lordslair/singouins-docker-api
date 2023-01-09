@@ -27,7 +27,6 @@ RUN apk update --no-cache \
                           tzdata=~2022 \
     && su ai -c "python3 -m ensurepip --upgrade \
                   && pip3 install --user -U -r /requirements.txt" \
-    && apk del .build-deps \
     && rm /requirements.txt
 
 USER ai
