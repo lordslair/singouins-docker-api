@@ -16,7 +16,7 @@ ENV PYTHONUNBUFFERED='True'
 ENV PYTHONIOENCODING='UTF-8'
 
 COPY --chown=ws:ws /ws/requirements.txt /code/requirements.txt
-COPY --chown=ws:ws /ws/main.py          /code/websocket.py
+COPY --chown=ws:ws /ws/main.py          /code/main.py
 COPY --chown=ws:ws /nosql               /code/nosql
 
 WORKDIR /code
@@ -38,4 +38,4 @@ RUN apk update --no-cache \
 
 USER ws
 
-ENTRYPOINT ["/code/websocket.py"]
+ENTRYPOINT ["/code/main.py"]
