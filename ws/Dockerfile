@@ -15,9 +15,9 @@ ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
 ENV PYTHONUNBUFFERED='True'
 ENV PYTHONIOENCODING='UTF-8'
 
-COPY --chown=ws:ws requirements.txt /code/requirements.txt
-COPY --chown=ws:ws main.py          /code/websocket.py
-COPY --chown=ws:ws /nosql           /code/nosql
+COPY --chown=ws:ws /ws/requirements.txt /code/requirements.txt
+COPY --chown=ws:ws /ws/main.py          /code/websocket.py
+COPY --chown=ws:ws /nosql               /code/nosql
 
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
