@@ -83,8 +83,15 @@ async def handler(websocket, path):
         else:
             logger.info(f'[loop] Client remove OK (@IP:{realip})')
 
-loop = asyncio.get_event_loop()
-loop.create_task(broadcast())
+try:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.create_task(broadcast())
+except Exception as e:
+    logger.error(f'[core] Start Loop KO [{e}]')
+else:
+    logger.info('[core] Start Loop OK')
+
 
 # Opening Queue
 try:
