@@ -32,7 +32,7 @@ RUN apk update --no-cache \
                                     libffi-dev=~3.4 \
                                     python3-dev=~3.9 \
     && su ws -c "python3 -m ensurepip --upgrade \
-                        && pip3 install --user -U -r /requirements.txt \
+                        && pip3 install --user -U -r requirements.txt \
                         && rm requirements.txt" \
     && apk del .build-deps
 
