@@ -1,4 +1,4 @@
-FROM alpine:3.15
+FROM alpine:3.16
 
 RUN adduser -h /code -u 1000 -D -H redsub
 
@@ -21,11 +21,11 @@ ENV PATH="/code/.local/bin:${PATH}"
 ENV TZ="Europe/Paris"
 
 RUN apk update --no-cache \
-    && apk add --no-cache python3=3.9.13-r1 \
-                          tzdata=2022c-r0 \
+    && apk add --no-cache python3=~3.10 \
+                          tzdata=~2022 \
     && su redsub -c "python3 -m ensurepip --upgrade \
                      && pip3 install --user -U -r requirements.txt \
-                     && rm /requirements.txt"
+                     && rm requirements.txt"
 
 USER redsub
 
