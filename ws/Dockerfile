@@ -12,9 +12,6 @@ ENV LOGURU_FORMAT=$LOGURU_DATE$LOGURU_LEVEL$LOGURU_MSG
 ENV LOGURU_COLORIZE='true'
 ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
 
-ENV PYTHONUNBUFFERED='True'
-ENV PYTHONIOENCODING='UTF-8'
-
 COPY --chown=ws:ws /ws/requirements.txt /code/requirements.txt
 COPY --chown=ws:ws /ws/main.py          /code/main.py
 COPY --chown=ws:ws /nosql               /code/nosql
