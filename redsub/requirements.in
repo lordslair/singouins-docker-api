@@ -1,3 +1,2 @@
-loguru ~= 0.6
-redis ~= 4.1
+loguru   ~= 0.6
 yarqueue == 0.4.1
