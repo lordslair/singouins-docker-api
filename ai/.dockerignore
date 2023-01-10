@@ -1,6 +1,0 @@
-# For more security, we adopt a EXCLUDE ALL, then INCLUDE the necessary only
-/*
-!/bestiaire/*
-!/utils/*
-!/main.py
-!/requirements.txt

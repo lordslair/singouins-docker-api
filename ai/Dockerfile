@@ -14,8 +14,11 @@ ENV LOGURU_COLORIZE='true'
 ENV PYTHONUNBUFFERED='True'
 ENV PYTHONIOENCODING='UTF-8'
 
-COPY --chown=ai:ai /ai    /code
-COPY --chown=ai:ai /nosql /code/nosql
+COPY /ai/bestiaire        /code/bestiaire
+COPY /ai/utils            /code/utils
+COPY /ai/main.py          /code/main.py
+COPY /ai/requirements.txt /code/requirements.txt
+COPY /nosql               /code/nosql
 
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
@@ -24,9 +27,10 @@ ENV TZ="Europe/Paris"
 RUN apk update --no-cache \
     && apk add --no-cache python3=~3.9 \
                           tzdata=~2022 \
+    && chown -R ai:ai /code \
     && su ai -c "python3 -m ensurepip --upgrade \
-                  && pip3 install --user -U -r requirements.txt \
-                  && rm requirements.txt"
+                 && pip3 install --user -U -r requirements.txt \
+                 && rm requirements.txt"
 
 USER ai
 
