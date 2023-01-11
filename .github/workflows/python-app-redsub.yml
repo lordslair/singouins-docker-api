@@ -45,4 +45,4 @@ jobs:
         echo "--- Sleep(3)"
         sleep 3
         echo "--- Starting PyTest"
-        pytest redsub/tests/*
+        pytest -s redsub/tests/
