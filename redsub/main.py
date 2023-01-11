@@ -20,6 +20,16 @@ logger.info('[core] System imports OK')
 SUB_PATH     = os.environ.get('REDSUB_PATH', '*')
 REDSUB_QUEUE = os.environ.get('REDSUB_QUEUE', 'yarqueue:discord')
 
+# Check Redis config
+try:
+    config = r.config_get(pattern='notify-keyspace-events')
+    if config is None or config != '':
+        r.config_set(name='notify-keyspace-events', value='$sxE')
+except Exception as e:
+    logger.error(f'[core] Redis SET notify-keyspace-events KO [{e}]')
+else:
+    logger.debug('[core] Redis SET notify-keyspace-events OK')
+
 # Opening Queue
 try:
     yqueue = yarqueue.Queue(name=REDSUB_QUEUE, redis=r)
