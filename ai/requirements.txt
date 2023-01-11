@@ -10,21 +10,13 @@ certifi==2022.6.15
     # via requests
 charset-normalizer==2.1.0
     # via requests
-deprecated==1.2.13
-    # via redis
 idna==3.3
     # via requests
 loguru==0.6.0
-    # via -r requirements.in
-packaging==21.3
-    # via redis
-pyparsing==3.0.9
-    # via packaging
-redis==4.3.4
-    # via -r requirements.in
+    # via -r ai/requirements.in
+redis==4.4.1
+    # via -r ai/requirements.in
 requests==2.28.1
-    # via -r requirements.in
+    # via -r ai/requirements.in
 urllib3==1.26.11
     # via requests
-wrapt==1.14.1
-    # via deprecated
