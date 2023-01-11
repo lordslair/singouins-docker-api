@@ -11,11 +11,11 @@ ARG LOGURU_MSG="<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> 
 ENV LOGURU_FORMAT=$LOGURU_DATE$LOGURU_LEVEL$LOGURU_MSG
 ENV LOGURU_COLORIZE='true'
 
-ENV PYTHONUNBUFFERED='True'
-ENV PYTHONIOENCODING='UTF-8'
-
-COPY                         requirements.txt /requirements.txt
-COPY --chown=discord:discord code             /code
+COPY --chown=discord:discord /discord/requirements.txt /code/requirements.txt
+COPY --chown=discord:discord /discord/commands.py      /code/commands.py
+COPY --chown=discord:discord /discord/tasks.py         /code/tasks.py
+COPY --chown=discord:discord /discord/utils            /code/utils
+COPY --chown=discord:discord /nosql                    /code/nosql
 
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
@@ -29,8 +29,8 @@ RUN apk update --no-cache \
                                     libc-dev=~0.7 \
                                     python3-dev=~3.10 \
     && su discord -c "python3 -m ensurepip --upgrade \
-                     && pip3 install --user -U -r /requirements.txt" \
-    && apk del .build-deps \
-    && rm /requirements.txt
+                     && pip3 install --user -U -r requirements.txt \
+                     && rm requirements.txt" \
+    && apk del .build-deps
 
 USER discord
