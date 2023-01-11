@@ -9,110 +9,107 @@ import os
 import re
 import yarqueue
 
-from loguru             import logger
-from redis              import Redis
+from loguru                     import logger
+
+from nosql.connector            import r, REDIS_DB_NAME
 
 # Log System imports
-logger.info('[DB:*][core] [✓] System imports')
+logger.info('[core] System imports OK')
 
-# Redis variables
-REDIS_HOST    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_HOST']
-REDIS_PORT    = os.environ['SEP_BACKEND_REDIS_SVC_SERVICE_PORT']
-REDIS_DB      = os.environ['SEP_REDIS_DB']
 # Subscriber pattern
-SUB_PATH      = os.environ['SEP_REDIS_SUB_PATH']
-YQUEUE_NAME   = 'yarqueue:discord'
-
-# Opening Redis connection
-try:
-    r = Redis(host=REDIS_HOST,
-              port=REDIS_PORT,
-              db=REDIS_DB,
-              encoding='utf-8',
-              decode_responses=True,
-              socket_connect_timeout=1)
-except (Redis.ConnectionError,
-        Redis.BusyLoadingError):
-    logger.error(f'[DB:{REDIS_DB}][core] [✗] Connection to Redis')
-else:
-    logger.info(f'[DB:{REDIS_DB}][core] [✓] Connection to Redis')
+SUB_PATH     = os.environ.get('REDSUB_PATH', '*')
+REDSUB_QUEUE = os.environ.get('REDSUB_QUEUE', 'yarqueue:discord')
 
 # Opening Queue
 try:
-    yqueue = yarqueue.Queue(name=YQUEUE_NAME, redis=r)
+    yqueue = yarqueue.Queue(name=REDSUB_QUEUE, redis=r)
 except Exception as e:
-    logger.error(f'Queue Connection KO (queue:{YQUEUE_NAME}) [{e}]')
+    logger.error(f'[core] Connection to Queue {REDSUB_QUEUE} KO [{e}]')
 else:
-    pass
+    logger.info(f'[core] Connection to Queue {REDSUB_QUEUE} OK')
 
 # Starting subscription
 try:
     pubsub = r.pubsub()
     pubsub.psubscribe(SUB_PATH)
 except Exception as e:
-    logger.error(f'[DB:{REDIS_DB}][core] '
-                 f'[✗] Subscription to Redis:"{SUB_PATH}" [{e}]')
+    logger.error(f'[core] Subscription to Redis:"{SUB_PATH}" KO [{e}]')
 else:
-    logger.info(f'[DB:{REDIS_DB}][core] '
-                f'[✓] Subscription to Redis:"{SUB_PATH}"')
+    logger.info(f'[core] Subscription to Redis:"{SUB_PATH}" OK')
 
 # We receive the events from Redis
 for msg in pubsub.listen():
-    logger.trace(f'[DB:{REDIS_DB}] {msg}')
+    logger.trace(f'[PUBSUB][DB:{REDIS_DB_NAME}] {msg}')
 
     # Detect the action which triggered the event, and related Redis key
-    m = re.search(r"__keyevent@1__:(?P<action>\w+)", msg['channel'])
+    m = re.search(r"__keyevent@\w__:(?P<action>\w+)", msg['channel'])
     if m is None:
         # If no action detected, we skip processing
-        logger.trace(f"Regex ?P<action> KO (channel:{msg['channel']})")
+        logger.trace(
+            f"Regex ?P<action> KO (channel:{msg['channel']}) - Skipping"
+            )
         continue
-    else:
-        logger.trace(f"Regex ?P<action> OK (channel:{msg['channel']})")
 
     if m.group('action') == 'expired':
+        # Here we get the EXPIRED KEYS
+        logger.debug(f"[PUBSUB][DB:{REDIS_DB_NAME}] Expired: {msg['data']}")
+        # Key that can expire (so far):
+        # - Event
+        std_key = re.search(
+            (
+                r"(?P<key_root>[a-zA-Z]+):"
+                r"(?P<key_uuid>[a-f0-9]{8}-[a-f0-9]{4}"
+                r"-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$"
+                ),
+            msg['data']
+            )
+        # - PA
+        # Effect/Status/CD
+        cplx_key = re.search(
+            (
+                r"(?P<key_root>[a-zA-Z]+):"
+                r"(?P<key_uuid>[a-f0-9]{8}-[a-f0-9]{4}"
+                r"-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):"
+                r"(?P<subkey_uuid>[a-f0-9]{8}-[a-f0-9]{4}"
+                r"-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):"
+                r"(?P<key_string>[a-zA-Z]+)$"
+                ),
+            msg['data']
+            )
 
-        c = re.search(r"(cds):(\d*):(\d*):(\d*):[a-zA-Z0-9_]+",
-                      msg['data'])
-        s = re.search(r"(status):(\d*):(\d*):(\d*):[a-zA-Z0-9_]+",
-                      msg['data'])
-        e = re.search(r"(effects):(\d*):(\d*):(\d*):\d*:[a-zA-Z0-9_]+",
-                      msg['data'])
-        #                           │     │     └────> Regex for {metaid}
-        #                           │     └──────────> Regex for {creatureid}
-        #                           └────────────────> Regex for {instanceid}
-
-        if c is not None:
-            type       = 'CD'
-            creatureid = c.group(3)
-            metaid     = c.group(4)
-        elif s is not None:
-            type       = 'Status'
-            creatureid = s.group(3)
-            metaid     = s.group(4)
-        elif e is not None:
-            type       = 'Effect'
-            creatureid = e.group(3)
-            metaid     = e.group(4)
+        if std_key:
+            type = std_key.group('key_root')
+            creatureuuid = std_key.group('key_uuid')
+        elif cplx_key:
+            type = cplx_key.group('key_root')
+            instanceuuid = cplx_key.group('key_uuid')
+            creatureuuid = cplx_key.group('subkey_uuid')
+            data = cplx_key.group('key_string')
+            qmsg = {
+                "ciphered": False,
+                "payload": {
+                    "type": type,
+                    "instanceuuid": instanceuuid,
+                    "data": data,
+                    "creatureuuid": creatureuuid,
+                    "fullkey": msg['data'],
+                    },
+                "embed": None,
+                "scope": None,
+                "source": 'redsub',
+                }
+            logger.success(qmsg)
         else:
-            # If no action detected, we skip processing
-            logger.warning(f"regex ko: {msg['data']}")
-            continue
-
-        logger.debug(f"[DB:{REDIS_DB}][expired] {msg['data']}")
+            logger.trace(f"RegEx <key_root> KO : {msg['data']}")
 
         # Put data in Queue
-        try:
-            qmsg = {"ciphered": False,
-                    "payload": {"type":     type,
-                                "metaid":   metaid,
-                                "creature": creatureid},
-                    "embed": None,
-                    "scope": None,
-                    "source": 'redsub'}
-            yqueue.put(json.dumps(qmsg))
-
-        except Exception as e:
-            logger.error(f'Queue Query KO '
-                         f'(queue:{YQUEUE_NAME},msg:<{msg}>) [{e}]')
-        else:
-            logger.trace(f'Queue Query OK: (qmsg:{qmsg})')
+        if qmsg:
+            try:
+                yqueue.put(json.dumps(qmsg))
+            except Exception as e:
+                logger.error(
+                    f'Queue Query KO '
+                    f'(queue:{REDSUB_QUEUE},msg:<{msg}>) [{e}]'
+                    )
+            else:
+                logger.trace(f'Queue Query OK: (qmsg:{qmsg})')
