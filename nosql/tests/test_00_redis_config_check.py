@@ -3,7 +3,9 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname('/code/'))
+# Needed for local imports and simulate production paths
+LOCAL_PATH = os.path.dirname(os.path.abspath('nosql'))
+sys.path.append(LOCAL_PATH)
 
 from nosql.connector import r  # noqa: E402
 

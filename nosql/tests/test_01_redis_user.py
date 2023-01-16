@@ -4,7 +4,9 @@ import os
 import sys
 import uuid
 
-sys.path.append(os.path.dirname('/code/'))
+# Needed for local imports and simulate production paths
+LOCAL_PATH = os.path.dirname(os.path.abspath('nosql'))
+sys.path.append(LOCAL_PATH)
 
 from nosql.models.RedisUser import RedisUser  # noqa: E402
 
