@@ -48,6 +48,22 @@ def test_redis_user_search_ok():
     assert Users[0]['id'] == USER_ID
 
 
+def test_redis_user_setters():
+    """
+    Querying a RedisUser, and modifiy attributes
+    """
+    User = RedisUser().get(username=USER_NAME)
+
+    User.hash = 'plipplop'
+    User.d_name = 'User#1234'
+
+    # Lets check by calling again a Creature if it was updated in Redis
+    UserAgain = RedisUser().get(username=USER_NAME)
+
+    assert UserAgain.hash == 'plipplop'
+    assert UserAgain.d_name == 'User#1234'
+
+
 def test_redis_user_del():
     """
     Removing a RedisUser
