@@ -4,17 +4,19 @@
 name: Python PyTest (Redsub)
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Python PyTest (NoSQL)"]
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    types:
+      - completed
 
 permissions:
   contents: read
 
 jobs:
   build:
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  
     runs-on: ubuntu-latest
     strategy:
       matrix:
