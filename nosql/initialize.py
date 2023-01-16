@@ -109,6 +109,42 @@ def initialize_redis_indexes():
     else:
         logger.trace('Redis init: OK auction_idx (already created)')
 
+    # RedisCD
+    try:
+        r.ft("cd_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_cd = IndexDefinition(
+                prefix=["cds:"],
+                score=0.5,
+                score_field="cd_score"
+                )
+
+            # Schema definition
+            schema = (
+                TextField("bearer"),
+                NumericField("duration_base"),
+                TextField("extra"),
+                TextField("id"),
+                TextField("name"),
+                TextField("source"),
+                TextField("type"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("cd_idx").create_index(
+                schema,
+                definition=index_cd
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK cd_idx')
+    else:
+        logger.trace('Redis init: OK cd_idx (already created)')
+
     # RedisCosmetic
     try:
         r.ft("cosmetic_idx").info()
@@ -183,6 +219,42 @@ def initialize_redis_indexes():
             logger.info('Redis init: OK creature_idx')
     else:
         logger.trace('Redis init: OK creature_idx (already created)')
+
+    # RedisEffect
+    try:
+        r.ft("effect_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_effect = IndexDefinition(
+                prefix=["effects:"],
+                score=0.5,
+                score_field="effect_score"
+                )
+
+            # Schema definition
+            schema = (
+                TextField("bearer"),
+                NumericField("duration_base"),
+                TextField("extra"),
+                TextField("id"),
+                TextField("name"),
+                TextField("source"),
+                TextField("type"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("effect_idx").create_index(
+                schema,
+                definition=index_effect
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK effect_idx')
+    else:
+        logger.trace('Redis init: OK effect_idx (already created)')
 
     # RedisEvent
     try:
@@ -389,6 +461,42 @@ def initialize_redis_indexes():
             logger.info('Redis init: OK squad_idx')
     else:
         logger.trace('Redis init: OK squad_idx (already created)')
+
+    # RedisCD
+    try:
+        r.ft("status_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_status = IndexDefinition(
+                prefix=["statuses:"],
+                score=0.5,
+                score_field="status_score"
+                )
+
+            # Schema definition
+            schema = (
+                TextField("bearer"),
+                NumericField("duration_base"),
+                TextField("extra"),
+                TextField("id"),
+                TextField("name"),
+                TextField("source"),
+                TextField("type"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("status_idx").create_index(
+                schema,
+                definition=index_status
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK status_idx')
+    else:
+        logger.trace('Redis init: OK status_idx (already created)')
 
     # RedisUser
     try:

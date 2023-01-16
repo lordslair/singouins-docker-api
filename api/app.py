@@ -193,13 +193,13 @@ app.add_url_rule('/mypc/<uuid:pcid>/stats',
 #         /effects
 #         /statuses
 #
-app.add_url_rule('/mypc/<uuid:pcid>/cds',
+app.add_url_rule('/mypc/<uuid:creatureuuid>/cds',
                  methods=['GET'],
                  view_func=routes.external.mypc.cds.cds_get)
-app.add_url_rule('/mypc/<uuid:pcid>/effects',
+app.add_url_rule('/mypc/<uuid:creatureuuid>/effects',
                  methods=['GET'],
                  view_func=routes.external.mypc.effects.effects_get)
-app.add_url_rule('/mypc/<uuid:pcid>/statuses',
+app.add_url_rule('/mypc/<uuid:creatureuuid>/statuses',
                  methods=['GET'],
                  view_func=routes.external.mypc.statuses.statuses_get)
 
@@ -254,13 +254,13 @@ app.add_url_rule('/mypc/<uuid:pcid>/instance/<uuid:instanceid>/leave',
 #
 # Routes: /action/resolver
 #
-app.add_url_rule('/mypc/<uuid:pcid>/action/resolver/context',
+app.add_url_rule('/mypc/<uuid:creatureuuid>/action/resolver/context',
                  methods=['POST'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_context)
-app.add_url_rule('/mypc/<uuid:pcid>/action/resolver/move',
+app.add_url_rule('/mypc/<uuid:creatureuuid>/action/resolver/move',
                  methods=['POST'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_move)
-app.add_url_rule('/mypc/<uuid:pcid>/action/resolver/skill/<string:skill_name>',
+app.add_url_rule('/mypc/<uuid:creatureuuid>/action/resolver/skill/<string:skill_name>',
                  methods=['PUT'],
                  view_func=routes.external.mypc.action_resolver.action_resolver_skill)
 

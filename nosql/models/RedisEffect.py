@@ -1,39 +1,36 @@
 # -*- coding: utf8 -*-
 
 import json
+import uuid
 
-from loguru                     import logger
+from loguru                      import logger
+from redis.commands.search.query import Query
 
-from nosql.connector            import r
+from nosql.connector             import r
+from nosql.variables             import str2typed, typed2str
 
 
 class RedisEffect:
-    def __init__(self, creature):
-        self.hkey     = f'effects:{creature.instance}:{creature.id}'
-        self.instance = creature.instance
-        self.logh     = f'[Creature.id:{creature.id}]'
+    def __init__(self, creature=None):
+        self.creature = creature
+        self.type = 'effect'
 
-        # The pre-generated effects does not already exist in redis
-        logger.trace(f'{self.logh} Method >> Initialization')
+    def new(
+        self,
+        duration_base,
+        extra,
+        name,
+        source,
+    ):
+        # We check if self.creature exists before continuing
+        if self.creature is None:
+            logger.warning('[Effect.id:None] Use RedisEffect(Creature) before')
+            return False
 
-        try:
-            self.bearer        = creature.id
-            self.duration_base = None
-            self.duration_left = None
-            self.extra         = None
-            self.name          = None
-            self.source        = None
-            self.type          = 'effect'
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method OK')
+        # We need to define the new instance.id
+        self.id = str(uuid.uuid4())
+        self.logh = f'[Effect.id:{self.id}]'
 
-    def add(self,
-            duration_base,
-            extra,
-            name,
-            source):
         try:
             # We push data in final dict
             logger.trace(f'{self.logh} Method >> (HASH Creating)')
@@ -41,8 +38,9 @@ class RedisEffect:
             if isinstance(extra, dict):
                 self.extra = json.dumps(extra)
             if extra is None:
-                self.extra = 'None'
+                self.extra = None
 
+            self.bearer        = self.creature.id
             self.duration_base = duration_base
             self.duration_left = duration_base
             self.name          = name
@@ -51,15 +49,15 @@ class RedisEffect:
             hashdict = {
                 "bearer": self.bearer,
                 "duration_base": self.duration_base,
-                "extra": self.extra,
+                "extra": typed2str(self.extra),
                 "name": self.name,
                 "source": self.source,
                 "type": self.type
             }
 
             logger.trace(f'{self.logh} Method >> (HASH Storing)')
-            r.hset(f'{self.hkey}:{self.name}', mapping=hashdict)
-            r.expire(f'{self.hkey}:{self.name}', self.duration_base)
+            r.hset(f'effects:{self.bearer}:{self.name}', mapping=hashdict)
+            r.expire(f'effects:{self.bearer}:{self.name}', self.duration_base)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
@@ -67,149 +65,125 @@ class RedisEffect:
             logger.trace(f'{self.logh} Method OK')
             return True
 
-    def get(self, name):
-        try:
-            if r.exists(f'{self.hkey}:{name}'):
-                # The effect does already exist in Redis
-                hash = r.hgetall(f'{self.hkey}:{name}')
-                logger.trace(f'{self.logh} Method >> (HASH Loading)')
+    def destroy(self, name, creatureuuid=None):
+        self.logh = '[Effect.id:None]'
+        # We check if self.creature exists before continuing
+        if self.creature is None and creatureuuid is None:
+            logger.warning(f'{self.logh} Method KO (Missing parameter')
+            return False
 
-                self.bearer        = hash['bearer']
-                self.duration_base = int(hash['duration_base'])
-                self.duration_left = int(r.ttl(f'{self.hkey}:{name}'))
-                self.name          = hash['name']
-                self.source        = hash['source']
-                self.type          = hash['type']
+        if creatureuuid is None and self.creature:
+            # The RedisEffect was called before, lets set creatureuuid
+            creatureuuid = self.creature.id
 
-                # We convert JSON > dict
-                if hash['extra'] == 'None':
-                    self.extra = None
-                elif isinstance(hash['extra'], str):
-                    self.extra = json.loads(hash['extra'])
-            else:
-                logger.warning(f'{self.logh} Method KO - HASH not found')
-                return False
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
+        if r.exists(f'effects:{creatureuuid}:{name}'):
+            pass
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.warning(f'{self.logh} Method KO (KEY NotFound)')
+            return True
 
-            return {
-                "bearer": self.bearer,
-                "duration_base": self.duration_base,
-                "duration_left": self.duration_left,
-                "extra": self.extra,
-                "id": 1,
-                "name": self.name,
-                "source": self.source,
-                "type": self.type
-            }
-
-    def get_all(self):
-        path      = f'{self.hkey}:*'
-        #                         └────> Wildcard for {effect_name}
-        effects  = []
-
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            # We get the list of keys for all the effects
-            keys        = r.keys(path)
-            sorted_keys = sorted(keys)
-            # We initialize indexes used during iterations
-            index       = 0
-            # We create a pipeline to query the keys TTL
-            p = r.pipeline()
-            for key in sorted_keys:
-                p.hgetall(key)
-                p.ttl(key)
-            pipeline = p.execute()
-
-            # We loop over the effect keys to build the data
-            for key in sorted_keys:
-                logger.trace(f'key:{key}')
-                # We convert JSON > dict
-                if pipeline[index]['extra'] == 'None':
-                    extra = None
-                elif isinstance(pipeline[index]['extra'], str):
-                    extra = json.loads(pipeline[index]['extra'])
-                effect = {
-                    "bearer": self.bearer,
-                    "duration_base": int(pipeline[index]['duration_base']),
-                    "duration_left": int(pipeline[index + 1]),
-                    "extra": extra,
-                    "id": int(1 + index / 2),
-                    "name": pipeline[index]['name'],
-                    "source": pipeline[index]['source'],
-                    "type": pipeline[index]['type']
-                }
-                # We update the index for next iteration
-                index += 2
-                # We add the effect into effects list
-                effects.append(effect)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return effects
-
-    def get_all_instance(self):
-        path      = f'effects:{self.instance}:*:*'
-        #                                      │ └─> Wildcard for {effect_name}
-        #                                      └───> Wildcard for {creatureid}
-        effects  = []
-
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            # We get the list of keys for all the effects
-            keys        = r.keys(path)
-            sorted_keys = sorted(keys)
-            # We initialize indexes used during iterations
-            index       = 0
-            # We create a pipeline to query the keys TTL
-            p = r.pipeline()
-            for key in sorted_keys:
-                p.hgetall(key)
-                p.ttl(key)
-            pipeline = p.execute()
-
-            # We loop over the effect keys to build the data
-            for key in sorted_keys:
-                logger.trace(f'key:{key}')
-                # We convert JSON > dict
-                if pipeline[index]['extra'] == 'None':
-                    extra = None
-                elif isinstance(pipeline[index]['extra'], str):
-                    extra = json.loads(pipeline[index]['extra'])
-                effect = {
-                    "bearer": pipeline[index]['bearer'],
-                    "duration_base": int(pipeline[index]['duration_base']),
-                    "duration_left": int(pipeline[index + 1]),
-                    "extra": extra,
-                    "id": int(1 + index / 2),
-                    "name": pipeline[index]['name'],
-                    "source": pipeline[index]['source'],
-                    "type": pipeline[index]['type']
-                }
-                # We update the index for next iteration
-                index += 2
-                # We add the effect into effects list
-                effects.append(effect)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return effects
-
-    def destroy(self, name):
         try:
             logger.trace(f'{self.logh} Method >> (HASH Destroying)')
-            r.delete(f'{self.hkey}:{name}')
+            r.delete(f'effects:{creatureuuid}:{name}')
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
             logger.trace(f'{self.logh} Method OK')
             return True
+
+    def search(self, query, maxpaging=25):
+        self.logh = '[Effect.id:None]'
+        index = 'effect_idx'
+        try:
+            r.ft(index).info()
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(r.ft(index).info())
+            pass
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Searching {query})')
+            results = r.ft(index).search(Query(query).paging(0, maxpaging))
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(results)
+            pass
+
+        # If we are here, we got results
+        self._asdict = []
+        for result in results.docs:
+            result_dict = {}
+            # We remove from the final result an internal result attr
+            del result.payload
+            # We fetch the key TTL
+            result.ttl = r.ttl(result.id)
+            # We remove the prexix added by RediSearch
+            result.id = result.id.removeprefix('effects:')
+            # We remove the suffix of the key
+            result.id = result.id.removesuffix(f':{result.name}')
+            for attr, value in result.__dict__.items():
+                setattr(result, attr, str2typed(value))
+                result_dict[attr] = getattr(result, attr)
+            self._asdict.append(result_dict)
+
+        self.results = results.docs
+
+        logger.trace(f'{self.logh} Method OK')
+        return self
+
+
+"""
+    FT.CREATE effect_idx PREFIX 1 "effects:"
+        LANGUAGE english
+        SCORE 0.5
+        SCORE_FIELD "effect_score"
+        SCHEMA
+            bearer TEXT
+            duration_base NUMERIC
+            extra TEXT
+            id TEXT
+            name TEXT
+            source TEXT
+            type TEXT
+
+    FT.SEARCH effect_idx "" LIMIT 0 10
+
+    FT.DROPINDEX effect_idx
+"""
+
+if __name__ == '__main__':
+    from nosql.models.RedisCreature import RedisCreature
+    creatureuuid = '20671520-85fb-35ad-861a-e8ccebe1ebb9'
+
+    Creature = RedisCreature().get(creatureuuid)
+    Effect = RedisEffect(Creature)
+    logger.success(Effect.creature)
+    logger.success(Effect.creature.id)
+    Effect.new(
+        duration_base=180,
+        extra=None,
+        name='Tested',
+        source=Creature.id,
+    )
+    bearer = creatureuuid.replace('-', ' ')
+    Effects = RedisEffect().search(query=f'@bearer:{bearer}')
+    logger.success(Effects)
+    logger.success(Effects.results)
+    logger.success(Effects.results[0].id)
+    logger.success(Effects._asdict)
+    logger.success(Effects._asdict)
+    logger.success(RedisEffect(Creature).destroy(name='Tested'))
+    Effect.new(
+        duration_base=180,
+        extra=None,
+        name='Tested',
+        source=Creature.id,
+    )
+    logger.success(
+        RedisEffect().destroy(creatureuuid=creatureuuid, name='Tested')
+        )

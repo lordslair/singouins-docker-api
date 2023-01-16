@@ -14,20 +14,20 @@ from utils.routehelper          import (
     )
 
 #
-# Routes /mypc/{pcid}/effects
+# Routes /mypc/{creatureuuid}/effects
 #
 
 
-# API: GET /mypc/{pcid}/effects
+# API: GET /mypc/{creatureuuid}/effects
 @jwt_required()
-def effects_get(pcid):
+def effects_get(creatureuuid):
     User = RedisUser().get(get_jwt_identity())
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
     try:
-        creature_effect  = RedisEffect(Creature)
-        creature_effects = creature_effect.get_all()
+        bearer = Creature.id.replace('-', ' ')
+        Effects = RedisEffect(Creature).search(query=f'@bearer:{bearer}')
     except Exception as e:
         msg = f'{h} Effects Query KO [{e}]'
         logger.error(msg)
@@ -45,7 +45,9 @@ def effects_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": {"effects": creature_effects,
-                            "creature": Creature._asdict()},
+                "payload": {
+                    "effects": Effects._asdict,
+                    "creature": Creature._asdict(),
+                    },
             }
         ), 200

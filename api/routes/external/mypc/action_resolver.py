@@ -24,17 +24,17 @@ from utils.routehelper          import (
     )
 
 #
-# Routes /mypc/{pcid}/action/resolver/*
+# Routes /mypc/{creatureuuid}/action/resolver/*
 #
 
 
-# API: POST /mypc/{pcid}/action/resolver/skill/{skill_name}
+# API: POST /mypc/{creatureuuid}/action/resolver/skill/{skill_name}
 @jwt_required()
-def action_resolver_skill(pcid, skill_name):
+def action_resolver_skill(creatureuuid, skill_name):
     request_json_check(request)
 
     User = RedisUser().get(get_jwt_identity())
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
     if Creature.instance is None:
@@ -48,9 +48,14 @@ def action_resolver_skill(pcid, skill_name):
             }
         ), 200
 
+    # To use in RediSearch
+    instance = Creature.instance.replace('-', ' ')
+
     try:
-        redis_cd    = RedisStatus(Creature)
-        creature_cd = redis_cd.get(skill_name)
+        bearer = Creature.id.replace('-', ' ')
+        Cds = RedisCd().search(
+                query=f'(@bearer:{bearer}) & (@name:{skill_name})'
+                )
     except Exception as e:
         msg = f'{h} CDs Query KO [{e}]'
         logger.error(msg)
@@ -62,7 +67,7 @@ def action_resolver_skill(pcid, skill_name):
             }
         ), 200
     else:
-        if creature_cd:
+        if len(Cds) > 0:
             # The skill was already used, and still on CD
             msg = f'{h} Skill already on CD (skill_name:{skill_name})'
             logger.debug(msg)
@@ -70,13 +75,12 @@ def action_resolver_skill(pcid, skill_name):
                 {
                     "success": False,
                     "msg": msg,
-                    "payload": creature_cd,
+                    "payload": Cds._asdict,
                 }
             ), 200
 
     try:
-        creatures_effect  = RedisEffect(Creature)
-        creatures_effects = creatures_effect.get_all_instance()
+        Effects = RedisEffect().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisEffect Query KO [{e}]'
         logger.error(msg)
@@ -89,8 +93,7 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        creatures_status   = RedisStatus(Creature)
-        creatures_statuses = creatures_status.get_all_instance()
+        Statuses = RedisStatus().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisStatus Query KO [{e}]'
         logger.error(msg)
@@ -103,8 +106,7 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(Creature)
-        creatures_cds = creatures_cd.get_all_instance()
+        Cds = RedisCd().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisCd Query KO [{e}]'
         logger.error(msg)
@@ -169,9 +171,9 @@ def action_resolver_skill(pcid, skill_name):
             "map": map,
             "instance": Creature.instance,
             "creatures": Creatures,
-            "effects": creatures_effects,
-            "status": creatures_statuses,
-            "cd": creatures_cds,
+            "effects": Effects._asdict,
+            "status": Statuses._asdict,
+            "cd": Cds._asdict,
             "pa": creature_pa._asdict()
         },
         "fightEvent": {
@@ -204,7 +206,7 @@ def action_resolver_skill(pcid, skill_name):
             action_text=f'Used a Skill ({skill_name})',
             action_ttl=30 * 86400
             )
-        msg = f'{h} Resolver Query OK (pcid:{Creature.id})'
+        msg = f'{h} Resolver Query OK (creatureuuid:{Creature.id})'
         logger.debug(msg)
         return jsonify(
             {
@@ -216,13 +218,13 @@ def action_resolver_skill(pcid, skill_name):
         ), 200
 
 
-# API: POST /mypc/{pcid}/action/resolver/move
+# API: POST /mypc/{creatureuuid}/action/resolver/move
 @jwt_required()
-def action_resolver_move(pcid):
+def action_resolver_move(creatureuuid):
     request_json_check(request)
 
     User = RedisUser().get(get_jwt_identity())
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
     if Creature.instance is None:
@@ -236,9 +238,11 @@ def action_resolver_move(pcid):
             }
         ), 200
 
+    # To use in RediSearch
+    instance = Creature.instance.replace('-', ' ')
+
     try:
-        creatures_effect  = RedisEffect(Creature)
-        creatures_effects = creatures_effect.get_all_instance()
+        Effects = RedisEffect().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisEffect Query KO [{e}]'
         logger.error(msg)
@@ -251,8 +255,7 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        creatures_status   = RedisStatus(Creature)
-        creatures_statuses = creatures_status.get_all_instance()
+        Statuses = RedisStatus().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisStatus Query KO [{e}]'
         logger.error(msg)
@@ -265,8 +268,7 @@ def action_resolver_move(pcid):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(Creature)
-        creatures_cds = creatures_cd.get_all_instance()
+        Cds = RedisCd().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisCd Query KO [{e}]'
         logger.error(msg)
@@ -330,9 +332,9 @@ def action_resolver_move(pcid):
             "map": map,
             "instance": Creature.instance,
             "creatures": Creatures,
-            "effects": creatures_effects,
-            "status": creatures_statuses,
-            "cd": creatures_cds,
+            "effects": Effects._asdict,
+            "status": Statuses._asdict,
+            "cd": Cds._asdict,
             "pa": creature_pa._asdict()
         },
         "fightEvent": {
@@ -376,13 +378,13 @@ def action_resolver_move(pcid):
         ), 200
 
 
-# API: POST /mypc/{pcid}/action/resolver/context
+# API: POST /mypc/{creatureuuid}/action/resolver/context
 @jwt_required()
-def action_resolver_context(pcid):
+def action_resolver_context(creatureuuid):
     request_json_check(request)
 
     User = RedisUser().get(get_jwt_identity())
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
     if Creature.instance is None:
@@ -396,23 +398,11 @@ def action_resolver_context(pcid):
             }
         ), 200
 
-    try:
-        creatures_effect  = RedisEffect(Creature)
-        creatures_effects = creatures_effect.get_all_instance()
-    except Exception as e:
-        msg = f'{h} RedisEffect Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
+    # To use in RediSearch
+    instance = Creature.instance.replace('-', ' ')
 
     try:
-        creatures_status   = RedisStatus(Creature)
-        creatures_statuses = creatures_status.get_all_instance()
+        Statuses = RedisStatus().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisStatus Query KO [{e}]'
         logger.error(msg)
@@ -425,10 +415,22 @@ def action_resolver_context(pcid):
         ), 200
 
     try:
-        creatures_cd  = RedisCd(Creature)
-        creatures_cds = creatures_cd.get_all_instance()
+        Cds = RedisCd().search(query=f'@instance:{instance}')
     except Exception as e:
         msg = f'{h} RedisCd Query KO [{e}]'
+        logger.error(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
+
+    try:
+        Effects = RedisEffect().search(query=f'@instance:{instance}')
+    except Exception as e:
+        msg = f'{h} RedisEffect Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -490,9 +492,9 @@ def action_resolver_context(pcid):
             "map": map,
             "instance": Creature.instance,
             "creatures": Creatures,
-            "effects": creatures_effects,
-            "status": creatures_statuses,
-            "cd": creatures_cds,
+            "effects": Effects._asdict,
+            "status": Statuses._asdict,
+            "cd": Cds._asdict,
             "pa": creature_pa._asdict()
         },
         "fightEvent": {

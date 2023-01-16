@@ -42,6 +42,9 @@ def str2typed(string):
     # None
     elif string == 'None':
         return None
+    # INT (just in case an INT gets in the mix)
+    elif isinstance(string, int):
+        return string
     # Date
     elif re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', string):
         return string

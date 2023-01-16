@@ -1,39 +1,36 @@
 # -*- coding: utf8 -*-
 
 import json
+import uuid
 
-from loguru                     import logger
+from loguru                      import logger
+from redis.commands.search.query import Query
 
-from nosql.connector            import r
+from nosql.connector             import r
+from nosql.variables             import str2typed, typed2str
 
 
 class RedisCd:
-    def __init__(self, creature):
-        self.hkey     = f'cds:{creature.instance}:{creature.id}'
-        self.instance = creature.instance
-        self.logh     = f'[Creature.id:{creature.id}]'
+    def __init__(self, creature=None):
+        self.creature = creature
+        self.type = 'cd'
 
-        # The pre-generated cds does not already exist in redis
-        logger.trace(f'{self.logh} Method >> Initialization')
+    def new(
+        self,
+        duration_base,
+        extra,
+        name,
+        source,
+    ):
+        # We check if self.creature exists before continuing
+        if self.creature is None:
+            logger.warning('[Cd.id:None] Use RedisCd(Creature) before')
+            return False
 
-        try:
-            self.bearer        = creature.id
-            self.duration_base = None
-            self.duration_left = None
-            self.extra         = None
-            self.name          = None
-            self.source        = None
-            self.type          = 'cd'
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method OK')
+        # We need to define the new instance.id
+        self.id = str(uuid.uuid4())
+        self.logh = f'[Cd.id:{self.id}]'
 
-    def add(self,
-            duration_base,
-            extra,
-            name,
-            source):
         try:
             # We push data in final dict
             logger.trace(f'{self.logh} Method >> (HASH Creating)')
@@ -41,8 +38,9 @@ class RedisCd:
             if isinstance(extra, dict):
                 self.extra = json.dumps(extra)
             if extra is None:
-                self.extra = ''
+                self.extra = None
 
+            self.bearer        = self.creature.id
             self.duration_base = duration_base
             self.duration_left = duration_base
             self.name          = name
@@ -51,15 +49,15 @@ class RedisCd:
             hashdict = {
                 "bearer": self.bearer,
                 "duration_base": self.duration_base,
-                "extra": self.extra,
+                "extra": typed2str(self.extra),
                 "name": self.name,
                 "source": self.source,
                 "type": self.type
             }
 
             logger.trace(f'{self.logh} Method >> (HASH Storing)')
-            r.hset(f'{self.hkey}:{self.name}', mapping=hashdict)
-            r.expire(f'{self.hkey}:{self.name}', self.duration_base)
+            r.hset(f'cds:{self.bearer}:{self.name}', mapping=hashdict)
+            r.expire(f'cds:{self.bearer}:{self.name}', self.duration_base)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
@@ -67,149 +65,125 @@ class RedisCd:
             logger.trace(f'{self.logh} Method OK')
             return True
 
-    def get(self, name):
-        try:
-            if r.exists(f'{self.hkey}:{name}'):
-                # The cd does already exist in Redis
-                hash = r.hgetall(f'{self.hkey}:{name}')
-                logger.trace(f'{self.logh} Method >> (HASH Loading)')
+    def destroy(self, name, creatureuuid=None):
+        self.logh = '[Cd.id:None]'
+        # We check if self.creature exists before continuing
+        if self.creature is None and creatureuuid is None:
+            logger.warning(f'{self.logh} Method KO (Missing parameter')
+            return False
 
-                self.bearer        = hash['bearer']
-                self.duration_base = int(hash['duration_base'])
-                self.duration_left = int(r.ttl(f'{self.hkey}:{name}'))
-                self.name          = hash['name']
-                self.source        = hash['source']
-                self.type          = hash['type']
+        if creatureuuid is None and self.creature:
+            # The RedisCd was called before, lets set creatureuuid
+            creatureuuid = self.creature.id
 
-                # We convert JSON > dict
-                if hash['extra'] == '':
-                    self.extra = None
-                elif isinstance(hash['extra'], str):
-                    self.extra = json.loads(hash['extra'])
-            else:
-                logger.warning(f'{self.logh} Method KO - HASH not found')
-                return False
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
+        if r.exists(f'cds:{creatureuuid}:{name}'):
+            pass
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.warning(f'{self.logh} Method KO (KEY NotFound)')
+            return True
 
-            return {
-                "bearer": self.bearer,
-                "duration_base": self.duration_base,
-                "duration_left": self.duration_left,
-                "extra": self.extra,
-                "id": 1,
-                "name": self.name,
-                "source": self.source,
-                "type": self.type
-            }
-
-    def get_all(self):
-        path      = f'{self.hkey}:*'
-        #                         └────> Wildcard for {skill_name}
-        cds  = []
-
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            # We get the list of keys for all the cds
-            keys        = r.keys(path)
-            sorted_keys = sorted(keys)
-            # We initialize indexes used during iterations
-            index       = 0
-            # We create a pipeline to query the keys TTL
-            p = r.pipeline()
-            for key in sorted_keys:
-                p.hgetall(key)
-                p.ttl(key)
-            pipeline = p.execute()
-
-            # We loop over the cd keys to build the data
-            for key in sorted_keys:
-                logger.trace(f'key:{key}')
-                # We convert JSON > dict
-                if pipeline[index]['extra'] == '':
-                    extra = None
-                elif isinstance(pipeline[index]['extra'], str):
-                    extra = json.loads(pipeline[index]['extra'])
-                cd = {
-                    "bearer": self.bearer,
-                    "duration_base": int(pipeline[index]['duration_base']),
-                    "duration_left": int(pipeline[index + 1]),
-                    "extra": extra,
-                    "id": int(1 + index / 2),
-                    "name": pipeline[index]['name'],
-                    "source": pipeline[index]['source'],
-                    "type": pipeline[index]['type']
-                }
-                # We update the index for next iteration
-                index += 2
-                # We add the cd into cds list
-                cds.append(cd)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return cds
-
-    def get_all_instance(self):
-        path      = f'cds:{self.instance}:*:*'
-        #                                      │ └─> Wildcard for {skill_name}
-        #                                      └───> Wildcard for {creatureid}
-        cds  = []
-
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            # We get the list of keys for all the cds
-            keys        = r.keys(path)
-            sorted_keys = sorted(keys)
-            # We initialize indexes used during iterations
-            index       = 0
-            # We create a pipeline to query the keys TTL
-            p = r.pipeline()
-            for key in sorted_keys:
-                p.hgetall(key)
-                p.ttl(key)
-            pipeline = p.execute()
-
-            # We loop over the cd keys to build the data
-            for key in sorted_keys:
-                logger.trace(f'key:{key}')
-                # We convert JSON > dict
-                if pipeline[index]['extra'] == '':
-                    extra = None
-                elif isinstance(pipeline[index]['extra'], str):
-                    extra = json.loads(pipeline[index]['extra'])
-                cd = {
-                    "bearer": pipeline[index]['bearer'],
-                    "duration_base": int(pipeline[index]['duration_base']),
-                    "duration_left": int(pipeline[index + 1]),
-                    "extra": extra,
-                    "id": int(1 + index / 2),
-                    "name": pipeline[index]['name'],
-                    "source": pipeline[index]['source'],
-                    "type": pipeline[index]['type']
-                }
-                # We update the index for next iteration
-                index += 2
-                # We add the cd into cds list
-                cds.append(cd)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return cds
-
-    def destroy(self, name):
         try:
             logger.trace(f'{self.logh} Method >> (HASH Destroying)')
-            r.delete(f'{self.hkey}:{name}')
+            r.delete(f'cds:{creatureuuid}:{name}')
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
             logger.trace(f'{self.logh} Method OK')
             return True
+
+    def search(self, query, maxpaging=25):
+        self.logh = '[Cd.id:None]'
+        index = 'cd_idx'
+        try:
+            r.ft(index).info()
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(r.ft(index).info())
+            pass
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Searching {query})')
+            results = r.ft(index).search(Query(query).paging(0, maxpaging))
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            # logger.trace(results)
+            pass
+
+        # If we are here, we got results
+        self._asdict = []
+        for result in results.docs:
+            result_dict = {}
+            # We remove from the final result an internal result attr
+            del result.payload
+            # We fetch the key TTL
+            result.ttl = r.ttl(result.id)
+            # We remove the prexix added by RediSearch
+            result.id = result.id.removeprefix('cds:')
+            # We remove the suffix of the key
+            result.id = result.id.removesuffix(f':{result.name}')
+            for attr, value in result.__dict__.items():
+                setattr(result, attr, str2typed(value))
+                result_dict[attr] = getattr(result, attr)
+            self._asdict.append(result_dict)
+
+        self.results = results.docs
+
+        logger.trace(f'{self.logh} Method OK')
+        return self
+
+
+"""
+    FT.CREATE cd_idx PREFIX 1 "cds:"
+        LANGUAGE english
+        SCORE 0.5
+        SCORE_FIELD "cd_score"
+        SCHEMA
+            bearer TEXT
+            duration_base NUMERIC
+            extra TEXT
+            id TEXT
+            name TEXT
+            source TEXT
+            type TEXT
+
+    FT.SEARCH cd_idx "" LIMIT 0 10
+
+    FT.DROPINDEX cd_idx
+"""
+
+if __name__ == '__main__':
+    from nosql.models.RedisCreature import RedisCreature
+    creatureuuid = '20671520-85fb-35ad-861a-e8ccebe1ebb9'
+
+    Creature = RedisCreature().get(creatureuuid)
+    Cd = RedisCd(Creature)
+    logger.success(Cd.creature)
+    logger.success(Cd.creature.id)
+    Cd.new(
+        duration_base=180,
+        extra=None,
+        name='Tested',
+        source=Creature.id,
+    )
+    bearer = creatureuuid.replace('-', ' ')
+    Cds = RedisCd().search(query=f'@bearer:{bearer}')
+    logger.success(Cds)
+    logger.success(Cds.results)
+    logger.success(Cds.results[0].id)
+    logger.success(Cds._asdict)
+    logger.success(Cds._asdict)
+    logger.success(RedisCd(Creature).destroy(name='Tested'))
+    Cd.new(
+        duration_base=180,
+        extra=None,
+        name='Tested',
+        source=Creature.id,
+    )
+    logger.success(
+        RedisCd().destroy(creatureuuid=creatureuuid, name='Tested')
+        )

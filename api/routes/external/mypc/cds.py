@@ -14,20 +14,20 @@ from utils.routehelper          import (
     )
 
 #
-# Routes /mypc/{pcid}/cds
+# Routes /mypc/{creatureuuid}/cds
 #
 
 
-# API: GET /mypc/{pcid}/cds
+# API: GET /mypc/{creatureuuid}/cds
 @jwt_required()
-def cds_get(pcid):
+def cds_get(creatureuuid):
     User = RedisUser().get(get_jwt_identity())
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
     try:
-        creature_cd  = RedisCd(Creature)
-        creature_cds = creature_cd.get_all()
+        bearer = Creature.id.replace('-', ' ')
+        Cds = RedisCd(Creature).search(query=f'@bearer:{bearer}')
     except Exception as e:
         msg = f'{h} CDs Query KO [{e}]'
         logger.error(msg)
@@ -45,7 +45,9 @@ def cds_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": {"cds": creature_cds,
-                            "creature": Creature._asdict()},
+                "payload": {
+                    "cds": Cds._asdict,
+                    "creature": Creature._asdict(),
+                    },
             }
         ), 200

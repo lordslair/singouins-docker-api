@@ -14,20 +14,20 @@ from utils.routehelper          import (
     )
 
 #
-# Routes /mypc/{pcid}/statuses
+# Routes /mypc/{creatureuuid}/statuses
 #
 
 
-# API: GET /mypc/{pcid}/statuses
+# API: GET /mypc/{creatureuuid}/statuses
 @jwt_required()
-def statuses_get(pcid):
+def statuses_get(creatureuuid):
     User = RedisUser().get(get_jwt_identity())
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
     try:
-        creature_status   = RedisStatus(Creature)
-        creature_statuses = creature_status.get_all()
+        bearer = Creature.id.replace('-', ' ')
+        Statuses = RedisStatus(Creature).search(query=f'@bearer:{bearer}')
     except Exception as e:
         msg = f'{h} Statuses Query KO [{e}]'
         logger.error(msg)
@@ -45,7 +45,9 @@ def statuses_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": {"statuses": creature_statuses,
-                            "creature": Creature._asdict()},
+                "payload": {
+                    "statuses": Statuses._asdict,
+                    "creature": Creature._asdict(),
+                    },
             }
         ), 200
