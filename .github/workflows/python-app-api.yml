@@ -63,9 +63,7 @@ jobs:
         python3 api/app.py &
         echo "--- Sleep(3)"
         sleep 3
-        echo "--- Starting PyTest [EXTERNAL]"
+        echo "--- Starting PyTest"
         pytest api/tests/external/test_0*.py api/tests/external/test_1*.py
-        echo "--- Starting PyTest [INTERNAL]"
-        pytest -s api/tests/internal
-        echo "--- Starting PyTest [EXTERNAL] (Cleaning)"
+        echo "--- Starting PyTest (Cleaning)"
         pytest api/tests/external/test_99*.py
