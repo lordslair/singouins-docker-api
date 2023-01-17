@@ -85,17 +85,19 @@ class RedisUser:
         }
 
     def destroy(self):
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
         try:
-            if hasattr(self, 'id'):
-                self.logh = f'[User.id:{self.id}]'
-                logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-                if r.exists(f'{self.hkey}:{self.id}'):
-                    r.delete(f'{self.hkey}:{self.id}')
-                else:
-                    logger.warning(f'{self.logh} Method KO - NotFound')
-                    return False
+            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - User.id NotFound')
+                logger.warning(f'{self.logh} Method KO - NotFound')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
