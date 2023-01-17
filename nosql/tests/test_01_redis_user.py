@@ -131,8 +131,8 @@ def test_redis_user_get_ko():
     User = RedisUser()
 
     assert User.hkey == 'users'
-    assert hasattr(User, 'id') is False
-    assert hasattr(User, 'name') is False
+    assert User.id is None
+    assert User.name is None
 
 
 def test_redis_user_search_empty():
