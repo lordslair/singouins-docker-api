@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import json
 import os
 import sys
 import uuid
@@ -30,7 +31,7 @@ def test_redis_user_get_ok():
     """
     Querying a RedisUser
     """
-    User = RedisUser().get(username=USER_NAME)
+    User = RedisUser(username=USER_NAME)
 
     assert User.name == USER_NAME
     assert User.hash == USER_HASH
@@ -41,36 +42,79 @@ def test_redis_user_search_ok():
     """
     Searching a RedisUser
     """
-    Users = RedisUser().search(field='id', query=USER_ID.replace('-', ' '))
+    field_id = USER_ID.replace('-', ' ')
+    Users = RedisUser().search(query=f'@id:{field_id}')
 
-    assert Users[0]['name'] == USER_NAME
-    assert Users[0]['hash'] == USER_HASH
-    assert Users[0]['id'] == USER_ID
+    assert hasattr(Users, 'objects') is True
+    assert len(Users.objects) == 1
+    assert Users.objects[0].name == USER_NAME
+    assert Users.objects[0].hash == USER_HASH
+    assert Users.objects[0].id == USER_ID
+
+    assert Users.objects[0].as_dict()['name'] == USER_NAME
+    assert Users.objects[0].as_dict()['hash'] == USER_HASH
+    assert Users.objects[0].as_dict()['id'] == USER_ID
 
 
 def test_redis_user_setters():
     """
     Querying a RedisUser, and modifiy attributes
     """
-    User = RedisUser().get(username=USER_NAME)
+    # 1. From a direct Query
+    User = RedisUser(username=USER_NAME)
 
     User.hash = 'plipplop'
     User.d_name = 'User#1234'
 
     # Lets check by calling again a Creature if it was updated in Redis
-    UserAgain = RedisUser().get(username=USER_NAME)
+    UserAgain = RedisUser(username=USER_NAME)
 
     assert UserAgain.hash == 'plipplop'
     assert UserAgain.d_name == 'User#1234'
+
+    # 1. From a Search Query
+    field_id = USER_ID.replace('-', ' ')
+    Users = RedisUser().search(query=f'@id:{field_id}')
+
+    assert hasattr(Users, 'objects') is True
+    assert len(Users.objects) == 1
+    Users.objects[0].hash = 'plopplip'
+    Users.objects[0].d_name = 'User#4321'
+
+    # Lets check by calling again a Creature if it was updated in Redis
+    UserAgain = RedisUser(username=USER_NAME)
+
+    assert UserAgain.hash == 'plopplip'
+    assert UserAgain.d_name == 'User#4321'
+
+
+def test_redis_user_to_json():
+    """
+    Querying a RedisUser, and dumping it as JSON
+    """
+    User = RedisUser(username=USER_NAME)
+
+    assert json.loads(User.to_json())
+    assert json.loads(User.to_json())['name'] == USER_NAME
 
 
 def test_redis_user_del():
     """
     Removing a RedisUser
     """
-    ret = RedisUser().destroy(username=USER_NAME)
+    ret = RedisUser(username=USER_NAME).destroy()
 
     assert ret is True
+
+
+def test_redis_user_del_ko():
+    """
+    Removing a RedisUser
+    > Expected to fail
+    """
+    ret = RedisUser().destroy()
+
+    assert ret is False
 
 
 def test_redis_user_get_ko():
@@ -78,9 +122,17 @@ def test_redis_user_get_ko():
     Querying a RedisUser
     > Expected to fail
     """
-    User = RedisUser().get(username=USER_NAME)
+    User = RedisUser(username=USER_NAME)
 
-    assert User is False
+    assert User.hkey == 'users'
+    assert hasattr(User, 'id') is False
+    assert hasattr(User, 'name') is False
+
+    User = RedisUser()
+
+    assert User.hkey == 'users'
+    assert hasattr(User, 'id') is False
+    assert hasattr(User, 'name') is False
 
 
 def test_redis_user_search_empty():
@@ -88,6 +140,8 @@ def test_redis_user_search_empty():
     Searching a RedisUser
     > Expected to fail
     """
-    Users = RedisUser().search(field='id', query=USER_ID.replace('-', ' '))
+    field_id = USER_ID.replace('-', ' ')
+    Users = RedisUser().search(query=f'@id:{field_id}')
 
-    assert len(Users) == 0
+    assert hasattr(Users, 'objects') is True
+    assert len(Users.objects) == 0

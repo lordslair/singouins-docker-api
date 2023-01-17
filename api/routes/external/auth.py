@@ -51,7 +51,7 @@ def auth_login():
             }
         ), 400
 
-    User = RedisUser().get(username)
+    User = RedisUser(username)
     if not User or not check_password_hash(User.hash, password):
         msg = "Bad username or password"
         logger.warning(msg)
@@ -111,12 +111,12 @@ def auth_register():
     # Check User existence
     h = '[User.id:None]'  # Header for logging
     try:
-        User = RedisUser().get(mail)
+        User = RedisUser(mail)
     except Exception as e:
         msg = f'{h} User Query KO (mail:{mail}) [{e}]'
         logger.error(msg)
     else:
-        if User:
+        if hasattr(User, 'id'):
             msg = f"User already exists (mail:{mail})"
             logger.trace(msg)
             return jsonify(
@@ -126,8 +126,8 @@ def auth_register():
             ), 409
 
     User = RedisUser().new(
-        mail,
-        generate_password_hash(password, rounds=10),
+        username=mail,
+        hash=generate_password_hash(password, rounds=10),
         )
 
     if User:
@@ -162,7 +162,7 @@ def auth_confirm(token):
     username = confirm_token(token)
     if username:
         try:
-            User = RedisUser().get(username)
+            User = RedisUser(username)
             User.active = True
         except Exception as e:
             msg = f'User confirmation KO (username:{username}) [{e}]'
@@ -209,7 +209,7 @@ def auth_delete():
         ), 400
 
     try:
-        RedisUser().destroy(username)
+        RedisUser(username).destroy()
     except Exception as e:
         msg = f'User deletion KO (username:{username}) [{e}]'
         logger.error(msg)
@@ -234,7 +234,7 @@ def auth_forgotpassword():
         ), 400
 
     mail = request.json.get('mail', None)
-    User = RedisUser().get(mail)
+    User = RedisUser(mail)
 
     # We setup necessary to generate a new random password
     length    = 12
@@ -252,7 +252,7 @@ def auth_forgotpassword():
             }
         ), 200
     else:
-        if User.hash.decode("utf-8") != RedisUser().get(mail).hash:
+        if User.hash.decode("utf-8") != RedisUser(mail).hash:
             # If hashes are != we screwed up the update
             msg = "Password replacement KO"
             logger.warning(msg)

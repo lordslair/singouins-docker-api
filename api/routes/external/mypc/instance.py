@@ -32,7 +32,7 @@ from variables                           import YQ_DISCORD
 def instance_add(pcid):
     request_json_check(request)
 
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -251,7 +251,7 @@ def instance_add(pcid):
 # API: GET /mypc/{pcid}/instance/{instanceid}
 @jwt_required()
 def instance_get(pcid, instanceid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -316,7 +316,7 @@ def instance_get(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/join
 @jwt_required()
 def instance_join(pcid, instanceid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -400,7 +400,7 @@ def instance_join(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/leave
 @jwt_required()
 def instance_leave(pcid, instanceid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 

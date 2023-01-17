@@ -22,7 +22,7 @@ PCS_URL = os.environ.get("SEP_PCS_URL")
 
 async def embed_user_grant(bot, ctx):
     discordname = f'{ctx.author.name}#{ctx.author.discriminator}'
-    Users = RedisUser().search(field='d_name', query=discordname)
+    Users = RedisUser().search(query=f'@d_name:{discordname}')
 
     if len(Users) == 0:
         # Discord name not found in DB
@@ -164,7 +164,7 @@ def embed_user_link(bot, ctx, mail):
         )
         return embed
 
-    User = RedisUser().get(mail)
+    User = RedisUser(mail)
     if User is None or User is False:
         msg = f'No User with mail:`{mail}` in DB'
         logger.trace(msg)

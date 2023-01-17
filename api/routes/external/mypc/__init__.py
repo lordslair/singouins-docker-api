@@ -28,8 +28,7 @@ from utils.routehelper          import (
 # API: POST /mypc
 @jwt_required()
 def mypc_add():
-    username = get_jwt_identity()
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     h = f'[User.id:{User.id}]'
 
     pcclass      = request.json.get('class', None)
@@ -84,7 +83,7 @@ def mypc_add():
                 pcname,
                 pcrace,
                 pcgender,
-                RedisUser().get(username).id
+                User.id,
                 )
         except Exception as e:
             msg = f'{h} PC creation KO (pcname:{pcname}) [{e}]'
@@ -270,7 +269,7 @@ def mypc_add():
 @jwt_required()
 def mypc_get_all():
     try:
-        User = RedisUser().get(get_jwt_identity())
+        User = RedisUser(get_jwt_identity())
         h = f'[User.id:{User.id}]'
         account = User.id.replace('-', ' ')
         Creatures = RedisCreature().search(query=f'@account:{account}')

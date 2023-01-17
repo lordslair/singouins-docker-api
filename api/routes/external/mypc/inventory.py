@@ -31,7 +31,7 @@ from variables                  import YQ_BROADCAST
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle
 @jwt_required()
 def inventory_item_dismantle(pcid, itemid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -150,7 +150,7 @@ def inventory_item_dismantle(pcid, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_equip(pcid, type, slotname, itemid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -449,7 +449,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_unequip(pcid, type, slotname, itemid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -549,7 +549,7 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety> # noqa
 @jwt_required()
 def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 

@@ -21,7 +21,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{pcid}/view
 @jwt_required()
 def view_get(pcid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 

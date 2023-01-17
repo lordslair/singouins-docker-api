@@ -33,7 +33,7 @@ from utils.routehelper          import (
 def action_resolver_skill(creatureuuid, skill_name):
     request_json_check(request)
 
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
@@ -223,7 +223,7 @@ def action_resolver_skill(creatureuuid, skill_name):
 def action_resolver_move(creatureuuid):
     request_json_check(request)
 
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 
@@ -383,7 +383,7 @@ def action_resolver_move(creatureuuid):
 def action_resolver_context(creatureuuid):
     request_json_check(request)
 
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 

@@ -21,7 +21,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{creatureuuid}/effects
 @jwt_required()
 def effects_get(creatureuuid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
     h = creature_check(Creature, User)
 

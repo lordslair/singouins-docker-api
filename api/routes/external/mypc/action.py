@@ -26,7 +26,7 @@ from utils.routehelper          import (
 # API: /mypc/{pcid}/action/reload/{weaponid}
 @jwt_required()
 def action_weapon_reload(pcid, weaponid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
@@ -171,7 +171,7 @@ def action_weapon_reload(pcid, weaponid):
 # API: POST /mypc/{pcid}/action/unload/{weaponid}
 @jwt_required()
 def action_weapon_unload(pcid, weaponid):
-    User = RedisUser().get(get_jwt_identity())
+    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
     h = creature_check(Creature, User)
 
