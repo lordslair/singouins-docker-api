@@ -7,7 +7,6 @@ from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisKorp     import RedisKorp
-from nosql.models.RedisUser     import RedisUser
 from nosql.queue                import yqueue_put
 
 from utils.routehelper          import (
@@ -25,9 +24,8 @@ from variables                  import YQ_BROADCAST, YQ_DISCORD
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/accept
 @jwt_required()
 def korp_accept(pcid, korpid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
@@ -120,9 +118,8 @@ def korp_accept(pcid, korpid):
 def korp_create(pcid):
     request_json_check(request)
 
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     korpname = request.json.get('name', None)
 
@@ -236,9 +233,8 @@ def korp_create(pcid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/decline
 @jwt_required()
 def korp_decline(pcid, korpid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
@@ -330,9 +326,8 @@ def korp_decline(pcid, korpid):
 # API: DELETE /mypc/<uuid:pcid>/korp/<uuid:korpid>
 @jwt_required()
 def korp_delete(pcid, korpid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
@@ -438,9 +433,8 @@ def korp_delete(pcid, korpid):
 # API: GET /mypc/{pcid}/korp/{korpid}
 @jwt_required()
 def korp_get_one(pcid, korpid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
@@ -515,9 +509,8 @@ def korp_get_one(pcid, korpid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/invite/<int:targetid>
 @jwt_required()
 def korp_invite(pcid, korpid, targetid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     CreatureTarget = RedisCreature().get(targetid)
 
@@ -655,9 +648,8 @@ def korp_invite(pcid, korpid, targetid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/kick/<int:targetid>
 @jwt_required()
 def korp_kick(pcid, korpid, targetid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     CreatureTarget = RedisCreature().get(targetid)
 
@@ -773,9 +765,8 @@ def korp_kick(pcid, korpid, targetid):
 # API: /mypc/<uuid:pcid>/korp/<uuid:korpid>/leave
 @jwt_required()
 def korp_leave(pcid, korpid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)

@@ -7,7 +7,6 @@ from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisStats    import RedisStats
-from nosql.models.RedisUser     import RedisUser
 
 from utils.routehelper          import (
     creature_check,
@@ -21,9 +20,8 @@ from utils.routehelper          import (
 # API: GET /mypc/{pcid}/stats
 @jwt_required()
 def stats_get(pcid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     try:
         Stats = RedisStats(Creature)

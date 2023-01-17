@@ -12,7 +12,6 @@ from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisWallet   import RedisWallet
-from nosql.models.RedisUser     import RedisUser
 
 from utils.routehelper          import (
     creature_check,
@@ -26,9 +25,8 @@ from utils.routehelper          import (
 # API: /mypc/{pcid}/action/reload/{weaponid}
 @jwt_required()
 def action_weapon_reload(pcid, weaponid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # Retrieving weapon stats
     try:
@@ -171,9 +169,8 @@ def action_weapon_reload(pcid, weaponid):
 # API: POST /mypc/{pcid}/action/unload/{weaponid}
 @jwt_required()
 def action_weapon_unload(pcid, weaponid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # Retrieving weapon stats
     try:

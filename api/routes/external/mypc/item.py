@@ -10,7 +10,6 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
-from nosql.models.RedisUser     import RedisUser
 
 from utils.routehelper          import (
     creature_check,
@@ -24,9 +23,8 @@ from utils.routehelper          import (
 # API: GET /mypc/{pcid}/item
 @jwt_required()
 def item_get(pcid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     try:
         bearer = Creature.id.replace('-', ' ')

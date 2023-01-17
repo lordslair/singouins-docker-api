@@ -14,7 +14,6 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisWallet   import RedisWallet
-from nosql.models.RedisUser     import RedisUser
 
 from utils.routehelper          import (
     creature_check,
@@ -30,9 +29,8 @@ from utils.routehelper          import (
 @jwt_required()
 def action_craft_consumable(pcid, recipeid):
     request_json_check(request)
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # Retrieving recipe
     try:

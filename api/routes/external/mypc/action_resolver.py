@@ -15,7 +15,6 @@ from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisStatus   import RedisStatus
-from nosql.models.RedisUser     import RedisUser
 
 from variables                  import RESOLVER_URL
 from utils.routehelper          import (
@@ -33,9 +32,8 @@ from utils.routehelper          import (
 def action_resolver_skill(creatureuuid, skill_name):
     request_json_check(request)
 
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
@@ -223,9 +221,8 @@ def action_resolver_skill(creatureuuid, skill_name):
 def action_resolver_move(creatureuuid):
     request_json_check(request)
 
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
@@ -383,9 +380,8 @@ def action_resolver_move(creatureuuid):
 def action_resolver_context(creatureuuid):
     request_json_check(request)
 
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'

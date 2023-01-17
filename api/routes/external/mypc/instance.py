@@ -13,7 +13,6 @@ from nosql.metas                         import metaNames
 from nosql.models.RedisCreature          import RedisCreature
 from nosql.models.RedisInstance          import RedisInstance
 from nosql.models.RedisStats             import RedisStats
-from nosql.models.RedisUser              import RedisUser
 
 from utils.routehelper          import (
     creature_check,
@@ -32,9 +31,8 @@ from variables                           import YQ_DISCORD
 def instance_add(pcid):
     request_json_check(request)
 
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     hardcore = request.json.get('hardcore', None)
     fast     = request.json.get('fast', None)
@@ -251,9 +249,8 @@ def instance_add(pcid):
 # API: GET /mypc/{pcid}/instance/{instanceid}
 @jwt_required()
 def instance_get(pcid, instanceid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     if Creature.instance is None:
         msg = f'{h} Creature not in an instance'
@@ -316,9 +313,8 @@ def instance_get(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/join
 @jwt_required()
 def instance_join(pcid, instanceid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     instanceid = str(instanceid)
@@ -400,9 +396,8 @@ def instance_join(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/leave
 @jwt_required()
 def instance_leave(pcid, instanceid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     instanceid = str(instanceid)

@@ -7,7 +7,6 @@ from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSquad    import RedisSquad
-from nosql.models.RedisUser     import RedisUser
 from nosql.queue                import yqueue_put
 
 from utils.routehelper          import (
@@ -24,9 +23,8 @@ from variables                  import YQ_BROADCAST, YQ_DISCORD
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/accept
 @jwt_required()
 def squad_accept(pcid, squadid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
@@ -117,9 +115,8 @@ def squad_accept(pcid, squadid):
 # API: POST /mypc/<uuid:pcid>/squad
 @jwt_required()
 def squad_create(pcid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     if Creature.squad is not None:
         msg = f'{h} PC already in a Squad (squadid:{Creature.squad})'
@@ -206,9 +203,8 @@ def squad_create(pcid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/decline
 @jwt_required()
 def squad_decline(pcid, squadid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
@@ -300,9 +296,8 @@ def squad_decline(pcid, squadid):
 # API: DELETE /mypc/<uuid:pcid>/squad/<uuid:squadid>
 @jwt_required()
 def squad_delete(pcid, squadid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
@@ -408,9 +403,8 @@ def squad_delete(pcid, squadid):
 # API: GET /mypc/{pcid}/squad/{squadid}
 @jwt_required()
 def squad_get_one(pcid, squadid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)
@@ -485,9 +479,8 @@ def squad_get_one(pcid, squadid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/invite/<int:targetid>
 @jwt_required()
 def squad_invite(pcid, squadid, targetid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     CreatureTarget = RedisCreature().get(targetid)
 
@@ -625,9 +618,8 @@ def squad_invite(pcid, squadid, targetid):
 # API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/kick/<int:targetid>
 @jwt_required()
 def squad_kick(pcid, squadid, targetid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     CreatureTarget = RedisCreature().get(targetid)
 
@@ -743,9 +735,8 @@ def squad_kick(pcid, squadid, targetid):
 # API: /mypc/<uuid:pcid>/squad/<uuid:squadid>/leave
 @jwt_required()
 def squad_leave(pcid, squadid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(pcid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
     squadid = str(squadid)

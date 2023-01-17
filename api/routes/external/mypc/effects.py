@@ -7,7 +7,6 @@ from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
-from nosql.models.RedisUser     import RedisUser
 
 from utils.routehelper          import (
     creature_check,
@@ -21,9 +20,8 @@ from utils.routehelper          import (
 # API: GET /mypc/{creatureuuid}/effects
 @jwt_required()
 def effects_get(creatureuuid):
-    User = RedisUser(get_jwt_identity())
     Creature = RedisCreature().get(creatureuuid)
-    h = creature_check(Creature, User)
+    h = creature_check(Creature, get_jwt_identity())
 
     try:
         bearer = Creature.id.replace('-', ' ')

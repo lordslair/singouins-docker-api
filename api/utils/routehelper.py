@@ -3,6 +3,8 @@
 from flask                      import jsonify
 from loguru                     import logger
 
+from nosql.models.RedisUser     import RedisUser
+
 from variables                  import API_INTERNAL_TOKEN
 
 
@@ -49,7 +51,7 @@ def request_json_check(request):
         return True
 
 
-def creature_check(Creature, User=None):
+def creature_check(Creature, username=None):
     try:
         # We check that The Creature is found
         # Or it's useless to continue
@@ -66,7 +68,8 @@ def creature_check(Creature, User=None):
 
         # If the Creature is found, and if a User is provided
         # We check if the User owns the Creature
-        if User is not None:
+        if username is not None:
+            User = RedisUser(username=username)
             if Creature.account != User.id:
                 msg = (
                     f'[Creature.id:{Creature.id}] Creature/User mismatch '
