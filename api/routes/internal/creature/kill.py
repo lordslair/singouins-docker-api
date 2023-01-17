@@ -112,13 +112,13 @@ def creature_kill(creatureid, victimid):
         try:
             try:
                 # We add loot only to the killer
-                creature_wallet = RedisWallet(Creature)
+                Wallet = RedisWallet(Creature.id)
                 if Creature.race in [1, 2, 3, 4]:
                     # Creature is a Singouin, we remove bananas
-                    creature_wallet.bananas += currency
+                    Wallet.bananas += currency
                 elif Creature.race in [5, 6, 7, 8]:
                     # Creature is a Pourchon, we remove sausages
-                    creature_wallet.sausages += currency
+                    Wallet.sausages += currency
                 else:
                     # We fucked up
                     pass
@@ -244,14 +244,14 @@ def creature_kill(creatureid, victimid):
                 h = f'[Creature.id:{CreatureMember.id}]'
                 try:
                     # We add loot only to the killer
-                    creature_wallet = RedisWallet(CreatureMember)
+                    Wallet = RedisWallet(CreatureMember.id)
                     amount = int(currency/len(SquadMembers))
                     if Creature.race in [1, 2, 3, 4]:
                         # Creature is a Singouin, we remove bananas
-                        creature_wallet.bananas += amount
+                        Wallet.bananas += amount
                     elif Creature.race in [5, 6, 7, 8]:
                         # Creature is a Pourchon, we remove sausages
-                        creature_wallet.sausages += amount
+                        Wallet.sausages += amount
                     else:
                         # We fucked up
                         pass

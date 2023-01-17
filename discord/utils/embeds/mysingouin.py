@@ -253,7 +253,7 @@ def embed_mysingouin_stats(bot, singouinuuid):
 
 def embed_mysingouin_wallet(bot, singouinuuid):
     Creature = RedisCreature().get(singouinuuid)
-    Wallet = RedisWallet(Creature)
+    Wallet = RedisWallet(Creature.id)
 
     try:
         embed = discord.Embed(

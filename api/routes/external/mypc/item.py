@@ -37,7 +37,7 @@ def item_get(pcid):
 
         creature_slots = RedisSlots(Creature)
         creature_cosmetics = RedisCosmetic(Creature).get_all()
-        creature_wallet = RedisWallet(Creature)
+        Wallet = RedisWallet(Creature.id)
     except Exception as e:
         msg = f'{h} Items Query KO [{e}]'
         logger.error(msg)
@@ -60,7 +60,7 @@ def item_get(pcid):
                     "armor": armor,
                     "equipment": creature_slots._asdict(),
                     "cosmetic": creature_cosmetics,
-                    "wallet": creature_wallet._asdict(),
+                    "wallet": Wallet.as_dict(),
                 },
             }
         ), 200

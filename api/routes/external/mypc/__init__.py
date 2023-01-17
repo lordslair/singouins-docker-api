@@ -111,9 +111,9 @@ def mypc_add():
 
             try:
                 # We initialize a fresh wallet
-                creature_wallet = RedisWallet(Creature)
+                Wallet = RedisWallet(Creature.id).new()
             except Exception as e:
-                msg = f'{h} RedisWallet creation KO [{e}]'
+                msg = f'{h} Wallet creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -123,10 +123,10 @@ def mypc_add():
                     }
                 ), 200
             else:
-                if creature_wallet:
-                    logger.trace(f'{h} RedisWallet creation OK')
+                if Wallet:
+                    logger.trace(f'{h} Wallet creation OK')
                 else:
-                    logger.warning(f'{h} RedisWallet creation KO')
+                    logger.warning(f'{h} Wallet creation KO')
 
             try:
                 if RedisCosmetic(Creature).new(pccosmetic):
@@ -332,8 +332,8 @@ def mypc_del(pcid):
             logger.trace(f'{h} RedisCosmetic delete OK')
         if RedisStats(Creature).destroy():
             logger.trace(f'{h} RedisStats delete OK (Redis)')
-        if RedisWallet(Creature).destroy():
-            logger.trace(f'{h} RedisWallet delete OK')
+        if RedisWallet(Creature.id).destroy():
+            logger.trace(f'{h} Wallet delete OK')
         if RedisSlots(Creature).destroy():
             logger.trace(f'{h} RedisSlots delete OK')
         if RedisHS(Creature).destroy():

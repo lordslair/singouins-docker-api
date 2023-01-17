@@ -25,7 +25,7 @@ def creature_wallet(creatureid):
     h = creature_check(Creature)
 
     try:
-        Wallet = RedisWallet(Creature)
+        Wallet = RedisWallet(Creature.id)
     except Exception as e:
         msg = f'{h} Wallet Query KO [{e}]'
         logger.error(msg)
@@ -45,7 +45,7 @@ def creature_wallet(creatureid):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "wallet": Wallet._asdict(),
+                        "wallet": Wallet.as_dict(),
                         "creature": Creature._asdict(),
                         },
                 }
@@ -110,7 +110,7 @@ def creature_wallet_modify(creatureid, caliber, operation, count):
         ), 200
 
     try:
-        Wallet = RedisWallet(Creature)
+        Wallet = RedisWallet(Creature.id)
         if operation == 'consume' and count > 0:
             wallet_value = getattr(Wallet, caliber)
             setattr(Wallet, caliber, wallet_value - count)
@@ -135,7 +135,7 @@ def creature_wallet_modify(creatureid, caliber, operation, count):
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "wallet": Wallet._asdict(),
+                        "wallet": Wallet.as_dict(),
                         "creature": Creature._asdict(),
                         },
                 }

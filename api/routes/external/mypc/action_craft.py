@@ -63,7 +63,7 @@ def action_craft_consumable(pcid, recipeid):
         ), 200
 
     # We load a lot of Redis Objects for later
-    Wallet = RedisWallet(Creature)
+    Wallet = RedisWallet(Creature.id)
     HighScores = RedisHS(Creature)
 
     # Check if requirements are met WITH extra components
