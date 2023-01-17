@@ -21,10 +21,10 @@ def test_redis_creature_new():
     """
     Creature = RedisCreature().new(
         name=CREATURE_NAME,
-        race=4,
+        raceid=4,
         gender=True,
-        accountid=ACCOUNT_ID,
-        instanceid=None,
+        accountuuid=ACCOUNT_ID,
+        instanceuuid=None,
     )
 
     assert Creature.name == CREATURE_NAME
