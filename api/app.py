@@ -150,15 +150,15 @@ app.add_url_rule('/meta/item/<string:metatype>',
 #
 # Routes: /pc
 #
-app.add_url_rule('/pc/<uuid:creatureid>',
+app.add_url_rule('/pc/<uuid:creatureuuid>',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_get_one)
 
-app.add_url_rule('/pc/<uuid:creatureid>/item',
+app.add_url_rule('/pc/<uuid:creatureuuid>/item',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_item_get_all)
 
-app.add_url_rule('/pc/<uuid:creatureid>/event',
+app.add_url_rule('/pc/<uuid:creatureuuid>/event',
                  methods=['GET'],
                  view_func=routes.external.pc.pc_event_get_all)
 #

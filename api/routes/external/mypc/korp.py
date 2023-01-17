@@ -24,7 +24,7 @@ from variables                  import YQ_BROADCAST, YQ_DISCORD
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/accept
 @jwt_required()
 def korp_accept(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
@@ -118,7 +118,7 @@ def korp_accept(pcid, korpid):
 def korp_create(pcid):
     request_json_check(request)
 
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     korpname = request.json.get('name', None)
@@ -233,7 +233,7 @@ def korp_create(pcid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/decline
 @jwt_required()
 def korp_decline(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
@@ -326,7 +326,7 @@ def korp_decline(pcid, korpid):
 # API: DELETE /mypc/<uuid:pcid>/korp/<uuid:korpid>
 @jwt_required()
 def korp_delete(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
@@ -433,7 +433,7 @@ def korp_delete(pcid, korpid):
 # API: GET /mypc/{pcid}/korp/{korpid}
 @jwt_required()
 def korp_get_one(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
@@ -509,10 +509,10 @@ def korp_get_one(pcid, korpid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/invite/<int:targetid>
 @jwt_required()
 def korp_invite(pcid, korpid, targetid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
-    CreatureTarget = RedisCreature().get(targetid)
+    CreatureTarget = RedisCreature(targetid)
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
@@ -648,10 +648,10 @@ def korp_invite(pcid, korpid, targetid):
 # API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/kick/<int:targetid>
 @jwt_required()
 def korp_kick(pcid, korpid, targetid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
-    CreatureTarget = RedisCreature().get(targetid)
+    CreatureTarget = RedisCreature(targetid)
 
     # We need to convert instanceid to STR as it is UUID type
     korpid = str(korpid)
@@ -765,7 +765,7 @@ def korp_kick(pcid, korpid, targetid):
 # API: /mypc/<uuid:pcid>/korp/<uuid:korpid>/leave
 @jwt_required()
 def korp_leave(pcid, korpid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type

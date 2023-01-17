@@ -31,7 +31,7 @@ from variables                           import YQ_DISCORD
 def instance_add(pcid):
     request_json_check(request)
 
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     hardcore = request.json.get('hardcore', None)
@@ -188,14 +188,14 @@ def instance_add(pcid):
                 y = randint(1, int(mapy))
 
                 Monster = RedisCreature().new(
-                    metaNames['race'][raceid]['name'],
-                    raceid,
-                    gender,
-                    None,
-                    rarity,
-                    x,
-                    y,
-                    instance.id,
+                    name=metaNames['race'][raceid]['name'],
+                    raceid=raceid,
+                    gender=gender,
+                    accountuuid=None,
+                    rarity=rarity,
+                    x=x,
+                    y=y,
+                    instanceuuid=instance.id,
                     )
             except Exception as e:
                 msg = (f'{h} Population in Instance KO for mob '
@@ -249,7 +249,7 @@ def instance_add(pcid):
 # API: GET /mypc/{pcid}/instance/{instanceid}
 @jwt_required()
 def instance_get(pcid, instanceid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     if Creature.instance is None:
@@ -270,7 +270,7 @@ def instance_get(pcid, instanceid):
             {
                 "success": False,
                 "msg": msg,
-                "payload": Creature._asdict(),
+                "payload": Creature.as_dict(),
             }
         ), 200
 
@@ -313,7 +313,7 @@ def instance_get(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/join
 @jwt_required()
 def instance_join(pcid, instanceid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
@@ -388,7 +388,7 @@ def instance_join(pcid, instanceid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": Creature._asdict(),
+                "payload": Creature.as_dict(),
             }
         ), 200
 
@@ -396,7 +396,7 @@ def instance_join(pcid, instanceid):
 # API: POST /mypc/{pcid}/instance/{instanceid}/leave
 @jwt_required()
 def instance_leave(pcid, instanceid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # We need to convert instanceid to STR as it is UUID type
@@ -500,9 +500,7 @@ def instance_leave(pcid, instanceid):
                     pass
                 else:
                     logger.trace(f'{h} Leaving EMPTY Instance({Instance.id})')
-                    Monster = RedisCreature().get(
-                        creature_inside['id']
-                        )
+                    Monster = RedisCreature(creature_inside['id'])
                     # We delete Stats
                     try:
                         RedisStats(Monster).destroy()
@@ -528,7 +526,7 @@ def instance_leave(pcid, instanceid):
                     # We kill it
                     # ALWAYS KILL CREATURE THE LAST
                     try:
-                        RedisCreature().destroy(Monster.id)
+                        Monster.destroy()
                     except Exception as e:
                         msg = f'{h} Creature delete KO [{e}]'
                         logger.error(msg)
@@ -582,7 +580,7 @@ def instance_leave(pcid, instanceid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Creature._asdict(),
+                    "payload": Creature.as_dict(),
                 }
             ), 200
     else:
@@ -628,6 +626,6 @@ def instance_leave(pcid, instanceid):
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Creature._asdict(),
+                    "payload": Creature.as_dict(),
                 }
             ), 200

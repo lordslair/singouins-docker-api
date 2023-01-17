@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import json
 import uuid
 
 from datetime                    import datetime
@@ -12,17 +13,89 @@ from nosql.variables             import str2typed, typed2str
 
 
 class RedisCreature:
-    def __init__(self):
+    def __init__(self, creatureuuid=None):
         self.hkey = 'creatures'
+        self.logh = f'[Creature.id:{creatureuuid}]'
+        self.id = creatureuuid
+        logger.trace(f'{self.logh} Method >> Initialization')
 
-    def destroy(self, cuuid):
+        if creatureuuid:
+            fullkey = f'{self.hkey}:{creatureuuid}'
+            try:
+                logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                if r.exists(fullkey):
+                    hashdict = r.hgetall(fullkey)
+                    for k, v in hashdict.items():
+                        # We create the object attribute with converted types
+                        # But we skip some of them as they have @setters
+                        # Note: any is like many 'or', all is like many 'and'.
+                        if any([
+                            k == 'instance',
+                            k == 'korp',
+                            k == 'korp_rank',
+                            k == 'squad',
+                            k == 'squad_rank',
+                            k == 'x',
+                            k == 'xp',
+                            k == 'y',
+                        ]):
+                            setattr(self, f'_{k}', str2typed(v))
+                        else:
+                            setattr(self, k, str2typed(v))
+                    logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+                else:
+                    logger.trace(f'{self.logh} Method KO (HASH NotFound)')
+            except Exception as e:
+                logger.error(f'{self.logh} Method KO [{e}]')
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        return self.__str__()
+
+    def as_dict(self):
+        return {
+            "account": self.account,
+            "created": self.created,
+            "date": self.date,
+            "gender": self.gender,
+            "id": self.id,
+            "instance": self.instance,
+            "korp": self.korp,
+            "korp_rank": self.korp_rank,
+            "level": self.level,
+            "name": self.name,
+            "race": self.race,
+            "rarity": self.rarity,
+            "squad": self.squad,
+            "squad_rank": self.squad_rank,
+            "targeted_by": self.targeted_by,
+            "x": self.x,
+            "xp": self.xp,
+            "y": self.y,
+        }
+
+    def destroy(self):
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
         try:
-            self.logh = f'[Creature.id:{cuuid}]'
             logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            if r.exists(f'{self.hkey}:{cuuid}'):
-                r.delete(f'{self.hkey}:{cuuid}')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.trace(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO - NotFound')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
@@ -31,94 +104,52 @@ class RedisCreature:
             logger.trace(f'{self.logh} Method OK')
             return True
 
-    def get(self, cuuid):
-        self.logh = f'[Creature.id:{cuuid}]'
-        fullkey = f'{self.hkey}:{cuuid}'
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            if r.exists(fullkey):
-                hashdict = r.hgetall(fullkey)
-            else:
-                logger.trace(f'{self.logh} Method KO (HASH NotFound)')
-                return False
-
-            for k, v in hashdict.items():
-                # We create the object attribute with converted types
-                # But we skip some of them as they have @setters
-                # Note: any is like many 'or', all is like many 'and'.
-                if any([
-                    k == 'instance',
-                    k == 'korp',
-                    k == 'korp_rank',
-                    k == 'squad',
-                    k == 'squad_rank',
-                    k == 'x',
-                    k == 'xp',
-                    k == 'y',
-                ]):
-                    setattr(self, f'_{k}', str2typed(v))
-                else:
-                    setattr(self, k, str2typed(v))
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return self
-
     def new(
-            self,
-            name,
-            race,
-            gender,
-            accountid,
-            rarity='Medium',
-            x=randint(2, 4),
-            y=randint(2, 5),
-            instanceid=None):
-
+        self,
+        name,
+        raceid,
+        gender,
+        accountuuid,
+        rarity='Medium',
+        x=randint(2, 4),
+        y=randint(2, 5),
+        instanceuuid=None,
+    ):
         # Checking if Creature exists with the same name
         # FOR A PLAYABLE CREATURE ONLY
         self.logh = '[Creature.id:None]'
-        try:
-            if race < 11:
-                # Checking if it exists
-                logger.trace(
-                    f'{self.logh} Method >> '
-                    f'(Checking uniqueness name:{name})'
-                    )
-                try:
-                    possible_uuid = str(
-                        uuid.uuid3(uuid.NAMESPACE_DNS, name)
-                        )
-                    if r.exists(f'{self.hkey}:{possible_uuid}'):
-                        logger.error(f'{self.logh} Method KO - Already Exists')
-                        return False
-                except Exception as e:
-                    logger.error(f'[Creature.id:None] Method KO [{e}]')
-                    return None
-                else:
-                    self.id = possible_uuid
-            else:
-                self.id = str(uuid.uuid4())
 
-            self.logh = f'[Creature.id:{self.id}]'
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
+        if raceid < 11:
+            # Checking if it exists
+            logger.trace(
+                f'{self.logh} Method >> (Checking uniqueness name:{name})')
+            try:
+                possible_uuid = str(uuid.uuid3(uuid.NAMESPACE_DNS, name))
+                if r.exists(f'{self.hkey}:{possible_uuid}'):
+                    logger.error(f'{self.logh} Method KO - Already Exists')
+                    return False
+            except Exception as e:
+                logger.error(f'[Creature.id:None] Method KO [{e}]')
+                return None
+            else:
+                self.id = possible_uuid
+        else:
+            self.id = str(uuid.uuid4())
+
+        self.logh = f'[Creature.id:{self.id}]'
 
         logger.trace(f'{self.logh} Method >> (Creating object)')
         try:
-            self.account = accountid
+            self.account = accountuuid
             self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.gender = gender
-            self._instance = instanceid
+            self._instance = instanceuuid
             self._korp = None
             self._korp_rank = None
             self.level = 1
             self.name = name
-            self.race = race
+            self.race = raceid
             self.rarity = rarity
             self._squad = None
             self._squad_rank = None
@@ -136,7 +167,7 @@ class RedisCreature:
             # We push data in final dict
             hashdict = {}
             # We loop over object properties to create it
-            for property, value in self._asdict().items():
+            for property, value in self.as_dict().items():
                 hashdict[property] = typed2str(value)
 
             logger.trace(f'{self.logh} Method >> (Storing HASH)')
@@ -201,29 +232,6 @@ class RedisCreature:
 
         logger.trace(f'{self.logh} Method OK')
         return creatures
-
-    def _asdict(self):
-        hashdict = {
-            "account": self.account,
-            "created": self.created,
-            "date": self.date,
-            "gender": self.gender,
-            "id": self.id,
-            "instance": self.instance,
-            "korp": self.korp,
-            "korp_rank": self.korp_rank,
-            "level": self.level,
-            "name": self.name,
-            "race": self.race,
-            "rarity": self.rarity,
-            "squad": self.squad,
-            "squad_rank": self.squad_rank,
-            "targeted_by": self.targeted_by,
-            "x": self.x,
-            "xp": self.xp,
-            "y": self.y,
-        }
-        return hashdict
 
     """
     Getter/Setter block for User management
@@ -413,38 +421,3 @@ class RedisCreature:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
             logger.trace(f'{self.logh} Method OK')
-
-
-if __name__ == '__main__':
-    Creature = RedisCreature().new(
-        'Turlututu',
-        4,
-        True,
-        'c884affd-21f6-32ec-9128-73016b53bfd7'
-    )
-
-    logger.success(RedisCreature().get(Creature.id)._asdict())
-    logger.success(RedisCreature().search(field='name', query='Turlututu'))
-    logger.success(RedisCreature().destroy(Creature.id))
-
-    """
-    FT.CREATE creature_idx PREFIX 1 "creatures:"
-        LANGUAGE english
-        SCORE 0.5
-        SCORE_FIELD "creature_score"
-        SCHEMA
-            account TEXT
-            id TEXT
-            instance TEXT
-            korp TEXT
-            korp_rank TEXT
-            name TEXT
-            squad TEXT
-            squad_rank TEXT
-            x NUMERIC
-            y NUMERIC
-
-    FT.SEARCH creature_idx "" LIMIT 0 10
-
-    FT.DROPINDEX creature_idx
-    """

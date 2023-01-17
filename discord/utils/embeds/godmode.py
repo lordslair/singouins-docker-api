@@ -44,14 +44,14 @@ def embed_godmode_spawn(
     # We create first the Creature (It will be a monster)
     try:
         Creature = RedisCreature().new(
-            metaNames['race'][raceid]['name'],
-            raceid,
-            True,
-            None,
+            name=metaNames['race'][raceid]['name'],
+            raceid=raceid,
+            gender=True,
+            accountuuid=None,
             rarity=rarity,
             x=posx,
             y=posy,
-            instanceid=instanceuuid,
+            instanceuuid=instanceuuid,
             )
         Stats = RedisStats(Creature).new(classid=None)
         # We put the info in pubsub channel for IA to populate the instance
@@ -59,7 +59,7 @@ def embed_godmode_spawn(
             pmsg = {
                 "action": 'pop',
                 "instance": None,
-                "creature": Creature._asdict(),
+                "creature": Creature.as_dict(),
                 "stats": Stats._asdict(),
                 }
             pchannel = 'ai-creature'
@@ -109,7 +109,7 @@ def embed_godmode_spawn(
 
 
 def embed_godmode_kill(bot, ctx, creatureuuid, instanceuuid):
-    Creature = RedisCreature().get(creatureuuid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
 
     # WE WILL KILL HERE ONLY NON PLAYABLE CREATURES FOR SAFETY
     if Creature.account is not None:
@@ -132,7 +132,7 @@ def embed_godmode_kill(bot, ctx, creatureuuid, instanceuuid):
             pmsg = {
                 "action": 'kill',
                 "instance": Creature.instance,
-                "creature": Creature._asdict(),
+                "creature": Creature.as_dict(),
                 }
             pchannel = 'ai-creature'
             publish(pchannel, json.dumps(pmsg))
@@ -188,7 +188,7 @@ def embed_godmode_give(
     metaid,
     rarity,
 ):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     item_caracs = {
         "metatype": metatype,
         "metaid": metaid,
@@ -260,7 +260,7 @@ def embed_godmode_give(
 
 
 def embed_godmode_reset(bot, ctx, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     Pa = RedisPa(Creature)
 
     try:
@@ -288,7 +288,7 @@ def embed_godmode_reset(bot, ctx, singouinuuid):
 
 def embed_godmode_take(bot, ctx, singouinuuid, itemuuid):
     try:
-        Creature = RedisCreature().get(singouinuuid)
+        Creature = RedisCreature(creatureuuid=singouinuuid)
         Item = RedisItem(Creature).get(itemuuid)
         RedisItem(Creature).destroy(itemuuid)
     except Exception as e:

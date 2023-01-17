@@ -15,10 +15,10 @@ from nosql.models.RedisSlots    import RedisSlots
 #
 
 
-# API: GET /pc/{pcid}
+# API: GET /pc/{creatureuuid}
 @jwt_required()
-def pc_get_one(creatureid):
-    Creature = RedisCreature().get(creatureid)
+def pc_get_one(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = '[Creature.id:None]'
 
     if Creature is None or Creature is False:
@@ -40,15 +40,15 @@ def pc_get_one(creatureid):
         {
             "success": True,
             "msg": msg,
-            "payload": Creature._asdict(),
+            "payload": Creature.as_dict(),
         }
     ), 200
 
 
-# API: GET /pc/{pcid}/item
+# API: GET /pc/{creatureuuid}/item
 @jwt_required()
-def pc_item_get_all(creatureid):
-    Creature = RedisCreature().get(creatureid)
+def pc_item_get_all(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = '[Creature.id:None]'
 
     if Creature is None or Creature is False:
@@ -185,10 +185,10 @@ def pc_item_get_all(creatureid):
     ), 200
 
 
-# API: GET /pc/{pcid}/event
+# API: GET /pc/{creatureuuid}/event
 @jwt_required()
-def pc_event_get_all(creatureid):
-    Creature = RedisCreature().get(creatureid)
+def pc_event_get_all(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = '[Creature.id:None]'
 
     if Creature is None or Creature is False:

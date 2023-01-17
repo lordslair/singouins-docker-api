@@ -20,7 +20,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{pcid}/pa
 @jwt_required()
 def pa_get(pcid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:

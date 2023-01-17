@@ -36,7 +36,7 @@ PCS_URL = os.environ.get("SEP_PCS_URL")
 
 
 def embed_mysingouin_highscores(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     HS = RedisHS(Creature)
 
     # We try to fetch the TOP1 HighScores
@@ -108,7 +108,7 @@ def embed_mysingouin_highscores(bot, singouinuuid):
 
 
 def embed_mysingouin_korp(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
 
     if Creature.korp is None:
         embed = discord.Embed(
@@ -169,7 +169,7 @@ def embed_mysingouin_korp(bot, singouinuuid):
 
 
 def embed_mysingouin_pa(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     Pa = RedisPa(Creature)
 
     try:
@@ -203,7 +203,7 @@ def embed_mysingouin_pa(bot, singouinuuid):
 
 
 def embed_mysingouin_stats(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     Stats = RedisStats(Creature)
 
     try:
@@ -252,7 +252,7 @@ def embed_mysingouin_stats(bot, singouinuuid):
 
 
 def embed_mysingouin_wallet(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     Wallet = RedisWallet(Creature.id)
 
     try:
@@ -342,7 +342,7 @@ def embed_mysingouin_wallet(bot, singouinuuid):
 
 
 def embed_mysingouin_equipement(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
     Slots = RedisSlots(Creature)
 
     try:
@@ -516,7 +516,7 @@ def embed_mysingouin_list(bot, ctx):
 
 
 def embed_mysingouin_squad(bot, singouinuuid):
-    Creature = RedisCreature().get(singouinuuid)
+    Creature = RedisCreature(creatureuuid=singouinuuid)
 
     if Creature.squad is None:
         embed = discord.Embed(

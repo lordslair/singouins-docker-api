@@ -21,7 +21,7 @@ from utils.routehelper          import (
 def creature_stats(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     try:
@@ -45,7 +45,7 @@ def creature_stats(creatureid):
                 "msg": msg,
                 "payload": {
                     "stats": Stats._asdict(),
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200
@@ -55,7 +55,7 @@ def creature_stats(creatureid):
 def creature_stats_hp_modify(creatureid, operation, count):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     if not isinstance(count, int):
@@ -108,7 +108,7 @@ def creature_stats_hp_modify(creatureid, operation, count):
                 "msg": msg,
                 "payload": {
                     "stats": Stats._asdict(),
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200

@@ -101,8 +101,8 @@ class buyView(View):
     async def ok_button_callback(self, button, interaction):
         try:
             Auction = RedisAuction().get(self.itemuuid)
-            CreatureSeller = RedisCreature().get(Auction.sellerid)
-            CreatureBuyer = RedisCreature().get(self.singouinuuid)
+            CreatureSeller = RedisCreature(creatureuuid=Auction.sellerid)
+            CreatureBuyer = RedisCreature(creatureuuid=self.singouinuuid)
             Item = RedisItem(CreatureSeller).get(self.itemuuid)
 
             WalletBuyer = RedisWallet(CreatureBuyer)

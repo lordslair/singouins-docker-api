@@ -23,7 +23,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{pcid}/item
 @jwt_required()
 def item_get(pcid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:

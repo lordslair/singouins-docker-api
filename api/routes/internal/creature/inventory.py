@@ -21,7 +21,7 @@ from utils.routehelper          import (
 def creature_inventory_get(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     try:
@@ -46,7 +46,7 @@ def creature_inventory_get(creatureid):
                 "msg": msg,
                 "payload": {
                     "inventory": Inventory,
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200

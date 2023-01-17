@@ -29,7 +29,7 @@ from utils.routehelper          import (
 @jwt_required()
 def action_craft_consumable(pcid, recipeid):
     request_json_check(request)
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # Retrieving recipe

@@ -30,14 +30,14 @@ def creature_add():
         # We create first the Creature (It will be a monster)
         try:
             Creature = RedisCreature().new(
-                metaNames['race'][request.json.get('raceid')]['name'],
-                request.json.get('raceid'),
-                request.json.get('gender'),
-                None,
-                request.json.get('rarity'),
-                request.json.get('x'),
-                request.json.get('y'),
-                request.json.get('instanceid')
+                name=metaNames['race'][request.json.get('raceid')]['name'],
+                raceid=request.json.get('raceid'),
+                gender=request.json.get('gender'),
+                accountuuid=None,
+                rarity=request.json.get('rarity'),
+                x=request.json.get('x'),
+                y=request.json.get('y'),
+                unstanceuuid=request.json.get('instanceid')
                 )
         except Exception as e:
             msg = f'{h} Creature Query KO [{e}]'
@@ -83,7 +83,7 @@ def creature_add():
             pmsg = {
                 "action": 'pop',
                 "instance": None,
-                "creature": Creature._asdict(),
+                "creature": Creature.as_dict(),
                 "stats": Stats._asdict(),
                 }
             pchannel = 'ai-creature'
@@ -100,7 +100,7 @@ def creature_add():
             {
                 "success": True,
                 "msg": msg,
-                "payload": Creature._asdict(),
+                "payload": Creature.as_dict(),
             }
         ), 201
 
@@ -109,14 +109,14 @@ def creature_add():
 def creature_del(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # We put the info in pubsub channel for IA to regulate the instance
     try:
         pmsg     = {"action": 'kill',
                     "instance": Creature.instance,
-                    "creature": Creature._asdict()}
+                    "creature": Creature.as_dict()}
         pchannel = 'ai-creature'
         publish(pchannel, jsonify(pmsg).get_data())
     except Exception as e:
@@ -128,7 +128,7 @@ def creature_del(creatureid):
     try:
         # Now we can delete tue PC itself
         RedisStats(Creature).destroy()
-        RedisCreature().destroy(Creature.id)
+        RedisCreature(Creature.id).destroy()
     except Exception as e:
         msg = f'{h} Creature delete KO [{e}]'
         logger.error(msg)
@@ -155,7 +155,7 @@ def creature_del(creatureid):
 def creature_get_one(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     msg = f'{h} Creature Query OK'
@@ -164,7 +164,7 @@ def creature_get_one(creatureid):
         {
             "success": True,
             "msg": msg,
-            "payload": Creature._asdict(),
+            "payload": Creature.as_dict(),
         }
     ), 200
 

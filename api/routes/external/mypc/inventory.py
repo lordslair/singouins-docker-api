@@ -30,7 +30,7 @@ from variables                  import YQ_BROADCAST
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/dismantle
 @jwt_required()
 def inventory_item_dismantle(pcid, itemid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     if RedisPa(Creature).bluepa < 1:
@@ -138,7 +138,7 @@ def inventory_item_dismantle(pcid, itemid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     "wallet": Wallet.as_dict(),
                 },
             }
@@ -148,7 +148,7 @@ def inventory_item_dismantle(pcid, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_equip(pcid, type, slotname, itemid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
@@ -446,7 +446,7 @@ def inventory_item_equip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/unequip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 def inventory_item_unequip(pcid, type, slotname, itemid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
@@ -545,7 +545,7 @@ def inventory_item_unequip(pcid, type, slotname, itemid):
 # API: POST /mypc/<int:pcid>/inventory/item/<int:itemid>/offset/<int:offsetx>/<int:offsety> # noqa
 @jwt_required()
 def inventory_item_offset(pcid, itemid, offsetx=None, offsety=None):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:

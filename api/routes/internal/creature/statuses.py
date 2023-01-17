@@ -23,7 +23,7 @@ def creature_status_add(creatureid, status_name):
     request_internal_token_check(request)
     request_json_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     duration    = request.json.get('duration')
@@ -82,7 +82,7 @@ def creature_status_add(creatureid, status_name):
                     "msg": msg,
                     "payload": {
                         "statuses": creature_statuses,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -102,7 +102,7 @@ def creature_status_add(creatureid, status_name):
 def creature_status_del(creatureid, status_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     # Cd del
@@ -130,7 +130,7 @@ def creature_status_del(creatureid, status_name):
                     "msg": msg,
                     "payload": {
                         "statuses": creature_statuses,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -150,7 +150,7 @@ def creature_status_del(creatureid, status_name):
 def creature_status_get_one(creatureid, status_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     # Cd get
@@ -187,7 +187,7 @@ def creature_status_get_one(creatureid, status_name):
                     "msg": msg,
                     "payload": {
                         "status": creature_status,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -207,7 +207,7 @@ def creature_status_get_one(creatureid, status_name):
 def creature_status_get_all(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     # Statuses get
@@ -234,7 +234,7 @@ def creature_status_get_all(creatureid):
                     "msg": msg,
                     "payload": {
                         "statuses": creature_statuses,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200

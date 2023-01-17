@@ -20,7 +20,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{creatureuuid}/statuses
 @jwt_required()
 def statuses_get(creatureuuid):
-    Creature = RedisCreature().get(creatureuuid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
@@ -45,7 +45,7 @@ def statuses_get(creatureuuid):
                 "msg": msg,
                 "payload": {
                     "statuses": Statuses._asdict,
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200

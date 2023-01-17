@@ -22,7 +22,7 @@ from utils.routehelper          import (
 def creature_equipment(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     try:
@@ -75,7 +75,7 @@ def creature_equipment(creatureid):
                 "msg": msg,
                 "payload": {
                     "equipment": equipment,
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200
@@ -85,7 +85,7 @@ def creature_equipment(creatureid):
 def creature_equipment_modifiy(creatureid, itemid, operation, count):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     if operation not in ['add', 'consume']:
@@ -136,7 +136,7 @@ def creature_equipment_modifiy(creatureid, itemid, operation, count):
                 "msg": msg,
                 "payload": {
                     "item": Item._asdict(),
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200

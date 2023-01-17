@@ -23,7 +23,7 @@ def creature_cd_add(creatureid, skill_name):
     request_internal_token_check(request)
     request_json_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     duration    = request.json.get('duration')
@@ -82,7 +82,7 @@ def creature_cd_add(creatureid, skill_name):
                     "msg": msg,
                     "payload": {
                         "cds": creature_cds,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -102,7 +102,7 @@ def creature_cd_add(creatureid, skill_name):
 def creature_cd_del(creatureid, skill_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     # Cd del
@@ -130,7 +130,7 @@ def creature_cd_del(creatureid, skill_name):
                     "msg": msg,
                     "payload": {
                         "cds": creature_cds,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -150,7 +150,7 @@ def creature_cd_del(creatureid, skill_name):
 def creature_cd_get_one(creatureid, skill_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     # Cd get
@@ -187,7 +187,7 @@ def creature_cd_get_one(creatureid, skill_name):
                     "msg": msg,
                     "payload": {
                         "cd": creature_cd,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -207,7 +207,7 @@ def creature_cd_get_one(creatureid, skill_name):
 def creature_cd_get_all(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     # CDs get
@@ -234,7 +234,7 @@ def creature_cd_get_all(creatureid):
                     "msg": msg,
                     "payload": {
                         "cds": creature_cds,
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200

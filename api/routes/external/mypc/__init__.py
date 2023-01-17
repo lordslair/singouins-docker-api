@@ -80,10 +80,10 @@ def mypc_add():
             ), 200
         try:
             Creature = RedisCreature().new(
-                pcname,
-                pcrace,
-                pcgender,
-                User.id,
+                name=pcname,
+                raceid=pcrace,
+                gender=pcgender,
+                accountuuid=User.id,
                 )
         except Exception as e:
             msg = f'{h} PC creation KO (pcname:{pcname}) [{e}]'
@@ -260,7 +260,7 @@ def mypc_add():
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Creature._asdict(),
+                    "payload": Creature.as_dict(),
                 }
             ), 201
 
@@ -312,7 +312,7 @@ def mypc_get_all():
 # API: DELETE /mypc/<int:pcid>
 @jwt_required()
 def mypc_del(pcid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     if Creature.instance:
@@ -363,7 +363,7 @@ def mypc_del(pcid):
                     logger.trace(f'{h} RedisItem(s) delete OK')
 
         # Now we can delete the Creature itself
-        RedisCreature().destroy(Creature.id)
+        Creature.destroy()
 
         # TODO: For now we do NOT delete items on PC deletion
     except Exception as e:

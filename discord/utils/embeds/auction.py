@@ -87,7 +87,7 @@ def embed_auction_search(metatype, metaid):
 
 
 def embed_auction_remove(creatureuuid, itemuuid):
-    Creature = RedisCreature().get(creatureuuid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     Item = RedisItem(Creature).get(itemuuid)
 
     if Item is None:
@@ -128,7 +128,7 @@ def embed_auction_remove(creatureuuid, itemuuid):
 
 
 def embed_auction_sell(creatureuuid, itemuuid, price):
-    Creature = RedisCreature().get(creatureuuid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     Item = RedisItem(Creature).get(itemuuid)
 
     if Item is None:

@@ -23,7 +23,7 @@ from variables                  import YQ_BROADCAST
 def creature_position_set(creatureid, x, y):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature)
 
     try:
@@ -66,6 +66,6 @@ def creature_position_set(creatureid, x, y):
             {
                 "success": True,
                 "msg": msg,
-                "payload": Creature._asdict(),
+                "payload": Creature.as_dict(),
             }
         ), 200

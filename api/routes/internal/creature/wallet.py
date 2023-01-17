@@ -17,11 +17,11 @@ from utils.routehelper          import (
 
 
 # /internal/creature/*
-# API: GET /internal/creature/{creatureid}/wallet
-def creature_wallet(creatureid):
+# API: GET /internal/creature/{creatureuuid}/wallet
+def creature_wallet(creatureuuid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature)
 
     try:
@@ -46,7 +46,7 @@ def creature_wallet(creatureid):
                     "msg": msg,
                     "payload": {
                         "wallet": Wallet.as_dict(),
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200
@@ -62,11 +62,11 @@ def creature_wallet(creatureid):
             ), 200
 
 
-# API: PUT /internal/creature/{creatureid}/wallet/{caliber}/{operation}/(count)
-def creature_wallet_modify(creatureid, caliber, operation, count):
+# API: PUT /internal/creature/{creatureuuid}/wallet/{caliber}/{operation}/(count)
+def creature_wallet_modify(creatureuuid, caliber, operation, count):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature)
 
     if not isinstance(count, int):
@@ -136,7 +136,7 @@ def creature_wallet_modify(creatureid, caliber, operation, count):
                     "msg": msg,
                     "payload": {
                         "wallet": Wallet.as_dict(),
-                        "creature": Creature._asdict(),
+                        "creature": Creature.as_dict(),
                         },
                 }
             ), 200

@@ -36,7 +36,7 @@ def test_redis_creature_get_ok():
     """
     Querying a RedisCreature
     """
-    Creature = RedisCreature().get(cuuid=CREATURE_ID)
+    Creature = RedisCreature(creatureuuid=CREATURE_ID)
 
     assert Creature.name == CREATURE_NAME
     assert Creature.gender is True
@@ -58,13 +58,13 @@ def test_redis_creature_setters():
     """
     Querying a RedisCreature, and modifiy attributes
     """
-    Creature = RedisCreature().get(cuuid=CREATURE_ID)
+    Creature = RedisCreature(creatureuuid=CREATURE_ID)
 
     Creature.x = 10
     Creature.y = 10
 
     # Lets check by calling again a Creature if it was updated in Redis
-    CreatureAgain = RedisCreature().get(cuuid=CREATURE_ID)
+    CreatureAgain = RedisCreature(creatureuuid=CREATURE_ID)
 
     assert CreatureAgain.x == 10
     assert CreatureAgain.y == 10
@@ -74,7 +74,7 @@ def test_redis_creature_del():
     """
     Removing a RedisCreature
     """
-    ret = RedisCreature().destroy(cuuid=CREATURE_ID)
+    ret = RedisCreature(creatureuuid=CREATURE_ID).destroy()
 
     assert ret is True
 
@@ -84,9 +84,17 @@ def test_redis_creature_get_ko():
     Querying a RedisCreature
     > Expected to fail
     """
-    Creature = RedisCreature().get(cuuid=CREATURE_ID)
+    Creature = RedisCreature(creatureuuid=CREATURE_ID)
 
-    assert Creature is False
+    assert Creature.hkey == 'creatures'
+    assert hasattr(Creature, 'rarity') is False
+    assert hasattr(Creature, 'name') is False
+
+    Creature = RedisCreature()
+
+    assert Creature.hkey == 'creatures'
+    assert hasattr(Creature, 'rarity') is False
+    assert hasattr(Creature, 'name') is False
 
 
 def test_redis_creature_search_empty():

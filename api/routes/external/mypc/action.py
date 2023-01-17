@@ -25,7 +25,7 @@ from utils.routehelper          import (
 # API: /mypc/{pcid}/action/reload/{weaponid}
 @jwt_required()
 def action_weapon_reload(pcid, weaponid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # Retrieving weapon stats
@@ -169,7 +169,7 @@ def action_weapon_reload(pcid, weaponid):
 # API: POST /mypc/{pcid}/action/unload/{weaponid}
 @jwt_required()
 def action_weapon_unload(pcid, weaponid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     # Retrieving weapon stats

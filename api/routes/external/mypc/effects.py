@@ -20,7 +20,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{creatureuuid}/effects
 @jwt_required()
 def effects_get(creatureuuid):
-    Creature = RedisCreature().get(creatureuuid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
@@ -45,7 +45,7 @@ def effects_get(creatureuuid):
                 "msg": msg,
                 "payload": {
                     "effects": Effects._asdict,
-                    "creature": Creature._asdict(),
+                    "creature": Creature.as_dict(),
                     },
             }
         ), 200

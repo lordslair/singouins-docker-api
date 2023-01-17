@@ -51,14 +51,14 @@ color_dis['Legendary'] = ':purple_square:'
 
 
 # /internal/creature/*
-# API: POST /internal/creature/{creatureid}/kill/{victimid}
-def creature_kill(creatureid, victimid):
+# API: POST /internal/creature/{creatureuuid}/kill/{victimid}
+def creature_kill(creatureuuid, victimid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature().get(creatureid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature)
 
-    CreatureVictim = RedisCreature().get(victimid)
+    CreatureVictim = RedisCreature(victimid)
     if CreatureVictim is None:
         msg = f'{h} Victim not found (victimid:{victimid})'
         logger.warning(msg)
@@ -240,7 +240,7 @@ def creature_kill(creatureid, victimid):
 
             # We loop over the members
             for SquadMember in SquadMembers:
-                CreatureMember = RedisCreature().get(SquadMember['id'])
+                CreatureMember = RedisCreature(SquadMember['id'])
                 h = f'[Creature.id:{CreatureMember.id}]'
                 try:
                     # We add loot only to the killer
@@ -296,7 +296,7 @@ def creature_kill(creatureid, victimid):
                 try:
                     # We need to pick who wins the item in the squad
                     winner = choices(SquadMembers, k=1)[0]
-                    CreatureWinner = RedisCreature().get(winner['id'])
+                    CreatureWinner = RedisCreature(winner['id'])
                     h = f'[Creature.id:{CreatureWinner.id}]'
                     Item = RedisItem(CreatureWinner).new(loot)
                 except Exception as e:
@@ -388,7 +388,7 @@ def creature_kill(creatureid, victimid):
             # We destroy the RedisStats
             RedisStats(CreatureVictim).destroy()
             # We destroy the Creature
-            RedisCreature().destroy(victimid)
+            CreatureVictim.destroy()
         else:
             # It is a playable Creature (Singouin)
             # We DO NOT delete it
@@ -471,7 +471,7 @@ def creature_kill(creatureid, victimid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": Creature._asdict(),
+                "payload": Creature.as_dict(),
             }
         ), 200
 

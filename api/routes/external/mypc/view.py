@@ -20,7 +20,7 @@ from utils.routehelper          import (
 # API: GET /mypc/{pcid}/view
 @jwt_required()
 def view_get(pcid):
-    Creature = RedisCreature().get(pcid)
+    Creature = RedisCreature(creatureuuid=pcid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
@@ -101,7 +101,7 @@ def view_get(pcid):
             view_final = []  # We initialize the result array
             for SquadMember in SquadMembers:
                 try:
-                    CreatureMember = RedisCreature().get(SquadMember['id'])
+                    CreatureMember = RedisCreature(SquadMember['id'])
                     Stats = RedisStats(CreatureMember)
                     range = 4 + round(Stats.p / 50)
 
