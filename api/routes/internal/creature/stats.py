@@ -21,7 +21,7 @@ from utils.routehelper          import (
 def creature_stats(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:
@@ -55,7 +55,7 @@ def creature_stats(creatureid):
 def creature_stats_hp_modify(creatureid, operation, count):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     if not isinstance(count, int):

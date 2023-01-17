@@ -22,7 +22,7 @@ from utils.routehelper          import (
 def creature_equipment(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:
@@ -85,7 +85,7 @@ def creature_equipment(creatureid):
 def creature_equipment_modifiy(creatureid, itemid, operation, count):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     if operation not in ['add', 'consume']:

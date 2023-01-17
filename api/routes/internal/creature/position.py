@@ -23,7 +23,7 @@ from variables                  import YQ_BROADCAST
 def creature_position_set(creatureid, x, y):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:

@@ -29,12 +29,10 @@ from utils.gunilog                 import (InterceptHandler,
 
 # Imports of endpoint functions
 import routes.internal.creature
-import routes.internal.creature.auction
 import routes.internal.creature.cds
 import routes.internal.creature.context
 import routes.internal.creature.effects
 import routes.internal.creature.equipment
-import routes.internal.creature.highscore
 import routes.internal.creature.inventory
 import routes.internal.creature.item
 import routes.internal.creature.kill
@@ -45,12 +43,6 @@ import routes.internal.creature.statuses
 import routes.internal.creature.user
 import routes.internal.creature.view
 import routes.internal.creature.wallet
-import routes.internal.discord
-import routes.internal.instance
-import routes.internal.korp
-import routes.internal.meta
-import routes.internal.squad
-import routes.internal.statistics
 import routes.internal.up
 
 import routes.external.auth
@@ -367,23 +359,6 @@ app.add_url_rule('/internal/creature/<uuid:creatureid>',
 app.add_url_rule('/internal/creature/<uuid:creatureid>',
                  methods=['DELETE'],
                  view_func=routes.internal.creature.creature_del)
-# Routes /internal/creature/{creatureid}/auction/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.auction.creature_auction_buy)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.auction.creature_auction_get)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.auction.creature_auction_sell)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/auction/<uuid:itemid>',
-                 methods=['DELETE'],
-                 view_func=routes.internal.creature.auction.creature_auction_remove)
-# Routes /internal/creature/{creatureid}/auction/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/auctions',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.auction.creature_auctions_search)
 # Routes /internal/creature/{creatureid}/cd/*
 app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
                  methods=['PUT'],
@@ -421,10 +396,6 @@ app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_nam
 app.add_url_rule('/internal/creature/<uuid:creatureid>/effects',
                  methods=['GET'],
                  view_func=routes.internal.creature.effects.creature_effect_get_all)
-# Routes /internal/creature/{creatureid}/highscore/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/highscore',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.highscore.creature_highscore_get)
 # Routes /internal/creature/{creatureid}/inventory/*
 app.add_url_rule('/internal/creature/<uuid:creatureid>/inventory',
                  methods=['GET'],
@@ -481,57 +452,10 @@ app.add_url_rule('/internal/creature/<uuid:creatureid>/wallet',
 app.add_url_rule('/internal/creature/<uuid:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
                  methods=['PUT'],
                  view_func=routes.internal.creature.wallet.creature_wallet_modify)
-# Routes /internal/creature/{creatureid}/user/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/user',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.user.creature_user)
-# Routes /internal/creature/{creatureid}/view/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/view',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.view.creature_view_get)
 # Routes /internal/creatures/*
 app.add_url_rule('/internal/creatures',
                  methods=['GET'],
                  view_func=routes.internal.creature.creature_get_all)
-# Routes /internal/discord/*
-app.add_url_rule('/internal/discord/link',
-                 methods=['POST'],
-                 view_func=routes.internal.discord.discord_link)
-app.add_url_rule('/internal/discord/creature',
-                 methods=['POST'],
-                 view_func=routes.internal.discord.discord_creature_get_one)
-app.add_url_rule('/internal/discord/creatures',
-                 methods=['POST'],
-                 view_func=routes.internal.discord.discord_creature_get_all)
-app.add_url_rule('/internal/discord/user',
-                 methods=['POST'],
-                 view_func=routes.internal.discord.discord_user)
-# Routes /internal/instance/*
-app.add_url_rule('/internal/instances',
-                 methods=['GET'],
-                 view_func=routes.internal.instance.internal_instance_get_all)
-# Routes /internal/korp/*
-app.add_url_rule('/internal/korp/<uuid:korpid>',
-                 methods=['GET'],
-                 view_func=routes.internal.korp.internal_korp_get_one)
-app.add_url_rule('/internal/korps',
-                 methods=['GET'],
-                 view_func=routes.internal.korp.internal_korp_get_all)
-# Routes /internal/meta/*
-app.add_url_rule('/internal/meta/<string:metatype>',
-                 methods=['GET'],
-                 view_func=routes.internal.meta.internal_meta_get_one)
-# Routes /internal/squad/*
-app.add_url_rule('/internal/squad/<uuid:squadid>',
-                 methods=['GET'],
-                 view_func=routes.internal.squad.internal_squad_get_one)
-app.add_url_rule('/internal/squads',
-                 methods=['GET'],
-                 view_func=routes.internal.squad.internal_squad_get_all)
-# Routes /internal/statistics/*
-app.add_url_rule('/internal/statistics/highscores',
-                 methods=['GET'],
-                 view_func=routes.internal.statistics.statistics_highscores)
 # Routes /internal/up/*
 app.add_url_rule('/internal/up',
                  methods=['GET'],

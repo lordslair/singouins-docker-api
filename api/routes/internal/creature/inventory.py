@@ -21,7 +21,7 @@ from utils.routehelper          import (
 def creature_inventory_get(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:

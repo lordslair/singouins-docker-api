@@ -65,161 +65,6 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureProfileResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/auction/{itemid}:
-    delete:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Auction DEL request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: itemid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Auction GET request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: itemid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Auction ADD request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: itemid
-          schema:
-            type: integer
-          required: true
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                duration:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-                price:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 100
-      responses:
-        '201':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Auction BUY request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: itemid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/auctions:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Auction SEARCH request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                metaid:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 14
-                  required: true
-                metatype:
-                  schema:
-                    type: string
-                    enum: [armor, weapon]
-                    nullable: false
-                  required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
   /internal/creature/{creatureid}/cd/{skill_name}:
     put:
       tags:
@@ -567,28 +412,6 @@ paths:
                 $ref: '#/components/schemas/GenericResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/highscore:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature HighScore request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureHighScoreResponse'
-      security:
-        - internal_token: []
   /internal/creature/{creatureid}/kill/{victimid}:
     post:
       tags:
@@ -874,26 +697,6 @@ paths:
                 $ref: '#/components/schemas/InternalCreatureStatusesResponse'
       security:
         - internal_token: []
-  /internal/creature/{creatureid}/view:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature View request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreatureViewResponse'
-      security:
-        - internal_token: []
   /internal/creature/{creatureid}/wallet:
     get:
       tags:
@@ -968,202 +771,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalCreaturesResponse'
-      security:
-        - internal_token: []
-  /internal/discord/link:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: User/Discord association request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                discordname:
-                  type: string
-                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-                  example: 'DiscordName#1234'
-                  nullable: false
-                usermail:
-                  type: string
-                  format: email
-                  nullable: false
-      responses:
-        '200':
-          description: OK - User/Discord associated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalUserResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - internal_token: []
-  /internal/discord/creature:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature access request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                discordname:
-                  type: string
-                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-                  example: 'DiscordName#1234'
-                  nullable: false
-                creatureid:
-                  type: integer
-                  minimum: 1
-                  nullable: false
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalDiscordCreatureResponse'
-      security:
-        - internal_token: []
-  /internal/discord/creatures:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creatures request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                discordname:
-                  type: string
-                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-                  example: 'DiscordName#1234'
-                  nullable: false
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreaturesResponse'
-      security:
-        - internal_token: []
-  /internal/discord/user:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: User information request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                discordname:
-                  type: string
-                  pattern: '^.{3,32}#[0-9]{4}$' # regex for discord username
-                  example: 'DiscordName#1234'
-                  nullable: false
-      responses:
-        '200':
-          description: OK - User found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalUserResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - internal_token: []
-  /internal/korp:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Korp information request (one)
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalKorp'
-      responses:
-        '200':
-          description: OK - Korp found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalKorpResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - internal_token: []
-  /internal/korps:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Korps information request (all)
-      responses:
-        '200':
-          description: OK - Korps found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalKorpsResponse'
-      security:
-        - internal_token: []
-  /internal/squad:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Squad information request (one)
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalSquad'
-      responses:
-        '200':
-          description: OK - Squad found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalSquadResponse'
-        '400':
-          description: KO - Malformed JSON
-      security:
-        - internal_token: []
-  /internal/squads:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Squads information request (all)
-      responses:
-        '200':
-          description: OK - Squads found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalSquadsResponse'
-        '400':
-          description: KO - Malformed JSON
       security:
         - internal_token: []
   /internal/up:
@@ -2586,20 +2193,6 @@ components:
         success:
           type: boolean
           nullable: false
-    CreatureViewResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
 
     InternalCreatureResolverContextResponse:
       type: object
@@ -2644,7 +2237,6 @@ components:
         success:
           type: boolean
           nullable: false
-
     InternalCreatureCdResponse:
       type: object
       properties:
@@ -2694,7 +2286,6 @@ components:
         success:
           type: boolean
           nullable: false
-
     InternalCreatureItemResponse:
       type: object
       properties:
@@ -2713,26 +2304,6 @@ components:
         success:
           type: boolean
           nullable: false
-
-    InternalCreatureHighScoreResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            equipment:
-              $ref: '#/components/schemas/ItemObject'
-        success:
-          type: boolean
-          nullable: false
-
     InternalCreatureEffectResponse:
       type: object
       properties:
@@ -2887,92 +2458,6 @@ components:
               $ref: '#/components/schemas/PcObject'
             user:
               $ref: '#/components/schemas/UserObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalKorpResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            members:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            pending:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            korp:
-              $ref: '#/components/schemas/KorpObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalKorpsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/KorpObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalSquadResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            members:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            pending:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            squad:
-              $ref: '#/components/schemas/SquadObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalSquadsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/SquadObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalUserResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          $ref: '#/components/schemas/UserObject'
         success:
           type: boolean
           nullable: false

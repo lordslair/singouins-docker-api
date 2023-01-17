@@ -21,7 +21,7 @@ from utils.routehelper          import (
 def creature_pa_get(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:
@@ -66,7 +66,7 @@ def creature_pa_get(creatureid):
 def creature_pa_consume(creatureid, redpa, bluepa):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     if redpa > 16 or bluepa > 8:
@@ -146,7 +146,7 @@ def creature_pa_consume(creatureid, redpa, bluepa):
 def creature_pa_reset(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:

@@ -26,7 +26,7 @@ def creature_item_add(creatureid):
     request_internal_token_check(request)
     request_json_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     item_caracs = {
@@ -89,7 +89,7 @@ def creature_item_add(creatureid):
 def creature_item_del(creatureid, itemid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     try:

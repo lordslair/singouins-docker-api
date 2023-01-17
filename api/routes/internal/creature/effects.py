@@ -23,7 +23,7 @@ def creature_effect_add(creatureid, effect_name):
     request_internal_token_check(request)
     request_json_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     duration    = request.json.get('duration')
@@ -102,7 +102,7 @@ def creature_effect_add(creatureid, effect_name):
 def creature_effect_del(creatureid, effect_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # Effect del
@@ -150,7 +150,7 @@ def creature_effect_del(creatureid, effect_name):
 def creature_effect_get_one(creatureid, effect_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # Effect get
@@ -207,7 +207,7 @@ def creature_effect_get_one(creatureid, effect_name):
 def creature_effect_get_all(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # Effects get

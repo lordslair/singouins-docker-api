@@ -23,7 +23,7 @@ def creature_cd_add(creatureid, skill_name):
     request_internal_token_check(request)
     request_json_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     duration    = request.json.get('duration')
@@ -102,7 +102,7 @@ def creature_cd_add(creatureid, skill_name):
 def creature_cd_del(creatureid, skill_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # Cd del
@@ -150,7 +150,7 @@ def creature_cd_del(creatureid, skill_name):
 def creature_cd_get_one(creatureid, skill_name):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # Cd get
@@ -207,7 +207,7 @@ def creature_cd_get_one(creatureid, skill_name):
 def creature_cd_get_all(creatureid):
     request_internal_token_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureid)
     h = creature_check(Creature)
 
     # CDs get
