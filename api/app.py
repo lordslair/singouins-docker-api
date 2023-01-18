@@ -40,8 +40,6 @@ import routes.internal.creature.pa
 import routes.internal.creature.position
 import routes.internal.creature.stats
 import routes.internal.creature.statuses
-import routes.internal.creature.user
-import routes.internal.creature.view
 import routes.internal.creature.wallet
 import routes.internal.up
 
@@ -104,9 +102,13 @@ def after_request_time(response):
 #
 @app.route('/check', methods=['GET'])
 def check():
-    return jsonify({"msg": 'UP and running',
-                    "success": True,
-                    "payload": None}), 200
+    return jsonify(
+        {
+            "msg": 'UP and running',
+            "success": True,
+            "payload": None,
+            }
+        ), 200
 
 
 #
