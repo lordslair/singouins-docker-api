@@ -70,9 +70,23 @@ class RedisUser:
         return self.__str__()
 
     def to_json(self):
+        """
+        Converts RedisUser object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
         return self.__str__()
 
     def as_dict(self):
+        """
+        Converts RedisUser object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
         return {
             "active": self.active,
             "created": self.created,
@@ -85,6 +99,13 @@ class RedisUser:
         }
 
     def destroy(self):
+        """
+        Destroys a User and deletes it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
         if hasattr(self, 'id') is False:
             logger.warning(f'{self.logh} Method KO - ID NotSet')
             return False
@@ -107,6 +128,15 @@ class RedisUser:
             return True
 
     def new(self, username, hash):
+        """
+        Creates a new User and stores it into Redis DB.
+
+        Parameters:
+        username (str): User 'name' (aka the user mail address)
+        hash (str): User hashed password to store
+
+        Returns: RedisUser object
+        """
         self.logh = f'[User.id:{username}]'
         # Checking if it exists
         logger.trace(f'{self.logh} Method >> (Checking uniqueness)')
@@ -154,6 +184,15 @@ class RedisUser:
             return self
 
     def search(self, query, maxpaging=25):
+        """
+        Search for Users in Redis DB using RediSearch.
+
+        Parameters:
+        query (str): Redisearch raw query
+        maxpaging (int): User hashed password to store [Default:25]
+
+        Returns: list()
+        """
         self.logh = '[User.id:None]'
         index = 'user_idx'
         try:

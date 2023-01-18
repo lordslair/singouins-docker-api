@@ -58,9 +58,23 @@ class RedisCreature:
         return self.__str__()
 
     def to_json(self):
+        """
+        Converts RedisCreature object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
         return self.__str__()
 
     def as_dict(self):
+        """
+        Converts RedisCreature object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
         return {
             "account": self.account,
             "created": self.created,
@@ -83,6 +97,13 @@ class RedisCreature:
         }
 
     def destroy(self):
+        """
+        Destroys a Creature and deletes it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
         if hasattr(self, 'id') is False:
             logger.warning(f'{self.logh} Method KO - ID NotSet')
             return False
@@ -115,6 +136,21 @@ class RedisCreature:
         y=randint(2, 5),
         instanceuuid=None,
     ):
+        """
+        Creates a new Creature and stores it into Redis DB.
+
+        Parameters:
+        name (str): Creature name
+        raceid (int): Creature raceid
+        gender (bool): Creature gender
+        accountuuid (str): Creature account for Playable Creatures
+        rarity (str): Creature rarity [Default:25]
+        x (int): Creature Position:x [Default:randint(2, 4)]
+        y (int): Creature Position:y [Default:randint(2, 5)]
+        instanceuuid (str): Creature instance [Default:None]
+
+        Returns: RedisCreature object
+        """
         # Checking if Creature exists with the same name
         # FOR A PLAYABLE CREATURE ONLY
         self.logh = '[Creature.id:None]'
@@ -180,6 +216,15 @@ class RedisCreature:
             return self
 
     def search(self, query, maxpaging=25):
+        """
+        Search for Creatures in Redis DB using RediSearch.
+
+        Parameters:
+        query (str): Redisearch raw query
+        maxpaging (int): User hashed password to store [Default:25]
+
+        Returns: list()
+        """
         self.logh = '[Creature.id:None]'
         index = 'creature_idx'
         try:

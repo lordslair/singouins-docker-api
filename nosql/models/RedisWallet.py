@@ -72,9 +72,23 @@ class RedisWallet:
         return self.__str__()
 
     def to_json(self):
+        """
+        Converts RedisWallet object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
         return self.__str__()
 
     def as_dict(self):
+        """
+        Converts RedisWallet object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
         return {
             "ammo":
                 {
@@ -104,6 +118,13 @@ class RedisWallet:
             }
 
     def destroy(self):
+        """
+        Destroys a Wallet and deletes it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
         if hasattr(self, 'id') is False:
             logger.warning(f'{self.logh} Method KO - ID NotSet')
             return False
@@ -126,6 +147,13 @@ class RedisWallet:
             return True
 
     def new(self):
+        """
+        Creates a new Wallet and stores it into Redis DB.
+
+        Parameters: None
+
+        Returns: RedisWallet object
+        """
         if self.id is None:
             logger.warning(f'{self.logh} Method KO - Creature.id NotFound')
             return None
