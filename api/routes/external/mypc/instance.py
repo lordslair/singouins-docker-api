@@ -113,7 +113,7 @@ def instance_add(pcid):
             "map": mapid,
             "public": public
         }
-        instance = RedisInstance().new(instance_dict)
+        Instance = RedisInstance().new(instance_dict)
     except Exception as e:
         msg = f"{h} Instance Query KO [{e}]"
         logger.error(msg)
@@ -128,9 +128,9 @@ def instance_add(pcid):
     # Everything went well so far
     try:
         # Assign the PC into the instance
-        Creature.instance = instance.id
+        Creature.instance = Instance.id
     except Exception as e:
-        msg = f'{h} Instance Query KO (instanceid:{instance.id}) [{e}]'
+        msg = f'{h} Instance Query KO (instanceid:{Instance.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -157,7 +157,7 @@ def instance_add(pcid):
                 "ciphered": False,
                 "payload": (
                     f':map: **[{Creature.id}] {Creature.name}** '
-                    f'opened an Instance ({instance.id})'
+                    f'opened an Instance ({Instance.id})'
                     ),
                 "embed": None,
                 "scope": scope,
@@ -195,7 +195,7 @@ def instance_add(pcid):
                     rarity=rarity,
                     x=x,
                     y=y,
-                    instanceuuid=instance.id,
+                    instanceuuid=Instance.id,
                     )
             except Exception as e:
                 msg = (f'{h} Population in Instance KO for mob '
@@ -208,14 +208,19 @@ def instance_add(pcid):
                     logger.warning(msg)
                 else:
                     mobs_generated.append(Monster)
-                    # We put the info in pubsub channel
-                    # for IA to populate the instance
+                    # We send in pubsub channel for IA to spawn the Mobs
                     try:
-                        pmsg     = {"action": 'pop',
-                                    "instance": instance._asdict(),
-                                    "creature": Monster._asdict()}
                         pchannel = 'ai-creature'
-                        publish(pchannel, jsonify(pmsg).get_data())
+                        publish(
+                            pchannel,
+                            jsonify(
+                                {
+                                    "action": 'pop',
+                                    "instance": Instance._asdict(),
+                                    "creature": Monster.as_dict(),
+                                    }
+                                ).get_data(),
+                                )
                     except Exception as e:
                         msg = f'{h} Publish({pchannel}) KO [{e}]'
                         logger.error(msg)
@@ -241,7 +246,7 @@ def instance_add(pcid):
         {
             "success": True,
             "msg": msg,
-            "payload": instance._asdict(),
+            "payload": Instance._asdict(),
         }
     ), 201
 
@@ -276,7 +281,7 @@ def instance_get(pcid, instanceid):
 
     # Check if the instance exists
     try:
-        instance = RedisInstance().get(Creature.instance)
+        Instance = RedisInstance().get(Creature.instance)
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instanceid}) [{e}]'
         logger.error(msg)
@@ -288,14 +293,14 @@ def instance_get(pcid, instanceid):
             }
         ), 200
     else:
-        if instance:
-            msg = f'{h} Instance Query OK (instanceid:{instance.id})'
+        if Instance:
+            msg = f'{h} Instance Query OK (instanceid:{Instance.id})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": instance._asdict(),
+                    "payload": Instance._asdict(),
                 }
             ), 200
         else:
@@ -332,7 +337,7 @@ def instance_join(pcid, instanceid):
 
     # Check if the instance exists
     try:
-        instance = RedisInstance().get(instanceid)
+        Instance = RedisInstance().get(instanceid)
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instanceid}) [{e}]'
         logger.error(msg)
@@ -340,8 +345,8 @@ def instance_join(pcid, instanceid):
                         "msg": msg,
                         "payload": None}), 200
     else:
-        if instance and instance.public is False:
-            msg = f'{h} Instance not public (instanceid:{instance.id})'
+        if Instance and Instance.public is False:
+            msg = f'{h} Instance not public (instanceid:{Instance.id})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -353,7 +358,7 @@ def instance_join(pcid, instanceid):
 
     # We add the Creature into the instance
     try:
-        Creature.instance = instance.id
+        Creature.instance = Instance.id
     except Exception as e:
         msg = f'{h} Instance Query KO (instanceid:{instanceid}) [{e}]'
         logger.error(msg)
@@ -375,14 +380,14 @@ def instance_join(pcid, instanceid):
                     "ciphered": False,
                     "payload": (
                         f':map: **[{Creature.id}] {Creature.name}** '
-                        f'joined an Instance ({instance.id})'
+                        f'joined an Instance ({Instance.id})'
                         ),
                     "embed": None,
                     "scope": scope,
                     }
                 )
         # Everything went well
-        msg = f'{h} Instance join OK (instanceid:{instance.id})'
+        msg = f'{h} Instance join OK (instanceid:{Instance.id})'
         logger.debug(msg)
         return jsonify(
             {
@@ -424,7 +429,7 @@ def instance_leave(pcid, instanceid):
             }
         ), 200
 
-    # Check if the instance exists
+    # Check if the Instance exists
     try:
         Instance = RedisInstance().get(Creature.instance)
     except Exception as e:
@@ -510,14 +515,19 @@ def instance_leave(pcid, instanceid):
                     else:
                         msg = f'{h} CreatureStats delete OK'
                         logger.trace(msg)
-                    # We put the info in pubsub channel
-                    # for IA to regulate the instance
+                    # We send in pubsub channel for IA to spawn the Mobs
                     try:
-                        pmsg     = {"action": 'kill',
-                                    "instance": Instance._asdict(),
-                                    "creature": Monster._asdict()}
                         pchannel = 'ai-creature'
-                        publish(pchannel, jsonify(pmsg).get_data())
+                        publish(
+                            pchannel,
+                            jsonify(
+                                {
+                                    "action": 'kill',
+                                    "instance": Instance._asdict(),
+                                    "creature": Monster.as_dict(),
+                                    }
+                                ).get_data(),
+                                )
                     except Exception as e:
                         msg = f'{h} Publish({pchannel}) KO [{e}]'
                         logger.error(msg)
@@ -567,7 +577,7 @@ def instance_leave(pcid, instanceid):
                         "ciphered": False,
                         "payload": (
                             f':map: **[{Creature.id}] {Creature.name}** '
-                            f'closed an Instance ({instance.id})'
+                            f'closed an Instance ({Instance.id})'
                             ),
                         "embed": None,
                         "scope": scope,
