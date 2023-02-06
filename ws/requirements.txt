@@ -8,7 +8,7 @@ async-timeout==4.0.2
     # via redis
 loguru==0.6.0
     # via -r ws/requirements.in
-redis==4.4.1
+redis==4.4.2
     # via yarqueue
 strenum==0.4.9
     # via yarqueue
