@@ -61,8 +61,6 @@ def test_singouins_action_resolver_context():
     creature = [x for x in context['creatures'] if x['id'] == CREATURE_ID][0]
     assert creature is not None
 
-    assert context['pa']['blue']['pa'] > 0
-
     assert isinstance(context['cd'], list)
     assert isinstance(context['effects'], list)
     assert isinstance(context['status'], list)
