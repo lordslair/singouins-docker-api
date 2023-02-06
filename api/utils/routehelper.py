@@ -5,30 +5,6 @@ from loguru                     import logger
 
 from nosql.models.RedisUser     import RedisUser
 
-from variables                  import API_INTERNAL_TOKEN
-
-
-def request_internal_token_check(request):
-    bearer = f'Bearer {API_INTERNAL_TOKEN}'
-    try:
-        if request.headers.get('Authorization') != bearer:
-            msg = '[API] Token not authorized'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 403
-    except Exception as e:
-        logger.error(f'[API] Token validation failed [{e}]')
-        return jsonify({"success": False,
-                        "msg":     msg,
-                        "payload": None}), 200
-    else:
-        return True
-
 
 def request_json_check(request):
     try:

@@ -2,792 +2,9 @@ openapi: 3.0.0
 info:
   description: ''
   version: 0.0.1
-  title: S&P Internal API
+  title: Singouins API
   contact: {}
 paths:
-  /internal/creature:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature ADD request
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InternalCreatureCreateBody'
-      responses:
-        '201':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureProfileResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}:
-    delete:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature DEL request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature profile request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureProfileResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/cd/{skill_name}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature ADD CD request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: skill_name
-          schema:
-            type: string
-            example: 'Bloodstrike'
-          required: true
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                duration:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-                extra:
-                  type: object
-                  properties:
-                    extrakey:
-                      type: string
-                      nullable: true
-                      example: 'extravalue'
-                  nullable: true
-                source:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureCdsResponse'
-      security:
-        - internal_token: []
-    delete:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature DEL CD request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: skill_name
-          schema:
-            type: string
-            example: 'Bloodstrike'
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature GET CD request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: skill_name
-          schema:
-            type: string
-            example: 'Bloodstrike'
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureCdResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/cds:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature CDs request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureCdsResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/context:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Context request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureResolverContextResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/effect/{effect_name}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature ADD Effect request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: effect_name
-          schema:
-            type: string
-            example: 'EffectName'
-          required: true
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                duration:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-                extra:
-                  type: object
-                  properties:
-                    extrakey:
-                      type: string
-                      nullable: true
-                      example: 'extravalue'
-                  nullable: true
-                source:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureEffectsResponse'
-      security:
-        - internal_token: []
-    delete:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature DEL Effect request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: effect_name
-          schema:
-            type: string
-            example: 'EffectName'
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature GET Effect request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: effect_name
-          schema:
-            type: string
-            example: 'EffectName'
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureEffectResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/effects:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature GET Effects request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureEffectsResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/equipment:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Equipment request (Items in slots)
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureEquipmentResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/equipment/{itemid}/ammo/{operation}/{count}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Equipment request (Items in slots)
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: itemid
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-        - in: path
-          name: operation
-          schema:
-            type: string
-            enum: [add, consume]
-            nullable: false
-          required: true
-        - in: path
-          name: count
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureItemResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/inventory:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Inventory request (Items in bags)
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/kill/{victimid}:
-    post:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature KILL request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-        - in: path
-          name: victimid
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureProfileResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/pa:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature PA request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreaturePaResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/pa/consume/{redpa}/{bluepa}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature PA request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-          required: true
-        - in: path
-          name: redpa
-          schema:
-            type: integer
-            nullable: false
-            minimum: 0
-            maximum: 16
-          required: true
-        - in: path
-          name: bluepa
-          schema:
-            type: integer
-            nullable: false
-            minimum: 0
-            maximum: 16
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreaturePaResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/pa/reset:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature PA reset request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/stats:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Stats request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureStatsResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/stats/hp/{operation}/{count}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Stats operation (HP)
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-        - in: path
-          name: operation
-          schema:
-            type: string
-            enum: [add, consume]
-            nullable: false
-          required: true
-        - in: path
-          name: count
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureStatsResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/status/{status_name}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature ADD Status request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-          required: true
-        - in: path
-          name: status_name
-          schema:
-            type: string
-            nullable: false
-          required: true
-      requestBody:
-        description: ''
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                duration:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-                extra:
-                  type: object
-                  properties:
-                    extrakey:
-                      type: string
-                      nullable: true
-                      example: 'extravalue'
-                  nullable: true
-                source:
-                  type: integer
-                  nullable: false
-                  minimum: 1
-                  example: 300
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureStatusesResponse'
-      security:
-        - internal_token: []
-    delete:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature DEL Status request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: status_name
-          schema:
-            type: string
-            nullable: false
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature GET Status request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: status_name
-          schema:
-            type: string
-            nullable: false
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureStatusResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/statuses:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature GET ALL Status request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureStatusesResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/wallet:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Wallet request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureWalletResponse'
-      security:
-        - internal_token: []
-  /internal/creature/{creatureid}/wallet/{caliber}/{operation}/{count}:
-    put:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creature Wallet request
-      parameters:
-        - in: path
-          name: creatureid
-          schema:
-            type: integer
-            nullable: false
-          required: true
-        - in: path
-          name: caliber
-          schema:
-            type: string
-            enum: ['cal22','cal223','cal311','cal50','cal55','shell','bolt','arrow']
-            nullable: false
-          required: true
-        - in: path
-          name: operation
-          schema:
-            type: string
-            enum: [add, consume]
-            nullable: false
-          required: true
-        - in: path
-          name: count
-          schema:
-            type: integer
-            nullable: false
-            minimum: 1
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreatureWalletResponse'
-      security:
-        - internal_token: []
-  /internal/creatures:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal Creatures request
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalCreaturesResponse'
-      security:
-        - internal_token: []
-  /internal/up:
-    get:
-      tags:
-        - '/internal : Internal requests'
-      summary: Internal UP request
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericResponse'
-      security:
-        - internal_token: []
-
   /auth/register:
     post:
       tags:
@@ -962,7 +179,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreatureCdsResponse'
+                $ref: '#/components/schemas/CreatureCdsResponse'
   /mypc/{pcid}/action/reload/{weaponid}:
     post:
       tags:
@@ -1114,7 +331,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreatureEffectsResponse'
+                $ref: '#/components/schemas/CreatureEffectsResponse'
   /mypc/{pcid}/event:
     get:
       tags:
@@ -1198,7 +415,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreatureStatusesResponse'
+                $ref: '#/components/schemas/CreatureStatusesResponse'
   /mypc/{pcid}/view:
     get:
       tags:
@@ -1300,7 +517,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreatureProfileResponse'
+                $ref: '#/components/schemas/CreatureProfileResponse'
       security:
         - access_token: []
   /mypc/{pcid}/instance/{instanceid}/join:
@@ -1329,7 +546,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InternalCreatureProfileResponse'
+                $ref: '#/components/schemas/CreatureProfileResponse'
 
   /pc/{pcid}:
     get:
@@ -1754,21 +971,6 @@ paths:
 
 components:
   schemas:
-    InternalKorp:
-      type: object
-      properties:
-        korpid:
-          type: integer
-          minimum: 1
-          nullable: false
-    InternalSquad:
-      type: object
-      properties:
-        squadid:
-          type: integer
-          minimum: 1
-          nullable: true
-
     AuthRegisterPostBody:
       type: object
       properties:
@@ -1904,61 +1106,6 @@ components:
           nullable: false
           example: 1
           minimum: 1
-
-    InternalCreatureCreateBody:
-      type: object
-      properties:
-        raceid:
-          type: integer
-          nullable: false
-          example: 14
-          minimum: 11
-        gender:
-          type: boolean
-          nullable: false
-          example: False
-        rarity:
-          type: string
-          enum: ['Small','Medium','Big','Unique','Boss','God']
-          nullable: false
-          example: 'Boss'
-        instanceid:
-          type: integer
-          nullable: false
-          example: 1
-          minimum: 1
-        x:
-          type: integer
-          nullable: false
-          example: 5
-        y:
-          type: integer
-          nullable: false
-          example: 5
-        m:
-          type: integer
-          nullable: false
-          example: 60
-        r:
-          type: integer
-          nullable: false
-          example: 80
-        g:
-          type: integer
-          nullable: false
-          example: 100
-        v:
-          type: integer
-          nullable: false
-          example: 80
-        p:
-          type: integer
-          nullable: false
-          example: 90
-        b:
-          type: integer
-          nullable: false
-          example: 100
 
     CreatureResolverMoveBody:
       type: object
@@ -2194,50 +1341,7 @@ components:
           type: boolean
           nullable: false
 
-    InternalCreatureResolverContextResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            map:
-              type: integer
-              example: 1
-              minimum: 1
-              nullable: false
-            instance:
-              type: integer
-              example: 1
-              minimum: 1
-              nullable: false
-            creatures:
-              type: array
-              items:
-                $ref: '#/components/schemas/PcObject'
-            effects:
-              type: array
-              items:
-                $ref: '#/components/schemas/EffectObject'
-            status:
-              type: array
-              items:
-                $ref: '#/components/schemas/StatusObject'
-            cd:
-              type: array
-              items:
-                $ref: '#/components/schemas/CdObject'
-            pa:
-              type: array
-              items:
-                $ref: '#/components/schemas/PaObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreatureCdResponse:
+    CreatureCdResponse:
       type: object
       properties:
         msg:
@@ -2249,7 +1353,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreatureCdsResponse:
+    CreatureCdsResponse:
       type: object
       properties:
         msg:
@@ -2268,43 +1372,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreatureEquipmentResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            equipment:
-              $ref: '#/components/schemas/EquipmentObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreatureItemResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            highscore:
-              $ref: '#/components/schemas/HighScoreObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreatureEffectResponse:
+    CreatureEffectResponse:
       type: object
       properties:
         msg:
@@ -2316,7 +1384,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreatureEffectsResponse:
+    CreatureEffectsResponse:
       type: object
       properties:
         msg:
@@ -2335,24 +1403,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreaturePaResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            pa:
-              $ref: '#/components/schemas/PaObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreatureProfileResponse:
+    CreatureProfileResponse:
       type: object
       properties:
         msg:
@@ -2364,24 +1415,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreatureStatsResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            stats:
-              $ref: '#/components/schemas/StatsObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreatureStatusResponse:
+    CreatureStatusResponse:
       type: object
       properties:
         msg:
@@ -2393,7 +1427,7 @@ components:
         success:
           type: boolean
           nullable: false
-    InternalCreatureStatusesResponse:
+    CreatureStatusesResponse:
       type: object
       properties:
         msg:
@@ -2409,55 +1443,6 @@ components:
                 $ref: '#/components/schemas/StatusObject'
             creature:
               $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreatureWalletResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          nullable: true
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            wallet:
-              $ref: '#/components/schemas/WalletObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalCreaturesResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: array
-          items:
-            $ref: '#/components/schemas/PcObject'
-        success:
-          type: boolean
-          nullable: false
-    InternalDiscordCreatureResponse:
-      type: object
-      properties:
-        msg:
-          type: string
-          format: string
-          nullable: false
-        payload:
-          type: object
-          properties:
-            creature:
-              $ref: '#/components/schemas/PcObject'
-            user:
-              $ref: '#/components/schemas/UserObject'
         success:
           type: boolean
           nullable: false
@@ -3188,12 +2173,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    internal_token:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
 
 security:
   - refresh_token: []
   - access_token: []
-  - internal_token: []

@@ -30,10 +30,6 @@ PCS_URL       = os.environ.get("SEP_PCS_URL", 'http://127.0.0.1')
 
 # Discord permanent invite link
 DISCORD_URL   = os.environ.get("SEP_DISCORD_URL", 'http://127.0.0.1')
-
-# Token used for /internal routes
-API_INTERNAL_TOKEN = os.environ['SEP_INTERNAL_TOKEN']
-
 # Resolver variables
 RESOLVER_HOST    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST",
                                   '127.0.0.1')

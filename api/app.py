@@ -27,22 +27,6 @@ from utils.gunilog                 import (InterceptHandler,
                                            StandaloneApplication,
                                            StubbedGunicornLogger)
 
-# Imports of endpoint functions
-import routes.internal.creature
-import routes.internal.creature.cds
-import routes.internal.creature.context
-import routes.internal.creature.effects
-import routes.internal.creature.equipment
-import routes.internal.creature.inventory
-import routes.internal.creature.item
-import routes.internal.creature.kill
-import routes.internal.creature.pa
-import routes.internal.creature.position
-import routes.internal.creature.stats
-import routes.internal.creature.statuses
-import routes.internal.creature.wallet
-import routes.internal.up
-
 import routes.external.auth
 import routes.external.log
 import routes.external.map
@@ -74,7 +58,7 @@ metrics = PrometheusMetrics(app)  # We wrap around all the app the metrics
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     '/swagger',
     '/static/swagger.yaml',
-    config={'app_name': "S&P Internal API"}
+    config={'app_name': "Singouins API"}
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix='/swagger')
 
@@ -347,121 +331,6 @@ app.add_url_rule('/map/<int:mapid>',
 app.add_url_rule('/log',
                  methods=['POST'],
                  view_func=routes.external.log.front)
-#
-# Routes /internal
-#
-# Routes /internal/creature/*
-app.add_url_rule('/internal/creature',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.creature_add)
-# Routes /internal/creature/{creatureid}
-app.add_url_rule('/internal/creature/<uuid:creatureid>',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.creature_get_one)
-app.add_url_rule('/internal/creature/<uuid:creatureid>',
-                 methods=['DELETE'],
-                 view_func=routes.internal.creature.creature_del)
-# Routes /internal/creature/{creatureid}/cd/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.cds.creature_cd_add)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
-                 methods=['DELETE'],
-                 view_func=routes.internal.creature.cds.creature_cd_del)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/cd/<string:skill_name>',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.cds.creature_cd_get_one)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/cds',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.cds.creature_cd_get_all)
-# Routes /internal/creature/{creatureid}/context/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/context',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.context.creature_context_get)
-# Routes /internal/creature/{creatureid}/equipment/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/equipment',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.equipment.creature_equipment)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/equipment/<uuid:itemid>/ammo/<string:operation>/<int:count>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.equipment.creature_equipment_modifiy)
-# Routes /internal/creature/{creatureid}/effect/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_name>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.effects.creature_effect_add)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_name>',
-                 methods=['DELETE'],
-                 view_func=routes.internal.creature.effects.creature_effect_del)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/effect/<string:effect_name>',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.effects.creature_effect_get_one)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/effects',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.effects.creature_effect_get_all)
-# Routes /internal/creature/{creatureid}/inventory/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/inventory',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.inventory.creature_inventory_get)
-# Routes /internal/creature/{creatureid}/item/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/item',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.item.creature_item_add)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/item/<uuid:itemid>',
-                 methods=['DELETE'],
-                 view_func=routes.internal.creature.item.creature_item_del)
-# Routes /internal/creature/{creatureid}/kill/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/kill/<uuid:victimid>',
-                 methods=['POST'],
-                 view_func=routes.internal.creature.kill.creature_kill)
-# Routes /internal/creature/{creatureid}/pa/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/pa',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.pa.creature_pa_get)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/pa/consume/<int:redpa>/<int:bluepa>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.pa.creature_pa_consume)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/pa/reset',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.pa.creature_pa_reset)
-# Routes /internal/creature/{creatureid}/position/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/position/<int:x>/<int:y>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.position.creature_position_set)
-# Routes /internal/creature/{creatureid}/status/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/status/<string:status_name>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.statuses.creature_status_add)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/status/<string:status_name>',
-                 methods=['DELETE'],
-                 view_func=routes.internal.creature.statuses.creature_status_del)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/status/<string:status_name>',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.statuses.creature_status_get_one)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/statuses',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.statuses.creature_status_get_all)
-# Routes /internal/creature/{creatureid}/stats/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/stats',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.stats.creature_stats)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/stats/hp/<string:operation>/<int:count>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.stats.creature_stats_hp_modify)
-# Routes /internal/creature/{creatureid}/wallet/*
-app.add_url_rule('/internal/creature/<uuid:creatureid>/wallet',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.wallet.creature_wallet)
-app.add_url_rule('/internal/creature/<uuid:creatureid>/wallet/<string:caliber>/<string:operation>/<int:count>',
-                 methods=['PUT'],
-                 view_func=routes.internal.creature.wallet.creature_wallet_modify)
-# Routes /internal/creatures/*
-app.add_url_rule('/internal/creatures',
-                 methods=['GET'],
-                 view_func=routes.internal.creature.creature_get_all)
-# Routes /internal/up/*
-app.add_url_rule('/internal/up',
-                 methods=['GET'],
-                 view_func=routes.internal.up.up_get)
 
 if __name__ == '__main__':
     intercept_handler = InterceptHandler()
