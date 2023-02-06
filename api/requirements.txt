@@ -54,7 +54,7 @@ pyjwt==2.6.0
     # via flask-jwt-extended
 redis==4.4.1
     # via yarqueue
-requests==2.28.1
+requests==2.28.2
     # via -r api/requirements.in
 six==1.16.0
     # via flask-cors
