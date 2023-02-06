@@ -13,7 +13,6 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisInstance import RedisInstance
-from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisStatus   import RedisStatus
 
 from variables                  import RESOLVER_URL
@@ -117,21 +116,8 @@ def action_resolver_skill(creatureuuid, skill_name):
         ), 200
 
     try:
-        creature_pa = RedisPa(Creature)
-    except Exception as e:
-        msg = f'{h} RedisPa Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
         Instance = RedisInstance().get(Creature.instance)
-        map      = Instance.map
+        map = Instance.map
     except Exception as e:
         msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
@@ -144,10 +130,10 @@ def action_resolver_skill(creatureuuid, skill_name):
         ), 200
 
     try:
-        fightEventname     = request.json.get('name', None)
-        fightEventtype     = request.json.get('type', None)
-        fightEventactor    = request.json.get('actor', None)
-        fightEventparams   = request.json.get('params', None)
+        fightEventname = request.json.get('name', None)
+        fightEventtype = request.json.get('type', None)
+        fightEventactor = request.json.get('actor', None)
+        fightEventparams = request.json.get('params', None)
 
         instance = Instance.id.replace('-', ' ')
         Creatures = RedisCreature().search(query=f'@instance:{instance}')
@@ -171,8 +157,7 @@ def action_resolver_skill(creatureuuid, skill_name):
             "creatures": Creatures,
             "effects": Effects._asdict,
             "status": Statuses._asdict,
-            "cd": Cds._asdict,
-            "pa": creature_pa._asdict()
+            "cd": Cds._asdict
         },
         "fightEvent": {
             "name": fightEventname,
@@ -184,7 +169,7 @@ def action_resolver_skill(creatureuuid, skill_name):
 
     try:
         logger.trace(payload)
-        response  = requests.post(f'{RESOLVER_URL}/', json=payload)
+        response = requests.post(f'{RESOLVER_URL}/', json=payload)
     except Exception as e:
         msg = f'{h} Resolver Query KO (skill_name:{skill_name}) [{e}]'
         logger.error(msg)
@@ -210,8 +195,10 @@ def action_resolver_skill(creatureuuid, skill_name):
             {
                 "success": True,
                 "msg": msg,
-                "payload": {"resolver": json.loads(response.text),
-                            "internal": payload},
+                "payload": {
+                    "resolver": json.loads(response.text),
+                    "internal": payload,
+                    },
             }
         ), 200
 
@@ -278,21 +265,8 @@ def action_resolver_move(creatureuuid):
         ), 200
 
     try:
-        creature_pa = RedisPa(Creature)
-    except Exception as e:
-        msg = f'{h} RedisPa Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
         Instance = RedisInstance().get(Creature.instance)
-        map      = Instance.map
+        map = Instance.map
     except Exception as e:
         msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
@@ -305,10 +279,10 @@ def action_resolver_move(creatureuuid):
         ), 200
 
     try:
-        fightEventname     = request.json.get('name', None)
-        fightEventtype     = request.json.get('type', None)
-        fightEventactor    = request.json.get('actor', None)
-        fightEventparams   = request.json.get('params', None)
+        fightEventname = request.json.get('name', None)
+        fightEventtype = request.json.get('type', None)
+        fightEventactor = request.json.get('actor', None)
+        fightEventparams = request.json.get('params', None)
 
         instance = Instance.id.replace('-', ' ')
         Creatures = RedisCreature().search(query=f'@instance:{instance}')
@@ -331,8 +305,7 @@ def action_resolver_move(creatureuuid):
             "creatures": Creatures,
             "effects": Effects._asdict,
             "status": Statuses._asdict,
-            "cd": Cds._asdict,
-            "pa": creature_pa._asdict()
+            "cd": Cds._asdict
         },
         "fightEvent": {
             "name": fightEventname,
@@ -343,7 +316,7 @@ def action_resolver_move(creatureuuid):
     }
 
     try:
-        response  = requests.post(f'{RESOLVER_URL}/', json=payload)
+        response = requests.post(f'{RESOLVER_URL}/', json=payload)
     except Exception as e:
         msg = f'{h} Resolver Query KO [{e}]'
         logger.error(msg)
@@ -369,8 +342,10 @@ def action_resolver_move(creatureuuid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": {"resolver": json.loads(response.text),
-                            "internal": payload},
+                "payload": {
+                    "resolver": json.loads(response.text),
+                    "internal": payload,
+                    },
             }
         ), 200
 
@@ -437,21 +412,8 @@ def action_resolver_context(creatureuuid):
         ), 200
 
     try:
-        creature_pa = RedisPa(Creature)
-    except Exception as e:
-        msg = f'{h} RedisPa Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
         Instance = RedisInstance().get(Creature.instance)
-        map      = Instance.map
+        map = Instance.map
     except Exception as e:
         msg = f'{h} RedisInstance Query KO [{e}]'
         logger.error(msg)
@@ -464,10 +426,10 @@ def action_resolver_context(creatureuuid):
         ), 200
 
     try:
-        fightEventname     = request.json.get('name', None)
-        fightEventtype     = request.json.get('type', None)
-        fightEventactor    = request.json.get('actor', None)
-        fightEventparams   = request.json.get('params', None)
+        fightEventname = request.json.get('name', None)
+        fightEventtype = request.json.get('type', None)
+        fightEventactor = request.json.get('actor', None)
+        fightEventparams = request.json.get('params', None)
 
         instance = Instance.id.replace('-', ' ')
         Creatures = RedisCreature().search(query=f'@instance:{instance}')
@@ -490,8 +452,7 @@ def action_resolver_context(creatureuuid):
             "creatures": Creatures,
             "effects": Effects._asdict,
             "status": Statuses._asdict,
-            "cd": Cds._asdict,
-            "pa": creature_pa._asdict()
+            "cd": Cds._asdict
         },
         "fightEvent": {
             "name": fightEventname,
@@ -507,7 +468,9 @@ def action_resolver_context(creatureuuid):
         {
             "success": True,
             "msg": msg,
-            "payload": {"resolver": None,
-                        "internal": payload},
+            "payload": {
+                "resolver": None,
+                "internal": payload,
+                },
         }
     ), 200
