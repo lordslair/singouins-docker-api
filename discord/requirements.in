@@ -1,5 +1,5 @@
 email-validator ~= 1.3
-kubernetes      ~= 25.3
+kubernetes      ~= 26.1
 loguru          ~= 0.6
 py-cord         ~= 2.3.2
 yarqueue        == 0.4.1
