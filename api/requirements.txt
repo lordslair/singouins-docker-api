@@ -48,7 +48,7 @@ markupsafe==2.1.1
     #   werkzeug
 prometheus-client==0.15.0
     # via prometheus-flask-exporter
-prometheus-flask-exporter==0.21.0
+prometheus-flask-exporter==0.22.1
     # via -r api/requirements.in
 pyjwt==2.6.0
     # via flask-jwt-extended
