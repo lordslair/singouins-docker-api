@@ -107,7 +107,7 @@ class RedisPa:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
             if r.exists(f'{self.hkey}:{self.id}:blue'):
                 r.delete(f'{self.hkey}:{self.id}:blue')
             if r.exists(f'{self.hkey}:{self.id}:red'):
@@ -116,13 +116,13 @@ class RedisPa:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def consume(self, redpa=0, bluepa=0):
         try:
             if bluepa > 0:
-                logger.trace(f'{self.logh} Method >> (KEY Update) BLUE')
+                logger.trace(f'{self.logh} Method >> (KEY Updating) BLUE')
                 # An action consumed a blue PA, we need to update
                 key    = f'{self.hkey}:{self.id}:blue'
                 ttl    = r.ttl(key)
@@ -141,7 +141,7 @@ class RedisPa:
                         # Key does not exist anymore (PA count = PA max)
                         r.set(key, 'None', ex=newttl)
             if redpa > 0:
-                logger.trace(f'{self.logh} Method >> (KEY Update) RED')
+                logger.trace(f'{self.logh} Method >> (KEY Updating) RED')
                 # An action consumed a red PA, we need to update
                 key    = f'{self.hkey}:{self.id}:red'
                 ttl    = r.ttl(key)
@@ -163,5 +163,5 @@ class RedisPa:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (KEY Updated)')
             return True

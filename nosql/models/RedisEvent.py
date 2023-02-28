@@ -83,17 +83,17 @@ class RedisEvent:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(

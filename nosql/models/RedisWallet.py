@@ -101,7 +101,7 @@ class RedisWallet:
 
     def destroy(self):
         """
-        Destroys a Wallet and deletes it from Redis DB.
+        Destroys an Object and DEL it from Redis DB.
 
         Parameters: None
 
@@ -115,17 +115,17 @@ class RedisWallet:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(self):
@@ -141,8 +141,6 @@ class RedisWallet:
             return None
 
         self.logh = f'[Wallet.id:{self.id}]'
-        # Checking if it exists
-        logger.trace(f'{self.logh} Method >> (Checking uniqueness)')
         try:
             if r.exists(f'{self.hkey}:{self.id}'):
                 logger.error(f'{self.logh} Method KO - Already Exists')
@@ -151,29 +149,24 @@ class RedisWallet:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
 
-        logger.trace(f'{self.logh} Method >> (Creating object)')
-        try:
-            self._cal22 = 0
-            self._cal223 = 0
-            self._cal311 = 0
-            self._cal50 = 0
-            self._cal55 = 0
-            self._shell = 0
-            self._bolt = 0
-            self._arrow = 0
-            self._legendary = 0
-            self._epic = 0
-            self._rare = 0
-            self._uncommon = 0
-            self._common = 0
-            self._broken = 0
-            self._sausages = 0
-            self._bananas = 0
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
+        self._cal22 = 0
+        self._cal223 = 0
+        self._cal311 = 0
+        self._cal50 = 0
+        self._cal55 = 0
+        self._shell = 0
+        self._bolt = 0
+        self._arrow = 0
+        self._legendary = 0
+        self._epic = 0
+        self._rare = 0
+        self._uncommon = 0
+        self._common = 0
+        self._broken = 0
+        self._sausages = 0
+        self._bananas = 0
 
-        logger.trace(f'{self.logh} Method >> (Creating dict)')
+        logger.trace(f'{self.logh} Method >> (Dict Creating)')
         try:
             hashdict = {
                 "cal22": self.cal22,
@@ -193,14 +186,13 @@ class RedisWallet:
                 "epic": self.epic,
                 "legendary": self.legendary,
                 }
-            logger.trace(f'{self.logh} Method >> (Storing HASH)')
+            logger.trace(f'{self.logh} Method >> (HASH Storing)')
             r.hset(f'{self.hkey}:{self.id}', mapping=hashdict)
-            logger.trace(f'{self.logh} Method >> (Stored HASH)')
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Stored)')
             return self
 
     """
@@ -217,13 +209,13 @@ class RedisWallet:
         self._bananas = bananas
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.bananas'
+                f'{self.logh} Method >> (HASH Setting) Wallet.bananas'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'bananas', self._bananas)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def sausages(self):
@@ -234,13 +226,13 @@ class RedisWallet:
         self._sausages = sausages
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.sausages'
+                f'{self.logh} Method >> (HASH Setting) Wallet.sausages'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'sausages', self._sausages)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def broken(self):
@@ -251,13 +243,13 @@ class RedisWallet:
         self._broken = broken
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.broken'
+                f'{self.logh} Method >> (HASH Setting) Wallet.broken'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'broken', self._broken)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def common(self):
@@ -268,13 +260,13 @@ class RedisWallet:
         self._common = common
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.common'
+                f'{self.logh} Method >> (HASH Setting) Wallet.common'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'common', self._common)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def uncommon(self):
@@ -285,13 +277,13 @@ class RedisWallet:
         self._uncommon = uncommon
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.uncommon'
+                f'{self.logh} Method >> (HASH Setting) Wallet.uncommon'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'uncommon', self._uncommon)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
             @property
             def uncommon(self):
@@ -306,13 +298,13 @@ class RedisWallet:
         self._rare = rare
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.rare'
+                f'{self.logh} Method >> (HASH Setting) Wallet.rare'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'rare', self._rare)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def epic(self):
@@ -323,13 +315,13 @@ class RedisWallet:
         self._epic = epic
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.epic'
+                f'{self.logh} Method >> (HASH Setting) Wallet.epic'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'epic', self._epic)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def legendary(self):
@@ -340,13 +332,13 @@ class RedisWallet:
         self._legendary = legendary
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.legendary'
+                f'{self.logh} Method >> (HASH Setting) Wallet.legendary'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'legendary', self._legendary)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def cal22(self):
@@ -357,13 +349,13 @@ class RedisWallet:
         self._cal22 = cal22
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.cal22'
+                f'{self.logh} Method >> (HASH Setting) Wallet.cal22'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'cal22', self._cal22)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def cal223(self):
@@ -374,13 +366,13 @@ class RedisWallet:
         self._cal223 = cal223
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.cal223'
+                f'{self.logh} Method >> (HASH Setting) Wallet.cal223'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'cal223', self._cal223)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def cal311(self):
@@ -391,13 +383,13 @@ class RedisWallet:
         self._cal311 = cal311
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.cal311'
+                f'{self.logh} Method >> (HASH Setting) Wallet.cal311'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'cal311', self._cal311)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def cal50(self):
@@ -408,13 +400,13 @@ class RedisWallet:
         self._cal50 = cal50
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.cal50'
+                f'{self.logh} Method >> (HASH Setting) Wallet.cal50'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'cal50', self._cal50)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def cal55(self):
@@ -425,13 +417,13 @@ class RedisWallet:
         self._cal55 = cal55
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.cal55'
+                f'{self.logh} Method >> (HASH Setting) Wallet.cal55'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'cal55', self._cal55)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def shell(self):
@@ -442,13 +434,13 @@ class RedisWallet:
         self._shell = shell
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.shell'
+                f'{self.logh} Method >> (HASH Setting) Wallet.shell'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'shell', self._shell)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def bolt(self):
@@ -459,13 +451,13 @@ class RedisWallet:
         self._bolt = bolt
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.bolt'
+                f'{self.logh} Method >> (HASH Setting) Wallet.bolt'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'bolt', self._bolt)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def arrow(self):
@@ -476,10 +468,10 @@ class RedisWallet:
         self._arrow = arrow
         try:
             logger.trace(
-                f'{self.logh} Method >> (Setting HASH) Wallet.arrow'
+                f'{self.logh} Method >> (HASH Setting) Wallet.arrow'
                 )
             r.hset(f'{self.hkey}:{self.id}', 'arrow', self._arrow)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')

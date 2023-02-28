@@ -106,17 +106,17 @@ class RedisStats:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - KEY NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK (HASH Destroyed)')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(
@@ -241,7 +241,7 @@ class RedisStats:
 
             r.hset(f'{self.hkey}:{self.id}', mapping=hashdict)
         except Exception as e:
-            logger.error(f'{self.logh} Method KO (HASH Storing) [{e}]')
+            logger.error(f'{self.logh} Method KO [{e}]')
         else:
             logger.trace(f'{self.logh} Method OK (HASH Stored)')
             return self
@@ -260,9 +260,9 @@ class RedisStats:
     def hp(self, hp):
         self._hp = hp
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) Stats.hp')
+            logger.trace(f'{self.logh} Method >> (HASH Setting) Stats.hp')
             r.hset(f'{self.hkey}:{self.id}', 'hp', self._hp)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')

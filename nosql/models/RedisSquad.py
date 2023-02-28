@@ -81,17 +81,17 @@ class RedisSquad:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(self, creatureuuid):
@@ -111,7 +111,7 @@ class RedisSquad:
                 logger.error(f'{self.logh} Method KO - Already Exists')
                 return False
 
-        logger.trace(f'{self.logh} Method >> (Creating dict)')
+        logger.trace(f'{self.logh} Method >> (Dict Creating)')
         try:
             self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -122,7 +122,7 @@ class RedisSquad:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
 
-        logger.trace(f'{self.logh} Method >> (Storing HASH)')
+        logger.trace(f'{self.logh} Method >> (HASH Storing)')
         try:
             hashdict = {
                 "created": self.created,
@@ -136,5 +136,5 @@ class RedisSquad:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Stored)')
             return self

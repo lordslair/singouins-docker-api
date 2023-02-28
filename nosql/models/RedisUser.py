@@ -90,7 +90,7 @@ class RedisUser:
 
     def destroy(self):
         """
-        Destroys a User and deletes it from Redis DB.
+        Destroys an Object and DEL it from Redis DB.
 
         Parameters: None
 
@@ -104,17 +104,17 @@ class RedisUser:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(self, username, hash):
@@ -141,21 +141,16 @@ class RedisUser:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
 
-        logger.trace(f'{self.logh} Method >> (Creating object)')
-        try:
-            self._active = True
-            self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            self._d_ack = False
-            self._d_name = None
-            self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            self._hash = hash
-            self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, username))
-            self.name = username
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
+        self._active = True
+        self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self._d_ack = False
+        self._d_name = None
+        self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self._hash = hash
+        self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, username))
+        self.name = username
 
-        logger.trace(f'{self.logh} Method >> (Creating dict)')
+        logger.trace(f'{self.logh} Method >> (Dict Creating)')
         try:
             fullkey = f'{self.hkey}:{self.id}'
             # We push data in final dict
@@ -164,13 +159,13 @@ class RedisUser:
             for property, value in self.as_dict().items():
                 hashdict[property] = typed2str(value)
 
-            logger.trace(f'{self.logh} Method >> (Storing HASH)')
+            logger.trace(f'{self.logh} Method >> (HASH Storing)')
             r.hset(fullkey, mapping=hashdict)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Stored)')
             return self
 
     """
@@ -186,7 +181,7 @@ class RedisUser:
     def active(self, active):
         self._active = active
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) User.active')
+            logger.trace(f'{self.logh} Method >> (HASH Setting) User.active')
             r.hset(
                 f'{self.hkey}:{self.id}',
                 'active',
@@ -200,7 +195,7 @@ class RedisUser:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def d_name(self):
@@ -210,7 +205,7 @@ class RedisUser:
     def d_name(self, d_name):
         self._d_name = d_name
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) User.d_name')
+            logger.trace(f'{self.logh} Method >> (HASH Setting) User.d_name')
             r.hset(
                 f'{self.hkey}:{self.id}',
                 'd_name',
@@ -224,7 +219,7 @@ class RedisUser:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def d_ack(self):
@@ -234,7 +229,7 @@ class RedisUser:
     def d_ack(self, d_ack):
         self._d_ack = d_ack
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) User.d_ack')
+            logger.trace(f'{self.logh} Method >> (HASH Setting) User.d_ack')
             r.hset(
                 f'{self.hkey}:{self.id}',
                 'd_ack',
@@ -248,7 +243,7 @@ class RedisUser:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def hash(self):
@@ -258,7 +253,7 @@ class RedisUser:
     def hash(self, hash):
         self._hash = hash
         try:
-            logger.trace(f'{self.logh} Method >> (Setting HASH) User.hash')
+            logger.trace(f'{self.logh} Method >> (HASH Setting) User.hash')
             r.hset(
                 f'{self.hkey}:{self.id}',
                 'hash',
@@ -272,4 +267,4 @@ class RedisUser:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')

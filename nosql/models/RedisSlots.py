@@ -82,17 +82,17 @@ class RedisSlots:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK (HASH Destroyed)')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(
@@ -161,7 +161,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def hands(self):
@@ -180,7 +180,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def head(self):
@@ -199,7 +199,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def holster(self):
@@ -218,7 +218,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def lefthand(self):
@@ -237,7 +237,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def legs(self):
@@ -256,7 +256,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def righthand(self):
@@ -277,7 +277,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def shoulders(self):
@@ -298,7 +298,7 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def torso(self):
@@ -317,4 +317,4 @@ class RedisSlots:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')

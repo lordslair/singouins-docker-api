@@ -118,17 +118,17 @@ class RedisCreature:
             return False
 
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
             if r.exists(f'{self.hkey}:{self.id}'):
+                logger.trace(f'{self.logh} Method >> (HASH Destroying)')
                 r.delete(f'{self.hkey}:{self.id}')
             else:
-                logger.warning(f'{self.logh} Method KO - NotFound')
+                logger.warning(f'{self.logh} Method KO (HASH NotFound)')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def new(
@@ -204,7 +204,7 @@ class RedisCreature:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
 
-        logger.trace(f'{self.logh} Method >> (Creating dict)')
+        logger.trace(f'{self.logh} Method >> (Dict Creating)')
         try:
             creaturekey = f'{self.hkey}:{self.id}'
             # We push data in final dict
@@ -219,13 +219,13 @@ class RedisCreature:
                 else:
                     hashdict[property] = typed2str(value)
 
-            logger.trace(f'{self.logh} Method >> (Storing HASH)')
+            logger.trace(f'{self.logh} Method >> (HASH Storing)')
             r.hset(creaturekey, mapping=hashdict)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Stored)')
             return self
 
     """
@@ -243,7 +243,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.instance'
+                '(HASH Setting) Creature.instance'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -254,7 +254,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def korp(self):
@@ -266,7 +266,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.korp'
+                '(HASH Setting) Creature.korp'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -277,7 +277,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def korp_rank(self):
@@ -289,7 +289,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.korp_rank'
+                '(HASH Setting) Creature.korp_rank'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -300,7 +300,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def squad(self):
@@ -312,7 +312,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.squad'
+                '(HASH Setting) Creature.squad'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -323,7 +323,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def squad_rank(self):
@@ -335,7 +335,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.squad_rank'
+                '(HASH Setting) Creature.squad_rank'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -346,7 +346,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def xp(self):
@@ -358,7 +358,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.xp'
+                '(HASH Setting) Creature.xp'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -369,7 +369,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def x(self):
@@ -381,7 +381,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.x'
+                '(HASH Setting) Creature.x'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -392,7 +392,7 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
 
     @property
     def y(self):
@@ -404,7 +404,7 @@ class RedisCreature:
         try:
             logger.trace(
                 f'{self.logh} Method >> '
-                '(Setting HASH) Creature.y'
+                '(HASH Setting) Creature.y'
                 )
             r.hset(
                 f'{self.hkey}:{self.id}',
@@ -415,4 +415,4 @@ class RedisCreature:
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Set)')
