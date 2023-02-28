@@ -6,7 +6,6 @@ import uuid
 from datetime                    import datetime
 from loguru                      import logger
 from random                      import randint
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.variables             import str2typed, typed2str
@@ -20,11 +19,12 @@ class RedisCreature:
         logger.trace(f'{self.logh} Method >> Initialization')
 
         if creatureuuid:
-            fullkey = f'{self.hkey}:{creatureuuid}'
+            creaturekey = f'{self.hkey}:{creatureuuid}'
+            aggrokey = f'aggros:{creatureuuid}'
             try:
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
-                if r.exists(fullkey):
-                    hashdict = r.hgetall(fullkey)
+                if r.exists(creaturekey):
+                    hashdict = r.hgetall(creaturekey)
                     for k, v in hashdict.items():
                         # We create the object attribute with converted types
                         # But we skip some of them as they have @setters
@@ -43,6 +43,11 @@ class RedisCreature:
                         else:
                             setattr(self, k, str2typed(v))
                     logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+
+                    logger.trace(f'{self.logh} Method >> (Getting aggro)')
+                    self.aggro = 0
+                    if r.exists(aggrokey):
+                        self.aggro = int(r.get(aggrokey))
                 else:
                     logger.trace(f'{self.logh} Method KO (HASH NotFound)')
             except Exception as e:
@@ -59,7 +64,7 @@ class RedisCreature:
 
     def to_json(self):
         """
-        Converts RedisCreature object into a JSON
+        Converts Object into a JSON
 
         Parameters: None
 
@@ -69,7 +74,7 @@ class RedisCreature:
 
     def as_dict(self):
         """
-        Converts RedisCreature object into a Python dict
+        Converts Object into a Python dict
 
         Parameters: None
 
@@ -77,6 +82,7 @@ class RedisCreature:
         """
         return {
             "account": self.account,
+            "aggro": self.aggro,
             "created": self.created,
             "date": self.date,
             "gender": self.gender,
@@ -98,7 +104,7 @@ class RedisCreature:
 
     def destroy(self):
         """
-        Destroys a Creature and deletes it from Redis DB.
+        Destroys an Object and DEL it from Redis DB.
 
         Parameters: None
 
@@ -176,6 +182,7 @@ class RedisCreature:
 
         logger.trace(f'{self.logh} Method >> (Creating object)')
         try:
+            self.aggro = 0
             self.account = accountuuid
             self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -199,84 +206,27 @@ class RedisCreature:
 
         logger.trace(f'{self.logh} Method >> (Creating dict)')
         try:
-            fullkey = f'{self.hkey}:{self.id}'
+            creaturekey = f'{self.hkey}:{self.id}'
             # We push data in final dict
             hashdict = {}
             # We loop over object properties to create it
+
             for property, value in self.as_dict().items():
-                hashdict[property] = typed2str(value)
+                if any([
+                    property == 'aggro',
+                ]):
+                    pass
+                else:
+                    hashdict[property] = typed2str(value)
 
             logger.trace(f'{self.logh} Method >> (Storing HASH)')
-            r.hset(fullkey, mapping=hashdict)
+            r.hset(creaturekey, mapping=hashdict)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
             logger.trace(f'{self.logh} Method OK')
             return self
-
-    def search(self, query, maxpaging=25):
-        """
-        Search for Creatures in Redis DB using RediSearch.
-
-        Parameters:
-        query (str): Redisearch raw query
-        maxpaging (int): User hashed password to store [Default:25]
-
-        Returns: list()
-        """
-        self.logh = '[Creature.id:None]'
-        index = 'creature_idx'
-        try:
-            r.ft(index).info()
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.logh} Method >> (Searching {query})')
-            # Query("search engine").paging(0, 10)
-            # f"@bearer:[{bearerid} {bearerid}]"
-            results = r.ft(index).search(
-                Query(query).paging(0, maxpaging)
-                )
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        creatures = []
-        for result in results.docs:
-            user = {
-                "account": str2typed(result.account),
-                "created": result.created,
-                "date": result.date,
-                "gender": str2typed(result.gender),
-                "id": result.id.removeprefix('creatures:'),
-                "instance": str2typed(result.instance),
-                "korp": str2typed(result.korp),
-                "korp_rank": str2typed(result.korp_rank),
-                "level": str2typed(result.level),
-                "name": result.name,
-                "race": str2typed(result.race),
-                "rarity": result.rarity,
-                "squad": str2typed(result.squad),
-                "squad_rank": str2typed(result.squad_rank),
-                "targeted_by": str2typed(result.targeted_by),
-                "x": str2typed(result.x),
-                "xp": str2typed(result.xp),
-                "y": str2typed(result.y),
-                }
-            creatures.append(user)
-
-        logger.trace(f'{self.logh} Method OK')
-        return creatures
 
     """
     Getter/Setter block for User management

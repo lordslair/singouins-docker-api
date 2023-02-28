@@ -1,150 +1,123 @@
 # -*- coding: utf8 -*-
 
+import json
+
 from loguru                      import logger
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
+from nosql.variables             import str2typed
 
 
 class RedisHS:
-    def __init__(self, creature=None):
-        if creature is not None:
-            self.creature = creature
-            self.hlog = f'[Creature.id:{self.creature.id}]'
-            self.hkey = f'highscores:{creature.id}'
+    def __init__(self, creatureuuid=None):
+        self.hkey = 'highscores'
+        self.logh = f'[HighScores.id:{creatureuuid}]'
+        fullkey = f'{self.hkey}:{creatureuuid}'
 
-            # Intialize HighScore
-            self.action_dismantle = 0
-            self.action_reload = 0
-            self.action_unload = 0
-            self.craft_potion = 0
-            self.global_deaths = 0
-            self.global_kills = 0
+        try:
+            if creatureuuid:
+                self.id = creatureuuid
+                if r.exists(fullkey):
+                    logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                    hashdict = r.hgetall(fullkey)
 
+                    for k, v in hashdict.items():
+                        setattr(self, k, str2typed(v))
+
+                    logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+                else:
+                    logger.trace(f'{self.logh} Method KO (HASH NotFound)')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
         else:
-            self.hlog = '[Creature.id:None]'
+            logger.trace(f'{self.logh} Method OK')
 
-        if hasattr(self, 'hkey') and r.exists(self.hkey):
-            # The HighScores does already exist in redis
-            try:
-                hashdict = r.hgetall(self.hkey)
-                logger.trace(f'{self.hlog} Method >> (HASH Loading)')
+    def __iter__(self):
+        yield from self.as_dict().items()
 
-                for k, v in hashdict.items():
-                    # We create the object attribute with converted INT
-                    setattr(self, k, int(v))
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
 
-                logger.trace(f'{self.hlog} Method >> (HASH Loaded)')
-            except Exception as e:
-                logger.error(f'{self.hlog} Method KO [{e}]')
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        highscores = {}
+        for key, val in self.__dict__.items():
+            if any([
+                key == 'hkey',
+                key == 'logh',
+            ]):
+                pass
             else:
-                logger.trace(f'{self.hlog} Method OK')
+                highscores[key] = val
+        return highscores
+
+    def destroy(self):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
+            else:
+                logger.warning(f'{self.logh} Method KO - NotFound')
+                return False
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
         else:
-            # The HighScores does not already exist in redis
-            logger.trace(f'{self.hlog} Method >> (HASH NotFound)')
-            pass
+            logger.trace(f'{self.logh} Method OK')
+            return True
 
     def incr(self, key, count=1):
+        fullkey = f'{self.hkey}:{self.id}'
         try:
-            logger.trace(f'{self.hlog} Method >> (HASH Incrementing)')
+            logger.trace(f'{self.logh} Method >> (HASH Incrementing)')
             # We increment the object attribute
             if hasattr(self, key):
                 setattr(self, key, getattr(self, key) + count)
                 # We increment the hash key
-                r.hincrby(self.hkey, key, count)
+                r.hincrby(fullkey, key, count)
             else:
                 setattr(self, key, count)
                 # We create the hash key
-                r.hset(self.hkey, key, count)
+                r.hset(fullkey, key, count)
 
         except Exception as e:
-            logger.error(f'{self.hlog} Method KO [{e}]')
+            logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.hlog} Method OK')
+            for k, v in r.hgetall(fullkey).items():
+                setattr(self, k, str2typed(v))
+            logger.trace(f'{self.logh} Method OK')
             return True
-
-    def destroy(self):
-        try:
-            logger.trace(f'{self.hlog} Method >> (Destroying HASH)')
-            r.delete(self.hkey)
-        except Exception as e:
-            logger.error(f'{self.hlog} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.hlog} Method OK')
-            return True
-
-    def search(self, query, maxpaging=25):
-        self.hlog = '[Creature.id:None]'
-        index = 'highscore_idx'
-        try:
-            r.ft(index).info()
-        except Exception as e:
-            logger.error(f'{self.hlog} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.hlog} Method >> (Searching {query})')
-            # Query("search engine").paging(0, 10)
-            # f"@bearer:[{bearerid} {bearerid}]"
-            results = r.ft(index).search(
-                Query(query).paging(0, maxpaging)
-                )
-        except Exception as e:
-            logger.error(f'{self.hlog} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        highscores = list()
-        for result in results.docs:
-            highscore = dict()
-            for key, val in result.__dict__.items():
-                if key == 'id':
-                    highscore[key] = val.removeprefix('highscores:')
-                elif val is not None:
-                    highscore[key] = int(val)
-                else:
-                    highscore[key] = None
-            highscores.append(highscore)
-
-        logger.trace(f'{self.hlog} Method OK')
-        return highscores
-
-    def _asdict(self):
-        tree = {}
-        for key, val in self.__dict__.items():
-            if any([
-                key == 'creature',
-                key == 'hkey',
-                key == 'hlog',
-            ]):
-                pass
-            else:
-                """Return nested dict by splitting the keys on a delimiter."""
-                t = tree
-                prev = None
-                for part in key.split('_'):
-                    if prev is not None:
-                        t = t.setdefault(prev, {})
-                    prev = part
-                else:
-                    t.setdefault(prev, val)
-        return tree
-
-
-if __name__ == '__main__':
-    from nosql.models.RedisCreature import RedisCreature
-    Creature = RedisCreature().get('20671520-85fb-35ad-861a-e8ccebe1ebb9')
-    HS = RedisHS(Creature)
-    logger.success(HS)
-    logger.success(HS._asdict())
-    HS.incr('global_kills', 1)
-    logger.success(HS._asdict())
-    logger.warning(HS.search(query='*'))

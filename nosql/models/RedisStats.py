@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+import json
+
 from loguru                     import logger
 
 from nosql.connector            import r
@@ -11,50 +13,122 @@ from nosql.variables            import str2typed
 
 
 class RedisStats:
-    def __init__(self, creature):
-        self.creature = creature
-        self.hkey     = f'stats:{self.creature.id}'
-        self.logh     = f'[Creature.id:{self.creature.id}]'
+    def __init__(self, creatureuuid=None):
+        self.hkey = 'stats'
+        self.logh = f'[Stats.id:{creatureuuid}]'
 
-        if r.exists(self.hkey):
-            # The pre-generated stats does already exist in redis
+        if creatureuuid:
+            fullkey = f'{self.hkey}:{creatureuuid}'
             try:
-                hashdict = r.hgetall(self.hkey)
-                logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                if r.exists(fullkey):
+                    logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                    for k, v in r.hgetall(fullkey).items():
+                        if any([
+                            k == 'hp',
+                        ]):
+                            setattr(self, f'_{k}', str2typed(v))
+                        else:
+                            setattr(self, k, str2typed(v))
+                    logger.trace(f'{self.logh} Method OK (HASH Loaded)')
 
-                for k, v in hashdict.items():
-                    # We create the object attribute with converted types
-                    # But we skip some of them as they have @setters
-                    # Note: any is like many 'or', all is like many 'and'.
-                    if any([
-                        k == 'hp',
-                    ]):
-                        setattr(self, f'_{k}', str2typed(v))
-                    else:
-                        setattr(self, k, str2typed(v))
-
-                logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+                    # We add the ID for later use
+                    self.id = creatureuuid
+                else:
+                    logger.trace(f'{self.logh} Method KO (HASH NotFound)')
             except Exception as e:
                 logger.error(f'{self.logh} Method KO [{e}]')
-            else:
-                logger.trace(f'{self.logh} Method OK')
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        return {
+            "base": {
+                "m": self.m,
+                "r": self.r,
+                "g": self.g,
+                "v": self.v,
+                "p": self.p,
+                "b": self.b
+            },
+            "off": {
+                "capcom": self.capcom,
+                "capsho": self.capsho,
+            },
+            "def": {
+                "armor": {
+                    "p": self.arm_p,
+                    "b": self.arm_b,
+                },
+                "hpmax": self.hpmax,
+                "hp": self.hp,
+                "dodge": self.r,
+                "parry": self.parry,
+            }
+        }
 
     def destroy(self):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
         try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            r.delete(self.hkey)
+            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
+            else:
+                logger.warning(f'{self.logh} Method KO - KEY NotFound')
+                return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Destroyed)')
             return True
 
-    def new(self, classid):
+    def new(
+        self,
+        Creature,
+        classid,
+    ):
         logger.trace(f'{self.logh} Method >> (HASH Creating)')
+        self.id = Creature.id
 
         try:
-            metaRace = metaNames['race'][self.creature.race]
+            metaRace = metaNames['race'][Creature.race]
 
             # This is base stats
             self.m_race = metaRace['min_m']
@@ -98,7 +172,7 @@ class RedisStats:
             moybr       = round((self.b + self.r) / 2)
             self.capsho = round((self.v + moybr) / 2)
 
-            self.hpmax = 100 + self.m + round(self.creature.level / 2)
+            self.hpmax = 100 + self.m + round(Creature.level / 2)
             self._hp   = self.hpmax
 
             self.dodge = self.r
@@ -116,25 +190,14 @@ class RedisStats:
             self.arm_b = 0
             self.arm_p = 0
 
-            if self.creature.account is not None:
-                creature_slots = RedisSlots(self.creature)
-                if creature_slots:
-                    armors = [
-                        RedisItem(self.creature).get(creature_slots.feet),
-                        RedisItem(self.creature).get(creature_slots.hands),
-                        RedisItem(self.creature).get(creature_slots.head),
-                        RedisItem(self.creature).get(creature_slots.shoulders),
-                        RedisItem(self.creature).get(creature_slots.torso),
-                        RedisItem(self.creature).get(creature_slots.legs),
-                        ]
-
-                    for armor in armors:
-                        if armor:
-                            metaArmor = metaNames[armor.metatype][armor.metaid]
-                            self.arm_b += metaArmor['arm_b']
-                            self.arm_p += metaArmor['arm_p']
-                else:
-                    logger.warning(f'{self.logh} Method >> Slots NotFound')
+            if Creature.account is not None:
+                Slots = RedisSlots(creatureuuid=Creature.id)
+                for property, value in Slots.as_dict().items():
+                    if getattr(Slots, property) is not None:
+                        Item = RedisItem(itemuuid=Slots.feet)
+                        metaArmor = metaNames[Item.metatype][Item.metaid]
+                        self.arm_b += metaArmor['arm_b']
+                        self.arm_p += metaArmor['arm_p']
             else:
                 logger.trace(f'{self.logh} Method >> Slots Query skipped')
         except Exception as e:
@@ -146,7 +209,7 @@ class RedisStats:
 
         try:
             # We push data in final dict
-            logger.trace(f'{self.logh} Method >> (Storing HASH)')
+            logger.trace(f'{self.logh} Method >> (HASH Storing)')
             hashdict = {
                 "b": self.b,
                 "b_race": self.b_race,
@@ -176,39 +239,12 @@ class RedisStats:
                 "parry": self.parry,
                 }
 
-            r.hset(self.hkey, mapping=hashdict)
+            r.hset(f'{self.hkey}:{self.id}', mapping=hashdict)
         except Exception as e:
-            logger.error(f'{self.logh} Method KO (Storing HASH) [{e}]')
+            logger.error(f'{self.logh} Method KO (HASH Storing) [{e}]')
         else:
-            logger.trace(f'{self.logh} Method OK')
+            logger.trace(f'{self.logh} Method OK (HASH Stored)')
             return self
-
-    def _asdict(self):
-        hashdict = {
-            "base": {
-                "m": self.m,
-                "r": self.r,
-                "g": self.g,
-                "v": self.v,
-                "p": self.p,
-                "b": self.b
-            },
-            "off": {
-                "capcom": self.capcom,
-                "capsho": self.capsho,
-            },
-            "def": {
-                "armor": {
-                    "p": self.arm_p,
-                    "b": self.arm_b,
-                },
-                "hpmax": self.hpmax,
-                "hp": self.hp,
-                "dodge": self.r,
-                "parry": self.parry,
-            }
-        }
-        return hashdict
 
     """
     Getter/Setter block for HP management
@@ -225,19 +261,8 @@ class RedisStats:
         self._hp = hp
         try:
             logger.trace(f'{self.logh} Method >> (Setting HASH) Stats.hp')
-            r.hset(self.hkey, 'hp', self._hp)
+            r.hset(f'{self.hkey}:{self.id}', 'hp', self._hp)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
             logger.trace(f'{self.logh} Method OK')
-
-
-if __name__ == '__main__':
-    from nosql.models.RedisCreature import RedisCreature
-
-    Creature = RedisCreature().get('00000000-cafe-cafe-cafe-000000000000')
-    Stats = RedisStats(Creature)
-    logger.success(Stats)
-    Stats = RedisStats(Creature).new(2)
-    logger.success(Stats.hp)
-    logger.success(Stats._asdict())

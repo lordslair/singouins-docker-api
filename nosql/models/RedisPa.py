@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 
+import json
+
 from loguru                     import logger
 
 from nosql.connector            import r
@@ -14,26 +16,115 @@ bluemaxttl     = bluepaduration * bluepamax
 
 
 class RedisPa:
-    def __init__(self, creature):
-        self.creature = creature
-        self.hkey     = f'pa:{creature.id}'
-        self.logh     = f'[Creature.id:{self.creature.id}]'
-        logger.trace(f'{self.logh} Method >> Initialization')
+    def __init__(self, creatureuuid):
+        self.hkey     = 'pa'
+        self.logh     = f'[Creature.id:{creatureuuid}]'
 
-        self.redttl    = None
-        self.redpa     = None
-        self.redttnpa  = None
-        self.bluettl   = None
-        self.bluepa    = None
-        self.bluettnpa = None
-        self.refresh()
+        if creatureuuid:
+            logger.trace(f'{self.logh} Method >> Initialization')
+            self.id = creatureuuid
+            if r.exists(f'{self.hkey}:{self.id}:red'):
+                logger.trace(f'{self.logh} Method >> (HASH Loading) RED')
+                try:
+                    self.redttl   = r.ttl(f'{self.hkey}:{self.id}:red')
+                    redpa_temp    = redmaxttl - abs(self.redttl)
+                    self.redpa    = int(round(redpa_temp / redpaduration))
+                    self.redttnpa = self.redttl % redpaduration
+                except Exception as e:
+                    logger.error(f'{self.logh} Method KO [{e}]')
+            else:
+                self.redttl = 0
+                self.redpa = redpamax
+                self.redttnpa = redpaduration
+
+            if r.exists(f'{self.hkey}:{self.id}:blue'):
+                logger.trace(f'{self.logh} Method >> (HASH Loading) BLUE')
+                try:
+                    self.bluettl   = r.ttl(f'{self.hkey}:{self.id}:blue')
+                    bluepa_temp    = bluemaxttl - abs(self.bluettl)
+                    self.bluepa    = int(round(bluepa_temp / bluepaduration))
+                    self.bluettnpa = self.bluettl % bluepaduration
+                except Exception as e:
+                    logger.error(f'{self.logh} Method KO [{e}]')
+            else:
+                self.bluettl = 0
+                self.bluepa = bluepamax
+                self.bluettnpa = bluepaduration
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        return {
+            "blue": {
+                "pa": self.bluepa,
+                "ttnpa": self.bluettnpa,
+                "ttl": self.bluettl,
+                },
+            "red": {
+                "pa": self.redpa,
+                "ttnpa": self.redttnpa,
+                "ttl": self.redttl,
+                },
+            }
+
+    def destroy(self):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            if r.exists(f'{self.hkey}:{self.id}:blue'):
+                r.delete(f'{self.hkey}:{self.id}:blue')
+            if r.exists(f'{self.hkey}:{self.id}:red'):
+                r.delete(f'{self.hkey}:{self.id}:red')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.logh} Method OK')
+            return True
 
     def consume(self, redpa=0, bluepa=0):
         try:
             if bluepa > 0:
                 logger.trace(f'{self.logh} Method >> (KEY Update) BLUE')
                 # An action consumed a blue PA, we need to update
-                key    = f'{self.hkey}:blue'
+                key    = f'{self.hkey}:{self.id}:blue'
                 ttl    = r.ttl(key)
                 newttl = ttl + (bluepa * bluepaduration)
 
@@ -48,11 +139,11 @@ class RedisPa:
                         r.expire(key, newttl)
                     else:
                         # Key does not exist anymore (PA count = PA max)
-                        r.set(key, '', ex=newttl)
+                        r.set(key, 'None', ex=newttl)
             if redpa > 0:
                 logger.trace(f'{self.logh} Method >> (KEY Update) RED')
                 # An action consumed a red PA, we need to update
-                key    = f'{self.hkey}:red'
+                key    = f'{self.hkey}:{self.id}:red'
                 ttl    = r.ttl(key)
                 newttl = ttl + (redpa * redpaduration)
 
@@ -67,82 +158,10 @@ class RedisPa:
                         r.expire(key, newttl)
                     else:
                         # Key does not exist anymore (PA count = PA max)
-                        r.set(key, '', ex=newttl)
+                        r.set(key, 'None', ex=newttl)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
             logger.trace(f'{self.logh} Method OK')
             return True
-
-    def destroy(self):
-        self.logh = f'[Creature.id:{self.creature.id}]'
-        try:
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            r.delete(f'{self.hkey}:blue')
-            r.delete(f'{self.hkey}:red')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return True
-
-    def refresh(self):
-        try:
-            logger.trace(f'{self.logh} Method >> (KEY Loading)')
-            self.redttl   = r.ttl(f'{self.hkey}:red')
-            redpa_temp    = redmaxttl - abs(self.redttl)
-            self.redpa    = int(round(redpa_temp / redpaduration))
-            self.redttnpa = self.redttl % redpaduration
-            logger.trace(f'{self.logh} Method >> (KEY Loaded)')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method OK')
-
-        try:
-            logger.trace(f'{self.logh} Method >> (KEY Loading)')
-            self.bluettl   = r.ttl(f'{self.hkey}:blue')
-            bluepa_temp    = bluemaxttl - abs(self.bluettl)
-            self.bluepa    = int(round(bluepa_temp / bluepaduration))
-            self.bluettnpa = self.bluettl % bluepaduration
-            logger.trace(f'{self.logh} Method >> (KEY Loaded)')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method OK')
-
-    def reset(self):
-        try:
-            logger.trace(f'{self.logh} Method >> (Expiring KEY)')
-            r.set(f'{self.hkey}:red', '', ex=1)
-            r.set(f'{self.hkey}:blue', '', ex=1)
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return True
-
-    def _asdict(self):
-        # self.refresh()
-        hashdict = {
-            "blue":
-                {
-                    "pa": self.bluepa,
-                    "ttnpa": self.bluettnpa,
-                    "ttl": self.bluettl,
-                },
-            "red":
-                {
-                    "pa": self.redpa,
-                    "ttnpa": self.redttnpa,
-                    "ttl": self.redttl,
-                },
-        }
-        return hashdict
-
-
-if __name__ == '__main__':
-    pass

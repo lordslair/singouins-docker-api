@@ -6,26 +6,26 @@ from flask_jwt_extended         import (jwt_required,
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisEffect   import RedisEffect
+from nosql.models.RedisSearch   import RedisSearch
 
 from utils.routehelper          import (
     creature_check,
     )
 
-#
-# Routes /mypc/{creatureuuid}/effects
-#
 
-
-# API: GET /mypc/{creatureuuid}/effects
+#
+# Routes /mypc/<uuid:creatureuuid>/effects
+#
+# API: GET /mypc/<uuid:creatureuuid>/effects
 @jwt_required()
 def effects_get(creatureuuid):
     Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
-        bearer = Creature.id.replace('-', ' ')
-        Effects = RedisEffect(Creature).search(query=f'@bearer:{bearer}')
+        Effects = RedisSearch().effect(
+            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            )
     except Exception as e:
         msg = f'{h} Effects Query KO [{e}]'
         logger.error(msg)
@@ -44,7 +44,9 @@ def effects_get(creatureuuid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "effects": Effects._asdict,
+                    "effects": [
+                        Effect.as_dict() for Effect in Effects.results
+                        ],
                     "creature": Creature.as_dict(),
                     },
             }

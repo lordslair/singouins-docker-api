@@ -15,35 +15,17 @@ class RedisWallet:
         logger.trace(f'{self.logh} Method >> Initialization')
 
         if creatureuuid:
-            fullkey = f'{self.hkey}:{creatureuuid}'
-            try:
+            if r.exists(f'{self.hkey}:{self.id}'):
                 logger.trace(f'{self.logh} Method >> (HASH Loading)')
-                if r.exists(fullkey):
-                    for k, v in r.hgetall(fullkey).items():
+                try:
+                    for k, v in r.hgetall(f'{self.hkey}:{self.id}').items():
                         # We create the object attribute with converted INT
                         setattr(self, f'_{k}', int(v))
                     logger.trace(f'{self.logh} Method >> (HASH Loaded)')
-                else:
-                    logger.trace(f'{self.logh} Method KO (HASH NotFound)')
-            except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
-        else:
-            self._cal22 = None
-            self._cal223 = None
-            self._cal311 = None
-            self._cal50 = None
-            self._cal55 = None
-            self._shell = None
-            self._bolt = None
-            self._arrow = None
-            self._legendary = None
-            self._epic = None
-            self._rare = None
-            self._uncommon = None
-            self._common = None
-            self._broken = None
-            self._sausages = None
-            self._bananas = None
+                except Exception as e:
+                    logger.error(f'{self.logh} Method KO [{e}]')
+            else:
+                logger.trace(f'{self.logh} Method KO (HASH NotFound)')
 
     def __iter__(self):
         yield from {

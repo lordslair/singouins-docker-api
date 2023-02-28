@@ -6,21 +6,21 @@ from flask_jwt_extended         import (jwt_required,
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisStats    import RedisStats
 
 from utils.routehelper          import (
     creature_check,
     )
 
-#
-# Routes /mypc/{pcid}/view/*
-#
 
-
-# API: GET /mypc/{pcid}/view
+#
+# Routes /mypc/<uuid:creatureuuid>/view/*
+#
+# API: GET /mypc/<uuid:creatureuuid>/view
 @jwt_required()
-def view_get(pcid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def view_get(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
@@ -28,7 +28,7 @@ def view_get(pcid):
             # PC is solo / not in a squad
             view_final = []
             try:
-                Stats = RedisStats(Creature)
+                Stats = RedisStats(creatureuuid=Creature.id)
                 range = 4 + round(Stats.p / 50)
 
                 maxx  = Creature.x + range
@@ -36,11 +36,12 @@ def view_get(pcid):
                 maxy  = Creature.y + range
                 miny  = Creature.y - range
 
-                Creatures = RedisCreature().search(
+                CreaturesVisible = RedisSearch().creature(
                     query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
                     )
 
-                for creature_in_sight in Creatures:
+                for CreatureVisible in CreaturesVisible.results:
+                    creature_in_sight = CreatureVisible.as_dict()
                     # We define the default diplomacy title
                     creature_in_sight['diplo'] = 'neutral'
                     # We try to define the diplomacy based on tests
@@ -62,12 +63,10 @@ def view_get(pcid):
             # PC is in a squad
             # We query the Squad members in the same instance
             try:
-                squad = Creature.squad.replace('-', ' ')
-                instance = Creature.instance.replace('-', ' ')
-                SquadMembers = RedisCreature().search(
-                    f"(@squad:{squad}) & "
+                SquadMembers = RedisSearch().creature(
+                    f"(@squad:{Creature.squad.replace('-', ' ')}) & "
                     f"(@squad_rank:-Pending) & "
-                    f"(@instance:{instance})"
+                    f"(@instance:{Creature.instance.replace('-', ' ')})"
                     )
             except Exception as e:
                 msg = f'{h} Squad Query KO (squadid:{Creature.squad}) [{e}]'
@@ -80,7 +79,7 @@ def view_get(pcid):
                     }
                 ), 200
             else:
-                if not SquadMembers:
+                if not SquadMembers or len(SquadMembers.results) == 0:
                     msg = (
                         f'{h} Squad Query KO - NotFound '
                         f'(squadid:{Creature.squad})'
@@ -99,27 +98,26 @@ def view_get(pcid):
 
             views = []       # We initialize the intermadiate array
             view_final = []  # We initialize the result array
-            for SquadMember in SquadMembers:
+            for SquadMember in SquadMembers.results:
                 try:
-                    CreatureMember = RedisCreature(SquadMember['id'])
-                    Stats = RedisStats(CreatureMember)
+                    Stats = RedisStats(creatureuuid=SquadMember.id)
                     range = 4 + round(Stats.p / 50)
 
-                    maxx  = CreatureMember.x + range
-                    minx  = CreatureMember.x - range
-                    maxy  = CreatureMember.y + range
-                    miny  = CreatureMember.y - range
+                    maxx  = SquadMember.x + range
+                    minx  = SquadMember.x - range
+                    maxy  = SquadMember.y + range
+                    miny  = SquadMember.y - range
 
-                    Creatures = RedisCreature().search(
+                    CreaturesVisible = RedisSearch().creature(
                         query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
                         )
 
                     if len(views) == 0:
                         # We push the first results in the array
-                        views += Creatures
+                        views += CreaturesVisible.results
                     else:
                         # We aggregate all the results, without duplicates
-                        views = list(set(views + Creatures))
+                        views = list(set(views + CreaturesVisible.results))
 
                 except Exception as e:
                     msg = f'{h} View Query KO (squadid:{Creature.squad}) [{e}]'
@@ -132,16 +130,17 @@ def view_get(pcid):
                         }
                     ), 200
                 else:
-                    for creature in views:
+                    for CreatureVisible in views:
+                        creature_in_sight = CreatureVisible.as_dict()
                         # We define the default diplomacy title
-                        creature['diplo'] = 'neutral'
+                        creature_in_sight['diplo'] = 'neutral'
                         # We try to define the diplomacy based on tests
-                        if creature['race'] >= 11:
-                            creature['diplo'] = 'enemy'
-                        if creature['squad'] == Creature.squad:
-                            creature['diplo'] = 'squad'
+                        if creature_in_sight['race'] >= 11:
+                            creature_in_sight['diplo'] = 'enemy'
+                        if creature_in_sight['squad'] == Creature.squad:
+                            creature_in_sight['diplo'] = 'squad'
 
-                        view_final.append(creature)
+                        view_final.append(creature_in_sight)
     except Exception as e:
         msg = f'{h} View Query KO [{e}]'
         logger.error(msg)

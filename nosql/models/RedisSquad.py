@@ -1,25 +1,92 @@
 # -*- coding: utf8 -*-
 
-import copy
+import json
 import uuid
 
 from datetime                    import datetime
 from loguru                      import logger
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.variables             import str2typed, typed2str
 
 
 class RedisSquad:
-    def __init__(self):
-        self.hkey     = 'squads'
-
-    def destroy(self, squaduuid):
+    def __init__(self, squaduuid=None):
+        self.hkey = 'squads'
         self.logh = f'[Squad.id:{squaduuid}]'
+        fullkey = f'{self.hkey}:{squaduuid}'
+
+        try:
+            if r.exists(fullkey):
+                logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                hashdict = r.hgetall(fullkey)
+                for k, v in hashdict.items():
+                    setattr(self, k, str2typed(v))
+                logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+            else:
+                logger.trace(f'{self.logh} Method KO (HASH NotFound)')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+        else:
+            logger.trace(f'{self.logh} Method OK')
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        return {
+                "created": self.created,
+                "date": self.date,
+                "id": self.id,
+                "name": self.name,
+                "leader": self.leader,
+            }
+
+    def destroy(self):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
         try:
             logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            r.delete(f'{self.hkey}:{squaduuid}')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
+            else:
+                logger.warning(f'{self.logh} Method KO - NotFound')
+                return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
@@ -27,36 +94,13 @@ class RedisSquad:
             logger.trace(f'{self.logh} Method OK')
             return True
 
-    def get(self, squaduuid):
-        self.logh = f'[Squad.id:{squaduuid}]'
-        if r.exists(f'{self.hkey}:{squaduuid}'):
-            logger.trace(f'{self.logh} Method >> (KEY Loading)')
-            try:
-                hashdict = r.hgetall(f'{self.hkey}:{squaduuid}')
-
-                self.id = hashdict['id']
-                self.name = str2typed(hashdict['name'])
-                self.leader = str2typed(hashdict['leader'])
-                self.created = hashdict['created']
-
-                logger.trace(f'{self.logh} Method >> (KEY Loaded)')
-            except Exception as e:
-                logger.error(f'{self.logh} Method KO [{e}]')
-                return None
-            else:
-                logger.trace(f'{self.logh} Method OK')
-                return self
-        else:
-            logger.warning(f'{self.logh} Method KO - NotFound')
-            return False
-
-    def new(self, creature):
+    def new(self, creatureuuid):
         self.logh = '[Squad.id:None]'
         # Checking if it exists
         logger.trace(f'{self.logh} Method >> (Checking uniqueness)')
         try:
             possible_uuid = str(
-                uuid.uuid3(uuid.NAMESPACE_DNS, creature.name)
+                uuid.uuid3(uuid.NAMESPACE_DNS, creatureuuid)
                 )
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
@@ -72,7 +116,7 @@ class RedisSquad:
             self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.id = possible_uuid
-            self.leader = creature.id
+            self.leader = creatureuuid
             self.name = None
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
@@ -94,71 +138,3 @@ class RedisSquad:
         else:
             logger.trace(f'{self.logh} Method OK')
             return self
-
-    def search(self, query, maxpaging=25):
-        self.logh = '[Squad.id:None]'
-        index = 'squad_idx'
-        try:
-            r.ft(index).info()
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.logh} Method >> (Searching {query})')
-            # Query("search engine").paging(0, 10)
-            # f"@bearer:[{bearerid} {bearerid}]"
-            results = r.ft(index).search(
-                Query(query).paging(0, maxpaging)
-                )
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        squads = []
-        for result in results.docs:
-            squad = {
-                "created": result.created,
-                "date": result.date,
-                "id": result.id.removeprefix('squads:'),
-                "name": typed2str(result.name),
-                "leader": result.leader,
-                }
-            squads.append(squad)
-
-        logger.trace(f'{self.logh} Method OK')
-        return squads
-
-    def _asdict(self):
-        clone = copy.deepcopy(self)
-        if clone.logh:
-            del clone.logh
-        if clone.hkey:
-            del clone.hkey
-        return clone.__dict__
-
-
-if __name__ == '__main__':
-    pass
-
-    """
-    FT.CREATE squad_idx PREFIX 1 "squads:"
-        LANGUAGE english
-        SCORE 0.5
-        SCORE_FIELD "squad_score"
-        SCHEMA
-            id TAG
-            leader TEXT
-            name TEXT
-
-    FT.SEARCH squad_idx "YSquad" LIMIT 0 10
-
-    FT.DROPINDEX squad_idx
-    """

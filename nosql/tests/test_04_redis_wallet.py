@@ -98,8 +98,8 @@ def test_redis_wallet_get_ko():
     Wallet = RedisWallet()
 
     assert Wallet.hkey == 'wallets'
-    assert Wallet.cal22 is None
-    assert Wallet.arrow is None
+    assert hasattr(Wallet, 'cal22') is False
+    assert hasattr(Wallet, 'arrow') is False
 
 
 def test_redis_wallet_search_empty():

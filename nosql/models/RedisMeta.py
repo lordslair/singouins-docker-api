@@ -2,7 +2,8 @@
 
 from loguru                     import logger
 
-from nosql.connector            import r
+from nosql.connector import r
+from nosql.variables import str2typed
 
 
 class RedisMeta:
@@ -17,18 +18,7 @@ class RedisMeta:
 
             try:
                 for k, v in hashdict.items():
-                    # We create the object attribute with converted INT
-                    if v == 'false' or v == 'False':
-                        newv = False
-                    elif v == 'true' or v == 'True':
-                        newv = True
-                    elif v == '' or v == 'none' or v == 'None' or v == 'null':
-                        newv = None
-                    elif v.isdigit():
-                        newv = int(v)
-                    else:
-                        newv = v
-                    setattr(self, k, newv)
+                    setattr(self, k, str2typed(v))
             except Exception as e:
                 logger.error(f'{self.logh} Method KO [{e}]')
             else:

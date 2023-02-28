@@ -5,7 +5,6 @@ import uuid
 
 from datetime                    import datetime
 from loguru                      import logger
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.variables             import str2typed, typed2str
@@ -52,16 +51,7 @@ class RedisUser:
             self.name = None
 
     def __iter__(self):
-        yield from {
-            "active": self.active,
-            "created": self.created,
-            "d_ack": self.d_ack,
-            "d_name": self.d_name,
-            "date": self.date,
-            "hash": self.hash,
-            "id": self.id,
-            "name": self.name,
-        }.items()
+        yield from self.as_dict().items()
 
     def __str__(self):
         return json.dumps(dict(self), ensure_ascii=False)
@@ -182,47 +172,6 @@ class RedisUser:
         else:
             logger.trace(f'{self.logh} Method OK')
             return self
-
-    def search(self, query, maxpaging=25):
-        """
-        Search for Users in Redis DB using RediSearch.
-
-        Parameters:
-        query (str): Redisearch raw query
-        maxpaging (int): User hashed password to store [Default:25]
-
-        Returns: list()
-        """
-        self.logh = '[User.id:None]'
-        index = 'user_idx'
-        try:
-            r.ft(index).info()
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.logh} Method >> (Searching {query})')
-            results = r.ft(index).search(Query(query).paging(0, maxpaging))
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        self.objects = []
-        for result in results.docs:
-            # We fetch the REAL object found
-            User = RedisUser(result.name)
-            # We add it in self.objects list
-            self.objects.append(User)
-        logger.trace(f'{self.logh} Method OK')
-        return self
 
     """
     Getter/Setter block for User management

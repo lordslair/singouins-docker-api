@@ -5,9 +5,8 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem     import RedisItem
+from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -16,28 +15,26 @@ from utils.routehelper          import (
     )
 
 #
-# Routes /mypc/{pcid}/item/*
+# Routes /mypc/<uuid:creatureuuid>/item/*
 #
 
 
-# API: GET /mypc/{pcid}/item
+# API: GET /mypc/<uuid:creatureuuid>/item
 @jwt_required()
-def item_get(pcid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def item_get(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
-        bearer = Creature.id.replace('-', ' ')
-        creature_inventory = RedisItem(Creature).search(
-            field='bearer', query=f'{bearer}'
+        Items = RedisSearch().item(
+            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            )
+        Cosmetics = RedisSearch().cosmetic(
+            query=f"@bearer:{Creature.id.replace('-', ' ')}"
             )
 
-        armor = [x for x in creature_inventory if x['metatype'] == 'armor']
-        weapon = [x for x in creature_inventory if x['metatype'] == 'weapon']
-
-        creature_slots = RedisSlots(Creature)
-        creature_cosmetics = RedisCosmetic(Creature).get_all()
-        Wallet = RedisWallet(Creature.id)
+        Slots = RedisSlots(creatureuuid=Creature.id)
+        Wallet = RedisWallet(creatureuuid=Creature.id)
     except Exception as e:
         msg = f'{h} Items Query KO [{e}]'
         logger.error(msg)
@@ -56,10 +53,18 @@ def item_get(pcid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "weapon": weapon,
-                    "armor": armor,
-                    "equipment": creature_slots._asdict(),
-                    "cosmetic": creature_cosmetics,
+                    "weapon": [
+                        Item.as_dict() for Item in Items.results
+                        if Item.metatype == 'weapon'
+                        ],
+                    "armor": [
+                        Item.as_dict() for Item in Items.results
+                        if Item.metatype == 'armor'
+                        ],
+                    "equipment": Slots.as_dict(),
+                    "cosmetic": [
+                        Cosmetic.as_dict() for Cosmetic in Cosmetics.results
+                        ],
                     "wallet": Wallet.as_dict(),
                 },
             }

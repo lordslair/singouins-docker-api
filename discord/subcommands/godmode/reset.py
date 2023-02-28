@@ -1,0 +1,76 @@
+# -*- coding: utf8 -*-
+
+import discord
+
+from discord.commands import option
+from discord.ext import commands
+from loguru import logger
+
+from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisPa import RedisPa
+
+from subcommands.godmode._autocomplete import (
+    get_instances_list,
+    get_singouins_in_instance_list,
+    )
+
+
+def reset(group_godmode):
+    @group_godmode.command(
+        description='[@Team role] Reset Action Points for a Singouin',
+        default_permission=False,
+        name='reset',
+        )
+    @commands.guild_only()  # Hides the command from the menu in DMs
+    @commands.has_any_role('Team')
+    @option(
+        "instanceuuid",
+        description="Instance UUID",
+        autocomplete=get_instances_list
+        )
+    @option(
+        "singouinuuid",
+        description="Singouin UUID",
+        autocomplete=get_singouins_in_instance_list
+        )
+    async def reset(
+        ctx,
+        instanceuuid: str,
+        singouinuuid: str,
+    ):
+        name    = ctx.author.name
+        channel = ctx.channel.name
+        # As we need roles, it CANNOT be used in PrivateMessage
+        logger.info(
+            f'[#{channel}][{name}] '
+            f'/{group_godmode} reset {instanceuuid} {singouinuuid}'
+            )
+
+        try:
+            Creature = RedisCreature(creatureuuid=singouinuuid)
+            Pa = RedisPa(creatureuuid=singouinuuid)
+
+            Pa.redpa = 16
+            Pa.bluepa = 8
+        except Exception as e:
+            description = f'Godmode-Reset Query KO [{e}]'
+            logger.error(f'[#{channel}][{name}] └──> {description}')
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=description,
+                    colour=discord.Colour.red(),
+                    )
+                )
+            return
+        else:
+            msg = 'Godmode-Reset OK'
+            logger.trace(msg)
+            embed = discord.Embed(
+                title=f"**{Creature.name}**",
+                description=msg,
+                colour=discord.Colour.green()
+                )
+            embed.set_footer(text=f"CreatureUUID: {Creature.id}")
+
+            await ctx.respond(embed=embed)
+            logger.info(f'[#{channel}][{name}] └──> Godmode-Reset Query OK')

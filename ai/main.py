@@ -10,7 +10,7 @@ from bestiaire.Salamander       import Salamander
 from bestiaire.Fungus           import Fungus
 
 from nosql.connector            import r_no_decode, redis
-from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisSearch   import RedisSearch
 
 from utils.requests   import (
     resolver_generic_request_get,
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     threads_bestiaire = []
     try:
         # We Initialize with ALL the existing NPC Creatures in an instance
-        Creatures = RedisCreature().search(query='-(@instance:None)')
+        Creatures = RedisSearch().creature(query='-(@instance:None)').results
     except Exception as e:
         logger.error(f"[Initialization] Creatures Query KO [{e}]")
     else:
@@ -73,18 +73,18 @@ if __name__ == '__main__':
 
     if len(Creatures) > 0:
         logger.trace("Creature Loading >>")
-        for creature in Creatures:
-            if creature['race'] > 10:
+        for Creature in Creatures:
+            if Creature.race > 10:
                 # Like a lazy ass, we publish it into the channel
                 # to be treated in the listen() code
                 try:
                     pmsg = {
                         "action": 'pop',
-                        "creatureuuid": creature['id'],
+                        "creature": Creature.as_dict(),
                         }
                     r_no_decode.publish('ai-creature', json.dumps(pmsg))
 
-                    name = f"[{creature['id']}] {creature['name']}"
+                    name = f"[{Creature.id}] {Creature.name}"
                 except Exception as e:
                     logger.error(f"Creature publish KO | {name} [{e}]")
                 else:
@@ -101,7 +101,7 @@ if __name__ == '__main__':
           "channel": <ai-{creature|instance}>,
           "data": {
             "action": <pop|kill>,
-            "creature": <CreatureUUID>
+            "creature": <RedisCreature>
             },
           "pattern": <ai-{creature|instance}>,
           "type": "pmessage",
@@ -120,16 +120,18 @@ if __name__ == '__main__':
 
             if data['action'] == 'pop':
                 # We have to pop a new creature somewhere
+                creature = data['creature']
                 try:
                     if creature['race'] in [11, 12, 13, 14]:
                         # Need to pop a Salamander
-                        t = Salamander(creatureuuid=data['creatureuuid'])
+                        t = Salamander(creatureuuid=creature['id'])
                     elif creature['race'] in [15, 16]:
                         # Need to pop a Fungus
-                        t = Fungus(creatureuuid=data['creatureuuid'])
+                        t = Fungus(creatureuuid=creature['id'])
                     else:
                         # Gruik
                         pass
+                        logger.warning(data)
 
                     t.start()
                     threads_bestiaire.append(t)
@@ -141,9 +143,9 @@ if __name__ == '__main__':
                 # We have to kill an existing creature somewhere
                 creature = data['creature']
                 try:
-                    name = f"[{creature['id']}] {creature['name']}"
+                    name = f"[{Creature.id}] {Creature.name}"
                     for index, thread in enumerate(threads_bestiaire):
-                        if thread.creature.id == creature['id']:
+                        if thread.creature.id == Creature.race:
                             # We got the dead Creature
                             logger.trace(f'Creature to kill found: {name}')
                             thread.creature.hp = 0

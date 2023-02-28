@@ -1,10 +1,10 @@
 # -*- coding: utf8 -*-
 
+import json
 import uuid
 
 from datetime                    import datetime
 from loguru                      import logger
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.metas                 import metaNames
@@ -12,19 +12,105 @@ from nosql.variables             import str2typed, typed2str
 
 
 class RedisItem:
-    def __init__(self, creature=None):
-        self.creature = creature
-        self.hkey     = 'items'
+    def __init__(self, itemuuid=None):
+        self.hkey = 'items'
+        self.logh = f'[Item.id:{itemuuid}]'
+        fullkey = f'{self.hkey}:{itemuuid}'
+        logger.trace(f'{self.logh} Method >> Initialization')
 
-    def destroy(self, itemuuid):
         try:
-            self.item = itemuuid
-            self.logh = f'[Item.id:{self.item}]'
-            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
-            if r.exists(f'{self.hkey}:{itemuuid}'):
-                r.delete(f'{self.hkey}:{itemuuid}')
+            if itemuuid:
+                if r.exists(fullkey):
+                    logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                    hashdict = r.hgetall(fullkey)
+
+                    for k, v in hashdict.items():
+                        # We create the object attribute with converted types
+                        # But we skip some of them as they have @setters
+                        if any([
+                            k == 'ammo',
+                            k == 'bearer',
+                            k == 'offsetx',
+                            k == 'offsety',
+                        ]):
+                            setattr(self, f'_{k}', str2typed(v))
+                        else:
+                            setattr(self, k, str2typed(v))
+                    logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+                else:
+                    logger.trace(f'{self.logh} Method KO (HASH NotFound)')
             else:
-                logger.trace(f'{self.logh} Method KO - NotFound')
+                logger.trace(f'{self.logh} Method >> Initialized Empty')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+        else:
+            logger.trace(f'{self.logh} Method OK')
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        return {
+            "ammo": self.ammo,
+            "bearer": self.bearer,
+            "bound": self.bound,
+            "bound_type": self.bound_type,
+            "date": self.date,
+            "id": self.id,
+            "metatype": self.metatype,
+            "metaid": self.metaid,
+            "modded": self.modded,
+            "mods": self.mods,
+            "rarity": self.rarity,
+            "offsetx": self.offsetx,
+            "offsety": self.offsety,
+            "state": self.state,
+            }
+
+    def destroy(self):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
+        try:
+            logger.trace(f'{self.logh} Method >> (Destroying HASH)')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
+            else:
+                logger.warning(f'{self.logh} Method KO - NotFound')
                 return False
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
@@ -33,44 +119,13 @@ class RedisItem:
             logger.trace(f'{self.logh} Method OK')
             return True
 
-    def get(self, itemuuid):
-        self.logh = f'[Item.id:{itemuuid}]'
-        fullkey = f'{self.hkey}:{itemuuid}'
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Loading)')
-            if r.exists(fullkey):
-                hashdict = r.hgetall(fullkey)
-            else:
-                logger.trace(f'{self.logh} Method KO (HASH NotFound)')
-                return False
-
-            for k, v in hashdict.items():
-                # We create the object attribute with converted types
-                # But we skip some of them as they have @setters
-                # Note: any is like many 'or', all is like many 'and'.
-                if any([
-                    k == 'ammo',
-                    k == 'bearer',
-                    k == 'offsetx',
-                    k == 'offsety',
-                ]):
-                    setattr(self, f'_{k}', str2typed(v))
-                else:
-                    setattr(self, k, str2typed(v))
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return self
-
-    def new(self, item_caracs):
+    def new(self, creatureuuid, item_caracs):
         try:
             self.id = str(uuid.uuid4())
             self.logh = f'[Item.id:{self.id}]'
 
             self._ammo = None
-            self._bearer = self.creature.id
+            self._bearer = creatureuuid
             self.bound = item_caracs['bound']
             self.bound_type = item_caracs['bound_type']
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -108,28 +163,9 @@ class RedisItem:
             # We push data in final dict
             hashdict = {}
             # We loop over object properties to create it
-            for property, value in self._asdict().items():
+            for property, value in self.as_dict().items():
                 hashdict[property] = typed2str(value)
 
-            # We should have hashdict like this
-            """
-            hashdict = {
-                "ammo": self.ammo,
-                "bearer": self.bearer,
-                "bound": self.bound,
-                "bound_type": self.bound_type,
-                "date": self.date,
-                "id": self.id,
-                "metatype": self.metatype,
-                "metaid": self.metaid,
-                "modded": self.modded,
-                "mods": self.mods,
-                "rarity": self.rarity,
-                "offsetx": self.offsetx,
-                "offsety": self.offsety,
-                "state": self.state,
-            }
-            """
             logger.trace(f'{self.logh} Method >> (Storing HASH)')
             r.hset(fullkey, mapping=hashdict)
         except Exception as e:
@@ -138,71 +174,6 @@ class RedisItem:
         else:
             logger.trace(f'{self.logh} Method OK')
             return self
-
-    def search(self, field, query, maxpaging=25):
-        self.logh = '[Item.id:None]'
-        index = 'item_idx'
-        try:
-            r.ft(index).info()
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.logh} Method >> (Searching {field})')
-            # Query("search engine").paging(0, 10)
-            # f"@bearer:[{bearerid} {bearerid}]"
-            results = r.ft(index).search(
-                Query(
-                    f"@{field}:{query}"
-                    ).paging(0, maxpaging)
-                )
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        # We loop over them to build the DICT to return
-        # No more objects
-        items = []
-        for result in results.docs:
-            item = {}
-            for attr, value in result.__dict__.items():
-                if attr == 'payload':
-                    continue
-                item[attr] = str2typed(value)
-
-            # We need to scrape the ID value
-            item['id'] = item['id'].removeprefix('items:')
-            # We add the item in the items list
-            items.append(item)
-        logger.trace(f'{self.logh} Method OK')
-        return items
-
-    def _asdict(self):
-        hashdict = {
-            "ammo": self.ammo,
-            "bearer": self.bearer,
-            "bound": self.bound,
-            "bound_type": self.bound_type,
-            "date": self.date,
-            "id": self.id,
-            "metatype": self.metatype,
-            "metaid": self.metaid,
-            "modded": self.modded,
-            "mods": self.mods,
-            "rarity": self.rarity,
-            "offsetx": self.offsetx,
-            "offsety": self.offsety,
-            "state": self.state,
-        }
-        return hashdict
 
     """
     Getter/Setter block for Slot management
@@ -276,38 +247,3 @@ class RedisItem:
             logger.error(f'{self.logh} Method KO [{e}]')
         else:
             logger.trace(f'{self.logh} Method OK')
-
-
-if __name__ == '__main__':
-    item_caracs = {
-        "metatype": 'weapon',
-        "metaid": 32,
-        "bound": True,
-        "bound_type": 'BoP',
-        "modded": False,
-        "mods": None,
-        "state": 100,
-        "rarity": 'Common'
-    }
-
-    """
-    FT.CREATE item_idx PREFIX 1 "items:"
-        LANGUAGE english
-        SCORE 0.5
-        SCORE_FIELD "item_score"
-        SCHEMA
-            bearer TEXT
-            bound TEXT
-            bound_type TEXT
-            id TAG
-            metatype TEXT
-            metaid NUMERIC
-            modded TEXT
-            mods TEXT
-            state NUMERIC
-            rarity TEXT
-
-    FT.SEARCH item_idx "Common" LIMIT 0 10
-
-    FT.DROPINDEX item_idx
-    """

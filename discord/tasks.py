@@ -12,9 +12,7 @@ from loguru                     import logger
 from nosql.metas                import metaNames
 from nosql.queue                import yqueue_get
 
-from nosql.models.RedisKorp     import RedisKorp
-from nosql.models.RedisSquad    import RedisSquad
-from nosql.models.RedisUser     import RedisUser
+from nosql.models.RedisSearch   import RedisSearch
 
 from utils.variables import (
     rarity_item_types_discord,
@@ -113,20 +111,15 @@ async def yqueue_check(timer):
                     winnername = winner['name']
 
                     try:
-                        Users = RedisUser().search(
-                            field='id',
-                            # GruikFix
-                            # We need to replace the [-] (seen as separator)
-                            # Would need to baclslash it, but easier that way
-                            query=winner['id'].replace('-', ' ')
-                            )
+                        id = winner['id'].replace('-', ' ')
+                        Users = RedisSearch().user(query=f'@id:{id}')
                     except Exception as e:
                         logger.error(
                             f'User Query KO (winnerid:{winnerid}) [{e}]'
                             )
                         continue
                     else:
-                        User = Users[0]
+                        User = Users.results[0]
                         logger.debug(
                             f'User Query OK (winnerid:{winnerid})'
                             )
@@ -250,25 +243,17 @@ async def squad_channel_cleanup(timer):
                     continue
 
                 # We are here if REGEX matched
-                logger.trace(f'Squad channel (channel:{channel.name})')
-                squaduuid = m.group('squadid').removeprefix('squad-squads')
-                try:
-                    id = squaduuid.replace('-', ' ')
-                    Squads = RedisSquad().search(query=f'@id:{id}')
-                except Exception as e:
-                    logger.error(f'API Query KO [{e}]')
+                squaduuid = m.group('squadid')
+                Squads = RedisSearch().squad(
+                    query=f"@id:{squaduuid.replace('-', ' ')}"
+                    )
+                if len(Squads.results) != 0:
+                    # The Squad exists so we keep the channel
                     continue
-                else:
-                    if Squads == []:
-                        """
-                        # Meaning the Squad does not exists anymore -> DELETE
-                        # We go to next iteration
-                        """
-                        continue
 
                 # The squad does not exist in DB -> CLEANING
                 try:
-                    logger.info(
+                    logger.debug(
                         f'Squad channel deletion >> '
                         f'(channel:{channel.name})'
                         )
@@ -309,7 +294,7 @@ async def squad_channel_create(timer):
             category   = discord.utils.get(guild.categories, name='Squads')
 
             try:
-                Squads = RedisSquad().search(query='-(@instance:None)')
+                Squads = RedisSearch().squad(query='-(@instance:None)')
             except Exception as e:
                 logger.error(f'API Query KO [{e}]')
                 continue
@@ -321,8 +306,8 @@ async def squad_channel_create(timer):
                 else:
                     logger.trace('Squads Query OK')
 
-            for squad in Squads:
-                role_name    = f"Squad-{squad['id']}"
+            for Squad in Squads.results:
+                role_name    = f"Squad-{Squad.id}"
                 channel_name = role_name.lower()
                 channel      = discord.utils.get(
                     bot.get_all_channels(),
@@ -424,25 +409,17 @@ async def korp_channel_cleanup(timer):
                     continue
 
                 # We are here if REGEX matched
-                logger.trace(f'Korp channel (channel:{channel.name})')
-                korpuuid = m.group('korpid').removeprefix('korp-korps')
-                try:
-                    id = korpuuid.replace('-', ' ')
-                    Korps = RedisKorp().search(query=f'@id:{id}')
-                except Exception as e:
-                    logger.error(f'API Query KO [{e}]')
-                    exit()
-                else:
-                    if Korps == []:
-                        """
-                        # Meaning the Korp does not exists anymore -> DELETE
-                        # We go to next iteration
-                        """
-                        continue
+                korpuuid = m.group('korpid')
+                Korps = RedisSearch().korp(
+                    query=f"@id:{korpuuid.replace('-', ' ')}"
+                    )
+                if len(Korps.results) != 0:
+                    # The Korp exists so we keep the channel
+                    continue
 
                 # The Korp does not exist in DB -> CLEANING
                 try:
-                    logger.info(
+                    logger.debug(
                         f'Korp channel deletion >> '
                         f'(channel:{channel.name})'
                         )
@@ -483,33 +460,33 @@ async def korp_channel_create(timer):
             category   = discord.utils.get(guild.categories, name='Korps')
 
             try:
-                Korps = RedisKorp().search(query='-(@instance:None)')
+                Korps = RedisSearch().korp(query='-(@instance:None)')
             except Exception as e:
                 logger.error(f'API Query KO [{e}]')
                 continue
             else:
                 # We skip the loop if no korps are returned
-                if Korps is None or Korps == []:
+                if Korps.results == []:
                     logger.debug('Korps Query OK - But empty')
                     continue
                 else:
                     logger.trace('Korps Query OK')
 
-            for korp in Korps:
-                role_name    = f"Korp-{korp['id']}"
+            for Korp in Korps.results:
+                role_name    = f"Korp-{Korp.id}"
                 channel_name = role_name.lower()
                 channel      = discord.utils.get(
                     bot.get_all_channels(),
                     name=channel_name,
                     )
                 if channel:
-                    # Squad channel already exists
+                    # Korp channel already exists
                     logger.debug(
                         f'Korp channel exists (channel:{channel.name})'
                         )
                     pass
                 else:
-                    # Squad channel do not exists
+                    # Korp channel do not exists
                     logger.info(
                         f'Korp channel to add (channel:{channel_name})'
                         )
@@ -573,7 +550,7 @@ async def korp_channel_create(timer):
                         mykorpchannel = await guild.create_text_channel(
                             channel_name,
                             category=category,
-                            topic=f"<**{korp['name']}**>",
+                            topic=f"<**{Korp.name}**>",
                             overwrites=overwrites,
                         )
                     except Exception as e:
@@ -694,11 +671,11 @@ async def ssl_cert_validator(timer):
 # 86400s Tasks (@Daily)
 bot.loop.create_task(ssl_cert_validator(86400))
 # 3600s Tasks (@Hourly)
-bot.loop.create_task(squad_channel_cleanup(30))
-bot.loop.create_task(korp_channel_cleanup(30))
+bot.loop.create_task(squad_channel_cleanup(3600))
+bot.loop.create_task(korp_channel_cleanup(3600))
 # 300s Tasks (@5Minutes)
-bot.loop.create_task(squad_channel_create(30))
-bot.loop.create_task(korp_channel_create(30))
+bot.loop.create_task(squad_channel_create(300))
+bot.loop.create_task(korp_channel_create(300))
 # 60s Tasks (@1Minute)
 bot.loop.create_task(yqueue_check(60))
 # Run Discord bot

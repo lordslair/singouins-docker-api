@@ -6,6 +6,7 @@ from flask_jwt_extended         import (jwt_required,
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisKorp     import RedisKorp
 from nosql.queue                import yqueue_put
 
@@ -16,22 +17,18 @@ from utils.routehelper          import (
 
 from variables                  import YQ_BROADCAST, YQ_DISCORD
 
-#
-# Routes /mypc/{pcid}/korp
-#
 
-
-# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/accept
+#
+# Routes ../korp
+#
+# API: POST ../korp/<uuid:korpuuid>/accept
 @jwt_required()
-def korp_accept(pcid, korpid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_accept(creatureuuid, korpuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -41,7 +38,7 @@ def korp_accept(pcid, korpid):
             }
         ), 200
     if Creature.korp_rank != 'Pending':
-        msg = f'{h} Korp pending is required (korpid:{korpid})'
+        msg = f'{h} Korp pending is required (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -55,7 +52,7 @@ def korp_accept(pcid, korpid):
         Creature.korp = None
         Creature.korp_rank = 'Member'
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -66,9 +63,9 @@ def korp_accept(pcid, korpid):
         ), 200
     else:
         try:
-            Korp = RedisKorp().get(korpid)
+            Korp = RedisKorp(korpuuid=korpuuid)
         except Exception as e:
-            msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+            msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -83,7 +80,7 @@ def korp_accept(pcid, korpid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp',
                     }
@@ -102,54 +99,29 @@ def korp_accept(pcid, korpid):
                     "scope": f'Korp-{Creature.korp}',
                     }
                 )
-            msg = f'{h} Korp accept OK (korpid:{korpid})'
+            msg = f'{h} Korp accept OK (korpuuid:{korpuuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                 }
             ), 200
 
 
-# API: POST /mypc/<uuid:pcid>/korp
+# API: POST ../korp
 @jwt_required()
-def korp_create(pcid):
+def korp_create(creatureuuid):
     request_json_check(request)
 
-    Creature = RedisCreature(creatureuuid=pcid)
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     korpname = request.json.get('name', None)
 
-    if korpname is None:
-        msg = f'{h} Korpname not found (korpname:{korpname})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    # Remove everything, except alphanumeric, space, squote
-    korpname = ''.join([c for c in korpname if c.isalnum() or c in [" ", "'"]])
-    # Size check
-    if len(korpname) > 16:
-        msg = f'{h} Korp name too long (korpname:{korpname})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
     if Creature.korp is not None:
-        msg = f'{h} PC already in a Korp (korpid:{Creature.korp})'
+        msg = f'{h} PC already in a Korp (korpuuid:{Creature.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -160,13 +132,17 @@ def korp_create(pcid):
         ), 200
 
     try:
-        Korp = RedisKorp().new(Creature, korpname)
+        Korp = RedisKorp().new(creatureuuid=Creature.id, korpname=korpname)
     except Exception as e:
         msg = f'{h} Korp Query KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if Korp is False:
             msg = f'{h} Korp Query KO - Already exists'
@@ -184,7 +160,7 @@ def korp_create(pcid):
         Creature.korp = Korp.id
         Creature.korp_rank = 'Leader'
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{Korp.id}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{Korp.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -199,7 +175,7 @@ def korp_create(pcid):
             YQ_BROADCAST,
             {
                 "ciphered": False,
-                "payload": Korp._asdict(),
+                "payload": Korp.as_dict(),
                 "route": 'mypc/{id1}/korp',
                 "scope": 'korp',
                 }
@@ -219,28 +195,25 @@ def korp_create(pcid):
                 }
             )
 
-        msg = f'{h} Korp create OK (korpid:{Creature.korp})'
+        msg = f'{h} Korp create OK (korpuuid:{Creature.korp})'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
-                "payload": Korp._asdict(),
+                "payload": Korp.as_dict(),
             }
         ), 201
 
 
-# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/decline
+# API: POST ../korp/<uuid:korpuuid>/decline
 @jwt_required()
-def korp_decline(pcid, korpid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_decline(creatureuuid, korpuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -250,7 +223,7 @@ def korp_decline(pcid, korpid):
             }
         ), 200
     if Creature.korp_rank == 'Leader':
-        msg = f'{h} PC cannot be the korp Leader (korpid:{korpid})'
+        msg = f'{h} PC cannot be the korp Leader (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -264,7 +237,7 @@ def korp_decline(pcid, korpid):
         Creature.korp_rank = None
         Creature.korp = None
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -275,9 +248,9 @@ def korp_decline(pcid, korpid):
         ), 200
     else:
         try:
-            Korp = RedisKorp().get(korpid)
+            Korp = RedisKorp(korpuuid=korpuuid)
         except Exception as e:
-            msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+            msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -292,7 +265,7 @@ def korp_decline(pcid, korpid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp',
                     }
@@ -312,28 +285,25 @@ def korp_decline(pcid, korpid):
                     }
                 )
 
-            msg = f'{h} Korp decline OK (korpid:{korpid})'
+            msg = f'{h} Korp decline OK (korpuuid:{korpuuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                 }
             ), 200
 
 
-# API: DELETE /mypc/<uuid:pcid>/korp/<uuid:korpid>
+# API: DELETE ../korp/<uuid:korpuuid>
 @jwt_required()
-def korp_delete(pcid, korpid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_delete(creatureuuid, korpuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -343,7 +313,7 @@ def korp_delete(pcid, korpid):
             }
         ), 200
     if Creature.korp_rank != 'Leader':
-        msg = f'{h} PC is not the korp Leader (korpid:{Creature.korp_rank})'
+        msg = f'{h} Not the korp Leader (korpuuid:{Creature.korp_rank})'
         logger.warning(msg)
         return jsonify(
             {
@@ -354,10 +324,11 @@ def korp_delete(pcid, korpid):
         ), 200
 
     try:
-        korp = Creature.korp.replace('-', ' ')
-        Members = RedisCreature().search(f"@korp:{korp}")
+        Members = RedisSearch().creature(
+            f"@korp:{Creature.korp.replace('-', ' ')}"
+            )
     except Exception as e:
-        msg = f'Creature Query KO (korpid:{korpid}) [{e}]'
+        msg = f'Creature Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -367,9 +338,9 @@ def korp_delete(pcid, korpid):
             }
         ), 200
 
-    count = len(Members)
+    count = len(Members.results)
     if count > 1:
-        msg = f'Korp not empty (korpid:{korpid},members:{count})'
+        msg = f'Korp not empty (korpuuid:{korpuuid},members:{count})'
         logger.error(msg)
         return jsonify(
             {
@@ -380,11 +351,11 @@ def korp_delete(pcid, korpid):
         ), 200
 
     try:
-        RedisKorp().destroy(korpid)
+        RedisKorp(korpuuid=korpuuid).destroy()
         Creature.korp = None
         Creature.korp_rank = None
     except Exception as e:
-        msg = f'Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -419,7 +390,7 @@ def korp_delete(pcid, korpid):
                 }
             )
 
-        msg = f'{h} Korp delete OK (korpid:{korpid})'
+        msg = f'{h} Korp delete OK (korpuuid:{korpuuid})'
         logger.debug(msg)
         return jsonify(
             {
@@ -430,17 +401,14 @@ def korp_delete(pcid, korpid):
         ), 200
 
 
-# API: GET /mypc/{pcid}/korp/{korpid}
+# API: GET ../korp/<uuid:korpuuid>
 @jwt_required()
-def korp_get_one(pcid, korpid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_get_one(creatureuuid, korpuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -451,16 +419,17 @@ def korp_get_one(pcid, korpid):
         ), 200
 
     try:
-        Korp = RedisKorp().get(korpid)
-        korp = Creature.korp.replace('-', ' ')
-        KorpMembers = RedisCreature().search(
-            f"(@korp:{korp}) & (@korp_rank:-Pending)"
-            )
-        KorpPending = RedisCreature().search(
-            f"(@korp:{korp}) & (@korp_rank:Pending)"
-            )
+        Korp = RedisKorp(korpuuid=korpuuid)
+        KorpMembers = RedisSearch().creature(
+            f"@korp:{Creature.korp.replace('-', ' ')} & "
+            f"(@korp_rank:-Pending)"
+            ).results
+        KorpPending = RedisSearch().creature(
+            f"(@korp:{Creature.korp.replace('-', ' ')}) & "
+            f"(@korp_rank:Pending)"
+            ).results
     except Exception as e:
-        msg = f'Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -470,32 +439,26 @@ def korp_get_one(pcid, korpid):
             }
         ), 200
     else:
-        if Korp:
-            msg = f'{h} Korp Query OK (korpid:{korpid})'
+        if Korp.id:
+            msg = f'{h} Korp Query OK (korpuuid:{korpuuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "members": KorpMembers,
-                        "pending": KorpPending,
-                        "korp": Korp._asdict(),
+                        "members": [
+                            Creature.as_dict() for Creature in KorpMembers
+                            ],
+                        "pending": [
+                            Creature.as_dict() for Creature in KorpPending
+                            ],
+                        "korp": Korp.as_dict(),
                         }
                 }
             ), 200
-        elif Korp is False:
-            msg = f'{h} Korp Query KO - Not Found (korpid:{korpid})'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
         else:
-            msg = f'{h} Korp Query KO - Failed (korpid:{korpid})'
+            msg = f'{h} Korp Query KO - Failed (korpuuid:{korpuuid})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -506,19 +469,16 @@ def korp_get_one(pcid, korpid):
             ), 200
 
 
-# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/invite/<int:targetid>
+# API: POST ../korp/<uuid:korpuuid>/invite/<uuid:targetuuid>
 @jwt_required()
-def korp_invite(pcid, korpid, targetid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_invite(creatureuuid, korpuuid, targetuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    CreatureTarget = RedisCreature(targetid)
+    CreatureTarget = RedisCreature(creatureuuid=targetuuid)
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -528,7 +488,7 @@ def korp_invite(pcid, korpid, targetid):
             }
         ), 200
     if Creature.korp_rank != 'Leader':
-        msg = f'{h} PC should be the korp Leader (korpid:{korpid})'
+        msg = f'{h} PC should be the korp Leader (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -538,10 +498,7 @@ def korp_invite(pcid, korpid, targetid):
             }
         ), 200
     if CreatureTarget.korp is not None:
-        msg = (
-            f'{h} Already in Korp '
-            f'(pcid:{CreatureTarget.id},korpid:{CreatureTarget.korp})'
-            )
+        msg = f'{h} Already in Korp (korpuuid:{CreatureTarget.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -553,10 +510,11 @@ def korp_invite(pcid, korpid, targetid):
 
     # Korp population check
     try:
-        korp = Creature.korp.replace('-', ' ')
-        Members = RedisCreature().search(f"@korp:{korp}")
+        Members = RedisSearch().creature(
+            f"@korp:{Creature.korp.replace('-', ' ')}"
+            )
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -566,11 +524,11 @@ def korp_invite(pcid, korpid, targetid):
             }
         ), 200
 
-    count      = len(Members)
+    count      = len(Members.results)
     maxmembers = 100
     if count == maxmembers:
         members = f'{count}/{maxmembers}'
-        msg = f'{h} Korp Full (korpid:{korpid},members:{members})'
+        msg = f'{h} Korp Full (korpuuid:{korpuuid},members:{members})'
         logger.error(msg)
         return jsonify(
             {
@@ -581,10 +539,10 @@ def korp_invite(pcid, korpid, targetid):
         ), 200
 
     try:
-        CreatureTarget.korp = korpid
+        CreatureTarget.korp = str(korpuuid)
         CreatureTarget.korp_rank = 'Pending'
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -595,9 +553,9 @@ def korp_invite(pcid, korpid, targetid):
         ), 200
     else:
         try:
-            Korp = RedisKorp().get(korpid)
+            Korp = RedisKorp(korpuuid=korpuuid)
         except Exception as e:
-            msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+            msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -612,7 +570,7 @@ def korp_invite(pcid, korpid, targetid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp',
                     }
@@ -634,30 +592,27 @@ def korp_invite(pcid, korpid, targetid):
                     }
                 )
 
-            msg = f'{h} Korp invite OK (korpid:{korpid})'
+            msg = f'{h} Korp invite OK (korpuuid:{korpuuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                 }
             ), 200
 
 
-# API: POST /mypc/<uuid:pcid>/korp/<uuid:korpid>/kick/<int:targetid>
+# API: POST ../korp/<uuid:korpuuid>/kick/<uuid:targetuuid>
 @jwt_required()
-def korp_kick(pcid, korpid, targetid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_kick(creatureuuid, korpuuid, targetuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    CreatureTarget = RedisCreature(targetid)
+    CreatureTarget = RedisCreature(creatureuuid=targetuuid)
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -667,7 +622,7 @@ def korp_kick(pcid, korpid, targetid):
             }
         ), 200
     if Creature.korp_rank != 'Leader':
-        msg = f'{h} PC should be the korp Leader (korpid:{korpid})'
+        msg = f'{h} PC should be the korp Leader (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -677,7 +632,7 @@ def korp_kick(pcid, korpid, targetid):
             }
         ), 200
     if CreatureTarget.korp is None:
-        msg = f'{h} Should be in Korp (korpid:{CreatureTarget.korp})'
+        msg = f'{h} Should be in Korp (korpuuid:{CreatureTarget.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -687,7 +642,7 @@ def korp_kick(pcid, korpid, targetid):
             }
         ), 200
     if CreatureTarget.id == Creature.id:
-        msg = f'{h} Cannot kick yourself (korpid:{CreatureTarget.korp})'
+        msg = f'{h} Cannot kick yourself (korpuuid:{CreatureTarget.korp})'
         logger.warning(msg)
         return jsonify(
             {
@@ -701,7 +656,7 @@ def korp_kick(pcid, korpid, targetid):
         CreatureTarget.korp = None
         CreatureTarget.korp_rank = None
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -712,9 +667,9 @@ def korp_kick(pcid, korpid, targetid):
         ), 200
     else:
         try:
-            Korp = RedisKorp().get(korpid)
+            Korp = RedisKorp(korpuuid=korpuuid)
         except Exception as e:
-            msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+            msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -729,7 +684,7 @@ def korp_kick(pcid, korpid, targetid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp',
                     }
@@ -751,28 +706,25 @@ def korp_kick(pcid, korpid, targetid):
                     }
                 )
 
-            msg = f'{h} Korp kick OK (korpid:{korpid})'
+            msg = f'{h} Korp kick OK (korpuuid:{korpuuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                 }
             ), 200
 
 
-# API: /mypc/<uuid:pcid>/korp/<uuid:korpid>/leave
+# API: ../korp/<uuid:korpuuid>/leave
 @jwt_required()
-def korp_leave(pcid, korpid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def korp_leave(creatureuuid, korpuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    korpid = str(korpid)
-
-    if Creature.korp != korpid:
-        msg = f'{h} Korp request outside of your scope (korpid:{korpid})'
+    if Creature.korp != str(korpuuid):
+        msg = f'{h} Korp request outside your scope (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -782,7 +734,7 @@ def korp_leave(pcid, korpid):
             }
         ), 200
     if Creature.korp_rank == 'Leader':
-        msg = f'{h} PC cannot be the korp Leader (korpid:{korpid})'
+        msg = f'{h} PC cannot be the korp Leader (korpuuid:{korpuuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -796,7 +748,7 @@ def korp_leave(pcid, korpid):
         Creature.korp = None
         Creature.korp_rank = None
     except Exception as e:
-        msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+        msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -807,9 +759,9 @@ def korp_leave(pcid, korpid):
         ), 200
     else:
         try:
-            Korp = RedisKorp().get(korpid)
+            Korp = RedisKorp(korpuuid=korpuuid)
         except Exception as e:
-            msg = f'{h} Korp Query KO (korpid:{korpid}) [{e}]'
+            msg = f'{h} Korp Query KO (korpuuid:{korpuuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -824,7 +776,7 @@ def korp_leave(pcid, korpid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                     "route": 'mypc/{id1}/korp',
                     "scope": 'korp',
                     }
@@ -844,12 +796,12 @@ def korp_leave(pcid, korpid):
                     }
                 )
 
-            msg = f'{h} Korp leave OK (korpid:{korpid})'
+            msg = f'{h} Korp leave OK (korpuuid:{korpuuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Korp._asdict(),
+                    "payload": Korp.as_dict(),
                 }
             ), 200

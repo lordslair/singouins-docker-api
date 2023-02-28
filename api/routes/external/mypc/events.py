@@ -6,29 +6,28 @@ from flask_jwt_extended         import (jwt_required,
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisEvent    import RedisEvent
+from nosql.models.RedisSearch   import RedisSearch
 
 from utils.routehelper          import (
     creature_check,
     )
 
-#
-# Routes /mypc/{pcid}/event/*
-#
 
-
-# API: GET /mypc/{pcid}/event
+#
+# Routes /mypc/<uuid:creatureuuid>/event/*
+#
+# API: GET /mypc/<uuid:creatureuuid>/event
 @jwt_required()
-def mypc_event_get_all(pcid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def mypc_event_get_all(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
-        action_src = Creature.id.replace('-', ' ')
-        action_dst = Creature.id.replace('-', ' ')
-        creature_events = RedisEvent().search(
-            query=f'(@src:{action_src}) | (@dst:{action_dst})',
-            maxpaging=100,
+        Events = RedisSearch(maxpaging=100).event(
+            query=(
+                f"(@src:{Creature.id.replace('-', ' ')}) | "
+                f"(@dst:{Creature.id.replace('-', ' ')})"
+                ),
             )
     except Exception as e:
         msg = f'{h} Event Query KO [{e}]'
@@ -47,6 +46,8 @@ def mypc_event_get_all(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": creature_events._asdict,
+                "payload": [
+                    Event.as_dict() for Event in Events.results
+                    ],
             }
         ), 200

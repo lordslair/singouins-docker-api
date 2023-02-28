@@ -10,7 +10,7 @@ from nosql.maps                 import get_map
 #
 # Routes /map
 #
-# API: GET /map/{mapid}
+# API: GET /map/<int:mapid>
 @jwt_required()
 def map_get(mapid):
     # Pre-flight checks

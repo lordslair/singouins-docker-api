@@ -81,7 +81,7 @@ def test_singouins_mypc_instance_join():
     assert json.loads(response.text)['success'] is True
     assert pc['instance'] is None
 
-    # We create a PJTestSquadKick
+    # We create a PJTestInstanceJoin
     url = f'{API_URL}/mypc'  # POST
     payload_c = {
         'name': 'PJTestInstanceJoin',
@@ -142,13 +142,29 @@ def test_singouins_mypc_instance_join():
     pcs      = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
     pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+    pcjoin   = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert pc['instance'] is not None
+    assert pc['instance'] == instanceid
+    assert pcjoin['instance'] == instanceid
 
-    url      = f"{API_URL}/mypc/{CREATURE_ID}/instance/{pc['instance']}/leave"  # POST # noqa
+    # We leave the instance with PJTest
+    url      = f"{API_URL}/mypc/{CREATURE_ID}/instance/{instanceid}/leave"  # POST # noqa
     response = requests.post(url, headers=headers)
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
+
+    # We check that we are not linked in the instance anymore
+    url      = f'{API_URL}/mypc'  # GET
+    response = requests.get(url, headers=headers)
+    pcs      = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+    pcjoin   = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+    assert pc['instance'] is None
+    assert pcjoin['instance'] == instanceid

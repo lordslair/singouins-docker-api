@@ -9,6 +9,7 @@ LOCAL_PATH = os.path.dirname(os.path.abspath('nosql'))
 sys.path.append(LOCAL_PATH)
 
 from nosql.models.RedisCreature import RedisCreature  # noqa: E402
+from nosql.models.RedisSearch import RedisSearch  # noqa: E402
 
 CREATURE_NAME = "PyTest Creature"
 CREATURE_ID   = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
@@ -30,6 +31,7 @@ def test_redis_creature_new():
     assert Creature.name == CREATURE_NAME
     assert Creature.gender is True
     assert Creature.id == CREATURE_ID
+    assert Creature.aggro == 0
 
 
 def test_redis_creature_get_ok():
@@ -41,17 +43,26 @@ def test_redis_creature_get_ok():
     assert Creature.name == CREATURE_NAME
     assert Creature.gender is True
     assert Creature.id == CREATURE_ID
+    assert Creature.aggro == 0
 
 
 def test_redis_creature_search_ok():
     """
-    Searching a RedisCreature
+    Searching a Creature
     """
-    Creatures = RedisCreature().search(query=f'@name:{CREATURE_NAME}')
+    Creatures = RedisSearch().creature(query=f'@name:{CREATURE_NAME}')
 
-    assert Creatures[0]['name'] == CREATURE_NAME
-    assert Creatures[0]['gender'] is True
-    assert Creatures[0]['id'] == CREATURE_ID
+    Creature = Creatures.results_as_dict[0]
+    assert Creature['name'] == CREATURE_NAME
+    assert Creature['gender'] is True
+    assert Creature['id'] == CREATURE_ID
+    assert Creature['aggro'] == 0
+
+    Creature = Creatures.results[0]
+    assert Creature.name == CREATURE_NAME
+    assert Creature.gender is True
+    assert Creature.id == CREATURE_ID
+    assert Creature.aggro == 0
 
 
 def test_redis_creature_setters():
@@ -68,6 +79,18 @@ def test_redis_creature_setters():
 
     assert CreatureAgain.x == 10
     assert CreatureAgain.y == 10
+
+    # Lets check that setters through RediSearch are working
+    Creatures = RedisSearch().creature(query=f'@name:{CREATURE_NAME}')
+    Creature = Creatures.results[0]
+
+    Creature.x = 5
+    Creature.y = 5
+
+    CreatureAgain = RedisCreature(creatureuuid=CREATURE_ID)
+
+    assert CreatureAgain.x == 5
+    assert CreatureAgain.y == 5
 
 
 def test_redis_creature_del():
@@ -99,9 +122,9 @@ def test_redis_creature_get_ko():
 
 def test_redis_creature_search_empty():
     """
-    Searching a RedisCreature
+    Searching a Creature
     > Expected to fail
     """
-    Creatures = RedisCreature().search(query=f'@name:{CREATURE_NAME}')
+    Creatures = RedisSearch().creature(query=f'@name:{CREATURE_NAME}')
 
-    assert len(Creatures) == 0
+    assert len(Creatures.results) == 0

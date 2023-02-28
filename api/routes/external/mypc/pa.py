@@ -12,19 +12,18 @@ from utils.routehelper          import (
     creature_check,
     )
 
-#
-# Routes /mypc/{pcid}/pa/*
-#
 
-
-# API: GET /mypc/{pcid}/pa
+#
+# Routes /mypc/<uuid:creatureuuid>/pa/*
+#
+# API: GET /mypc/<uuid:creatureuuid>/pa
 @jwt_required()
-def pa_get(pcid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def pa_get(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
-        creature_pa = RedisPa(Creature)._asdict()
+        Pa = RedisPa(creatureuuid=creatureuuid)
     except Exception as e:
         msg = f'{h} PA Query KO [{e}]'
         logger.error(msg)
@@ -42,6 +41,6 @@ def pa_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": creature_pa,
+                "payload": Pa.as_dict(),
             }
         ), 200

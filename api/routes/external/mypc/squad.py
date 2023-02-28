@@ -6,6 +6,7 @@ from flask_jwt_extended         import (jwt_required,
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisSquad    import RedisSquad
 from nosql.queue                import yqueue_put
 
@@ -15,22 +16,18 @@ from utils.routehelper          import (
 
 from variables                  import YQ_BROADCAST, YQ_DISCORD
 
-#
-# Routes /mypc/{pcid}/squad
-#
 
-
-# API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/accept
+#
+# Routes ../squad
+#
+# API: POST ../squad/<uuid:squaduuid>/accept
 @jwt_required()
-def squad_accept(pcid, squadid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_accept(creatureuuid, squaduuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -40,7 +37,7 @@ def squad_accept(pcid, squadid):
             }
         ), 200
     if Creature.squad_rank != 'Pending':
-        msg = f'{h} Squad pending is required (squadid:{squadid})'
+        msg = f'{h} Squad pending is required (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -54,7 +51,7 @@ def squad_accept(pcid, squadid):
         Creature.squad = None
         Creature.squad_rank = 'Member'
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -65,9 +62,9 @@ def squad_accept(pcid, squadid):
         ), 200
     else:
         try:
-            Squad = RedisSquad().get(squadid)
+            Squad = RedisSquad(squaduuid=squaduuid)
         except Exception as e:
-            msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -82,7 +79,7 @@ def squad_accept(pcid, squadid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad',
                     }
@@ -101,25 +98,25 @@ def squad_accept(pcid, squadid):
                     "scope": f'Squad-{Creature.squad}',
                     }
                 )
-            msg = f'{h} Squad accept OK (squadid:{squadid})'
+            msg = f'{h} Squad accept OK (squaduuid:{squaduuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                 }
             ), 200
 
 
-# API: POST /mypc/<uuid:pcid>/squad
+# API: POST ../squad
 @jwt_required()
-def squad_create(pcid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_create(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     if Creature.squad is not None:
-        msg = f'{h} PC already in a Squad (squadid:{Creature.squad})'
+        msg = f'{h} PC already in a Squad (squaduuid:{Creature.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -130,13 +127,17 @@ def squad_create(pcid):
         ), 200
 
     try:
-        Squad = RedisSquad().new(Creature)
+        Squad = RedisSquad().new(creatureuuid=Creature.id)
     except Exception as e:
         msg = f'{h} Squad Query KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         if Squad is False:
             msg = f'{h} Squad Query KO - Already exists'
@@ -154,7 +155,7 @@ def squad_create(pcid):
         Creature.squad = Squad.id
         Creature.squad_rank = 'Leader'
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{Squad.id}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -169,7 +170,7 @@ def squad_create(pcid):
             YQ_BROADCAST,
             {
                 "ciphered": False,
-                "payload": Squad._asdict(),
+                "payload": Squad.as_dict(),
                 "route": 'mypc/{id1}/squad',
                 "scope": 'squad',
                 }
@@ -189,28 +190,25 @@ def squad_create(pcid):
                 }
             )
 
-        msg = f'{h} Squad create OK (squadid:{Creature.squad})'
+        msg = f'{h} Squad create OK (squaduuid:{Creature.squad})'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
-                "payload": Squad._asdict(),
+                "payload": Squad.as_dict(),
             }
         ), 201
 
 
-# API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/decline
+# API: POST ../squad/<uuid:squaduuid>/decline
 @jwt_required()
-def squad_decline(pcid, squadid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_decline(creatureuuid, squaduuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -220,7 +218,7 @@ def squad_decline(pcid, squadid):
             }
         ), 200
     if Creature.squad_rank == 'Leader':
-        msg = f'{h} PC cannot be the squad Leader (squadid:{squadid})'
+        msg = f'{h} PC cannot be the squad Leader (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -234,7 +232,7 @@ def squad_decline(pcid, squadid):
         Creature.squad_rank = None
         Creature.squad = None
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -245,9 +243,9 @@ def squad_decline(pcid, squadid):
         ), 200
     else:
         try:
-            Squad = RedisSquad().get(squadid)
+            Squad = RedisSquad(squaduuid=squaduuid)
         except Exception as e:
-            msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -262,7 +260,7 @@ def squad_decline(pcid, squadid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad',
                     }
@@ -282,28 +280,25 @@ def squad_decline(pcid, squadid):
                     }
                 )
 
-            msg = f'{h} Squad decline OK (squadid:{squadid})'
+            msg = f'{h} Squad decline OK (squaduuid:{squaduuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                 }
             ), 200
 
 
-# API: DELETE /mypc/<uuid:pcid>/squad/<uuid:squadid>
+# API: DELETE ../squad/<uuid:squaduuid>
 @jwt_required()
-def squad_delete(pcid, squadid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_delete(creatureuuid, squaduuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -313,7 +308,7 @@ def squad_delete(pcid, squadid):
             }
         ), 200
     if Creature.squad_rank != 'Leader':
-        msg = f'{h} PC is not the squad Leader (squadid:{Creature.squad_rank})'
+        msg = f'{h} Not the squad Leader (squaduuid:{Creature.squad_rank})'
         logger.warning(msg)
         return jsonify(
             {
@@ -324,10 +319,11 @@ def squad_delete(pcid, squadid):
         ), 200
 
     try:
-        squad = Creature.squad.replace('-', ' ')
-        Members = RedisCreature().search(f"@squad:{squad}")
+        Members = RedisSearch().creature(
+            f"@squad:{Creature.squad.replace('-', ' ')}"
+            )
     except Exception as e:
-        msg = f'Creature Query KO (squadid:{squadid}) [{e}]'
+        msg = f'Creature Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -337,9 +333,9 @@ def squad_delete(pcid, squadid):
             }
         ), 200
 
-    count = len(Members)
+    count = len(Members.results)
     if count > 1:
-        msg = f'Squad not empty (squadid:{squadid},members:{count})'
+        msg = f'Squad not empty (squaduuid:{squaduuid},members:{count})'
         logger.error(msg)
         return jsonify(
             {
@@ -350,11 +346,11 @@ def squad_delete(pcid, squadid):
         ), 200
 
     try:
-        RedisSquad().destroy(squadid)
+        RedisSquad(squaduuid=squaduuid).destroy()
         Creature.squad = None
         Creature.squad_rank = None
     except Exception as e:
-        msg = f'Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -389,7 +385,7 @@ def squad_delete(pcid, squadid):
                 }
             )
 
-        msg = f'{h} Squad delete OK (squadid:{squadid})'
+        msg = f'{h} Squad delete OK (squaduuid:{squaduuid})'
         logger.debug(msg)
         return jsonify(
             {
@@ -400,17 +396,14 @@ def squad_delete(pcid, squadid):
         ), 200
 
 
-# API: GET /mypc/{pcid}/squad/{squadid}
+# API: GET ../squad/<uuid:squaduuid>
 @jwt_required()
-def squad_get_one(pcid, squadid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_get_one(creatureuuid, squaduuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -421,16 +414,17 @@ def squad_get_one(pcid, squadid):
         ), 200
 
     try:
-        Squad = RedisSquad().get(squadid)
-        squad = Creature.squad.replace('-', ' ')
-        SquadMembers = RedisCreature().search(
-            f"(@squad:{squad}) & (@squad_rank:-Pending)"
-            )
-        SquadPending = RedisCreature().search(
-            f"(@squad:{squad}) & (@squad_rank:Pending)"
-            )
+        Squad = RedisSquad(squaduuid=squaduuid)
+        SquadMembers = RedisSearch().creature(
+            f"@squad:{Creature.squad.replace('-', ' ')} & "
+            f"(@squad_rank:-Pending)"
+            ).results
+        SquadPending = RedisSearch().creature(
+            f"(@squad:{Creature.squad.replace('-', ' ')}) & "
+            f"(@squad_rank:Pending)"
+            ).results
     except Exception as e:
-        msg = f'Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -440,32 +434,26 @@ def squad_get_one(pcid, squadid):
             }
         ), 200
     else:
-        if Squad:
-            msg = f'{h} Squad Query OK (squadid:{squadid})'
+        if Squad.id:
+            msg = f'{h} Squad Query OK (squaduuid:{squaduuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
                     "payload": {
-                        "members": SquadMembers,
-                        "pending": SquadPending,
-                        "squad": Squad._asdict(),
+                        "members": [
+                            Creature.as_dict() for Creature in SquadMembers
+                            ],
+                        "pending": [
+                            Creature.as_dict() for Creature in SquadPending
+                            ],
+                        "squad": Squad.as_dict(),
                         }
                 }
             ), 200
-        elif Squad is False:
-            msg = f'{h} Squad Query KO - Not Found (squadid:{squadid})'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
         else:
-            msg = f'{h} Squad Query KO - Failed (squadid:{squadid})'
+            msg = f'{h} Squad Query KO - Failed (squaduuid:{squaduuid})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -476,19 +464,16 @@ def squad_get_one(pcid, squadid):
             ), 200
 
 
-# API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/invite/<int:targetid>
+# API: POST ../squad/<uuid:squaduuid>/invite/<uuid:targetuuid>
 @jwt_required()
-def squad_invite(pcid, squadid, targetid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_invite(creatureuuid, squaduuid, targetuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    CreatureTarget = RedisCreature(targetid)
+    CreatureTarget = RedisCreature(creatureuuid=targetuuid)
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -498,7 +483,7 @@ def squad_invite(pcid, squadid, targetid):
             }
         ), 200
     if Creature.squad_rank != 'Leader':
-        msg = f'{h} PC should be the squad Leader (squadid:{squadid})'
+        msg = f'{h} PC should be the squad Leader (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -508,10 +493,7 @@ def squad_invite(pcid, squadid, targetid):
             }
         ), 200
     if CreatureTarget.squad is not None:
-        msg = (
-            f'{h} Already in Squad '
-            f'(pcid:{CreatureTarget.id},squadid:{CreatureTarget.squad})'
-            )
+        msg = f'{h} Already in Squad (squaduuid:{CreatureTarget.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -523,10 +505,11 @@ def squad_invite(pcid, squadid, targetid):
 
     # Squad population check
     try:
-        squad = Creature.squad.replace('-', ' ')
-        Members = RedisCreature().search(f"@squad:{squad}")
+        Members = RedisSearch().creature(
+            f"@squad:{Creature.squad.replace('-', ' ')}"
+            )
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -536,11 +519,11 @@ def squad_invite(pcid, squadid, targetid):
             }
         ), 200
 
-    count      = len(Members)
+    count      = len(Members.results)
     maxmembers = 100
     if count == maxmembers:
         members = f'{count}/{maxmembers}'
-        msg = f'{h} Squad Full (squadid:{squadid},members:{members})'
+        msg = f'{h} Squad Full (squaduuid:{squaduuid},members:{members})'
         logger.error(msg)
         return jsonify(
             {
@@ -551,10 +534,10 @@ def squad_invite(pcid, squadid, targetid):
         ), 200
 
     try:
-        CreatureTarget.squad = squadid
+        CreatureTarget.squad = str(squaduuid)
         CreatureTarget.squad_rank = 'Pending'
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -565,9 +548,9 @@ def squad_invite(pcid, squadid, targetid):
         ), 200
     else:
         try:
-            Squad = RedisSquad().get(squadid)
+            Squad = RedisSquad(squaduuid=squaduuid)
         except Exception as e:
-            msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -582,7 +565,7 @@ def squad_invite(pcid, squadid, targetid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad',
                     }
@@ -604,30 +587,27 @@ def squad_invite(pcid, squadid, targetid):
                     }
                 )
 
-            msg = f'{h} Squad invite OK (squadid:{squadid})'
+            msg = f'{h} Squad invite OK (squaduuid:{squaduuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                 }
             ), 200
 
 
-# API: POST /mypc/<uuid:pcid>/squad/<uuid:squadid>/kick/<int:targetid>
+# API: POST ../squad/<uuid:squaduuid>/kick/<uuid:targetuuid>
 @jwt_required()
-def squad_kick(pcid, squadid, targetid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_kick(creatureuuid, squaduuid, targetuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    CreatureTarget = RedisCreature(targetid)
+    CreatureTarget = RedisCreature(creatureuuid=targetuuid)
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -637,7 +617,7 @@ def squad_kick(pcid, squadid, targetid):
             }
         ), 200
     if Creature.squad_rank != 'Leader':
-        msg = f'{h} PC should be the squad Leader (squadid:{squadid})'
+        msg = f'{h} PC should be the squad Leader (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -647,7 +627,7 @@ def squad_kick(pcid, squadid, targetid):
             }
         ), 200
     if CreatureTarget.squad is None:
-        msg = f'{h} Should be in Squad (squadid:{CreatureTarget.squad})'
+        msg = f'{h} Should be in Squad (squaduuid:{CreatureTarget.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -657,7 +637,7 @@ def squad_kick(pcid, squadid, targetid):
             }
         ), 200
     if CreatureTarget.id == Creature.id:
-        msg = f'{h} Cannot kick yourself (squadid:{CreatureTarget.squad})'
+        msg = f'{h} Cannot kick yourself (squaduuid:{CreatureTarget.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -671,7 +651,7 @@ def squad_kick(pcid, squadid, targetid):
         CreatureTarget.squad = None
         CreatureTarget.squad_rank = None
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -682,9 +662,9 @@ def squad_kick(pcid, squadid, targetid):
         ), 200
     else:
         try:
-            Squad = RedisSquad().get(squadid)
+            Squad = RedisSquad(squaduuid=squaduuid)
         except Exception as e:
-            msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -699,7 +679,7 @@ def squad_kick(pcid, squadid, targetid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad',
                     }
@@ -721,28 +701,25 @@ def squad_kick(pcid, squadid, targetid):
                     }
                 )
 
-            msg = f'{h} Squad kick OK (squadid:{squadid})'
+            msg = f'{h} Squad kick OK (squaduuid:{squaduuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                 }
             ), 200
 
 
-# API: /mypc/<uuid:pcid>/squad/<uuid:squadid>/leave
+# API: ../squad/<uuid:squaduuid>/leave
 @jwt_required()
-def squad_leave(pcid, squadid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def squad_leave(creatureuuid, squaduuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
-    # We need to convert instanceid to STR as it is UUID type
-    squadid = str(squadid)
-
-    if Creature.squad != squadid:
-        msg = f'{h} Squad request outside of your scope (squadid:{squadid})'
+    if Creature.squad != str(squaduuid):
+        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -752,7 +729,7 @@ def squad_leave(pcid, squadid):
             }
         ), 200
     if Creature.squad_rank == 'Leader':
-        msg = f'{h} PC cannot be the squad Leader (squadid:{squadid})'
+        msg = f'{h} PC cannot be the squad Leader (squaduuid:{squaduuid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -766,7 +743,7 @@ def squad_leave(pcid, squadid):
         Creature.squad = None
         Creature.squad_rank = None
     except Exception as e:
-        msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -777,9 +754,9 @@ def squad_leave(pcid, squadid):
         ), 200
     else:
         try:
-            Squad = RedisSquad().get(squadid)
+            Squad = RedisSquad(squaduuid=squaduuid)
         except Exception as e:
-            msg = f'{h} Squad Query KO (squadid:{squadid}) [{e}]'
+            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -794,7 +771,7 @@ def squad_leave(pcid, squadid):
                 YQ_BROADCAST,
                 {
                     "ciphered": False,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                     "route": 'mypc/{id1}/squad',
                     "scope": 'squad',
                     }
@@ -814,12 +791,12 @@ def squad_leave(pcid, squadid):
                     }
                 )
 
-            msg = f'{h} Squad leave OK (squadid:{squadid})'
+            msg = f'{h} Squad leave OK (squaduuid:{squaduuid})'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Squad._asdict(),
+                    "payload": Squad.as_dict(),
                 }
             ), 200

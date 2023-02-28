@@ -1,7 +1,8 @@
 # -*- coding: utf8 -*-
 
-import re
 import os
+import re
+import uuid
 
 redpaduration  = 3600
 redpamax       = 16
@@ -65,5 +66,8 @@ def typed2str(string):
     # BOOLEAN False
     elif string is False:
         return 'False'
+    # UUID
+    elif isinstance(string, uuid):
+        return str(string)
     else:
         return string

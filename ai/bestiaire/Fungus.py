@@ -14,7 +14,7 @@ class Fungus(Mob):
         Mob.__init__(self, creatureuuid)
 
     def run(self):
-        SLEEP_TIME = 10
+        SLEEP_TIME = self.instance.tick
 
         while self.stats.hp > 0:
             self.get_pa()

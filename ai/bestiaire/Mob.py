@@ -8,13 +8,15 @@ from loguru                      import logger
 from utils.requests              import resolver_move
 
 from utils.computation import (
-    closest_creature_from_creature,
+    closest_player_from_me,
     next_coords_to_creature,
+    is_coords_empty,
     )
 
 from nosql.models.RedisCreature  import RedisCreature
 from nosql.models.RedisStats     import RedisStats
 from nosql.models.RedisPa        import RedisPa
+from nosql.models.RedisInstance  import RedisInstance
 
 
 class Mob(ABC, threading.Thread):
@@ -23,13 +25,12 @@ class Mob(ABC, threading.Thread):
     def __init__(self, creatureuuid):
         super(threading.Thread, self).__init__()
 
-        Creature = RedisCreature().get(creatureuuid)
-        Stats = RedisStats(Creature)
-
         # We replicate Creature attibutes into Salamander
-        self.creature = Creature
+        self.creature = RedisCreature(creatureuuid=creatureuuid)
         # We add the HP/HPmax from Stats attributes
-        self.stats = Stats
+        self.stats = RedisStats(creatureuuid=self.creature.id)
+        # We add Instance info as we need it
+        self.instance = RedisInstance(instanceuuid=self.creature.instance)
         # Addind Logging headers
         self.logh = f'[{self.creature.id}] {self.creature.name:20}'
 
@@ -47,7 +48,7 @@ class Mob(ABC, threading.Thread):
 
     def get_pos(self):
         try:
-            Creature = RedisCreature().get(self.creature.id)
+            Creature = RedisCreature(creatureuuid=self.creature.id)
         except Exception as e:
             logger.error(f'{self.logh} | RedisCreature Request KO [{e}]')
         else:
@@ -56,53 +57,81 @@ class Mob(ABC, threading.Thread):
             logger.trace(f'{self.logh} | RedisCreature Request OK')
 
     def set_pos(self):
-        (closest, coords) = closest_creature_from_creature(self)
-        if closest:
+        # We check the closest PC in sight
+        CreatureTarget = closest_player_from_me(self)
+        if CreatureTarget:
             # We have a close PC in sight
-            (targetx, targety) = next_coords_to_creature(self, closest)
+            (nextx, nexty) = next_coords_to_creature(self, CreatureTarget)
         else:
             logger.debug(f'{self.logh} | No close Creature. Stop here')
             return None
 
-        if (targetx, targety) and \
-           (self.creature.x, self.creature.y) == (targetx, targety):
+        # logger.info(f'closest:{CreatureTarget}')
+        # logger.info(f'x:{nextx}, y:{nexty}')
+
+        # Collision check
+        if not is_coords_empty(x=nextx, y=nexty):
+            # There is a Creature on these coordinates
             logger.debug(
-                f"{self.logh} | Should not move "
-                f"(Already close to "
-                f"[{closest['id']}] {closest['name']} "
-                f"@({closest['x']},{closest['y']}))"
+                f"{self.logh} | Move KO | "
+                f'(Tile occupied @({nextx}, {nexty}))'
                 )
-        elif (targetx, targety) in coords:
-            # Collision check
-            # There is an NPC on the path
-            logger.debug(
-                f"{self.logh} | Should not move "
-                f"(Path obstructed @({targetx, targety}))"
-                )
+            return
         else:
-            # Lets call the resolver for move now
+            # There is no one on these coordinates
             logger.debug(
-                f"{self.logh} | Move >> "
-                f"from (x:{self.creature.x},y:{self.creature.y}) "
-                f"to (x:{targetx},y:{targety}))"
+                f"{self.logh} | Move >> | "
+                f'(Tile empty @({nextx, nexty}))'
                 )
-            try:
-                payload = resolver_move(self, targetx, targety)
-            except Exception as e:
-                logger.error(f'{self.logh} | Request KO [{e}]')
+
+        # Proximity check
+        if (nextx, nexty) and \
+           (self.creature.x, self.creature.y) == (nextx, nexty):
+            logger.debug(
+                f"{self.logh} | Move KO | "
+                f"(Already close to "
+                f"[{CreatureTarget.id}] {CreatureTarget.name} "
+                f"@({CreatureTarget.x},{CreatureTarget.y}))"
+                )
+            return
+        else:
+            logger.debug(
+                f"{self.logh} | Move >> | "
+                f"(Not close enough to "
+                f"[{CreatureTarget.id}] {CreatureTarget.name} "
+                f"@({CreatureTarget.x},{CreatureTarget.y}))"
+                )
+
+        # We can move, path clear
+        logger.debug(
+            f"{self.logh} | Move >> | "
+            f"from (x:{self.creature.x},y:{self.creature.y}) "
+            f"to (x:{nextx},y:{nextx}))"
+            )
+        try:
+            payload = resolver_move(self, nextx, nexty)
+        except Exception as e:
+            logger.error(f'{self.logh} | Request KO [{e}]')
+        else:
+            if payload is None:
+                logger.warning(
+                    f"{self.logh} | Move KO | "
+                    'Resolver response.body is None'
+                    )
+                return
+
+            if payload['result']['success']:
+                logger.debug(
+                    f"{self.logh} | Move OK | "
+                    f"from (x:{self.creature.x},y:{self.creature.y}) "
+                    f"to (x:{nextx},y:{nexty}))"
+                    )
             else:
-                if payload['result']['success']:
-                    logger.debug(
-                        f"{self.logh} | Move OK "
-                        f"from (x:{self.creature.x},y:{self.creature.y}) "
-                        f"to (x:{targetx},y:{targety}))"
-                        )
-                else:
-                    logger.warning(
-                        f"{self.logh} | Move KO "
-                        f"from (x:{self.creature.x},y:{self.creature.y}) "
-                        f"to (x:{targetx},y:{targety}))"
-                        )
+                logger.warning(
+                    f"{self.logh} | Move KO | "
+                    f"from (x:{self.creature.x},y:{self.creature.y}) "
+                    f"to (x:{nextx},y:{nexty}))"
+                    )
 
     @abstractmethod
     def get_life(self):
@@ -114,7 +143,7 @@ class Mob(ABC, threading.Thread):
 
     def get_pa(self):
         try:
-            Pa = RedisPa(self.creature)
+            Pa = RedisPa(creatureuuid=self.creature.id)
         except Exception as e:
             logger.error(f'{self.logh} | RedisPa Request KO [{e}]')
         else:

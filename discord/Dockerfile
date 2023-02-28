@@ -14,7 +14,8 @@ ENV LOGURU_COLORIZE='true'
 COPY --chown=discord:discord /discord/requirements.txt /code/requirements.txt
 COPY --chown=discord:discord /discord/commands.py      /code/commands.py
 COPY --chown=discord:discord /discord/tasks.py         /code/tasks.py
-COPY --chown=discord:discord /discord/utils            /code/utils
+COPY --chown=discord:discord /discord/variables.py     /code/variables.py
+COPY --chown=discord:discord /discord/subcommands      /code/subcommands
 COPY --chown=discord:discord /nosql                    /code/nosql
 
 WORKDIR /code

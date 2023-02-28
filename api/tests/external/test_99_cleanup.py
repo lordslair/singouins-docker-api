@@ -19,24 +19,21 @@ def test_singouins_pc_delete():
     response = requests.get(url, headers=headers)
     pcs      = json.loads(response.text)['payload']
 
-    if pcs is not None:
-        for pc in pcs:
-            pcid       = pc['id']
-            instanceid = pc['instance']
-            if instanceid is not None:
-                # We need to leave the instance
-                url      = f'{API_URL}/mypc/{pcid}/instance/{instanceid}/leave'
-                response = requests.post(url, headers=headers)
-
-                assert response.status_code == 200
-                assert json.loads(response.text)['success'] is True
-
-            # We delete the PC
-            url        = f'{API_URL}/mypc/{pcid}'  # DELETE
-            response   = requests.delete(url, headers=headers)
+    for pc in pcs:
+        if pc['instance'] is not None:
+            # We need to leave the instance
+            url = f"{API_URL}/mypc/{pc['id']}/instance/{pc['instance']}/leave"
+            response = requests.post(url, headers=headers)
 
             assert response.status_code == 200
             assert json.loads(response.text)['success'] is True
+
+        # We delete the PC
+        url        = f"{API_URL}/mypc/{pc['id']}"  # DELETE
+        response   = requests.delete(url, headers=headers)
+
+        assert response.status_code == 200
+        assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_auth_delete():

@@ -1,20 +1,100 @@
 # -*- coding: utf8 -*-
 
+import json
 import time
 import uuid
 
 from datetime                    import datetime
 from loguru                      import logger
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.variables             import str2typed, typed2str
 
 
 class RedisEvent:
-    def __init__(self):
-        self.hlog = '[Event.id:None]'
-        logger.trace(f'{self.hlog} Method >> Initialization')
+    def __init__(self, eventuuid=None):
+        self.hkey = 'events'
+        self.logh = '[Event.id:None]'
+
+        try:
+            if eventuuid:
+                self.id = eventuuid
+                if r.exists(f'{self.hkey}:{self.id}'):
+                    logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                    for k, v in r.hgetall(f'{self.hkey}:{self.id}').items():
+                        setattr(self, k, str2typed(v))
+                else:
+                    logger.trace(f'{self.logh} Method KO (HASH NotFound)')
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+        else:
+            logger.trace(f'{self.logh} Method OK (HASH Loaded)')
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        return {
+            "dst": self.dst,
+            "src": self.src,
+            "action": self.action,
+            "type": self.type,
+            "id": self.id,
+            "date": self.date,
+            "timestamp": self.timestamp,
+            }
+
+    def destroy(self):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'id') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
+        try:
+            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
+            if r.exists(f'{self.hkey}:{self.id}'):
+                r.delete(f'{self.hkey}:{self.id}')
+            else:
+                logger.warning(f'{self.logh} Method KO - NotFound')
+                return False
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.logh} Method OK')
+            return True
 
     def new(
         self,
@@ -26,80 +106,33 @@ class RedisEvent:
     ):
         ts  = time.time_ns() // 1000000  # Time in milliseconds
         eventuuid = str(uuid.uuid4())
-        self.hlog = f'[Event.id:{eventuuid}]'
+        self.logh = f'[Event.id:{eventuuid}]'
 
+        self.action = action_text
+        self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.dst = action_dst
+        self.id = eventuuid
+        self.src = action_src
+        self.timestamp = ts
+        self.type = action_type
+
+        logger.trace(f'{self.logh} Method >> (Dict Creating)')
         try:
-            logger.trace(f'{self.hlog} Method >> (HASH Creating)')
+            fullkey = f'{self.hkey}:{self.id}'
+            # We push data in final dict
+            hashdict = {}
 
-            hashdict = {
-                "dst": typed2str(action_dst),
-                "src": typed2str(action_src),
-                "action": typed2str(action_text),
-                "type": typed2str(action_type),
-                "id": eventuuid,
-                "date": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                "timestamp": ts,
-            }
-            r.hset(f'events:{eventuuid}', mapping=hashdict)
+            # We loop over object properties to create it
+            for property, value in self.as_dict().items():
+                hashdict[property] = typed2str(value)
+
+            logger.trace(f'{self.logh} Method >> (HASH Storing)')
+            r.hset(fullkey, mapping=hashdict)
             if action_ttl is not None:
-                r.expire(f'events:{eventuuid}', action_ttl)
-        except Exception as e:
-            logger.error(f'{self.hlog} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.hlog} Method OK')
-            return True
-
-    def destroy(self, eventuuid):
-        self.hlog = f'[Event.id:{eventuuid}]'
-        try:
-            logger.trace(f'{self.hlog} Method >> (HASH Destroying)')
-            r.delete(f'events:{eventuuid}')
-        except Exception as e:
-            logger.error(f'{self.hlog} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.hlog} Method OK')
-            return True
-
-    def search(self, query, maxpaging=25):
-        self.logh = '[Event.id:None]'
-        index = 'event_idx'
-        try:
-            r.ft(index).info()
+                r.expire(fullkey, action_ttl)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.logh} Method >> (Searching {query})')
-            # Query("search engine").paging(0, 10)
-            # f"@bearer:[{bearerid} {bearerid}]"
-            results = r.ft(index).search(
-                Query(query).paging(0, maxpaging)
-                )
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        self._asdict = []
-        for result in results.docs:
-            result_dict = {}
-            del result.payload
-            result.id = result.id.removeprefix('events:')
-            for attr, value in result.__dict__.items():
-                setattr(result, attr, str2typed(value))
-                result_dict[attr] = getattr(result, attr)
-            self._asdict.append(result_dict)
-
-        self.results = results.docs
-
-        logger.trace(f'{self.logh} Method OK')
-        return self
+            logger.trace(f'{self.logh} Method OK (HASH Stored)')
+            return self

@@ -4,16 +4,101 @@ import json
 import uuid
 
 from loguru                      import logger
-from redis.commands.search.query import Query
 
 from nosql.connector             import r
 from nosql.variables             import str2typed, typed2str
 
 
 class RedisStatus:
-    def __init__(self, creature=None):
-        self.creature = creature
+    def __init__(self, creatureuuid=None, name=None):
         self.type = 'status'
+        self.hkey = 'statuses'
+        self.logh = f'[Status.id:{creatureuuid}]'
+
+        if creatureuuid:
+            self.creatureuuid = creatureuuid
+            if name:
+                logger.trace(f'{self.logh} Method >> Initialization')
+                fullkey = f'{self.hkey}:{self.creatureuuid}:{name}'
+                try:
+                    logger.trace(f'{self.logh} Method >> (HASH Loading)')
+                    if r.exists(fullkey):
+                        hashdict = r.hgetall(fullkey)
+                        for k, v in hashdict.items():
+                            setattr(self, k, str2typed(v))
+                        self.duration_left = r.ttl(fullkey)
+                        logger.trace(f'{self.logh} Method >> (HASH Loaded)')
+                    else:
+                        logger.trace(f'{self.logh} Method KO (HASH NotFound)')
+                except Exception as e:
+                    logger.error(f'{self.logh} Method KO [{e}]')
+
+    def __iter__(self):
+        yield from self.as_dict().items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_json(self):
+        """
+        Converts Object into a JSON
+
+        Parameters: None
+
+        Returns: str()
+        """
+        return self.__str__()
+
+    def as_dict(self):
+        """
+        Converts Object into a Python dict
+
+        Parameters: None
+
+        Returns: dict()
+        """
+        return {
+            "bearer": self.bearer,
+            "duration_base": self.duration_base,
+            "duration_left": self.duration_left,
+            "extra": self.extra,
+            "id": self.id,
+            "name": self.name,
+            "source": self.source,
+            "type": self.type
+            }
+
+    def destroy(self, name):
+        """
+        Destroys an Object and DEL it from Redis DB.
+
+        Parameters: None
+
+        Returns: bool()
+        """
+        if hasattr(self, 'creatureuuid') is False:
+            logger.warning(f'{self.logh} Method KO - ID NotSet')
+            return False
+        if self.creatureuuid is None:
+            logger.warning(f'{self.logh} Method KO - ID NotFound')
+            return False
+
+        try:
+            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
+            if r.exists(f'{self.hkey}:{self.creatureuuid}:{name}'):
+                r.delete(f'{self.hkey}:{self.creatureuuid}:{name}')
+            else:
+                logger.warning(f'{self.logh} Method KO - NotFound')
+                return False
+        except Exception as e:
+            logger.error(f'{self.logh} Method KO [{e}]')
+            return None
+        else:
+            logger.trace(f'{self.logh} Method OK')
+            return True
 
     def new(
         self,
@@ -22,14 +107,16 @@ class RedisStatus:
         name,
         source,
     ):
-        # We check if self.creature exists before continuing
-        if self.creature is None:
-            logger.warning('[Status.id:None] Use RedisStatus(Creature) before')
+        # We check if self.id exists before continuing
+        if self.creatureuuid is None:
+            logger.warning(f'{self.logh} Method KO (Missing parameter)')
             return False
 
-        # We need to define the new instance.id
-        self.id = str(uuid.uuid4())
-        self.logh = f'[Status.id:{self.id}]'
+        # We need to define the new Status.id
+        self.id = str(uuid.uuid3(
+            uuid.NAMESPACE_DNS,
+            f'{self.creatureuuid}{name}')
+            )
 
         try:
             # We push data in final dict
@@ -40,7 +127,7 @@ class RedisStatus:
             if extra is None:
                 self.extra = None
 
-            self.bearer        = self.creature.id
+            self.bearer        = self.creatureuuid
             self.duration_base = duration_base
             self.duration_left = duration_base
             self.name          = name
@@ -49,141 +136,20 @@ class RedisStatus:
             hashdict = {
                 "bearer": self.bearer,
                 "duration_base": self.duration_base,
+                "id": self.id,
                 "extra": typed2str(self.extra),
                 "name": self.name,
                 "source": self.source,
                 "type": self.type
             }
 
+            fullkey = f'{self.hkey}:{self.bearer}:{self.name}'
             logger.trace(f'{self.logh} Method >> (HASH Storing)')
-            r.hset(f'statuses:{self.bearer}:{self.name}', mapping=hashdict)
-            r.expire(f'statuses:{self.bearer}:{self.name}', self.duration_base)
+            r.hset(fullkey, mapping=hashdict)
+            r.expire(fullkey, self.duration_base)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None
         else:
             logger.trace(f'{self.logh} Method OK')
-            return True
-
-    def destroy(self, name, creatureuuid=None):
-        self.logh = '[Status.id:None]'
-        # We check if self.creature exists before continuing
-        if self.creature is None and creatureuuid is None:
-            logger.warning(f'{self.logh} Method KO (Missing parameter')
-            return False
-
-        if creatureuuid is None and self.creature:
-            # The RedisStatus was called before, lets set creatureuuid
-            creatureuuid = self.creature.id
-
-        if r.exists(f'statuses:{creatureuuid}:{name}'):
-            pass
-        else:
-            logger.warning(f'{self.logh} Method KO (KEY NotFound)')
-            return True
-
-        try:
-            logger.trace(f'{self.logh} Method >> (HASH Destroying)')
-            r.delete(f'statuses:{creatureuuid}:{name}')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            logger.trace(f'{self.logh} Method OK')
-            return True
-
-    def search(self, query, maxpaging=25):
-        self.logh = '[Status.id:None]'
-        index = 'status_idx'
-        try:
-            r.ft(index).info()
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(r.ft(index).info())
-            pass
-
-        try:
-            logger.trace(f'{self.logh} Method >> (Searching {query})')
-            results = r.ft(index).search(Query(query).paging(0, maxpaging))
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO [{e}]')
-            return None
-        else:
-            # logger.trace(results)
-            pass
-
-        # If we are here, we got results
-        self._asdict = []
-        for result in results.docs:
-            result_dict = {}
-            # We remove from the final result an internal result attr
-            del result.payload
-            # We fetch the key TTL
-            result.ttl = r.ttl(result.id)
-            # We remove the prexix added by RediSearch
-            result.id = result.id.removeprefix('statuses:')
-            # We remove the suffix of the key
-            result.id = result.id.removesuffix(f':{result.name}')
-            for attr, value in result.__dict__.items():
-                setattr(result, attr, str2typed(value))
-                result_dict[attr] = getattr(result, attr)
-            self._asdict.append(result_dict)
-
-        self.results = results.docs
-
-        logger.trace(f'{self.logh} Method OK')
-        return self
-
-
-"""
-    FT.CREATE status_idx PREFIX 1 "statuses:"
-        LANGUAGE english
-        SCORE 0.5
-        SCORE_FIELD "status_score"
-        SCHEMA
-            bearer TEXT
-            duration_base NUMERIC
-            extra TEXT
-            id TEXT
-            name TEXT
-            source TEXT
-            type TEXT
-
-    FT.SEARCH status_idx "" LIMIT 0 10
-
-    FT.DROPINDEX status_idx
-"""
-
-if __name__ == '__main__':
-    from nosql.models.RedisCreature import RedisCreature
-    creatureuuid = '20671520-85fb-35ad-861a-e8ccebe1ebb9'
-
-    Creature = RedisCreature().get(creatureuuid)
-    Status = RedisStatus(Creature)
-    logger.success(Status.creature)
-    logger.success(Status.creature.id)
-    Status.new(
-        duration_base=180,
-        extra=None,
-        name='Tested',
-        source=Creature.id,
-    )
-    bearer = creatureuuid.replace('-', ' ')
-    Statuses = RedisStatus().search(query=f'@bearer:{bearer}')
-    logger.success(Statuses)
-    logger.success(Statuses.results)
-    logger.success(Statuses.results[0].id)
-    logger.success(Statuses._asdict)
-    logger.success(Statuses._asdict)
-    logger.success(RedisStatus(Creature).destroy(name='Tested'))
-    Status.new(
-        duration_base=180,
-        extra=None,
-        name='Tested',
-        source=Creature.id,
-    )
-    logger.success(
-        RedisStatus().destroy(creatureuuid=creatureuuid, name='Tested')
-        )
+            return self

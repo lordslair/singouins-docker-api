@@ -163,7 +163,7 @@ def initialize_redis_indexes():
                 TextField("bearer"),
                 TextField("bound"),
                 TextField("bound_type"),
-                TagField("id"),
+                TextField("id"),
                 NumericField("metaid"),
                 TextField("rarity"),
                 NumericField("state"),
@@ -202,6 +202,7 @@ def initialize_redis_indexes():
                 TextField("korp"),
                 TextField("korp_rank"),
                 TextField("name"),
+                NumericField("race"),
                 TextField("squad"),
                 TextField("squad_rank"),
                 NumericField("x"),
@@ -291,37 +292,6 @@ def initialize_redis_indexes():
             logger.info('Redis init: OK event_idx')
     else:
         logger.trace('Redis init: OK event_idx (already created)')
-
-    # RedisHS
-    try:
-        r.ft("highscore_idx").info()
-    except ResponseError:
-        # We need to create the index
-        try:
-            # Options for index creation
-            index_auction = IndexDefinition(
-                prefix=["highscores:"],
-                score=0.5,
-                score_field="highscore_score"
-                )
-
-            # Schema definition
-            schema = (
-                NumericField("global_deaths"),
-                NumericField("global_kills"),
-            )
-
-            # Create an index and pass in the schema
-            r.ft("highscore_idx").create_index(
-                schema,
-                definition=index_auction
-                )
-        except Exception as e:
-            logger.error(f'Redis init: KO [{e}]')
-        else:
-            logger.info('Redis init: OK highscore_idx')
-    else:
-        logger.trace('Redis init: OK highscore_idx (already created)')
 
     # RedisInstance
     try:
@@ -413,7 +383,7 @@ def initialize_redis_indexes():
 
             # Schema definition
             schema = (
-                TagField("id"),
+                TextField("id"),
                 TextField("leader"),
                 TextField("name"),
             )
@@ -445,7 +415,7 @@ def initialize_redis_indexes():
 
             # Schema definition
             schema = (
-                TagField("id"),
+                TextField("id"),
                 TextField("leader"),
                 TextField("name"),
             )

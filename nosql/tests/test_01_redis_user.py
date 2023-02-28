@@ -9,6 +9,7 @@ import uuid
 LOCAL_PATH = os.path.dirname(os.path.abspath('nosql'))
 sys.path.append(LOCAL_PATH)
 
+from nosql.models.RedisSearch import RedisSearch  # noqa: E402
 from nosql.models.RedisUser import RedisUser  # noqa: E402
 
 USER_NAME = "pytest@user.com"
@@ -43,17 +44,20 @@ def test_redis_user_search_ok():
     Searching a RedisUser
     """
     field_id = USER_ID.replace('-', ' ')
-    Users = RedisUser().search(query=f'@id:{field_id}')
+    Users = RedisSearch().user(query=f'@id:{field_id}')
 
-    assert hasattr(Users, 'objects') is True
-    assert len(Users.objects) == 1
-    assert Users.objects[0].name == USER_NAME
-    assert Users.objects[0].hash == USER_HASH
-    assert Users.objects[0].id == USER_ID
+    assert hasattr(Users, 'results') is True
+    assert len(Users.results) == 1
 
-    assert Users.objects[0].as_dict()['name'] == USER_NAME
-    assert Users.objects[0].as_dict()['hash'] == USER_HASH
-    assert Users.objects[0].as_dict()['id'] == USER_ID
+    User = Users.results[0]
+    assert User.name == USER_NAME
+    assert User.hash == USER_HASH
+    assert User.id == USER_ID
+
+    User = Users.results_as_dict[0]
+    assert User['name'] == USER_NAME
+    assert User['hash'] == USER_HASH
+    assert User['id'] == USER_ID
 
 
 def test_redis_user_setters():
@@ -74,12 +78,12 @@ def test_redis_user_setters():
 
     # 1. From a Search Query
     field_id = USER_ID.replace('-', ' ')
-    Users = RedisUser().search(query=f'@id:{field_id}')
+    Users = RedisSearch().user(query=f'@id:{field_id}')
 
-    assert hasattr(Users, 'objects') is True
-    assert len(Users.objects) == 1
-    Users.objects[0].hash = 'plopplip'
-    Users.objects[0].d_name = 'User#4321'
+    assert hasattr(Users, 'results') is True
+    assert len(Users.results) == 1
+    Users.results[0].hash = 'plopplip'
+    Users.results[0].d_name = 'User#4321'
 
     # Lets check by calling again a Creature if it was updated in Redis
     UserAgain = RedisUser(username=USER_NAME)
@@ -141,7 +145,7 @@ def test_redis_user_search_empty():
     > Expected to fail
     """
     field_id = USER_ID.replace('-', ' ')
-    Users = RedisUser().search(query=f'@id:{field_id}')
+    Users = RedisSearch().user(query=f'@id:{field_id}')
 
-    assert hasattr(Users, 'objects') is True
-    assert len(Users.objects) == 0
+    assert hasattr(Users, 'results') is True
+    assert len(Users.results) == 0

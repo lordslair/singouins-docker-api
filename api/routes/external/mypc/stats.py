@@ -12,25 +12,28 @@ from utils.routehelper          import (
     creature_check,
     )
 
-#
-# Routes /mypc/{pcid}/stats/*
-#
 
-
-# API: GET /mypc/{pcid}/stats
+#
+# Routes /mypc/<uuid:creatureuuid>/stats/*
+#
+# API: GET /mypc/<uuid:creatureuuid>/stats
 @jwt_required()
-def stats_get(pcid):
-    Creature = RedisCreature(creatureuuid=pcid)
+def stats_get(creatureuuid):
+    Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
-        Stats = RedisStats(Creature)
+        Stats = RedisStats(creatureuuid=creatureuuid)
     except Exception as e:
         msg = f'{h} Stats Query KO [{e}]'
         logger.error(msg)
-        return jsonify({"success": False,
-                        "msg": msg,
-                        "payload": None}), 200
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     else:
         msg = f'{h} Stats Query OK'
         logger.debug(msg)
@@ -38,6 +41,6 @@ def stats_get(pcid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": Stats._asdict(),
+                "payload": Stats.as_dict(),
             }
         ), 200

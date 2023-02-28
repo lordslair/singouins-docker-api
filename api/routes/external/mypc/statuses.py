@@ -6,26 +6,26 @@ from flask_jwt_extended         import (jwt_required,
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisStatus   import RedisStatus
+from nosql.models.RedisSearch   import RedisSearch
 
 from utils.routehelper          import (
     creature_check,
     )
 
-#
-# Routes /mypc/{creatureuuid}/statuses
-#
 
-
-# API: GET /mypc/{creatureuuid}/statuses
+#
+# Routes /mypc/<uuid:creatureuuid>/statuses
+#
+# API: GET /mypc/<uuid:creatureuuid>/statuses
 @jwt_required()
 def statuses_get(creatureuuid):
     Creature = RedisCreature(creatureuuid=creatureuuid)
     h = creature_check(Creature, get_jwt_identity())
 
     try:
-        bearer = Creature.id.replace('-', ' ')
-        Statuses = RedisStatus(Creature).search(query=f'@bearer:{bearer}')
+        Statuses = RedisSearch().status(
+            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            )
     except Exception as e:
         msg = f'{h} Statuses Query KO [{e}]'
         logger.error(msg)
@@ -44,7 +44,9 @@ def statuses_get(creatureuuid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "statuses": Statuses._asdict,
+                    "statuses": [
+                        Status.as_dict() for Status in Statuses.results
+                        ],
                     "creature": Creature.as_dict(),
                     },
             }
