@@ -1,4 +1,4 @@
-FROM alpine:3.15
+FROM alpine:3.16
 
 RUN adduser -h /code -u 1000 -D -H api
 
@@ -9,28 +9,22 @@ ARG LOGURU_DATE="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
 ARG LOGURU_LEVEL="<level>level={level: <8}</level> | "
 ARG LOGURU_MSG="<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
 ENV LOGURU_FORMAT=$LOGURU_DATE$LOGURU_LEVEL$LOGURU_MSG
-ENV LOGURU_COLORIZE='true'
-ENV LOGURU_DEBUG_COLOR='<cyan><bold>'
-
-ENV PYTHONUNBUFFERED='True'
-ENV PYTHONIOENCODING='UTF-8'
 
 COPY --chown=api:api /api   /code
 COPY --chown=api:api /nosql /code/nosql
 
 WORKDIR /code
 ENV PATH="/code/.local/bin:${PATH}"
-ENV TZ="Europe/Paris"
 
 RUN apk update --no-cache \
-    && apk add --no-cache python3=~3.9 \
+    && apk add --no-cache python3=~3.10 \
                           tzdata=~2022 \
     && apk add --no-cache --virtual .build-deps \
-                                    gcc=~10.3 \
-                                    g++=~10.3 \
+                                    gcc=~11.2 \
+                                    g++=~11.2 \
                                     libc-dev=~0.7 \
                                     libffi-dev=~3.4 \
-                                    python3-dev=~3.9 \
+                                    python3-dev=~3.10 \
     && su api -c "python3 -m ensurepip --upgrade \
                   && pip3 install --user -U -r requirements.txt \
                   && rm requirements.txt" \
