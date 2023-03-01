@@ -16,6 +16,10 @@ updates:
       interval: "daily"
   # Maintain Dockerfile content
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/api"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/discord"
+    schedule:
+      interval: "weekly"
