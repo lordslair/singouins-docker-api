@@ -16,10 +16,22 @@ updates:
       interval: "daily"
   # Maintain Dockerfile content
   - package-ecosystem: "docker"
+    directory: "/ai"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
     directory: "/api"
     schedule:
       interval: "weekly"
   - package-ecosystem: "docker"
     directory: "/discord"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/redsub"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/ws"
     schedule:
       interval: "weekly"
