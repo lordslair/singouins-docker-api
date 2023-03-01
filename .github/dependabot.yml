@@ -6,14 +6,30 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/ai"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/discord"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/redsub"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/ws"
+    schedule:
+      interval: "weekly"
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
   # Maintain Dockerfile content
   - package-ecosystem: "docker"
     directory: "/ai"
