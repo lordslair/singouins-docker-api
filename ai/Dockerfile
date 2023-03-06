@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:3.17
 
 RUN adduser -h /code -u 1000 -D -H ai
 
@@ -21,7 +21,7 @@ RUN apk update --no-cache \
                           tzdata=~2022 \
     && su ai -c "python3 -m ensurepip --upgrade \
                  && pip3 install --user -U -r requirements.txt \
-                 && rm requirements.txt"
+                 && rm requirements.* Dockerfile"
 
 USER ai
 
