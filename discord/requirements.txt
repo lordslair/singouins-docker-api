@@ -9,9 +9,7 @@ aiohttp==3.8.3
 aiosignal==1.3.1
     # via aiohttp
 async-timeout==4.0.2
-    # via
-    #   aiohttp
-    #   redis
+    # via aiohttp
 attrs==22.2.0
     # via aiohttp
 cachetools==5.2.1
@@ -27,7 +25,7 @@ charset-normalizer==2.1.1
 dnspython==2.2.1
     # via email-validator
 email-validator==1.3.1
-    # via -r discord/requirements.in
+    # via -r requirements.in
 frozenlist==1.3.3
     # via
     #   aiohttp
@@ -40,9 +38,9 @@ idna==3.4
     #   requests
     #   yarl
 kubernetes==26.1.0
-    # via -r discord/requirements.in
+    # via -r requirements.in
 loguru==0.6.0
-    # via -r discord/requirements.in
+    # via -r requirements.in
 multidict==6.0.4
     # via
     #   aiohttp
@@ -50,7 +48,7 @@ multidict==6.0.4
 oauthlib==3.2.2
     # via requests-oauthlib
 py-cord==2.4.0
-    # via -r discord/requirements.in
+    # via -r requirements.in
 pyasn1==0.4.8
     # via
     #   pyasn1-modules
@@ -61,7 +59,7 @@ python-dateutil==2.8.2
     # via kubernetes
 pyyaml==6.0
     # via kubernetes
-redis==4.5.1
+redis==4.5.3
     # via yarqueue
 requests==2.28.2
     # via
@@ -87,7 +85,7 @@ websocket-client==1.4.2
 yarl==1.8.2
     # via aiohttp
 yarqueue==0.4.1
-    # via -r discord/requirements.in
+    # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
