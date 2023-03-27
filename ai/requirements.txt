@@ -4,8 +4,6 @@
 #
 #    pip-compile ai/requirements.in
 #
-async-timeout==4.0.2
-    # via redis
 certifi==2022.12.7
     # via requests
 charset-normalizer==2.1.1
@@ -13,10 +11,10 @@ charset-normalizer==2.1.1
 idna==3.4
     # via requests
 loguru==0.6.0
-    # via -r ai/requirements.in
-redis==4.5.1
-    # via -r ai/requirements.in
+    # via -r requirements.in
+redis==4.5.3
+    # via -r requirements.in
 requests==2.28.2
-    # via -r ai/requirements.in
+    # via -r requirements.in
 urllib3==1.26.14
     # via requests
