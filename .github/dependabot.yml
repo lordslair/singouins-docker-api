@@ -18,10 +18,6 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip"
-    directory: "/redsub"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "pip"
     directory: "/ws"
     schedule:
       interval: "weekly"
@@ -41,10 +37,6 @@ updates:
       interval: "weekly"
   - package-ecosystem: "docker"
     directory: "/discord"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/redsub"
     schedule:
       interval: "weekly"
   - package-ecosystem: "docker"
