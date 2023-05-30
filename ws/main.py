@@ -3,14 +3,15 @@
 # Inspired from https://github.com/aaugustin/websockets/issues/653
 
 import asyncio
+import json
 import os
+import re
 import uuid
 import websockets
-import yarqueue
 
 from loguru                     import logger
 
-from nosql.connector            import r_no_decode
+from nosql.connector            import r
 
 # Log System imports
 logger.info('[core] System imports OK')
@@ -21,31 +22,77 @@ REDIS_SLEEP = float(os.environ.get('REDIS_SLEEP', "0.1"))  # We receive a STR
 # WebSocket variables
 WSS_HOST  = os.environ.get('WSS_HOST', '0.0.0.0')
 WSS_PORT  = os.environ.get('WSS_PORT', 5000)
-WSS_QUEUE = os.environ.get('WSS_QUEUE', 'broadcast')
 
-# Opening Queue
-try:
-    yqueue = yarqueue.Queue(name=WSS_QUEUE, redis=r_no_decode)
-except Exception as e:
-    logger.error(f'[core] Connection to Queue {WSS_QUEUE} KO [{e}]')
-else:
-    logger.info(f'[core] Connection to Queue {WSS_QUEUE} OK')
+SUB_PATH     = os.environ.get('REDSUB_PATH', '*')
+REDSUB_QUEUE = os.environ.get('REDSUB_QUEUE', 'yarqueue:discord')
 
 CLIENTS = set()
 
 
+# Check Redis config
+try:
+    config = r.config_get(pattern='notify-keyspace-events')
+    if config is None or config != '':
+        r.config_set(name='notify-keyspace-events', value='$sxE')
+except Exception as e:
+    logger.error(f'[core] Redis SET notify-keyspace-events KO [{e}]')
+else:
+    logger.debug('[core] Redis SET notify-keyspace-events OK')
+
+# Starting subscription
+try:
+    pubsub = r.pubsub()
+    pubsub.psubscribe(SUB_PATH)
+except Exception as e:
+    logger.error(f'[core] Subscription to Redis:"{SUB_PATH}" KO [{e}]')
+else:
+    logger.info(f'[core] Subscription to Redis:"{SUB_PATH}" OK')
+
+
 async def broadcast():
     while True:
-        logger.trace((f'[Q:{WSS_QUEUE}] New loop to check yqueue.empty()'))
-        if not yqueue.empty():
-            data = yqueue.get()
-            logger.debug(f'[Q:{WSS_QUEUE}] Consumer got from redis:<{data}>')
-            await asyncio.gather(
-                *[ws.send(data) for ws in CLIENTS],
-                return_exceptions=False,
-                )
+        logger.trace(('[loop] Consumer getting pubsub new messages'))
+        msg = pubsub.get_message()
+        if msg:
+            logger.debug(f'[loop] Consumer got <{msg}>')
 
-        await asyncio.sleep(REDIS_SLEEP)
+            # Detect the action which triggered the event
+            m = re.search(r"__keyevent@\w__:(?P<action>\w+)", msg['channel'])
+            if m is None:
+                # No action detected, we skip processing
+                logger.trace(
+                    f"Regex ?P<action> KO (channel:{msg['channel']}) - Skip"
+                    )
+                continue
+
+            if m.group('action') == 'expired':
+                # Here we get the EXPIRED KEYS
+                cplx_key = re.search(
+                    (
+                        r"(?P<key_root>[a-zA-Z]+):"
+                        r"(?P<key_uuid>[a-f0-9]{8}-[a-f0-9]{4}"
+                        r"-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):"
+                        r"(?P<key_string>[a-zA-Z]+)$"
+                        ),
+                    msg['data']
+                    )
+                await asyncio.gather(
+                    *[ws.send(
+                        json.dumps({
+                            "ciphered": False,
+                            "payload": {
+                                "type": cplx_key.group('key_root'),
+                                "data": cplx_key.group('key_string'),
+                                "creatureuuid": cplx_key.group('key_uuid'),
+                                "fullkey": msg['data'],
+                                },
+                            "embed": None,
+                            "scope": None,
+                            "source": 'redsub',
+                            })
+                        ) for ws in CLIENTS],
+                    return_exceptions=False,
+                    )
 
 
 async def handler(websocket, path):
@@ -58,7 +105,7 @@ async def handler(websocket, path):
     # Storing in redis client connlog
     try:
         rkey   = f'wsclients:{str(uuid.uuid4())}'
-        r_no_decode.set(rkey, realip)
+        r.set(rkey, realip)
     except Exception as e:
         logger.error(f'[loop] Client log KO (@IP:{realip}) [{e}]')
     else:
@@ -68,8 +115,8 @@ async def handler(websocket, path):
     try:
         # Receiving messages
         async for msg in websocket:
-            # Queuing them
-            yqueue.put(msg)
+            # We do nothing if we receive a msg through WS
+            pass
     except websockets.ConnectionClosedError:
         logger.warning(f'[loop] Client lost (@IP:{realip})')
     finally:
@@ -77,7 +124,7 @@ async def handler(websocket, path):
         CLIENTS.remove(websocket)
         # We delete in redis client connlog
         try:
-            r_no_decode.delete(f'wsclients:{ipuuid}')
+            r.delete(f'wsclients:{ipuuid}')
         except Exception as e:
             logger.error(f'[loop] Client remove KO (@IP:{realip}) [{e}]')
         else:
@@ -108,9 +155,9 @@ try:
 except KeyboardInterrupt:
     try:
         # We scan to find the connected clients
-        for key in r_no_decode.scan_iter('wsclients:*'):
+        for key in r.scan_iter('wsclients:*'):
             # We loop to delete all the redis entries
-            r_no_decode.delete(key)
+            r.delete(key)
     except Exception as e:
         logger.error(f'[core] Cleaned wsclients KO [{e}]')
     else:
