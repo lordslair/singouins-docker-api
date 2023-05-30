@@ -1,12 +1,11 @@
 name: Docker Image CI (WS)
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Python PyTest (API)"]
     branches: [ "master" ]
-    tags:
-      - 'v*'
-  pull_request:
-    branches: [ "master" ]
+    types:
+      - completed
 
 jobs:
 
