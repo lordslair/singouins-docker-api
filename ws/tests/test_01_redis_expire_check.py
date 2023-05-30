@@ -9,7 +9,7 @@ import time
 REDIS_HOST = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
 REDIS_PORT = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
 REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
-SUB_PATH     = os.environ.get('REDSUB_PATH', '*')
+PUBSUB_PATH = os.environ.get('PUBSUB_PATH', '*')
 
 r = redis.StrictRedis(
         host=REDIS_HOST,
@@ -28,7 +28,7 @@ def test_redis_expire():
     FULLKEY       = f'{TYPE}:{INSTANCE_UUID}:{CREATURE_UUID}:{DATA}'
     # We subscribe
     pubsub = r.pubsub()
-    pubsub.psubscribe(SUB_PATH)
+    pubsub.psubscribe(PUBSUB_PATH)
     time.sleep(1)
     msg = pubsub.get_message()
     # We check the pubsub works
@@ -42,7 +42,7 @@ def test_redis_expire():
         }
     """
     assert msg['type'] == 'psubscribe'
-    assert msg['channel'] == SUB_PATH
+    assert msg['channel'] == PUBSUB_PATH
     # We SET the data
     r.set(FULLKEY, '')
     # We check the item was properly created
@@ -60,7 +60,7 @@ def test_redis_expire():
     assert msg['channel'] == f'__keyevent@{REDIS_DB_NAME}__:set'
     assert msg['data'] == FULLKEY
     r.expire(FULLKEY, 1)
-    # We wait EXPIRE and redsub doing its job
+    # We wait EXPIRE and pubsub doing its job
     time.sleep(3)
     # We check the item was properly expired
     """

@@ -22,9 +22,8 @@ REDIS_SLEEP = float(os.environ.get('REDIS_SLEEP', "0.1"))  # We receive a STR
 # WebSocket variables
 WSS_HOST  = os.environ.get('WSS_HOST', '0.0.0.0')
 WSS_PORT  = os.environ.get('WSS_PORT', 5000)
-
-SUB_PATH     = os.environ.get('REDSUB_PATH', '*')
-REDSUB_QUEUE = os.environ.get('REDSUB_QUEUE', 'yarqueue:discord')
+# Redus PubSub variables
+PUBSUB_PATH  = os.environ.get('PUBSUB_PATH', '*')
 
 CLIENTS = set()
 
@@ -42,11 +41,11 @@ else:
 # Starting subscription
 try:
     pubsub = r.pubsub()
-    pubsub.psubscribe(SUB_PATH)
+    pubsub.psubscribe(PUBSUB_PATH)
 except Exception as e:
-    logger.error(f'[core] Subscription to Redis:"{SUB_PATH}" KO [{e}]')
+    logger.error(f'[core] Subscription to Redis:"{PUBSUB_PATH}" KO [{e}]')
 else:
-    logger.info(f'[core] Subscription to Redis:"{SUB_PATH}" OK')
+    logger.info(f'[core] Subscription to Redis:"{PUBSUB_PATH}" OK')
 
 
 async def broadcast():
