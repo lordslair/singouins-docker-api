@@ -22,7 +22,7 @@ ENV TZ="Europe/Paris"
 
 RUN apk update --no-cache \
     && apk add --no-cache python3=~3.10 \
-                          tzdata=~2022 \
+                          tzdata>=2023 \
     && apk add --no-cache --virtual .build-deps \
                                     gcc=~12.2 \
                                     libc-dev=~0.7 \

@@ -18,7 +18,7 @@ ENV PATH="/code/.local/bin:${PATH}"
 
 RUN apk update --no-cache \
     && apk add --no-cache python3=~3.10 \
-                          tzdata=~2022 \
+                          tzdata>=2023 \
     && apk add --no-cache --virtual .build-deps \
                                     gcc=~12.2 \
                                     g++=~12.2 \
