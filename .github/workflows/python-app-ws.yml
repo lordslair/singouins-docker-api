@@ -1,0 +1,54 @@
+# This workflow will install Python dependencies, run tests with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python PyTest (WS)
+
+on:
+  workflow_run:
+    workflows: ["Python PyTest (NoSQL)"]
+    branches: [ "master" ]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest flake8
+        if [ -f ws/requirements.txt ]; then pip install -r ws/requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Start Redis
+      uses: caiomarruda/redisearch-action@v1.0.1
+      with:
+        redis version: 2.6.0
+    - name: Test with PyTest
+      id: pytestext
+      run: |
+        echo "--- Moving nosql lib where it belongs"
+        cp -a nosql ws/
+        echo "--- Starting app in background"
+        python3 ws/main.py &
+        echo "--- Sleep(3)"
+        sleep 3
+        echo "--- Starting PyTest"
+        pytest -s ws/tests/
