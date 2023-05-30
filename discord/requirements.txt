@@ -49,7 +49,7 @@ multidict==6.0.4
     #   yarl
 oauthlib==3.2.2
     # via requests-oauthlib
-py-cord==2.4.0
+py-cord==2.4.1
     # via -r requirements.in
 pyasn1==0.4.8
     # via
