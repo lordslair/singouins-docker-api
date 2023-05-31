@@ -2,7 +2,7 @@ name: Docker Image CI (WS)
 
 on:
   workflow_run:
-    workflows: ["Python PyTest (API)"]
+    workflows: ["Python PyTest (WS)"]
     branches: [ "master" ]
     types:
       - completed
