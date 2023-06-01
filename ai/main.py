@@ -31,13 +31,15 @@ try:
     )
 except Exception as e:
     logger.error(f'[core] Connection to Resolver KO ({RESOLVER_URL}) [{e}]')
-    exit()
+    if os.environ.get("CI"):
+        pass
+    else:
+        exit()
 else:
-    if ret['success'] is True:
+    if ret and ret['success'] is True:
         logger.info(f'[core] Connection to Resolver OK ({RESOLVER_URL})')
     else:
         logger.warning(f'[core] Connection to Resolver KO ({RESOLVER_URL})')
-        exit()
 
 # Subscriber pattern
 SUB_PATHS = ['ai-instance', 'ai-creature']
