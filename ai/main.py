@@ -145,9 +145,9 @@ if __name__ == '__main__':
                 # We have to kill an existing creature somewhere
                 creature = data['creature']
                 try:
-                    name = f"[{Creature.id}] {Creature.name}"
+                    name = f"[{creature['id']}] {creature['name']}"
                     for index, thread in enumerate(threads_bestiaire):
-                        if thread.creature.id == Creature.race:
+                        if thread.creature.id == creature['id']:
                             # We got the dead Creature
                             logger.trace(f'Creature to kill found: {name}')
                             thread.creature.hp = 0
