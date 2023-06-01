@@ -122,29 +122,40 @@ if __name__ == '__main__':
 
             if data['action'] == 'pop':
                 # We have to pop a new creature somewhere
-                creature = data['creature']
-                try:
-                    if creature['race'] in [11, 12, 13, 14]:
-                        # Need to pop a Salamander
-                        t = Salamander(creatureuuid=creature['id'])
-                    elif creature['race'] in [15, 16]:
-                        # Need to pop a Fungus
-                        t = Fungus(creatureuuid=creature['id'])
-                    else:
-                        # Gruik
-                        pass
-                        logger.warning(data)
-
-                    t.start()
-                    threads_bestiaire.append(t)
-                except Exception as e:
-                    logger.error(f'Creature pop KO [{e}]')
+                name = f"[{data['creature']['id']}] {data['creature']['name']}"
+                # We check that it exists in Redis
+                Creatures = RedisSearch().creature(
+                    query=f"@id:{data['creature']['id'].replace('-', ' ')}"
+                    )
+                if len(Creatures.results) != 1:
+                    logger.warning(
+                        f'Creature pop KO | {name} (NotFound in Redis)'
+                        )
                 else:
-                    logger.debug('Creature pop OK')
+                    Creature = Creatures.results[0]
+                    try:
+                        if Creature.race in [11, 12, 13, 14]:
+                            # Need to pop a Salamander
+                            t = Salamander(creatureuuid=Creature.id)
+                        elif Creature.race in [15, 16]:
+                            # Need to pop a Fungus
+                            t = Fungus(creatureuuid=Creature.id)
+                        else:
+                            # Gruik
+                            pass
+                            logger.warning(data)
+
+                        t.start()
+                        threads_bestiaire.append(t)
+                    except Exception as e:
+                        logger.error(f'Creature pop KO | {name} [{e}]')
+                    else:
+                        logger.debug(f'Creature pop OK | {name}')
             elif data['action'] == 'kill':
                 # We have to kill an existing creature somewhere
                 creature = data['creature']
                 try:
+                    killed = False
                     name = f"[{creature['id']}] {creature['name']}"
                     for index, thread in enumerate(threads_bestiaire):
                         if thread.creature.id == creature['id']:
@@ -152,11 +163,16 @@ if __name__ == '__main__':
                             logger.trace(f'Creature to kill found: {name}')
                             thread.creature.hp = 0
                             threads_bestiaire.remove(thread)
-
+                            killed = True
                 except Exception as e:
                     logger.error(f"Creature kill KO | {name} [{e}]")
                 else:
-                    logger.debug(f"Creature kill OK | {name}")
+                    if killed is True:
+                        logger.debug(f"Creature kill OK | {name}")
+                    else:
+                        logger.warning(
+                            f"Creature kill KO | {name} (NotFound in threads)"
+                            )
             elif data['action'] == 'update':
                 # Some shit happened to a Creature - need to update thread info
                 pass
