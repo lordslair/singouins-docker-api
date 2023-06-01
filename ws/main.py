@@ -27,17 +27,6 @@ PUBSUB_PATH  = os.environ.get('PUBSUB_PATH', '*')
 
 CLIENTS = set()
 
-
-# Check Redis config
-try:
-    config = r.config_get(pattern='notify-keyspace-events')
-    if config is None or config != '':
-        r.config_set(name='notify-keyspace-events', value='$sxE')
-except Exception as e:
-    logger.error(f'[core] Redis SET notify-keyspace-events KO [{e}]')
-else:
-    logger.debug('[core] Redis SET notify-keyspace-events OK')
-
 # Starting subscription
 try:
     pubsub = r.pubsub()

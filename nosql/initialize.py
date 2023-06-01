@@ -13,6 +13,17 @@ from nosql.connector             import r
 from .variables                  import MAP_FILES, META_FILES
 
 
+def initialize_redis_config():
+    try:
+        config = r.config_get(pattern='notify-keyspace-events')
+        if config is None or config != '':
+            r.config_set(name='notify-keyspace-events', value='$sxE')
+    except Exception as e:
+        logger.error(f'Redis init: notify-keyspace-events KO [{e}]')
+    else:
+        logger.debug('Redis init: notify-keyspace-events OK')
+
+
 def initialize_redis_meta():
     try:
         for meta, file in META_FILES.items():
