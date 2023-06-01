@@ -25,21 +25,21 @@ RESOLVER_PORT = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT")
 RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
 
 # Pre-flight check for Resolver connection
-try:
-    ret = resolver_generic_request_get(
-        path="/check"
-    )
-except Exception as e:
-    logger.error(f'[core] Connection to Resolver KO ({RESOLVER_URL}) [{e}]')
-    if os.environ.get("CI"):
-        pass
-    else:
-        exit()
+if os.environ.get("CI"):
+    pass
 else:
-    if ret and ret['success'] is True:
-        logger.info(f'[core] Connection to Resolver OK ({RESOLVER_URL})')
+    try:
+        ret = resolver_generic_request_get(
+            path="/check"
+        )
+    except Exception as e:
+        logger.error(f'[core] >> Resolver KO ({RESOLVER_URL}) [{e}]')
+        exit()
     else:
-        logger.warning(f'[core] Connection to Resolver KO ({RESOLVER_URL})')
+        if ret and ret['success'] is True:
+            logger.info(f'[core] >> Resolver OK ({RESOLVER_URL})')
+        else:
+            logger.warning(f'[core] >> Resolver KO ({RESOLVER_URL})')
 
 # Subscriber pattern
 SUB_PATHS = ['ai-instance', 'ai-creature']
@@ -49,18 +49,18 @@ try:
     pubsub = r_no_decode.pubsub()
 except (redis.Redis.ConnectionError,
         redis.Redis.BusyLoadingError) as e:
-    logger.error(f'[core] Connection to Redis KO [{e}]')
+    logger.error(f'[core] >> Redis KO [{e}]')
 else:
-    logger.info('[core] Connection to Redis OK')
+    logger.info('[core] >> Redis OK')
 
 # Starting subscription
 for path in SUB_PATHS:
     try:
         pubsub.psubscribe(path)
     except Exception as e:
-        logger.error(f'[core] Sub to Redis:"{path}" KO [{e}]')
+        logger.error(f'[core] Subscribe to Redis:"{path}" KO [{e}]')
     else:
-        logger.info(f'[core] [✓] Sub to Redis:"{path}" OK')
+        logger.info(f'[core] Subscribe to Redis:"{path}" OK')
 
 if __name__ == '__main__':
     # We initialise counters
