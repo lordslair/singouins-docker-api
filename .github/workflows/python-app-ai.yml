@@ -46,5 +46,9 @@ jobs:
       run: |
         echo "--- Moving nosql lib where it belongs"
         cp -a nosql ai/
+        echo "--- Starting app in background"
+        python3 ai/main.py &
+        echo "--- Sleep(3)"
+        sleep 3
         echo "--- Starting PyTest"
         pytest -s ai/tests/
