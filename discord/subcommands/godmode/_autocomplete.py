@@ -13,7 +13,7 @@ from nosql.metas import (
     )
 from nosql.models.RedisSearch import RedisSearch
 
-from utils.variables import (
+from variables import (
     rarity_item_types_emoji,
     rarity_monster_types_emoji,
     )
