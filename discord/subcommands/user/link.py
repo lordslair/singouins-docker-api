@@ -4,8 +4,9 @@ import discord
 
 from loguru import logger
 from discord.commands import option
+from email_validator import validate_email, EmailNotValidError
 
-from subcommands.grant._embeds import embed_user_link
+from nosql.models.RedisSearch import RedisSearch
 
 
 def link(group_user, bot):
@@ -21,43 +22,7 @@ def link(group_user, bot):
         ctx,
         mail: str,
     ):
-        # Pre-flight checks
-        if ctx.channel.type is discord.ChannelType.private:
-            logger.info(
-                f'[#{ctx.channel.type}][{ctx.author.name}] '
-                f'/{group_user} link <{mail}>'
-                )
-            # We are in a private DMChannel
-            try:
-                embed = embed_user_link(bot, ctx, mail)
-            except Exception as e:
-                logger.error(
-                    f'[#{ctx.channel.type}][{ctx.author.name}] '
-                    f'└──> Embed KO [{e}]'
-                    )
-            else:
-                if embed:
-                    logger.info(
-                        f'[#{ctx.channel.type}][{ctx.author.name}] '
-                        f'├──> Query OK'
-                        )
-                    await ctx.respond(embed=embed)
-                    logger.info(
-                        f'[#{ctx.channel.type}][{ctx.author.name}] '
-                        f'└──> Answer sent'
-                        )
-                else:
-                    logger.info(
-                        f'[#{ctx.channel.type}][{ctx.author.name}] '
-                        f'└──> Query KO'
-                        )
-                    embed = discord.Embed(
-                        description='User Singouins register KO',
-                        colour=discord.Colour.red()
-                    )
-                    await ctx.respond(embed=embed)
-                    return
-        else:
+        if ctx.channel.type is not discord.ChannelType.private:
             logger.info(
                 f'[#{ctx.channel.name}][{ctx.author.name}] '
                 f'/{group_user} link <{mail}>'
@@ -94,3 +59,72 @@ def link(group_user, bot):
                 await ctx.respond(f'[{e}]')
             else:
                 return
+
+        # OK, we are in DM, we can work
+        logger.info(
+                f'[#{ctx.channel.type}][{ctx.author.name}] '
+                f'/{group_user} link <{mail}>'
+                )
+        try:
+            discordname = f'{ctx.author.name}#{ctx.author.discriminator}'
+            try:
+                validate_email(mail)
+            except EmailNotValidError as e:
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=f'Registration KO: Mail NotValid\n[{e}]',
+                        colour=discord.Colour.red(),
+                        )
+                    )
+                return
+
+            Users = RedisSearch().user(
+                query=f'@d_name:{discordname}'
+                )
+            if len(Users.results) == 0:
+                msg = f'No User with mail:`{mail}` in DB'
+                logger.trace(msg)
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=msg,
+                        colour=discord.Colour.orange(),
+                        )
+                    )
+                return
+            else:
+                User = Users.results[0]
+
+            try:
+                User.d_name = discordname
+                User.d_ack = True
+            except Exception as e:
+                msg = f'User Link KO [{e}]'
+                logger.trace(msg)
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=msg,
+                        colour=discord.Colour.red(),
+                        )
+                    )
+                return
+        except Exception as e:
+            logger.error(
+                f'[#{ctx.channel.type}][{ctx.author.name}] '
+                f'└──> Embed KO [{e}]'
+                )
+        else:
+            logger.info(
+                f'[#{ctx.channel.type}][{ctx.author.name}] '
+                f'├──> Query OK'
+                )
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.green(),
+                    )
+                )
+            return
+            logger.info(
+                f'[#{ctx.channel.type}][{ctx.author.name}] '
+                f'└──> Answer sent'
+                )
