@@ -68,7 +68,7 @@ def k8s_backup_logs(env):
 def k8s_deployer(env):
     # K8s conf loading
     ret = load_config(env)
-    if ret['success']:
+    if not ret['success']:
         namespace = ret['namespace']
     else:
         return ret['embed']
@@ -116,7 +116,7 @@ def load_config(env):
             return {
                 'success': True,
                 'embed': None,
-                'namespace': 'singouins-dev',
+                'namespace': 'singouins',
                 }
     elif env == 'prod':
         try:
