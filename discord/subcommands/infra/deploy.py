@@ -1,12 +1,15 @@
 # -*- coding: utf8 -*-
 
 import discord
+import re
+import time
 
+from kubernetes import client
 from loguru import logger
 from discord.commands import option
 from discord.ext import commands
 
-from subcommands.infra.__k8stools import k8s_deployer
+from subcommands.infra.__k8stools import load_config
 
 
 def deploy(group_admin):
@@ -32,12 +35,152 @@ def deploy(group_admin):
             f'/{group_admin} deploy {env}'
             )
 
+        # K8s conf loading
+        ret = load_config(env)
+        if ret['success']:
+            namespace = ret['namespace']
+        else:
+            return ret['embed']
+
         try:
             logger.info(
                 f'[#{ctx.channel.name}][{ctx.author.name}] '
                 f'├──> K8s Query Starting'
                 )
-            exec_stdout = k8s_deployer(env)
+
+            app_name = 'front-deployer'
+            pod_name = f"sep-backend-{app_name}"
+            pod_template = client.V1PodTemplateSpec(
+                spec=client.V1PodSpec(
+                    restart_policy="Never",
+                    containers=[
+                        client.V1Container(
+                            image="alpine/git:2.36.2",
+                            name=pod_name,
+                            image_pull_policy="IfNotPresent",
+                            volume_mounts=[
+                                client.V1VolumeMount(
+                                    name="websites",
+                                    mount_path='/var/www/websites',
+                                    ),
+                                client.V1VolumeMount(
+                                    name="deployer-sh",
+                                    mount_path='/code',
+                                    ),
+                                ],
+                            command=["/code/job-front-deployer.sh"],
+                            env=[
+                                client.V1EnvVar(
+                                    name='CUST_GIT_BRANCH',
+                                    value=f'build-{env}',
+                                    ),
+                                client.V1EnvVar(
+                                    name='CUST_GIT_QUIET',
+                                    value_from=client.V1EnvVarSource(
+                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                            name='sep-backend-git-secret',
+                                            key='git-angular-quiet',
+                                            )
+                                        )
+                                    ),
+                                client.V1EnvVar(
+                                    name='CUST_GIT_REPO',
+                                    value_from=client.V1EnvVarSource(
+                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                            name='sep-backend-git-secret',
+                                            key='git-angular-repo',
+                                            )
+                                        )
+                                    ),
+                                client.V1EnvVar(
+                                    name='CUST_GIT_USER',
+                                    value_from=client.V1EnvVarSource(
+                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                            name='sep-backend-git-secret',
+                                            key='git-angular-user',
+                                            )
+                                        )
+                                    ),
+                                client.V1EnvVar(
+                                    name='CUST_GIT_TOKEN',
+                                    value_from=client.V1EnvVarSource(
+                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                            name='sep-backend-git-secret',
+                                            key='git-angular-token',
+                                            )
+                                        )
+                                    ),
+                                client.V1EnvVar(
+                                    name='CUST_OUTPUT_PATH',
+                                    value_from=client.V1EnvVarSource(
+                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                            name='sep-backend-git-secret',
+                                            key='git-angular-output-path',
+                                            )
+                                        )
+                                    ),
+                                client.V1EnvVar(
+                                    name='CUST_OUTPUT_FOLDER',
+                                    value_from=client.V1EnvVarSource(
+                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                            name='sep-backend-git-secret',
+                                            key='git-angular-output-folder',
+                                            )
+                                        )
+                                    ),
+                                ],
+                            )
+                        ],
+                    volumes=[
+                        client.V1Volume(
+                            name='websites',
+                            persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource( # noqa E501
+                                claim_name='sep-backend-code-websites',
+                                ),
+                            ),
+                        client.V1Volume(
+                            name='deployer-sh',
+                            config_map=client.V1ConfigMapVolumeSource(
+                                items=[
+                                    client.V1KeyToPath(
+                                        key='deployer-sh',
+                                        path='job-front-deployer.sh',
+                                        mode=493,  # == 0755 permission
+                                        )
+                                    ],
+                                name='sep-backend-deployer',
+                                ),
+                            ),
+                        ],
+                    ),
+                metadata=client.V1ObjectMeta(
+                    namespace=namespace,
+                    name=pod_name,
+                    labels={
+                        "name": app_name,
+                        },
+                    ),
+                )
+
+            job = client.V1Job(
+                api_version="batch/v1",
+                kind="Job",
+                metadata=client.V1ObjectMeta(
+                    namespace=namespace,
+                    name=f"{pod_name}-job",
+                    ),
+                spec=client.V1JobSpec(
+                    backoff_limit=4,
+                    parallelism=1,
+                    completions=1,
+                    template=pod_template,
+                    ),
+                )
+
+            api_response = client.BatchV1Api().create_namespaced_job(
+                body=job,
+                namespace=namespace,
+                )
             logger.debug(
                 f'[#{ctx.channel.name}][{ctx.author.name}] '
                 f'├──> K8s Query Ended'
@@ -54,13 +197,120 @@ def deploy(group_admin):
             await ctx.respond(embed=embed)
             return
         else:
-            # We got the logs, we can start working
-            embed = discord.Embed(
-                title=f'K8s deploy status [{env}]',
-                description=f'```{exec_stdout}```',
-                colour=discord.Colour.green()
-            )
-            await ctx.interaction.edit_original_response(embed=embed)
+            # Job started
+            description = '>> Job starting'
+            await ctx.interaction.edit_original_response(
+                embed=discord.Embed(
+                    title=f'K8s deploy status [{env}]',
+                    description=description,
+                    colour=discord.Colour.blue()
+                    )
+                )
+            logger.info(
+                f'[#{ctx.channel.name}][{ctx.author.name}] '
+                f'└──> K8s Query OK - Job created'
+                )
+
+            job_completed = False
+            while not job_completed:
+                description = description + '.'
+                await ctx.interaction.edit_original_response(
+                    embed=discord.Embed(
+                        title=f'K8s deploy status [{env}]',
+                        description=description,
+                        colour=discord.Colour.blue()
+                        )
+                    )
+
+                api_response = client.BatchV1Api().read_namespaced_job_status(
+                    name=f"{pod_name}-job",
+                    namespace=namespace,
+                    )
+
+                if api_response.status.succeeded is not None or \
+                        api_response.status.failed is not None:
+                    job_completed = True
+                    logger.trace('K8s Query OK - Job completed')
+
+                    description = description + '\n>> Job completed'
+                    await ctx.interaction.edit_original_response(
+                        embed=discord.Embed(
+                            title=f'K8s deploy status [{env}]',
+                            description=description,
+                            colour=discord.Colour.green()
+                            )
+                        )
+
+                    try:
+                        pod = client.CoreV1Api().list_namespaced_pod(
+                            namespace,
+                            label_selector=f"name={app_name}",
+                            )
+                        if len(pod.items) == 1:
+                            log = client.CoreV1Api().read_namespaced_pod_log(
+                                name=pod.items[0].metadata.name,
+                                since_seconds=1728000,
+                                namespace=namespace,
+                                )
+                            logger.trace(log)
+
+                            if log != '':
+                                # Filter out ANSI sequences (ex: colors)
+                                reaesc = re.compile(r'\x1b[^m]*m')
+                                log_purged = reaesc.sub('', log)
+                                log_formatted = ''
+
+                                for line in log_purged.splitlines():
+                                    if 'WARN' in line.upper():
+                                        newline = f'🟧 {line}\n'
+                                    elif 'ERROR' in line.upper():
+                                        newline = f'🟥 {line}\n'
+                                    elif 'INFO' in line.upper():
+                                        newline = f'🟩 {line}\n'
+                                    elif 'DEBUG' in line.upper():
+                                        newline = f'🟦 {line}\n'
+                                    elif 'TRACE' in line.upper():
+                                        newline = f'🟦 {line}\n'
+                                    else:
+                                        newline = f'⬜ {line}\n'
+
+                                    log_formatted = log_formatted + newline
+                        else:
+                            logger.warning('K8s Query OK - Logs NotFound')
+                    except Exception as e:
+                        logger.error(f'K8s Query KO [{e}]')
+                    else:
+                        logger.trace('K8s Query OK - Logs fetched')
+                        description = description + \
+                            '\n>> Job logs:' + \
+                            f'\n```{log_formatted}```'
+                        await ctx.interaction.edit_original_response(
+                            embed=discord.Embed(
+                                title=f'K8s deploy status [{env}]',
+                                description=description,
+                                colour=discord.Colour.green()
+                                )
+                            )
+
+                    # Now we delete the Job
+                    api_response = client.BatchV1Api().delete_namespaced_job(
+                        name=f"{pod_name}-job",
+                        namespace=namespace,
+                        body=client.V1DeleteOptions(
+                            propagation_policy='Foreground',
+                            grace_period_seconds=0,
+                            ),
+                        )
+                    description = description + '\n>> Job deleting'
+                    await ctx.interaction.edit_original_response(
+                        embed=discord.Embed(
+                            title=f'K8s deploy status [{env}]',
+                            description=description,
+                            colour=discord.Colour.green()
+                            )
+                        )
+                time.sleep(1)
+            logger.trace('K8s Pods Query OK')
 
         logger.info(
             f'[#{ctx.channel.name}][{ctx.author.name}] '
