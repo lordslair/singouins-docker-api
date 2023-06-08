@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 import discord
+import uuid
 
 from loguru import logger
 from discord.commands import option
@@ -78,8 +79,9 @@ def link(group_user, bot):
                     )
                 return
 
+            useruuid = str(uuid.uuid3(uuid.NAMESPACE_DNS, mail))
             Users = RedisSearch().user(
-                query=f'@d_name:{discordname}'
+                query=f"@id:{useruuid.replace('-', ' ')}"
                 )
             if len(Users.results) == 0:
                 msg = f'No User with mail:`{mail}` in DB'
@@ -94,11 +96,22 @@ def link(group_user, bot):
             else:
                 User = Users.results[0]
 
+            if User.d_name is not None:
+                msg = 'Discord & Singouin link already done'
+                logger.debug(msg)
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=msg,
+                        colour=discord.Colour.green(),
+                        )
+                    )
+                return
+
             try:
                 User.d_name = discordname
                 User.d_ack = True
             except Exception as e:
-                msg = f'User Link KO [{e}]'
+                msg = f'Discord & Singouin link KO [{e}]'
                 logger.trace(msg)
                 await ctx.respond(
                     embed=discord.Embed(
@@ -119,7 +132,7 @@ def link(group_user, bot):
                 )
             await ctx.respond(
                 embed=discord.Embed(
-                    description=msg,
+                    description="Discord & Singouin link :ok: ",
                     colour=discord.Colour.green(),
                     )
                 )
