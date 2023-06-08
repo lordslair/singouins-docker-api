@@ -132,8 +132,8 @@ def mypc_add():
 
             try:
                 HighScores = RedisHS(creatureuuid=Creature.id)
-                HighScores.incr('global_kills')
-                HighScores.incr('global_deaths')
+                HighScores.incr('global_kills', count=0)
+                HighScores.incr('global_deaths', count=0)
             except Exception as e:
                 msg = f'{h} RedisHS creation KO [{e}]'
                 logger.error(msg)
