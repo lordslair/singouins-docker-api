@@ -5,8 +5,7 @@ import discord
 from loguru import logger
 from discord.ext import commands
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisUser import RedisUser
+from nosql.models.RedisSearch import RedisSearch
 
 
 def grant(group_user, bot):
@@ -25,19 +24,24 @@ def grant(group_user, bot):
             )
 
         discordname = f'{ctx.author.name}#{ctx.author.discriminator}'
-        Users = RedisUser().search(query=f'@d_name:{discordname}')
+        Users = RedisSearch().user(
+                query=f'@d_name:{discordname}'
+                )
 
-        if len(Users) == 0:
+        if len(Users.results) == 0:
             # Discord name not found in DB
             msg = f'Unknown Discord Name:`{discordname}` in DB'
             logger.trace(msg)
-            embed = discord.Embed(
-                description=msg,
-                colour=discord.Colour.orange()
-            )
-            return embed
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange(),
+                    ),
+                ephemeral=True,
+                )
+            return
         else:
-            User = Users[0]
+            User = Users.results[0]
 
         # Fetch the Discord role
         try:
@@ -46,11 +50,17 @@ def grant(group_user, bot):
                 name='Singouins'
                 )
         except Exception as e:
-            embed = discord.Embed(
-                description=f'User Singouins get-role:Singouins failed\n[{e}]',
-                colour=discord.Colour.red()
-            )
-            return embed
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=(
+                        f'User Singouins get-role:Singouins failed\n'
+                        f'[{e}]'
+                        ),
+                    colour=discord.Colour.red(),
+                    ),
+                ephemeral=True,
+                )
+            return
 
         # Check role existence
         if singouinrole not in ctx.author.roles:
@@ -58,97 +68,116 @@ def grant(group_user, bot):
             try:
                 await ctx.author.add_roles(singouinrole)
             except Exception as e:
-                embed = discord.Embed(
-                    description=(
-                        f'User Singouins add-role:Singouins failed\n'
-                        f'[{e}]'
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=(
+                            f'User Singouins add-role:Singouins failed\n'
+                            f'[{e}]'
+                            ),
+                        colour=discord.Colour.red(),
                         ),
-                    colour=discord.Colour.red()
-                )
-                return embed
+                    ephemeral=True,
+                    )
+                return
 
         # Apply Squad roles if needed
         guild = ctx.guild
-        account = User['id'].replace('-', ' ')
-        Creatures = RedisCreature().search(query=f'@account:{account}')
+        Creatures = RedisSearch().creature(
+                query=f"@account:{User.id.replace('-', ' ')}"
+                )
 
-        if len(Creatures) == 0:
+        if len(Creatures.results) == 0:
             # Discord found - but no Singouins in DB
             # So we can stop here
-            msg = f'Unknown Discord Name:`{discordname}` in DB'
+            msg = f'No Singouins found in DB for `{discordname}`'
             logger.trace(msg)
-            embed = discord.Embed(
-                description="User Singouins grant successed",
-                colour=discord.Colour.green()
-            )
-            return embed
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange(),
+                    ),
+                ephemeral=True,
+                )
+            return
 
-        for Creature in Creatures:
+        for Creature in Creatures.results:
             # Korp management
-            if Creature['korp']:
+            if Creature.korp:
                 # Add the korp role to the user
                 try:
                     korprole = discord.utils.get(
                         guild.roles,
-                        name=f"Korp-{Creature['korp']}"
+                        name=f"Korp-{Creature.korp}"
                         )
                 except Exception as e:
-                    embed = discord.Embed(
-                        description=(
-                            f"User Singouins "
-                            f"get-role:Korp-{Creature['korp']} "
-                            f"failed\n[{e}]"
+                    await ctx.respond(
+                        embed=discord.Embed(
+                            description=(
+                                f"User Singouins "
+                                f"get-role:Korp-{Creature.korp} "
+                                f"failed\n[{e}]"
+                                ),
+                            colour=discord.Colour.red(),
                             ),
-                        colour=discord.Colour.red()
-                    )
-                    return embed
+                        ephemeral=True,
+                        )
+                    return
                 else:
                     if korprole not in ctx.author.roles:
                         try:
                             await ctx.author.add_roles(korprole)
                         except Exception as e:
-                            embed = discord.Embed(
-                                description=(
-                                    f"User Singouins "
-                                    f"add-role:Korp-{Creature['korp']} "
-                                    f"failed\n[{e}]"
+                            await ctx.respond(
+                                embed=discord.Embed(
+                                    description=(
+                                        f"User Singouins "
+                                        f"add-role:Korp-{Creature.korp} "
+                                        f"failed\n[{e}]"
+                                        ),
+                                    colour=discord.Colour.red(),
                                     ),
-                                colour=discord.Colour.red()
-                            )
-                            return embed
+                                ephemeral=True,
+                                )
+                            return
 
             # Squad management
-            if Creature['squad']:
+            if Creature.squad:
                 # Add the korp role to the user
                 try:
                     squadrole = discord.utils.get(
                         guild.roles,
-                        name=f"Squad-{Creature['squad']}"
+                        name=f"Squad-{Creature.squad}"
                         )
                 except Exception as e:
-                    embed = discord.Embed(
-                        description=(
-                            f"User Singouins "
-                            f"get-role:Squad-{Creature['squad']} "
-                            f"failed\n[{e}]"
+                    await ctx.respond(
+                        embed=discord.Embed(
+                            description=(
+                                f"User Singouins "
+                                f"get-role:Squad-{Creature.squad} "
+                                f"failed\n[{e}]"
+                                ),
+                            colour=discord.Colour.red(),
                             ),
-                        colour=discord.Colour.red()
-                    )
-                    return embed
+                        ephemeral=True,
+                        )
+                    return
                 else:
                     if squadrole not in ctx.author.roles:
                         try:
                             await ctx.author.add_roles(squadrole)
                         except Exception as e:
-                            embed = discord.Embed(
-                                description=(
-                                    f"User Singouins "
-                                    f"add-role:Squad-{Creature['squad']} "
-                                    f"failed\n[{e}]"
+                            await ctx.respond(
+                                embed=discord.Embed(
+                                    description=(
+                                        f"User Singouins "
+                                        f"add-role:Squad-{Creature.squad} "
+                                        f"failed\n[{e}]"
+                                        ),
+                                    colour=discord.Colour.red(),
                                     ),
-                                colour=discord.Colour.red()
-                            )
-                            return embed
+                                ephemeral=True,
+                                )
+                            return
 
             logger.info(
                 f'[#{ctx.channel.name}][{ctx.author.name}] '
@@ -156,7 +185,7 @@ def grant(group_user, bot):
                 )
             await ctx.respond(
                 embed=discord.Embed(
-                    description="User Singouins & Squad/Korp grant successed",
+                    description="User Singouins & Squad/Korp grant :ok:",
                     colour=discord.Colour.green()
                     )
                 )
