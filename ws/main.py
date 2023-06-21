@@ -39,10 +39,9 @@ else:
 
 async def broadcast():
     while True:
-        logger.trace(('[loop] Consumer getting pubsub new messages'))
         msg = pubsub.get_message()
         if msg:
-            logger.debug(f'[loop] Consumer got <{msg}>')
+            logger.debug(f'[pubsub] Consumer got <{msg}>')
 
             # Detect the action which triggered the event
             m = re.search(r"__keyevent@\w__:(?P<action>\w+)", msg['channel'])
@@ -90,16 +89,16 @@ async def handler(websocket, path):
     CLIENTS.add(websocket)
     realip = websocket.request_headers['X-Real-IP']
     ipuuid = str(uuid.uuid3(uuid.NAMESPACE_DNS, realip))
-    logger.info(f'[loop] Client connection OK (@IP:{realip})')
+    logger.info(f'[ws] Client connection OK (@IP:{realip})')
 
     # Storing in redis client connlog
     try:
         rkey   = f'wsclients:{str(uuid.uuid4())}'
         r.set(rkey, realip)
     except Exception as e:
-        logger.error(f'[loop] Client log KO (@IP:{realip}) [{e}]')
+        logger.error(f'[ws] Client log KO (@IP:{realip}) [{e}]')
     else:
-        logger.info(f'[loop] Client log OK (@IP:{realip})')
+        logger.info(f'[ws] Client log OK (@IP:{realip})')
 
     # Main loop
     try:
@@ -108,7 +107,7 @@ async def handler(websocket, path):
             # We do nothing if we receive a msg through WS
             pass
     except websockets.ConnectionClosedError:
-        logger.warning(f'[loop] Client lost (@IP:{realip})')
+        logger.warning(f'[ws] Client lost (@IP:{realip})')
     finally:
         # At the end, we remove the connection
         CLIENTS.remove(websocket)
@@ -116,9 +115,9 @@ async def handler(websocket, path):
         try:
             r.delete(f'wsclients:{ipuuid}')
         except Exception as e:
-            logger.error(f'[loop] Client remove KO (@IP:{realip}) [{e}]')
+            logger.error(f'[ws] Client remove KO (@IP:{realip}) [{e}]')
         else:
-            logger.info(f'[loop] Client remove OK (@IP:{realip})')
+            logger.info(f'[ws] Client remove OK (@IP:{realip})')
 
 try:
     loop = asyncio.new_event_loop()
