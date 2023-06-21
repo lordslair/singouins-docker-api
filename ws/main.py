@@ -82,6 +82,8 @@ async def broadcast():
                     return_exceptions=False,
                     )
 
+        await asyncio.sleep(REDIS_SLEEP)
+
 
 async def handler(websocket, path):
     # When client connects
