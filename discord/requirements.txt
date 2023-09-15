@@ -39,7 +39,7 @@ idna==3.4
     #   email-validator
     #   requests
     #   yarl
-kubernetes==26.1.0
+kubernetes==27.2.0
     # via -r requirements.in
 loguru==0.7.0
     # via -r requirements.in
@@ -48,7 +48,9 @@ multidict==6.0.4
     #   aiohttp
     #   yarl
 oauthlib==3.2.2
-    # via requests-oauthlib
+    # via
+    #   kubernetes
+    #   requests-oauthlib
 py-cord==2.4.1
     # via -r requirements.in
 pyasn1==0.4.8
@@ -88,6 +90,3 @@ yarl==1.8.2
     # via aiohttp
 yarqueue==0.4.1
     # via -r requirements.in
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
