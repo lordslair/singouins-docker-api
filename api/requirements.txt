@@ -32,7 +32,7 @@ flask-swagger-ui==4.11.1
     # via -r requirements.in
 flask-uuid==0.2
     # via -r requirements.in
-gunicorn==20.1.0
+gunicorn==21.2.0
     # via -r requirements.in
 idna==3.4
     # via requests
@@ -46,6 +46,8 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   werkzeug
+packaging==23.1
+    # via gunicorn
 prometheus-client==0.15.0
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.22.4
@@ -66,6 +68,3 @@ werkzeug==2.2.3
     #   flask-jwt-extended
 yarqueue==0.4.1
     # via -r requirements.in
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
