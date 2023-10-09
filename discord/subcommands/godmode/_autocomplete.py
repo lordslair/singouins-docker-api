@@ -6,10 +6,8 @@ from loguru import logger
 from operator import itemgetter
 
 from nosql.metas import (
-    metaArmors,
     metaNames,
     metaRaces,
-    metaWeapons,
     )
 from nosql.models.RedisSearch import RedisSearch
 
@@ -40,14 +38,12 @@ async def get_instances_list(ctx: discord.AutocompleteContext):
 async def get_metanames_list(ctx: discord.AutocompleteContext):
     try:
         db_list = []
-        if ctx.options["metatype"] == 'weapon':
-            metas = metaWeapons
-        elif ctx.options["metatype"] == 'armor':
-            metas = metaArmors
-
-        for meta in sorted(metas, key=itemgetter('name')):
+        for metaid in metaNames[ctx.options["metatype"]]:
             db_list.append(
-                discord.OptionChoice(meta['name'], value=f"{meta['id']}")
+                discord.OptionChoice(
+                    metaNames[ctx.options["metatype"]][metaid]['name'],
+                    value=str(metaid),
+                    )
                 )
     except Exception as e:
         logger.error(f'Redis Query KO [{e}]')
@@ -157,29 +153,11 @@ async def get_singouin_inventory_item_list(ctx: discord.AutocompleteContext):
     else:
         db_list = []
         for Item in Items.results:
-            if Item.metatype == 'weapon':
-                meta = dict(
-                    list(
-                        filter(
-                            lambda x: x["id"] == Item.metaid,
-                            metaWeapons
-                            )
-                        )[0]
-                    )  # Gruikfix
-            elif Item.metatype == 'armor':
-                meta = dict(
-                    list(
-                        filter(
-                            lambda x: x["id"] == Item.metaid,
-                            metaArmors
-                            )
-                        )[0]
-                    )  # Gruikfix
+            name = metaNames[Item.metatype][Item.metaid]['name']
             db_list.append(
                 discord.OptionChoice(
-                    (f"{rarity_item_types_emoji[Item.rarity]} "
-                     f"{meta['name']}"),
-                    value=f"{Item.id}"
+                    f"{rarity_item_types_emoji[Item.rarity]} {name}",
+                    value=str(Item.id)
                     )
                 )
     return db_list

@@ -4,10 +4,8 @@ import discord
 
 from loguru import logger
 
-from nosql.metas import (
-    metaArmors,
-    metaWeapons,
-    )
+from nosql.metas import metaNames
+from nosql.models.RedisAuction import RedisAuction
 from nosql.models.RedisSearch import RedisSearch
 from variables import rarity_item_types_emoji
 
@@ -45,37 +43,17 @@ async def get_singouin_auctionable_item_list(ctx: discord.AutocompleteContext):
     else:
         db_list = []
         for Item in Items.results:
-            if Item.bound_type != 'BoE':
-                next
-
-            if Item.metatype == 'weapon':
-                meta = dict(
-                    list(
-                        filter(
-                            lambda x: x["id"] == Item.metaid,
-                            metaWeapons
+            if Item.bound_type == 'BoE':
+                if hasattr(RedisAuction(auctionuuid=Item.id), 'id') is False:
+                    name = metaNames[Item.metatype][Item.metaid]['name']
+                    db_list.append(
+                        discord.OptionChoice(
+                            f"{rarity_item_types_emoji[Item.rarity]} {name}",
+                            value=f"{Item.id}"
                             )
-                        )[0]
-                    )  # Gruikfix
-            elif Item.metatype == 'armor':
-                meta = dict(
-                    list(
-                        filter(
-                            lambda x: x["id"] == Item.metaid,
-                            metaArmors
-                            )
-                        )[0]
-                    )  # Gruikfix
+                        )
             else:
-                pass
-
-            db_list.append(
-                discord.OptionChoice(
-                    (f"{rarity_item_types_emoji[Item.rarity]} "
-                     f"{meta['name']}"),
-                    value=f"{Item.id}"
-                    )
-                )
+                next
     return db_list
 
 
