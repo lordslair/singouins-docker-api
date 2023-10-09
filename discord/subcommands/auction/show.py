@@ -7,6 +7,7 @@ from loguru import logger
 
 from nosql.models.RedisSearch import RedisSearch
 
+from subcommands.auction._tools import human_time
 from subcommands.singouin._autocomplete import get_singouins_list
 
 from variables import rarity_item_types_discord
@@ -65,14 +66,14 @@ def show(group_auction, bot):
         description = (
                 f"💱 `{itemname:{metaname_width}}` | "
                 f"`{price:8}` | "
-                f"`{end:4}`"
+                f"`{end:7}`"
                 f"\n"
                 )
         itemname = '-' * (metaname_width + 3)
         description += (
                 f"`{itemname:{metaname_width}}` | "
                 f"`--------` | "
-                f"`----`"
+                f"`-------`"
                 f"\n"
                 )
         # We loop on items retrieved in Auctions
@@ -82,7 +83,7 @@ def show(group_auction, bot):
                 f"`{Auction.metaname:{metaname_width}}` | "
                 f"`{Auction.price:5}` "
                 f"{discord.utils.get(bot.emojis, name='moneyB')} | "
-                f"`~{Auction.duration_left // 3600:2}h`"
+                f"`{human_time(Auction.duration_left):7}`"
                 "\n"
                 )
 

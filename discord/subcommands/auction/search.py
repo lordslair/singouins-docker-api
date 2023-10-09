@@ -8,6 +8,7 @@ from loguru import logger
 from nosql.metas import metaNames
 from nosql.models.RedisSearch import RedisSearch
 
+from subcommands.auction._tools import human_time
 from subcommands.godmode._autocomplete import get_metanames_list
 
 from variables import rarity_item_types_discord
@@ -114,7 +115,7 @@ def search(group_auction, bot):
         description = (
                 f"💱 `{itemname:{metaname_width}}` | "
                 f"`{price:8}` | "
-                f"`{end:4}` | "
+                f"`{end:7}` | "
                 f"`{seller:{sellername_width}}`"
                 f"\n"
                 )
@@ -122,7 +123,7 @@ def search(group_auction, bot):
         description += (
                 f"`{itemname:{metaname_width}}` | "
                 f"`--------` | "
-                f"`----` | "
+                f"`-------` | "
                 f"`{seller:{sellername_width}}`"
                 f"\n"
                 )
@@ -133,7 +134,7 @@ def search(group_auction, bot):
                 f"`{Auction.metaname:{metaname_width}}` | "
                 f"`{Auction.price:5}` "
                 f"{discord.utils.get(bot.emojis, name='moneyB')} | "
-                f"`~{Auction.duration_left // 3600:2}h` | "
+                f"`{human_time(Auction.duration_left):7}` | "
                 f"`{Auction.sellername:{sellername_width}}`"
                 "\n"
                 )
