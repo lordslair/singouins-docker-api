@@ -20,7 +20,7 @@ from subcommands.godmode._autocomplete import (
     )
 
 from variables import (
-    PCS_URL,
+    URL_ASSETS,
     rarity_monster_types_discord,
     )
 
@@ -132,12 +132,9 @@ def pop(group_godmode):
 
             embed.set_footer(text=f"CreatureUUID: {Creature.id}")
 
-            embed.set_thumbnail(
-                url=(
-                    f"{PCS_URL}/resources/sprites/creatures"
-                    f"/{Creature.race}.png"
-                    )
-                )
+            URI_PNG = f'sprites/creatures/{Creature.race}.png'
+            logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
+            embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
 
             await ctx.respond(embed=embed)
             logger.info(f'[#{channel}][{name}] └──> Godmode-Pop Query OK')

@@ -18,7 +18,7 @@ from subcommands.godmode._autocomplete import (
     )
 
 from variables import (
-    PCS_URL,
+    URL_ASSETS,
     rarity_item_types_discord,
     )
 
@@ -143,12 +143,9 @@ def give(group_godmode):
 
             embed.set_footer(text=f"ItemUUID: {Item.id}")
 
-            embed.set_thumbnail(
-                url=(
-                    f"{PCS_URL}/resources/sprites"
-                    f"/{Item.metatype}s/{Item.metaid}.png"
-                    )
-                )
+            URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
+            logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
+            embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
 
             await ctx.respond(embed=embed)
             logger.info(f'[#{channel}][{name}] └──> Godmode-Give Query OK')

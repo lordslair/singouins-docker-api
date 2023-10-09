@@ -22,7 +22,7 @@ from utils.variables import (
 # Log Internal imports
 logger.info('Imports OK')
 
-PCS_URL       = os.environ.get("SEP_PCS_URL")
+URL_ASSETS    = os.environ.get("SEP_URL_ASSETS")
 DISCORD_TOKEN = os.environ.get("SEP_DISCORD_TOKEN")
 YQ_DISCORD    = os.environ.get("SEP_YQ_DISCORD", 'yarqueue:discord')
 
@@ -181,10 +181,11 @@ async def yqueue_check(timer):
                         inline=True,
                         )
 
-                    embed.set_thumbnail(
-                        url=(f"{PCS_URL}/resources/sprites/"
-                             f"{item['metatype']}s/{item['metaid']}.png")
+                    URI_PNG = (
+                        f"sprites/{item['metatype']}s/{item['metaid']}.png"
                         )
+                    logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
+                    embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
 
                     embed.set_footer(text=f"ItemUUID: {item['id']}")
 

@@ -2,7 +2,7 @@
 
 import os
 
-PCS_URL = os.environ.get("SEP_PCS_URL")
+URL_ASSETS = os.environ.get("SEP_URL_ASSETS")
 
 rarity_item_types_emoji = {
     'Broken': '🟤 ',
