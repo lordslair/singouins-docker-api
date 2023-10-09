@@ -48,3 +48,18 @@ rarity_monster_types_discord = {
     'Boss': ':purple_square:',
     'God': ':orange_square:',
 }
+
+slots_armor = {
+    'head': ':military_helmet:',
+    'shoulders': ':mechanical_arm:',
+    'torso': ':shirt:',
+    'hands': ':hand_splayed:',
+    'legs': ':mechanical_leg:',
+    'feet': ':athletic_shoe:',
+    }
+slots_weapon = {
+    'holster': ':school_satchel:',
+    'lefthand': ':left_fist:',
+    'righthand': ':right_fist:',
+}
+slots_types = slots_armor | slots_weapon

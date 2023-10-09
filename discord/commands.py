@@ -142,6 +142,7 @@ else:
     logger.debug(f'[{group_name}] Command Group OK')
     singouin.equipment(group_singouin)
     singouin.highscores(group_singouin, bot)
+    singouin.inventory(group_singouin)
     singouin.korp(group_singouin, bot)
     singouin.pa(group_singouin)
     singouin.show(group_singouin, bot)
