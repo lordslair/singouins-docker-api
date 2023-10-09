@@ -142,6 +142,26 @@ async def get_singouins_in_instance_list(ctx: discord.AutocompleteContext):
     return db_list
 
 
+async def get_singouins_list(ctx: discord.AutocompleteContext):
+    try:
+        Creatures = RedisSearch().creature(query="@race:[1 4]")
+    except Exception as e:
+        logger.error(f'Redis Query KO [{e}]')
+        return None
+
+    db_list = []
+    for Creature in Creatures.results:
+        db_list.append(
+            discord.OptionChoice(
+                f"{rarity_monster_types_emoji[Creature.rarity]} "
+                f"{Creature.name} "
+                f"(ID: {Creature.id})",
+                value=Creature.id,
+                )
+            )
+    return db_list
+
+
 async def get_singouin_inventory_item_list(ctx: discord.AutocompleteContext):
     try:
         bearer = ctx.options['singouinuuid'].replace('-', ' ')

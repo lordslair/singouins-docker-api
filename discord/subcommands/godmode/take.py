@@ -11,8 +11,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem import RedisItem
 
 from subcommands.godmode._autocomplete import (
-    get_instances_list,
-    get_singouins_in_instance_list,
+    get_singouins_list,
     get_singouin_inventory_item_list,
     )
 
@@ -31,14 +30,9 @@ def take(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "instanceuuid",
-        description="Instance UUID",
-        autocomplete=get_instances_list
-        )
-    @option(
         "singouinuuid",
         description="Singouin UUID",
-        autocomplete=get_singouins_in_instance_list
+        autocomplete=get_singouins_list
         )
     @option(
         "itemuuid",
@@ -47,7 +41,6 @@ def take(group_godmode):
         )
     async def take(
         ctx,
-        instanceuuid: str,
         singouinuuid: str,
         itemuuid: str,
     ):
@@ -57,7 +50,7 @@ def take(group_godmode):
         logger.info(
             f'[#{channel}][{name}] '
             f'/{group_godmode} take '
-            f'{instanceuuid} {singouinuuid} {itemuuid}'
+            f'{singouinuuid} {itemuuid}'
             )
 
         try:

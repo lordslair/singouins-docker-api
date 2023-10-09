@@ -11,10 +11,9 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem import RedisItem
 
 from subcommands.godmode._autocomplete import (
-    get_instances_list,
     get_metanames_list,
     get_rarity_item_list,
-    get_singouins_in_instance_list,
+    get_singouins_list,
     )
 
 from variables import (
@@ -32,14 +31,9 @@ def give(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "instanceuuid",
-        description="Instance UUID",
-        autocomplete=get_instances_list
-        )
-    @option(
         "singouinuuid",
         description="Singouin UUID",
-        autocomplete=get_singouins_in_instance_list
+        autocomplete=get_singouins_list
         )
     @option(
         "rarity",
@@ -63,7 +57,6 @@ def give(group_godmode):
         )
     async def give(
         ctx,
-        instanceuuid: str,
         singouinuuid: str,
         rarity: str,
         metatype: str,
@@ -75,7 +68,7 @@ def give(group_godmode):
         logger.info(
             f'[#{channel}][{name}] '
             f'/{group_godmode} give '
-            f'{instanceuuid} {singouinuuid} {rarity} {metatype} {metaid}'
+            f'{singouinuuid} {rarity} {metatype} {metaid}'
             )
 
         Creature = RedisCreature(creatureuuid=singouinuuid)
