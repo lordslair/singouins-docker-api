@@ -86,7 +86,8 @@ def search(group_auction, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
 
@@ -97,7 +98,8 @@ def search(group_auction, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.orange(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
 
@@ -105,6 +107,8 @@ def search(group_auction, bot):
         metaname_width = max(
             len(Auction.metaname) for Auction in Auctions.results
             )
+        # We need to put a floor to respech the Tableau header
+        metaname_width = max(9, metaname_width)
         # Dirty Gruik to find the max(len(sellername))
         sellername_width = max(
             len(Auction.sellername) for Auction in Auctions.results
@@ -139,12 +143,13 @@ def search(group_auction, bot):
                 "\n"
                 )
 
-        embed = discord.Embed(
-            title=f'Searched for {metatype.upper()}:{search}',
-            description=description,
-            colour=discord.Colour.green()
-        )
-
-        await ctx.respond(embed=embed)
         logger.info(f'[#{channel}][{name}] └──> Auction Search Query OK')
+        await ctx.respond(
+                embed=discord.Embed(
+                    title=f'Searched for {metatype.upper()}:{search}',
+                    description=description,
+                    colour=discord.Colour.green(),
+                    ),
+                ephemeral=True,
+                )
         return

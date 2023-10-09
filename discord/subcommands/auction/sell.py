@@ -65,7 +65,8 @@ def sell(group_auction):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -75,7 +76,8 @@ def sell(group_auction):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -85,7 +87,8 @@ def sell(group_auction):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -95,7 +98,8 @@ def sell(group_auction):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -109,7 +113,8 @@ def sell(group_auction):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
         else:
@@ -122,6 +127,6 @@ def sell(group_auction):
                 colour=discord.Colour.green()
             )
 
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
         logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
         return

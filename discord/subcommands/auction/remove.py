@@ -70,7 +70,8 @@ def remove(group_auction):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -80,7 +81,8 @@ def remove(group_auction):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -94,19 +96,20 @@ def remove(group_auction):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
-        else:
-            embed = discord.Embed(
-                title="Removed from the Auction House:",
-                description=(
-                    f"{rarity_item_types_discord[Item.rarity]} "
-                    f"**{metaNames[Item.metatype][Item.metaid]['name']}**"
-                    ),
-                colour=discord.Colour.green()
-            )
 
-        await ctx.respond(embed=embed)
+        embed = discord.Embed(
+            title="Removed from the Auction House:",
+            description=(
+                f"{rarity_item_types_discord[Item.rarity]} "
+                f"**{metaNames[Item.metatype][Item.metaid]['name']}**"
+                ),
+            colour=discord.Colour.green(),
+            )
+        embed.set_footer(text=f"ItemUUID: {Item.id}")
+        await ctx.respond(embed=embed, ephemeral=True)
         logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
         return

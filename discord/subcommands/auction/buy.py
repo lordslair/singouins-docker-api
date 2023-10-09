@@ -68,6 +68,7 @@ def buy(group_auction):
             await ctx.respond(
                 embed=embed,
                 view=buyView(ctx, buyeruuid, itemuuid),
+                ephemeral=True,
                 )
         except Exception as e:
             description = f'Auction-Buy View KO [{e}]'
@@ -76,7 +77,8 @@ def buy(group_auction):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
         else:

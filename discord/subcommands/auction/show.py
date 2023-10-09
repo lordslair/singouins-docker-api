@@ -51,7 +51,8 @@ def show(group_auction, bot):
                 embed=discord.Embed(
                     description=msg,
                     colour=discord.Colour.orange()
-                    )
+                    ),
+                ephemeral=True,
                 )
             logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
@@ -92,7 +93,8 @@ def show(group_auction, bot):
                 title=f'Your auctions ({len(Auctions.results)}):',
                 description=description,
                 colour=discord.Colour.green()
-                )
+                ),
+            ephemeral=True,
             )
         logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
         return
