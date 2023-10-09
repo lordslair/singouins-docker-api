@@ -120,11 +120,12 @@ def equipment(group_singouin):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
         else:
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             logger.info(
                 f'[#{channel}][{name}] '
                 f'└──> Singouin-Equipment Query OK'

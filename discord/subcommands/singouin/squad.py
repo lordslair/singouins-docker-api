@@ -47,7 +47,8 @@ def squad(group_singouin, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
 
@@ -59,7 +60,8 @@ def squad(group_singouin, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
 
@@ -115,6 +117,7 @@ def squad(group_singouin, bot):
                 title="Squad",
                 description=mydesc,
                 colour=discord.Colour.blue()
-                )
+                ),
+            ephemeral=True,
             )
         logger.info(f'[#{channel}][{name}] └──> Singouin-Squad Query OK')

@@ -47,19 +47,21 @@ def korp(group_singouin, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
 
         Korp = RedisKorp(korpuuid=Creature.korp)
         if Korp.id is None:
             description = 'Singouin-Korp Query KO (Korp Not Found)'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.warning(f'[#{channel}][{name}] └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
-                    colour=discord.Colour.red(),
-                    )
+                    colour=discord.Colour.orange(),
+                    ),
+                ephemeral=True,
                 )
             return
 
@@ -115,6 +117,7 @@ def korp(group_singouin, bot):
                 title=f"Korp <{Korp.name}>",
                 description=mydesc,
                 colour=discord.Colour.blue()
-                )
+                ),
+            ephemeral=True,
             )
         logger.info(f'[#{channel}][{name}] └──> Singouin-Korp Query OK')

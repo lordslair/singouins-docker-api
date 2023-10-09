@@ -84,10 +84,11 @@ def stats(group_singouin, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
         else:
             logger.info(f'[#{channel}][{name}] └──> Singouin-Squad Query OK')
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             return

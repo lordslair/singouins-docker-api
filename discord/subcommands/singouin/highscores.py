@@ -108,5 +108,5 @@ def highscores(group_singouin, bot):
                 inline=True,
                 )
 
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
         logger.info(f'[#{channel}][{name}] └──> Singouin-HighScore Query OK')

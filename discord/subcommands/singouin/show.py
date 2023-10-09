@@ -47,7 +47,8 @@ def show(group_singouin, bot):
                     embed=discord.Embed(
                         description=description,
                         colour=discord.Colour.red(),
-                        )
+                        ),
+                    ephemeral=True,
                     )
                 return
         except Exception as e:
@@ -57,7 +58,8 @@ def show(group_singouin, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
 
@@ -88,9 +90,10 @@ def show(group_singouin, bot):
                 embed=discord.Embed(
                     description=description,
                     colour=discord.Colour.red(),
-                    )
+                    ),
+                ephemeral=True,
                 )
             return
         else:
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
             logger.info(f'[#{channel}][{name}] └──> Singouin-Korp Query OK')
