@@ -54,13 +54,15 @@ def show(group_auction, bot):
                     ),
                 ephemeral=True,
                 )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
+            logger.debug(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
             return
 
         # Dirty Gruik to find the max(len(metaname))
         metaname_width = max(
             len(Auction.metaname) for Auction in Auctions.results
             )
+        # We need to put a floor to respect the Tableau header
+        metaname_width = max(9, metaname_width)
 
         # We add a header for the results "Tableau"
         itemname, price, end = 'Item name', 'Price', 'End'

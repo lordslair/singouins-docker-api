@@ -32,7 +32,6 @@ class buyView(View):
             Item = RedisItem(itemuuid=self.itemuuid)
 
             WalletBuyer = RedisWallet(creatureuuid=self.buyeruuid)
-            WalletSeller = RedisWallet(creatureuuid=Auction.sellerid)
         except Exception as e:
             msg = f'Auction Query KO [{e}]'
             logger.error(msg)
@@ -90,6 +89,7 @@ class buyView(View):
             RedisAuction(auctionuuid=self.itemuuid).destroy()
             # We do the financial transaction
             WalletBuyer.bananas -= Auction.price
+            WalletSeller = RedisWallet(creatureuuid=Auction.sellerid)
             WalletSeller.bananas += round(Auction.price * 0.9)
             # We change the Item owner
             Item.bearer = CreatureBuyer.id
@@ -104,16 +104,18 @@ class buyView(View):
                 view=None,
                 )
         else:
+            embed = discord.Embed(
+                title='You successfully acquired:',
+                description=(
+                    f"{rarity_item_types_discord[Auction.rarity]} "
+                    f"**{Auction.metaname}** "
+                    f"(Price:{Auction.price})"
+                    ),
+                colour=discord.Colour.green(),
+                )
+            embed.set_footer(text=f"ItemUUID: {Auction.id}")
             await interaction.response.edit_message(
-                embed=discord.Embed(
-                    title='You successfully acquired:',
-                    description=(
-                        f"{rarity_item_types_discord[Auction.rarity]} "
-                        f"**{Auction.metaname}** "
-                        f"(Price:{Auction.price})"
-                        ),
-                    colour=discord.Colour.green()
-                ),
+                embed=embed,
                 view=None,
                 )
 

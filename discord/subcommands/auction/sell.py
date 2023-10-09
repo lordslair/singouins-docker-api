@@ -117,16 +117,16 @@ def sell(group_auction):
                 ephemeral=True,
                 )
             return
-        else:
-            embed = discord.Embed(
-                title='Added to the Auction House:',
-                description=(
-                    f"{rarity_item_types_discord[Item.rarity]} "
-                    f"**{Auction.metaname}** (Price:{price})"
-                    ),
-                colour=discord.Colour.green()
-            )
 
+        embed = discord.Embed(
+            title="Added from the Auction House:",
+            description=(
+                f"{rarity_item_types_discord[Item.rarity]} "
+                f"**{Auction.metaname}** (Price:{price})"
+                ),
+            colour=discord.Colour.green(),
+            )
+        embed.set_footer(text=f"ItemUUID: {Item.id}")
         await ctx.respond(embed=embed, ephemeral=True)
         logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
         return
