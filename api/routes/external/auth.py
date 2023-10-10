@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import datetime
 import string
 
 from flask                  import jsonify, request
@@ -21,6 +22,7 @@ from variables import (
     API_URL,
     DATA_PATH,
     DISCORD_URL,
+    TOKEN_DURATION,
     )
 
 
@@ -72,7 +74,10 @@ def auth_login():
     logger.trace(msg)
     return jsonify(
         {
-            'access_token': create_access_token(identity=username),
+            'access_token': create_access_token(
+                identity=username,
+                expires_delta=datetime.timedelta(minutes=TOKEN_DURATION)
+            ),
             'refresh_token': create_refresh_token(identity=username)
         }
     ), 200

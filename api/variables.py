@@ -4,6 +4,7 @@ import os
 
 # JWT variables
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
+TOKEN_DURATION = int(os.environ.get("SEP_TOKEN_DURATION", 60))
 
 # MySQL variables
 MYSQL_USER     = os.environ.get("SEP_MYSQL_USER")
