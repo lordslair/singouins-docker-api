@@ -14,6 +14,7 @@ from nosql.models.RedisSearch import RedisSearch  # noqa: E402
 CREATURE_NAME = "PyTest Creature"
 CREATURE_ID   = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
 ACCOUNT_ID    = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'foobar'))
+INSTANCE_ID   = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'PyTest Instance'))
 EFFECT_NAME    = "PyTest Effect"
 
 
@@ -24,6 +25,7 @@ def test_redis_effect_new():
     Effect = RedisEffect(creatureuuid=CREATURE_ID).new(
         duration_base=180,
         extra=None,
+        instance=INSTANCE_ID,
         name=EFFECT_NAME,
         source=CREATURE_ID,
     )
@@ -31,6 +33,7 @@ def test_redis_effect_new():
     assert Effect.name == EFFECT_NAME
     assert Effect.bearer == CREATURE_ID
     assert Effect.source == CREATURE_ID
+    assert Effect.instance == INSTANCE_ID
     assert Effect.duration_base > 0
 
 
@@ -45,12 +48,14 @@ def test_redis_effect_search_ok():
     assert Effect['name'] == EFFECT_NAME
     assert Effect['bearer'] == CREATURE_ID
     assert Effect['source'] == CREATURE_ID
+    assert Effect['instance'] == INSTANCE_ID
     assert Effect['duration_base'] > 0
 
     Effect = Effects.results[0]
     assert Effect.name == EFFECT_NAME
     assert Effect.bearer == CREATURE_ID
     assert Effect.source == CREATURE_ID
+    assert Effect.instance == INSTANCE_ID
     assert Effect.duration_base > 0
 
 
