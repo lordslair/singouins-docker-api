@@ -124,9 +124,9 @@ class RedisCd:
             # We push data in final dict
             logger.trace(f'{self.logh} Method >> (HASH Creating)')
             # We convert dict > JSON
-            if isinstance(extra, dict):
+            if extra and isinstance(extra, dict):
                 self.extra = json.dumps(extra)
-            if extra is None:
+            else:
                 self.extra = None
 
             self.bearer        = self.creatureuuid
