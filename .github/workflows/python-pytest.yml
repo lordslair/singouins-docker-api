@@ -38,7 +38,9 @@ jobs:
         echo "--- Installing PyTest prerequisites"
         pip install cryptography flake8 pytest requests 
         echo "--- Installing requirements"
-        if [ -f nosql/requirements.txt ]; then pip install -r nosql/requirements.txt; fi
+        if [ -f nosql/requirements.txt ]; \
+          then pip install -r nosql/requirements.txt; \
+        fi
 
     - name: Lint with flake8 📝
       run: |
@@ -88,7 +90,9 @@ jobs:
         echo "--- Installing PyTest prerequisites"
         pip install pytest flake8
         echo "--- Installing requirements"
-        if [ -f ${{ matrix.python-app }}/requirements.txt ]; then pip install -r ${{ matrix.python-app }}/requirements.txt; fi
+        if [ -f ${{ matrix.python-app }}/requirements.txt ]; \
+          then pip install -r ${{ matrix.python-app }}/requirements.txt; \
+        fi
 
     - name: Lint with flake8 📝
       run: |
@@ -117,8 +121,14 @@ jobs:
         echo "--- Moving nosql lib where it belongs"
         cp -a nosql ${{ matrix.python-app }}/
         echo "--- Starting app in background"
-        if [ -f ${{ matrix.python-app }}/main.py ]; then python3 ${{ matrix.python-app }}/main.py; fi
-        if [ -f ${{ matrix.python-app }}/app.py ]; then python3 ${{ matrix.python-app }}/app.py; fi
+        # Used for ws, ai
+        if [ -f ${{ matrix.python-app }}/main.py ]; \
+          then python3 ${{ matrix.python-app }}/main.py &; \
+        fi
+        # Used for api
+        if [ -f ${{ matrix.python-app }}/app.py ]; \
+          then python3 ${{ matrix.python-app }}/app.py &; \
+        fi
         echo "--- Sleep(3)"
         sleep 3
         echo "--- Starting PyTest"
