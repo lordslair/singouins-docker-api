@@ -1,0 +1,114 @@
+# This workflow will install Python dependencies, run tests with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Lint & PyTest (ALL)
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  nosql-pytest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ "3.11" ]
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }} 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install requirements ⏬
+      run: |
+        echo "--- Installing PIP"
+        python -m pip install --upgrade pip
+        echo "--- Installing PyTest prerequisites"
+        pip install cryptography flake8 pytest requests 
+        echo "--- Installing requirements"
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Lint with flake8 📝
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        echo "--- Linting with flake8"
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Start Redis 🛢️
+      uses: caiomarruda/redisearch-action@v1.0.1
+      with:
+        redis version: ${{ vars.REDIS_VERSION }}
+
+    - name: Test with PyTest ⚙️
+      env:
+          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
+      run: |
+        echo "--- Starting PyTest"
+        pytest nosql/tests/test_*.py
+
+
+  app-pytest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ "3.11" ]
+        python-app: [ "ai", "ws" ]
+
+    needs:
+    - nosql-pytest
+
+    if: ${{ needs.nosql-pytest.result == 'success' }}
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }} [${{ matrix.python-app }}] 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install requirements ⏬
+      run: |
+        echo "--- Installing PIP"
+        python -m pip install --upgrade pip
+        echo "--- Installing PyTest prerequisites"
+        pip install pytest flake8
+        echo "--- Installing requirements"
+        if [ -f ${{ matrix.python-app }}/requirements.txt ]; then pip install -r ${{ matrix.python-app }}/requirements.txt; fi
+
+    - name: Lint with flake8 📝
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Start Redis 🛢️
+      uses: caiomarruda/redisearch-action@v1.0.1
+      with:
+        redis version: ${{ vars.REDIS_VERSION }}
+
+    - name: Test with PyTest ⚙️
+      env:
+          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
+      run: |
+        echo "--- Moving nosql lib where it belongs"
+        cp -a nosql ${{ matrix.python-app }}/
+        echo "--- Starting app in background"
+        python3 ${{ matrix.python-app }}/main.py &
+        echo "--- Sleep(3)"
+        sleep 3
+        echo "--- Starting PyTest"
+        pytest ${{ matrix.python-app }}/tests/
