@@ -127,7 +127,7 @@ class RedisCd:
             self.duration_base = duration_base
             self.duration_left = duration_base
             self.id            = str(uuid.uuid4())
-            self.instance      = instance,
+            self.instance      = instance
             self.name          = name
             self.source        = source
 
