@@ -1,13 +1,9 @@
 # This workflow will install Python dependencies, run tests with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Release Pipeline (ALL)
+name: Pipeline Tests (ALL)
 
 on:
-  push:
-    branches: [ master ]
-    tags:
-      - 'v*'
   pull_request:
     branches: [ master ]
 
@@ -133,51 +129,3 @@ jobs:
         sleep 3
         echo "--- Starting PyTest"
         pytest ${{ matrix.python-app }}/tests/
-
-  build-push:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-app: [ "ai", "ws" ]
-
-    needs:
-    - app-pytest
-
-    # We need to have a successful app-pytest before
-    # AND
-    # We build & push only if github.ref is not master (~= new tag)
-    if: ${{ needs.app-pytest.result == 'success' }} && ${{ github.ref != 'refs/heads/master' }}
-
-    steps:
-    - run: echo ${{github.ref}}
-
-    - name: Checkout 🛎️
-      uses: actions/checkout@v4
-
-    - name: Log in to Docker Hub 🔐
-      uses: docker/login-action@v3
-      with:
-        username: ${{ vars.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Extracting Metadata 🔧
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ vars.DOCKER_USERNAME }}/${{ matrix.python-app }}
-        tags: |
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha,prefix=,suffix=,format=short
-          type=edge
-          type=raw,value=latest
-
-    - name: Build & Push to Docker Hub 🚀
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./${{ matrix.python-app }}/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
