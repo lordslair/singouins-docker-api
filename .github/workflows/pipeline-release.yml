@@ -5,7 +5,6 @@ name: Pipeline Release (ALL)
 
 on:
   push:
-    branches: [ master ]
     tags:
       - 'v*'
 
@@ -137,7 +136,7 @@ jobs:
 
     strategy:
       matrix:
-        python-app: [ "ai", "ws" ]
+        python-app: [ "ai", "ws", "api" ]
 
     needs:
     - app-pytest
