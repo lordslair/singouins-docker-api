@@ -139,7 +139,7 @@ jobs:
 
     strategy:
       matrix:
-        python-app: [ "ai", "ws", "api" ]
+        python-app: [ "ai", "ws", "api", "discord" ]
 
     needs:
     - app-pytest
