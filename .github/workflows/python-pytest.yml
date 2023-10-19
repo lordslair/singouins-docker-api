@@ -103,11 +103,22 @@ jobs:
     - name: Test with PyTest ⚙️
       env:
           LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
+          GUNICORN_CHDIR: ${{ secrets.GUNICORN_CHDIR }}
+
+          SEP_INTERNAL_TOKEN: ${{ secrets.SEP_INTERNAL_TOKEN }}
+          SEP_SECRET_KEY: ${{ secrets.SEP_SECRET_KEY }}
+
+          SEP_SMTP_FROM: ${{ secrets.SEP_SMTP_FROM }}
+          SEP_SMTP_SERVER: ${{ secrets.SEP_SMTP_SERVER }}
+          SEP_SMTP_USER: ${{ secrets.SEP_SMTP_USER }}
+          SEP_SMTP_PASS: ${{ secrets.SEP_SMTP_PASS }}
+          SEP_SMTP_HOSTNAME: ${{ secrets.SEP_SMTP_HOSTNAME }}
       run: |
         echo "--- Moving nosql lib where it belongs"
         cp -a nosql ${{ matrix.python-app }}/
         echo "--- Starting app in background"
-        python3 ${{ matrix.python-app }}/main.py &
+        if [ -f ${{ matrix.python-app }}/main.py ]; then python3 ${{ matrix.python-app }}/main.py; fi
+        if [ -f ${{ matrix.python-app }}/app.py ]; then python3 ${{ matrix.python-app }}/app.py; fi
         echo "--- Sleep(3)"
         sleep 3
         echo "--- Starting PyTest"
