@@ -52,7 +52,7 @@ jobs:
     - name: Start Redis 🛢️
       uses: caiomarruda/redisearch-action@v1.0.1
       with:
-        redis version: 2.6.0
+        redis version: ${{ vars.REDIS_VERSION }}
 
     - name: Test with PyTest ⚙️
       env:
@@ -94,7 +94,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./discord/Dockerfile
+        file: ./${{ env.DOCKER_IMAGE }}/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
