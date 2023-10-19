@@ -139,6 +139,7 @@ def initialize_redis_indexes():
                 NumericField("duration_base"),
                 TextField("extra"),
                 TextField("id"),
+                TextField("instance"),
                 TextField("name"),
                 TextField("source"),
                 TextField("type"),
@@ -251,6 +252,7 @@ def initialize_redis_indexes():
                 NumericField("duration_base"),
                 TextField("extra"),
                 TextField("id"),
+                TextField("instance"),
                 TextField("name"),
                 TextField("source"),
                 TextField("type"),
@@ -443,7 +445,75 @@ def initialize_redis_indexes():
     else:
         logger.trace('Redis init: OK squad_idx (already created)')
 
-    # RedisCD
+    # RedisProfession
+    try:
+        r.ft("profession_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_profession = IndexDefinition(
+                prefix=["professions:"],
+                score=0.5,
+                score_field="profession_score"
+                )
+
+            # Schema definition
+            schema = (
+                TextField("id"),
+                NumericField("mining"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("profession_idx").create_index(
+                schema,
+                definition=index_profession
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK profession_idx')
+    else:
+        logger.trace('Redis init: OK profession_idx (already created)')
+
+    # RedisResource
+    try:
+        r.ft("resource_idx").info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            # Options for index creation
+            index_resource = IndexDefinition(
+                prefix=["resources:"],
+                score=0.5,
+                score_field="resource_score"
+                )
+
+            # Schema definition
+            schema = (
+                TextField("id"),
+                TextField("instance"),
+                TextField("material"),
+                TextField("rarity"),
+                NumericField("tile_id"),
+                TextField("visible"),
+                NumericField("x"),
+                NumericField("y"),
+            )
+
+            # Create an index and pass in the schema
+            r.ft("resource_idx").create_index(
+                schema,
+                definition=index_resource
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info('Redis init: OK resource_idx')
+    else:
+        logger.trace('Redis init: OK resource_idx (already created)')
+
+    # RedisStatus
     try:
         r.ft("status_idx").info()
     except ResponseError:
@@ -462,6 +532,7 @@ def initialize_redis_indexes():
                 NumericField("duration_base"),
                 TextField("extra"),
                 TextField("id"),
+                TextField("instance"),
                 TextField("name"),
                 TextField("source"),
                 TextField("type"),

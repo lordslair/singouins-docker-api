@@ -13,7 +13,7 @@ class RedisStatus:
     def __init__(self, creatureuuid=None, name=None):
         self.type = 'status'
         self.hkey = 'statuses'
-        self.logh = f'[Status.id:{creatureuuid}]'
+        self.logh = f'[Creature.id:{creatureuuid}]'
 
         if creatureuuid:
             self.creatureuuid = creatureuuid
@@ -66,6 +66,7 @@ class RedisStatus:
             "duration_left": self.duration_left,
             "extra": self.extra,
             "id": self.id,
+            "instance": self.instance,
             "name": self.name,
             "source": self.source,
             "type": self.type
@@ -104,6 +105,7 @@ class RedisStatus:
         self,
         duration_base,
         extra,
+        instance,
         name,
         source,
     ):
@@ -130,6 +132,7 @@ class RedisStatus:
             self.bearer        = self.creatureuuid
             self.duration_base = duration_base
             self.duration_left = duration_base
+            self.instance      = instance
             self.name          = name
             self.source        = source
 
@@ -137,6 +140,7 @@ class RedisStatus:
                 "bearer": self.bearer,
                 "duration_base": self.duration_base,
                 "id": self.id,
+                "instance": self.instance,
                 "extra": typed2str(self.extra),
                 "name": self.name,
                 "source": self.source,

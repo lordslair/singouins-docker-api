@@ -13,7 +13,7 @@ class RedisEffect:
     def __init__(self, creatureuuid=None, name=None):
         self.type = 'effect'
         self.hkey = 'effects'
-        self.logh = f'[Effect.id:{creatureuuid}]'
+        self.logh = f'[Creature.id:{creatureuuid}]'
 
         if creatureuuid:
             self.creatureuuid = creatureuuid
@@ -66,6 +66,7 @@ class RedisEffect:
             "duration_left": self.duration_left,
             "extra": self.extra,
             "id": self.id,
+            "instance": self.instance,
             "name": self.name,
             "source": self.source,
             "type": self.type
@@ -104,6 +105,7 @@ class RedisEffect:
         self,
         duration_base,
         extra,
+        instance,
         name,
         source,
     ):
@@ -131,12 +133,14 @@ class RedisEffect:
             self.duration_base = duration_base
             self.duration_left = duration_base
             self.name          = name
+            self.instance      = instance
             self.source        = source
 
             hashdict = {
                 "bearer": self.bearer,
                 "duration_base": self.duration_base,
                 "id": self.id,
+                "instance": self.instance,
                 "extra": typed2str(self.extra),
                 "name": self.name,
                 "source": self.source,
