@@ -52,7 +52,7 @@ jobs:
     - name: Start Redis 🛢️
       uses: caiomarruda/redisearch-action@v1.0.1
       with:
-        redis version: ${{ env.REDIS_VERSION }}
+        redis version: 2.6.0
 
     - name: Test with PyTest ⚙️
       env:
