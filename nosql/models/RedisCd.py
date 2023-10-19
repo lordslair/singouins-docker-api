@@ -114,12 +114,6 @@ class RedisCd:
             logger.warning(f'{self.logh} Method KO (Missing parameter)')
             return False
 
-        # We need to define the new Cd.id
-        self.id = str(uuid.uuid3(
-            uuid.NAMESPACE_DNS,
-            f'{self.creatureuuid}{name}')
-            )
-
         try:
             # We push data in final dict
             logger.trace(f'{self.logh} Method >> (HASH Creating)')
@@ -132,6 +126,7 @@ class RedisCd:
             self.bearer        = self.creatureuuid
             self.duration_base = duration_base
             self.duration_left = duration_base
+            self.id            = str(uuid.uuid4())
             self.instance      = instance,
             self.name          = name
             self.source        = source
