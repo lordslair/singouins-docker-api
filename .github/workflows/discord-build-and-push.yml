@@ -1,0 +1,100 @@
+# This workflow will install Python dependencies, run tests with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Build & Push (Discord)
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+env:
+  DOCKER_IMAGE: discord
+
+jobs:
+  nosql-pytest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ "3.9", "3.10", "3.11" ]
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }} 🐍
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install requirements ⏬
+      run: |
+        echo "--- Installing PIP"
+        python -m pip install --upgrade pip
+        echo "--- Installing PyTest prerequisites"
+        pip install flake8 pytest
+        echo "--- Installing requirements"
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Lint with flake8 📝
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        echo "--- Linting with flake8"
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Start Redis 🛢️
+      uses: caiomarruda/redisearch-action@v1.0.1
+      with:
+        redis version: ${{ env.REDIS_VERSION }}
+
+    - name: Test with PyTest ⚙️
+      env:
+          LOGURU_LEVEL: ${{ env.LOGURU_LEVEL }}
+      run: |
+        echo "--- Starting PyTest"
+        pytest nosql/tests/test_*.py
+
+
+  python-build:
+    runs-on: ubuntu-latest
+    needs:
+    - nosql-pytest
+    if: ${{ needs.nosql-pytest.result == 'success' }}
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub 🔐
+      uses: docker/login-action@v3
+      with:
+        username: ${{ env.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extracting Metadata 🔧
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix=,suffix=,format=short
+          type=edge
+          type=raw,value=latest
+
+    - name: Build & Push to Docker Hub 🚀
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./discord/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
