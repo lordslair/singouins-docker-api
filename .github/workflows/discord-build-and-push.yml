@@ -56,7 +56,7 @@ jobs:
 
     - name: Test with PyTest ⚙️
       env:
-          LOGURU_LEVEL: ${{ env.LOGURU_LEVEL }}
+          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
       run: |
         echo "--- Starting PyTest"
         pytest nosql/tests/test_*.py
@@ -75,14 +75,14 @@ jobs:
     - name: Log in to Docker Hub 🔐
       uses: docker/login-action@v3
       with:
-        username: ${{ env.DOCKER_USERNAME }}
+        username: ${{ vars.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Extracting Metadata 🔧
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
+        images: ${{ vars.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
