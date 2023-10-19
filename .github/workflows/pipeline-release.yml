@@ -64,12 +64,15 @@ jobs:
     strategy:
       matrix:
         python-version: [ "3.11" ]
-        python-app: [ "ai", "ws" ]
+        python-app: [ "ai", "ws", "api" ]
 
     needs:
     - nosql-pytest
 
     if: ${{ needs.nosql-pytest.result == 'success' }}
+
+    environment:
+      name: api
 
     steps:
     - name: Checkout 🛎️
