@@ -122,13 +122,11 @@ jobs:
         cp -a nosql ${{ matrix.python-app }}/
         echo "--- Starting app in background"
         # Used for ws, ai
-        if [ -f ${{ matrix.python-app }}/main.py ]; \
-          then python3 ${{ matrix.python-app }}/main.py & ; \
+        if [ -f ${{ matrix.python-app }}/main.py ]
+          then python3 ${{ matrix.python-app }}/main.py &
         fi
         # Used for api
-        if [ -f ${{ matrix.python-app }}/app.py ]; \
-          then python3 ${{ matrix.python-app }}/app.py & ; \
-        fi
+        if [ -f ${{ matrix.python-app }}/app.py ]; then python3 ${{ matrix.python-app }}/app.py &; fi
         echo "--- Sleep(3)"
         sleep 3
         echo "--- Starting PyTest"
