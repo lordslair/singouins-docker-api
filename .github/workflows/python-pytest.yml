@@ -146,8 +146,8 @@ jobs:
 
     # We need to have a successful app-pytest before
     # AND
-    # We complete the process of build & push only for new tags
-    if: ${{ needs.app-pytest.result == 'success' }} && github.ref_type == 'tag'
+    # We build & push only for new version tags
+    if: ${{ needs.app-pytest.result == 'success' }} && startsWith(github.ref, 'refs/tags/v')
 
     steps:
     - name: Checkout 🛎️
