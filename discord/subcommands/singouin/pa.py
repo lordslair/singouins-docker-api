@@ -9,7 +9,7 @@ from loguru import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisPa import RedisPa
 
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
 
 
@@ -26,7 +26,7 @@ def pa(group_singouin):
     @option(
         "singouinuuid",
         description="Singouin ID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     async def pa(
         ctx,

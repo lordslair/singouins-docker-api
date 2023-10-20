@@ -9,7 +9,7 @@ from loguru import logger
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisWallet import RedisWallet
 
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
 
 
@@ -26,7 +26,7 @@ def wallet(group_singouin, bot):
     @option(
         "singouinuuid",
         description="Singouin UUID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     async def wallet(
         ctx,

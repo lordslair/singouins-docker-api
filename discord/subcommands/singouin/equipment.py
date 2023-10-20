@@ -11,7 +11,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem import RedisItem
 from nosql.models.RedisSlots import RedisSlots
 
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
 from variables import rarity_item_types_discord
 
@@ -29,7 +29,7 @@ def equipment(group_singouin):
     @option(
         "singouinuuid",
         description="Singouin UUID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     async def equipment(
         ctx,

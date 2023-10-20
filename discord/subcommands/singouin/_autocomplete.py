@@ -7,7 +7,7 @@ from loguru import logger
 from nosql.models.RedisSearch import RedisSearch
 
 
-async def get_singouins_list(ctx: discord.AutocompleteContext):
+async def get_mysingouins_list(ctx: discord.AutocompleteContext):
     try:
         DiscordUser = ctx.interaction.user
         discordname = f'{DiscordUser.name}#{DiscordUser.discriminator}'

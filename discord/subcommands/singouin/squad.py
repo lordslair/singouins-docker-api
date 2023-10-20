@@ -10,7 +10,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSquad import RedisSquad
 from nosql.models.RedisSearch import RedisSearch
 
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
 
 
@@ -24,7 +24,7 @@ def squad(group_singouin, bot):
     @option(
         "singouinuuid",
         description="Singouin ID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     async def squad(
         ctx,
