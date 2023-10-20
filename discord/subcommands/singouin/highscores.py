@@ -10,6 +10,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisHS import RedisHS
 
 from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._tools import creature_sprite
 
 
 def highscores(group_singouin, bot):
@@ -30,6 +31,7 @@ def highscores(group_singouin, bot):
     ):
         name = ctx.author.name
         channel = ctx.channel.name
+        file = None
 
         logger.info(
             f'[#{channel}][{name}] '
@@ -108,5 +110,13 @@ def highscores(group_singouin, bot):
                 inline=True,
                 )
 
-        await ctx.respond(embed=embed, ephemeral=True)
+            # We check if we have a sprite to add as thumbnail
+            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
+                file = discord.File(
+                    f'/tmp/{Creature.id}.png',
+                    filename=f'{Creature.id}.png'
+                    )
+                embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
+
+        await ctx.respond(embed=embed, ephemeral=True, file=file)
         logger.info(f'[#{channel}][{name}] └──> Singouin-HighScore Query OK')

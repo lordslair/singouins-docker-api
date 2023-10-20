@@ -10,6 +10,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisWallet import RedisWallet
 
 from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._tools import creature_sprite
 
 
 def wallet(group_singouin, bot):
@@ -31,8 +32,9 @@ def wallet(group_singouin, bot):
         ctx,
         singouinuuid: str,
     ):
-        name         = ctx.author.name
-        channel      = ctx.channel.name
+        name = ctx.author.name
+        channel = ctx.channel.name
+        file = None
 
         logger.info(
             f'[#{channel}][{name}] '
@@ -121,6 +123,14 @@ def wallet(group_singouin, bot):
                 value = ""
 
             embed.add_field(name='**Currency**', value=value, inline=True)
+
+            # We check if we have a sprite to add as thumbnail
+            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
+                file = discord.File(
+                    f'/tmp/{Creature.id}.png',
+                    filename=f'{Creature.id}.png'
+                    )
+                embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-Wallet Query KO [{e}]'
             logger.error(f'[#{channel}][{name}] └──> {description}')
@@ -134,5 +144,5 @@ def wallet(group_singouin, bot):
             return
         else:
             logger.info(f'[#{channel}][{name}] └──> Singouin-Squad Query OK')
-            await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed, ephemeral=True, file=file)
             return

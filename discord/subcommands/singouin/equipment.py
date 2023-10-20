@@ -12,6 +12,7 @@ from nosql.models.RedisItem import RedisItem
 from nosql.models.RedisSlots import RedisSlots
 
 from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._tools import creature_sprite
 from variables import rarity_item_types_discord
 
 
@@ -34,8 +35,9 @@ def equipment(group_singouin):
         ctx,
         singouinuuid: str,
     ):
-        name         = ctx.author.name
-        channel      = ctx.channel.name
+        name = ctx.author.name
+        channel = ctx.channel.name
+        file = None
 
         logger.info(
             f'[#{channel}][{name}] '
@@ -113,6 +115,15 @@ def equipment(group_singouin):
             embed.add_field(name='**Weapons**',
                             value=value,
                             inline=True)
+
+            # We check if we have a sprite to add as thumbnail
+            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
+                file = discord.File(
+                    f'/tmp/{Creature.id}.png',
+                    filename=f'{Creature.id}.png'
+                    )
+                embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
+
         except Exception as e:
             description = f'Singouin-Equipment Query KO [{e}]'
             logger.error(f'[#{channel}][{name}] └──> {description}')
@@ -125,7 +136,7 @@ def equipment(group_singouin):
                 )
             return
         else:
-            await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed, ephemeral=True, file=file)
             logger.info(
                 f'[#{channel}][{name}] '
                 f'└──> Singouin-Equipment Query OK'

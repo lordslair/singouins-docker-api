@@ -10,6 +10,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisPa import RedisPa
 
 from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._tools import creature_sprite
 
 
 def pa(group_singouin):
@@ -31,8 +32,9 @@ def pa(group_singouin):
         ctx,
         singouinuuid: str,
     ):
-        name         = ctx.author.name
-        channel      = ctx.channel.name
+        name = ctx.author.name
+        channel = ctx.channel.name
+        file = None
 
         logger.info(
             f'[#{channel}][{name}] '
@@ -64,6 +66,14 @@ def pa(group_singouin):
                     ),
                 inline=False,
                 )
+
+            # We check if we have a sprite to add as thumbnail
+            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
+                file = discord.File(
+                    f'/tmp/{Creature.id}.png',
+                    filename=f'{Creature.id}.png'
+                    )
+                embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-PA Query KO [{e}]'
             logger.error(f'[#{channel}][{name}] └──> {description}')
@@ -76,5 +86,5 @@ def pa(group_singouin):
                 )
             return
         else:
-            await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed, ephemeral=True, file=file)
             logger.info(f'[#{channel}][{name}] └──> Singouin-PA Query OK')
