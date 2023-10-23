@@ -24,7 +24,7 @@ charset-normalizer==3.3.0
     #   requests
 dnspython==2.4.2
     # via email-validator
-email-validator==2.0.0.post2
+email-validator==2.1.0
     # via -r requirements.in
 frozenlist==1.4.0
     # via
