@@ -64,7 +64,7 @@ strenum==0.4.9
     # via yarqueue
 urllib3==1.26.17
     # via requests
-werkzeug==2.3.7
+werkzeug==3.0.1
     # via
     #   flask
     #   flask-jwt-extended
