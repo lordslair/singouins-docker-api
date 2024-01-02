@@ -123,9 +123,6 @@ else:
     logger.debug(f'[{group_name}] Command Group OK')
     infra.backup(group_admin)
     infra.deploy(group_admin)
-    infra.kill(group_admin)
-    infra.log(group_admin)
-    infra.status(group_admin)
     logger.debug(f'[{group_name}] Commands OK')
 #
 # /mysingouin Commands (for @Singouins)
