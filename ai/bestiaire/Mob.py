@@ -112,26 +112,24 @@ class Mob(ABC, threading.Thread):
             payload = resolver_move(self, nextx, nexty)
         except Exception as e:
             logger.error(f'{self.logh} | Request KO [{e}]')
-        else:
-            if payload is None:
-                logger.warning(
-                    f"{self.logh} | Move KO | "
-                    'Resolver response.body is None'
-                    )
-                return
 
-            if payload['result']['success']:
-                logger.debug(
-                    f"{self.logh} | Move OK | "
-                    f"from (x:{self.creature.x},y:{self.creature.y}) "
-                    f"to (x:{nextx},y:{nexty}))"
-                    )
-            else:
-                logger.warning(
-                    f"{self.logh} | Move KO | "
-                    f"from (x:{self.creature.x},y:{self.creature.y}) "
-                    f"to (x:{nextx},y:{nexty}))"
-                    )
+        if payload is None or 'result' not in payload:
+            # Here we have a weird answer from Resolver
+            logger.warning(f"{self.logh} | Move KO | Resolver response is KO")
+            return
+
+        if payload['result']['success']:
+            logger.debug(
+                f"{self.logh} | Move OK | "
+                f"from (x:{self.creature.x},y:{self.creature.y}) "
+                f"to (x:{nextx},y:{nexty}))"
+                )
+        else:
+            logger.warning(
+                f"{self.logh} | Move KO | "
+                f"from (x:{self.creature.x},y:{self.creature.y}) "
+                f"to (x:{nextx},y:{nexty}))"
+                )
 
     @abstractmethod
     def get_life(self):
