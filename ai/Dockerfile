@@ -14,10 +14,10 @@ ENV PATH="/code/.local/bin:${PATH}"
 RUN apk update --no-cache \
     && apk add --no-cache \
         "python3>=3.11" \
+        "py3-pip>=23" \
         "tzdata>=2023" \
     && su ai -c \
-        "python3 -m ensurepip --upgrade && \
-        pip3 install --user -U -r requirements.txt && \
+        "pip3 install --break-system-packages --user -U -r requirements.txt && \
         rm requirements.* Dockerfile"
 
 USER ai
