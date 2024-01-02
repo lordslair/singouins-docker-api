@@ -122,9 +122,9 @@ def resolver_basic_attack(self, target):
 
 
 def check_response(response, code):
-    logger.info('HTTP response Headers:' + str(response.headers))
-    logger.info('HTTP response Code:' + str(response.status_code))
-    logger.info('HTTP response Body:' + str(response.text))
+    logger.trace('HTTP response Headers:' + str(response.headers))
+    logger.trace('HTTP response Code:' + str(response.status_code))
+    logger.trace('HTTP response Body:' + str(response.text))
 
     if response:
         if response.status_code == code:
