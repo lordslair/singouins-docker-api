@@ -14,7 +14,7 @@ from nosql.queue                import yqueue_get
 
 from nosql.models.RedisSearch   import RedisSearch
 
-from utils.variables import (
+from variables import (
     rarity_item_types_discord,
     rarity_item_types_integer,
     )
