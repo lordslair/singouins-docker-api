@@ -135,6 +135,23 @@ jobs:
         echo "--- Starting PyTest"
         pytest ${{ matrix.python-app }}/tests/
 
+  build-push:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-app: [ "ai", "ws", "api", "discord" ]
+
+    needs:
+    - app-pytest
+
+    # We need to have a successful app-pytest before
+    if: ${{ needs.app-pytest.result == 'success' }}
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
     - name: Log in to Docker Hub 🔐
       uses: docker/login-action@v3
       with:
@@ -145,15 +162,16 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_IMAGE }}
+        images: ${{ vars.DOCKER_USERNAME }}/${{ matrix.python-app }}
         tags: |
           type=sha,prefix=,suffix=,format=short
           type=edge
 
-    - name: Build 🏗️ & Push to Docker Hub 🚀  
+    - name: Build 🏗️ & Push to Docker Hub 🚀
       uses: docker/build-push-action@v5
       with:
         context: .
+        file: ./${{ matrix.python-app }}/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
