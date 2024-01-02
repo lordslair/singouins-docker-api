@@ -11,7 +11,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem import RedisItem
 
 from subcommands.auction._autocomplete import get_singouin_auctioned_item_list
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 
 from variables import rarity_item_types_discord
 
@@ -25,7 +25,7 @@ def remove(group_auction):
     @option(
         "selleruuid",
         description="Seller UUID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     @option(
         "metatype",

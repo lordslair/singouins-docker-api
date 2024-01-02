@@ -8,7 +8,7 @@ from loguru import logger
 from nosql.models.RedisSearch import RedisSearch
 
 from subcommands.auction._tools import human_time
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 
 from variables import rarity_item_types_discord
 
@@ -22,7 +22,7 @@ def show(group_auction, bot):
     @option(
         "selleruuid",
         description="Seller UUID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     async def show(
         ctx: discord.ApplicationContext,

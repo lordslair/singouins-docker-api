@@ -7,7 +7,7 @@ from loguru import logger
 
 from subcommands.auction._autocomplete import get_auctioned_item_list
 from subcommands.auction._view import buyView
-from subcommands.singouin._autocomplete import get_singouins_list
+from subcommands.singouin._autocomplete import get_mysingouins_list
 
 
 def buy(group_auction):
@@ -19,7 +19,7 @@ def buy(group_auction):
     @option(
         "buyeruuid",
         description="Singouin UUID",
-        autocomplete=get_singouins_list
+        autocomplete=get_mysingouins_list
         )
     @option(
         "metatype",
