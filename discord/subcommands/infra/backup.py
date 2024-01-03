@@ -5,8 +5,8 @@ import discord
 from loguru import logger
 from discord.commands import option
 from discord.ext import commands
-
-from subcommands.infra.__k8stools import k8s_backup_logs
+from kubernetes import config, client
+from kubernetes.stream import stream
 
 
 def backup(group_admin):
@@ -18,9 +18,14 @@ def backup(group_admin):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "env",
+        "namespace",
         description="Target environment",
-        choices=['dev', 'prod'],
+        autocomplete=discord.utils.basic_autocomplete(
+            [
+                discord.OptionChoice("singouins-dev", value='singouins-dev'),
+                discord.OptionChoice("singouins", value='singouins'),
+                ]
+            )
         )
     @option(
         "action",
@@ -29,33 +34,48 @@ def backup(group_admin):
         )
     async def backup(
         ctx,
-        env: str,
+        namespace: str,
         action: str,
     ):
+        # Header for later use
+        h = f'[#{ctx.channel.name}][{ctx.channel.name}]'
+
         await ctx.defer()  # To defer answer (default: 15min)
-        logger.info(
-            f'[#{ctx.channel.name}][{ctx.channel.name}] '
-            f'/{group_admin} backup {env}'
-            )
+        logger.info(f'{h} /{group_admin} backup {namespace} {action}')
 
         try:
-            logger.info(
-                f'[#{ctx.channel.name}][{ctx.author.name}] '
-                f'├──> K8s Query Starting'
-                )
-            if action == 'status':
-                exec_stdout = k8s_backup_logs(env)
-            logger.debug(
-                f'[#{ctx.channel.name}][{ctx.author.name}] '
-                f'├──> K8s Query Ended'
-                )
+            config.load_kube_config("/etc/k8s/kubeconfig.yaml")
         except Exception as e:
-            logger.error(
-                f'[#{ctx.channel.name}][{ctx.channel.name}] '
-                f'└──> K8s Query KO [{e}]'
-                )
+            msg = f'K8s conf load KO [{e}]'
+            logger.error(msg)
             embed = discord.Embed(
-                description='Command aborted: K8s Query KO',
+                description=msg,
+                colour=discord.Colour.red()
+                )
+            await ctx.respond(embed=embed)
+            return
+
+        try:
+            logger.info(f'{h} ├──> K8s Query Starting')
+            pod = client.CoreV1Api().list_namespaced_pod(
+                namespace,
+                label_selector="name=backup"
+                )
+
+            exec_stdout = stream(
+                client.CoreV1Api().connect_get_namespaced_pod_exec,
+                pod.items[0].metadata.name,
+                namespace,
+                command="/etc/periodic/daily/cron-status-sh",
+                stderr=True, stdin=False,
+                stdout=True, tty=False
+                )
+            logger.info(f'{h} ├──> K8s Query Ended')
+        except Exception as e:
+            msg = f'K8s pod_exec KO [{e}]'
+            logger.error(msg)
+            embed = discord.Embed(
+                description=msg,
                 colour=discord.Colour.red()
                 )
             await ctx.respond(embed=embed)
@@ -63,14 +83,11 @@ def backup(group_admin):
         else:
             # We got the logs, we can start working
             embed = discord.Embed(
-                title=f'K8s backup status [{env}]',
+                title=f'K8s backup status [{namespace}]',
                 description=f'```{exec_stdout}```',
                 colour=discord.Colour.green()
                 )
             await ctx.interaction.edit_original_response(embed=embed)
 
-        logger.info(
-            f'[#{ctx.channel.name}][{ctx.author.name}] '
-            f'└──> K8s Query OK'
-            )
+        logger.info(f'{h} └──> K8s Query OK')
         return

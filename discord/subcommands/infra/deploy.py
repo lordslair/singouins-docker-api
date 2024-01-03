@@ -8,8 +8,7 @@ from kubernetes import client
 from loguru import logger
 from discord.commands import option
 from discord.ext import commands
-
-from subcommands.infra.__k8stools import load_config
+from kubernetes import config
 
 
 def deploy(group_admin):
@@ -21,32 +20,44 @@ def deploy(group_admin):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "env",
+        "namespace",
         description="Target environment",
-        choices=['dev', 'prod'],
+        autocomplete=discord.utils.basic_autocomplete(
+            [
+                discord.OptionChoice("singouins-dev", value='singouins-dev'),
+                discord.OptionChoice("singouins", value='singouins'),
+                ]
+            )
         )
     async def deploy(
         ctx,
-        env: str,
+        namespace: str,
     ):
-        await ctx.defer()  # To defer answer (default: 15min)
-        logger.info(
-            f'[#{ctx.channel.name}][{ctx.channel.name}] '
-            f'/{group_admin} deploy {env}'
-            )
+        # Header for later use
+        h = f'[#{ctx.channel.name}][{ctx.channel.name}]'
 
-        # K8s conf loading
-        ret = load_config(env)
-        if ret['success']:
-            namespace = ret['namespace']
+        await ctx.defer()  # To defer answer (default: 15min)
+        logger.info(f'{h} /{group_admin} deploy {namespace}')
+
+        if namespace == 'singouins-dev':
+            env = 'dev'
         else:
-            return ret['embed']
+            env = 'prod'
 
         try:
-            logger.info(
-                f'[#{ctx.channel.name}][{ctx.author.name}] '
-                f'├──> K8s Query Starting'
+            config.load_kube_config("/etc/k8s/kubeconfig.yaml")
+        except Exception as e:
+            msg = f'K8s conf load KO [{e}]'
+            logger.error(msg)
+            embed = discord.Embed(
+                description=msg,
+                colour=discord.Colour.red()
                 )
+            await ctx.respond(embed=embed)
+            return
+
+        try:
+            logger.info(f'{h} ├──> K8s Query Starting')
 
             app_name = 'front-deployer'
             pod_name = f"sep-backend-{app_name}"
@@ -181,15 +192,9 @@ def deploy(group_admin):
                 body=job,
                 namespace=namespace,
                 )
-            logger.debug(
-                f'[#{ctx.channel.name}][{ctx.author.name}] '
-                f'├──> K8s Query Ended'
-                )
+            logger.debug(f'{h} ├──> K8s Query Ended')
         except Exception as e:
-            logger.error(
-                f'[#{ctx.channel.name}][{ctx.channel.name}] '
-                f'└──> K8s Query KO [{e}]'
-                )
+            logger.error(f'{h} └──> K8s Query KO [{e}]')
             embed = discord.Embed(
                 description='Command aborted: K8s Query KO',
                 colour=discord.Colour.red()
@@ -206,10 +211,7 @@ def deploy(group_admin):
                     colour=discord.Colour.blue()
                     )
                 )
-            logger.info(
-                f'[#{ctx.channel.name}][{ctx.author.name}] '
-                f'└──> K8s Query OK - Job created'
-                )
+            logger.info(f'{h} └──> K8s Query OK - Job created')
 
             job_completed = False
             while not job_completed:
@@ -312,8 +314,5 @@ def deploy(group_admin):
                 time.sleep(1)
             logger.trace('K8s Pods Query OK')
 
-        logger.info(
-            f'[#{ctx.channel.name}][{ctx.author.name}] '
-            f'└──> K8s Query OK'
-            )
+        logger.info(f'{h} └──> K8s Query OK')
         return
