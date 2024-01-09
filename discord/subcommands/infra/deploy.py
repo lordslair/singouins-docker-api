@@ -1,7 +1,6 @@
 # -*- coding: utf8 -*-
 
 import discord
-import re
 import time
 
 from kubernetes import client
@@ -9,6 +8,8 @@ from loguru import logger
 from discord.commands import option
 from discord.ext import commands
 from kubernetes import config
+
+from subcommands.infra._tools import log_pretty
 
 
 def deploy(group_admin):
@@ -20,29 +21,32 @@ def deploy(group_admin):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "namespace",
+        "env",
         description="Target environment",
         autocomplete=discord.utils.basic_autocomplete(
             [
-                discord.OptionChoice("singouins-dev", value='singouins-dev'),
-                discord.OptionChoice("singouins", value='singouins'),
+                discord.OptionChoice("DEV"),
+                discord.OptionChoice("PROD"),
                 ]
             )
         )
     async def deploy(
         ctx,
-        namespace: str,
+        env: str,
     ):
         # Header for later use
         h = f'[#{ctx.channel.name}][{ctx.channel.name}]'
 
         await ctx.defer()  # To defer answer (default: 15min)
-        logger.info(f'{h} /{group_admin} deploy {namespace}')
+        logger.info(f'{h} /{group_admin} deploy {env}')
 
-        if namespace == 'singouins-dev':
-            env = 'dev'
+        env = env.lower()
+        namespace = 'singouins-networking'
+
+        if env == 'dev':
+            output_folder = 'games.dev.singouins.com'
         else:
-            env = 'prod'
+            output_folder = 'games.singouins.com'
 
         try:
             config.load_kube_config("/etc/k8s/kubeconfig.yaml")
@@ -60,7 +64,7 @@ def deploy(group_admin):
             logger.info(f'{h} ├──> K8s Query Starting')
 
             app_name = 'front-deployer'
-            pod_name = f"sep-backend-{app_name}"
+            pod_name = app_name
             pod_template = client.V1PodTemplateSpec(
                 spec=client.V1PodSpec(
                     restart_policy="Never",
@@ -89,7 +93,7 @@ def deploy(group_admin):
                                     name='CUST_GIT_QUIET',
                                     value_from=client.V1EnvVarSource(
                                         secret_key_ref=client.V1SecretKeySelector( # noqa E501
-                                            name='sep-backend-git-secret',
+                                            name='git-secret',
                                             key='git-angular-quiet',
                                             )
                                         )
@@ -98,7 +102,7 @@ def deploy(group_admin):
                                     name='CUST_GIT_REPO',
                                     value_from=client.V1EnvVarSource(
                                         secret_key_ref=client.V1SecretKeySelector( # noqa E501
-                                            name='sep-backend-git-secret',
+                                            name='git-secret',
                                             key='git-angular-repo',
                                             )
                                         )
@@ -107,7 +111,7 @@ def deploy(group_admin):
                                     name='CUST_GIT_USER',
                                     value_from=client.V1EnvVarSource(
                                         secret_key_ref=client.V1SecretKeySelector( # noqa E501
-                                            name='sep-backend-git-secret',
+                                            name='git-secret',
                                             key='git-angular-user',
                                             )
                                         )
@@ -116,7 +120,7 @@ def deploy(group_admin):
                                     name='CUST_GIT_TOKEN',
                                     value_from=client.V1EnvVarSource(
                                         secret_key_ref=client.V1SecretKeySelector( # noqa E501
-                                            name='sep-backend-git-secret',
+                                            name='git-secret',
                                             key='git-angular-token',
                                             )
                                         )
@@ -125,19 +129,14 @@ def deploy(group_admin):
                                     name='CUST_OUTPUT_PATH',
                                     value_from=client.V1EnvVarSource(
                                         secret_key_ref=client.V1SecretKeySelector( # noqa E501
-                                            name='sep-backend-git-secret',
+                                            name='git-secret',
                                             key='git-angular-output-path',
                                             )
                                         )
                                     ),
                                 client.V1EnvVar(
                                     name='CUST_OUTPUT_FOLDER',
-                                    value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
-                                            name='sep-backend-git-secret',
-                                            key='git-angular-output-folder',
-                                            )
-                                        )
+                                    value=output_folder,
                                     ),
                                 ],
                             )
@@ -146,7 +145,7 @@ def deploy(group_admin):
                         client.V1Volume(
                             name='websites',
                             persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource( # noqa E501
-                                claim_name='sep-backend-code-websites',
+                                claim_name='nginx-www-pvc',
                                 ),
                             ),
                         client.V1Volume(
@@ -159,7 +158,7 @@ def deploy(group_admin):
                                         mode=493,  # == 0755 permission
                                         )
                                     ],
-                                name='sep-backend-deployer',
+                                name='deployer-configmap',
                                 ),
                             ),
                         ],
@@ -206,7 +205,7 @@ def deploy(group_admin):
             description = '>> Job starting'
             await ctx.interaction.edit_original_response(
                 embed=discord.Embed(
-                    title=f'K8s deploy status [{env}]',
+                    title=f'K8s deploy [{env}]',
                     description=description,
                     colour=discord.Colour.blue()
                     )
@@ -218,7 +217,7 @@ def deploy(group_admin):
                 description = description + '.'
                 await ctx.interaction.edit_original_response(
                     embed=discord.Embed(
-                        title=f'K8s deploy status [{env}]',
+                        title=f'K8s deploy [{env}]',
                         description=description,
                         colour=discord.Colour.blue()
                         )
@@ -237,7 +236,7 @@ def deploy(group_admin):
                     description = description + '\n>> Job completed'
                     await ctx.interaction.edit_original_response(
                         embed=discord.Embed(
-                            title=f'K8s deploy status [{env}]',
+                            title=f'K8s deploy [{env}]',
                             description=description,
                             colour=discord.Colour.green()
                             )
@@ -255,44 +254,23 @@ def deploy(group_admin):
                                 namespace=namespace,
                                 )
                             logger.trace(log)
-
-                            if log != '':
-                                # Filter out ANSI sequences (ex: colors)
-                                reaesc = re.compile(r'\x1b[^m]*m')
-                                log_purged = reaesc.sub('', log)
-                                log_formatted = ''
-
-                                for line in log_purged.splitlines():
-                                    if 'WARN' in line.upper():
-                                        newline = f'🟧 {line}\n'
-                                    elif 'ERROR' in line.upper():
-                                        newline = f'🟥 {line}\n'
-                                    elif 'INFO' in line.upper():
-                                        newline = f'🟩 {line}\n'
-                                    elif 'DEBUG' in line.upper():
-                                        newline = f'🟦 {line}\n'
-                                    elif 'TRACE' in line.upper():
-                                        newline = f'🟦 {line}\n'
-                                    else:
-                                        newline = f'⬜ {line}\n'
-
-                                    log_formatted = log_formatted + newline
                         else:
                             logger.warning('K8s Query OK - Logs NotFound')
                     except Exception as e:
                         logger.error(f'K8s Query KO [{e}]')
                     else:
                         logger.trace('K8s Query OK - Logs fetched')
-                        description = description + \
-                            '\n>> Job logs:' + \
-                            f'\n```{log_formatted}```'
-                        await ctx.interaction.edit_original_response(
-                            embed=discord.Embed(
-                                title=f'K8s deploy status [{env}]',
-                                description=description,
-                                colour=discord.Colour.green()
+                        description += '\n>> Job logs:\n```'
+
+                        for line in log_pretty(log):
+                            description += line
+                            await ctx.interaction.edit_original_response(
+                                embed=discord.Embed(
+                                    title=f'K8s deploy [{env}]',
+                                    description=f'{description}```',
+                                    colour=discord.Colour.green()
+                                    )
                                 )
-                            )
 
                     # Now we delete the Job
                     api_response = client.BatchV1Api().delete_namespaced_job(
@@ -303,10 +281,10 @@ def deploy(group_admin):
                             grace_period_seconds=0,
                             ),
                         )
-                    description = description + '\n>> Job deleting'
+                    description += '```>> Job deleting'
                     await ctx.interaction.edit_original_response(
                         embed=discord.Embed(
-                            title=f'K8s deploy status [{env}]',
+                            title=f'K8s deploy [{env}]',
                             description=description,
                             colour=discord.Colour.green()
                             )
