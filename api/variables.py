@@ -20,12 +20,6 @@ SQL_DSN        = (f'{MYSQL_USER}:{MYSQL_PASSWORD}@'
 # External URL
 API_URL        = os.environ.get("SEP_API_URL", 'http://127.0.0.1:5000')
 
-# Redis variables
-REDIS_HOST    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST",
-                               '127.0.0.1')
-REDIS_PORT    = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
-REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
-
 # PCS variables for remote storage
 PCS_URL       = os.environ.get("SEP_PCS_URL", 'http://127.0.0.1')
 
@@ -57,3 +51,13 @@ if os.environ.get("CI"):
     DATA_PATH   = 'api/data'
 else:
     DATA_PATH   = 'data'
+
+# Static data
+rarity_array = [
+    'Broken',
+    'Common',
+    'Uncommon',
+    'Rare',
+    'Epic',
+    'Legendary',
+]
