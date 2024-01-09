@@ -30,7 +30,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-google-auth==2.25.2
+google-auth==2.26.1
     # via kubernetes
 idna==3.6
     # via
