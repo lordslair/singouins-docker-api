@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:3.19
 
 RUN adduser -h /code -u 1000 -D -H api
 
@@ -14,6 +14,7 @@ ENV PATH="/code/.local/bin:${PATH}"
 RUN apk update --no-cache \
     && apk add --no-cache \
         "python3>=3.11" \
+        "py3-pip>=23" \
         "tzdata>=2023" \
     && apk add --no-cache --virtual .build-deps \
         "gcc=~12.2" \
@@ -22,9 +23,8 @@ RUN apk update --no-cache \
         "libffi-dev=~3.4" \
         "python3-dev>=3.11" \
     && su api -c \
-        "python3 -m ensurepip --upgrade && \
-        pip3 install --user -U -r requirements.txt && \
-        rm requirements.txt" \
+        "pip3 install --break-system-packages --user -U -r requirements.txt && \
+        rm requirements.* Dockerfile" \
     && apk del .build-deps
 
 USER api
