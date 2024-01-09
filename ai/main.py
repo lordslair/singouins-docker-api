@@ -14,15 +14,11 @@ from nosql.models.RedisSearch   import RedisSearch
 
 from utils.requests   import (
     resolver_generic_request_get,
+    RESOLVER_URL,
     )
 
 # Log System imports
 logger.info('[core] System imports OK')
-
-# Resolver variables
-RESOLVER_HOST = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST")
-RESOLVER_PORT = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT")
-RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
 
 # Pre-flight check for Resolver connection
 if os.environ.get("CI"):

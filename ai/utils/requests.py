@@ -8,9 +8,14 @@ from loguru import logger
 
 from nosql.models.RedisSearch import RedisSearch
 
-RESOLVER_HOST = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST")
-RESOLVER_PORT = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT")
+# Resolver variables
+RESOLVER_HOST = os.environ.get("RESOLVER_HOST")
+RESOLVER_PORT = os.environ.get("RESOLVER_PORT")
 RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
+
+logger.debug(f"RESOLVER_HOST: {RESOLVER_HOST}")
+logger.debug(f"RESOLVER_PORT: {RESOLVER_PORT}")
+logger.debug(f"RESOLVER_URL: {RESOLVER_URL}")
 
 
 def resolver_generic_request_get(path, code=200):
