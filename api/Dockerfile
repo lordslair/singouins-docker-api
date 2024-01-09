@@ -17,8 +17,8 @@ RUN apk update --no-cache \
         "py3-pip>=23" \
         "tzdata>=2023" \
     && apk add --no-cache --virtual .build-deps \
-        "gcc=~12.2" \
-        "g++=~12.2" \
+        "gcc=~13" \
+        "g++=~13" \
         "libc-dev=~0.7" \
         "libffi-dev=~3.4" \
         "python3-dev>=3.11" \
