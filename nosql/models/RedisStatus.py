@@ -64,7 +64,7 @@ class RedisStatus:
             "bearer": self.bearer,
             "duration_base": self.duration_base,
             "duration_left": self.duration_left,
-            "extra": self.extra,
+            "extra": json.loads(self.extra),
             "id": self.id,
             "instance": self.instance,
             "name": self.name,
