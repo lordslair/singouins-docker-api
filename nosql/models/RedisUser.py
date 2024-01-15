@@ -59,6 +59,15 @@ class RedisUser:
     def __repr__(self):
         return self.__str__()
 
+    def exists(self, username):
+        useruuid = str(uuid.uuid3(uuid.NAMESPACE_DNS, username))
+        if r.exists(f'{self.hkey}:{useruuid}'):
+            logger.trace(f'{self.logh} Method >> (HASH Found)')
+            return True
+        else:
+            logger.warning(f'{self.logh} Method KO (HASH NotFound)')
+            return False
+
     def to_json(self):
         """
         Converts RedisUser object into a JSON
