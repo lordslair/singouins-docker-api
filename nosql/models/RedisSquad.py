@@ -39,6 +39,14 @@ class RedisSquad:
     def __repr__(self):
         return self.__str__()
 
+    def exists(self, squaduuid):
+        if r.exists(f'{self.hkey}:{squaduuid}'):
+            logger.trace(f'{self.logh} Method >> (HASH Found)')
+            return True
+        else:
+            logger.warning(f'{self.logh} Method KO (HASH NotFound)')
+            return False
+
     def to_json(self):
         """
         Converts Object into a JSON

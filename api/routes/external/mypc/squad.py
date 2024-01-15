@@ -1,17 +1,18 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSearch   import RedisSearch
-from nosql.models.RedisSquad    import RedisSquad
+from nosql.models.RedisSquad     import RedisSquad
 from nosql.queue                import yqueue_put
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_creature_in_squad,
+    check_squad_exists,
     )
 
 from variables                  import YQ_BROADCAST, YQ_DISCORD
@@ -22,22 +23,13 @@ from variables                  import YQ_BROADCAST, YQ_DISCORD
 #
 # API: POST ../squad/<uuid:squaduuid>/accept
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
+@check_creature_in_squad
 def squad_accept(creatureuuid, squaduuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if Creature.squad_rank != 'Pending':
-        msg = f'{h} Squad pending is required (squaduuid:{squaduuid})'
+    if g.Creature.squad_rank != 'Pending':
+        msg = f'{g.h} Squad pending is required SquadUUID({g.Squad.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -48,75 +40,61 @@ def squad_accept(creatureuuid, squaduuid):
         ), 200
 
     try:
-        Creature.squad = None
-        Creature.squad_rank = 'Member'
+        g.Creature.squad = None
+        g.Creature.squad_rank = 'Member'
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
                 "success": False,
                 "msg": msg,
-                "payload": None,
+                "payload": e,
             }
         ), 200
     else:
-        try:
-            Squad = RedisSquad(squaduuid=squaduuid)
-        except Exception as e:
-            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
-            logger.error(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": g.Squad.as_dict(),
+                "route": 'mypc/{id1}/squad',
+                "scope": 'squad',
                 }
-            ), 200
-        else:
-            # Broadcast Queue
-            yqueue_put(
-                YQ_BROADCAST,
-                {
-                    "ciphered": False,
-                    "payload": Squad.as_dict(),
-                    "route": 'mypc/{id1}/squad',
-                    "scope": 'squad',
-                    }
-                )
-            # Discord Queue
-            yqueue_put(
-                YQ_DISCORD,
-                {
-                    "ciphered": False,
-                    "payload": (
-                        f':information_source: '
-                        f'**{Creature.name}** '
-                        f'joined this Squad'
-                        ),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}',
-                    }
-                )
-            msg = f'{h} Squad accept OK (squaduuid:{squaduuid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": Squad.as_dict(),
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{g.Creature.name}** '
+                    f'joined this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{g.Creature.squad}',
                 }
-            ), 200
+            )
+        msg = f'{g.h} Squad accept OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": g.Squad.as_dict(),
+            }
+        ), 200
 
 
 # API: POST ../squad
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def squad_create(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.squad is not None:
-        msg = f'{h} PC already in a Squad (squaduuid:{Creature.squad})'
+    if g.Creature.squad is not None:
+        msg = f'{g.h} Already in a Squad'
         logger.warning(msg)
         return jsonify(
             {
@@ -127,9 +105,9 @@ def squad_create(creatureuuid):
         ), 200
 
     try:
-        Squad = RedisSquad().new(creatureuuid=Creature.id)
+        Squad = RedisSquad().new(creatureuuid=g.Creature.id)
     except Exception as e:
-        msg = f'{h} Squad Query KO [{e}]'
+        msg = f'{g.h} Squad Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -140,7 +118,7 @@ def squad_create(creatureuuid):
         ), 200
     else:
         if Squad is False:
-            msg = f'{h} Squad Query KO - Already exists'
+            msg = f'{g.h} Squad Query KO - Already exists'
             logger.warning(msg)
             return jsonify(
                 {
@@ -152,10 +130,10 @@ def squad_create(creatureuuid):
 
     # Squad created, let's assign the team creator in the squad
     try:
-        Creature.squad = Squad.id
-        Creature.squad_rank = 'Leader'
+        g.Creature.squad = Squad.id
+        g.Creature.squad_rank = 'Leader'
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{Squad.id}) [{e}]'
+        msg = f'{g.h} Squad Query KO (squaduuid:{Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -182,15 +160,15 @@ def squad_create(creatureuuid):
                 "ciphered": False,
                 "payload": (
                     f':information_source: '
-                    f'**{Creature.name}** '
+                    f'**{g.Creature.name}** '
                     f'created this Squad'
                     ),
                 "embed": None,
-                "scope": f'Squad-{Creature.squad}',
+                "scope": f'Squad-{g.Creature.squad}',
                 }
             )
 
-        msg = f'{h} Squad create OK (squaduuid:{Creature.squad})'
+        msg = f'{g.h} Squad create OK'
         logger.debug(msg)
         return jsonify(
             {
@@ -203,22 +181,13 @@ def squad_create(creatureuuid):
 
 # API: POST ../squad/<uuid:squaduuid>/decline
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
+@check_creature_in_squad
 def squad_decline(creatureuuid, squaduuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if Creature.squad_rank == 'Leader':
-        msg = f'{h} PC cannot be the squad Leader (squaduuid:{squaduuid})'
+    if g.Creature.squad_rank == 'Leader':
+        msg = f'{g.h} PC cannot be the squad Leader SquadUUID({g.Squad.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -229,10 +198,10 @@ def squad_decline(creatureuuid, squaduuid):
         ), 200
 
     try:
-        Creature.squad_rank = None
-        Creature.squad = None
+        g.Creature.squad_rank = None
+        g.Creature.squad = None
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -242,73 +211,50 @@ def squad_decline(creatureuuid, squaduuid):
             }
         ), 200
     else:
-        try:
-            Squad = RedisSquad(squaduuid=squaduuid)
-        except Exception as e:
-            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
-            logger.error(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": g.Squad.as_dict(),
+                "route": 'mypc/{id1}/squad',
+                "scope": 'squad',
                 }
-            ), 200
-        else:
-            # Broadcast Queue
-            yqueue_put(
-                YQ_BROADCAST,
-                {
-                    "ciphered": False,
-                    "payload": Squad.as_dict(),
-                    "route": 'mypc/{id1}/squad',
-                    "scope": 'squad',
-                    }
-                )
-            # Discord Queue
-            yqueue_put(
-                YQ_DISCORD,
-                {
-                    "ciphered": False,
-                    "payload": (
-                        f':information_source: '
-                        f'**{Creature.name}** '
-                        f'declined this Squad'
-                        ),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}',
-                    }
-                )
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{g.Creature.name}** '
+                    f'declined this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{g.Creature.squad}',
+                }
+            )
 
-            msg = f'{h} Squad decline OK (squaduuid:{squaduuid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": Squad.as_dict(),
-                }
-            ), 200
+        msg = f'{g.h} Squad decline OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": g.Squad.as_dict(),
+            }
+        ), 200
 
 
 # API: DELETE ../squad/<uuid:squaduuid>
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
 def squad_delete(creatureuuid, squaduuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if Creature.squad_rank != 'Leader':
-        msg = f'{h} Not the squad Leader (squaduuid:{Creature.squad_rank})'
+    if g.Creature.squad_rank != 'Leader':
+        msg = f'{g.h} Not the squad Leader ({g.Creature.squad_rank})'
         logger.warning(msg)
         return jsonify(
             {
@@ -320,10 +266,10 @@ def squad_delete(creatureuuid, squaduuid):
 
     try:
         Members = RedisSearch().creature(
-            f"@squad:{Creature.squad.replace('-', ' ')}"
+            f"@squad:{g.Squad.id.replace('-', ' ')}"
             )
     except Exception as e:
-        msg = f'Creature Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -335,7 +281,7 @@ def squad_delete(creatureuuid, squaduuid):
 
     count = len(Members.results)
     if count > 1:
-        msg = f'Squad not empty (squaduuid:{squaduuid},members:{count})'
+        msg = f'{g.h} Squad not empty (members:{count})'
         logger.error(msg)
         return jsonify(
             {
@@ -347,10 +293,10 @@ def squad_delete(creatureuuid, squaduuid):
 
     try:
         RedisSquad(squaduuid=squaduuid).destroy()
-        Creature.squad = None
-        Creature.squad_rank = None
+        g.Creature.squad = None
+        g.Creature.squad_rank = None
     except Exception as e:
-        msg = f'Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -377,15 +323,15 @@ def squad_delete(creatureuuid, squaduuid):
                 "ciphered": False,
                 "payload": (
                     f':information_source: '
-                    f'**{Creature.name}** '
+                    f'**{g.Creature.name}** '
                     f'deleted this Squad'
                     ),
                 "embed": None,
-                "scope": f'Squad-{Creature.squad}',
+                "scope": f'Squad-{g.Squad.id}',
                 }
             )
 
-        msg = f'{h} Squad delete OK (squaduuid:{squaduuid})'
+        msg = f'{g.h} Squad delete OK'
         logger.debug(msg)
         return jsonify(
             {
@@ -398,33 +344,21 @@ def squad_delete(creatureuuid, squaduuid):
 
 # API: GET ../squad/<uuid:squaduuid>
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
 def squad_get_one(creatureuuid, squaduuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
     try:
-        Squad = RedisSquad(squaduuid=squaduuid)
         SquadMembers = RedisSearch().creature(
-            f"@squad:{Creature.squad.replace('-', ' ')} & "
+            f"@squad:{g.Squad.id.replace('-', ' ')} & "
             f"(@squad_rank:-Pending)"
             ).results
         SquadPending = RedisSearch().creature(
-            f"(@squad:{Creature.squad.replace('-', ' ')}) & "
+            f"(@squad:{g.Squad.id.replace('-', ' ')}) & "
             f"(@squad_rank:Pending)"
             ).results
     except Exception as e:
-        msg = f'Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -434,56 +368,35 @@ def squad_get_one(creatureuuid, squaduuid):
             }
         ), 200
     else:
-        if Squad.id:
-            msg = f'{h} Squad Query OK (squaduuid:{squaduuid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": {
-                        "members": [
-                            Creature.as_dict() for Creature in SquadMembers
-                            ],
-                        "pending": [
-                            Creature.as_dict() for Creature in SquadPending
-                            ],
-                        "squad": Squad.as_dict(),
-                        }
-                }
-            ), 200
-        else:
-            msg = f'{h} Squad Query KO - Failed (squaduuid:{squaduuid})'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'{g.h} Squad Query OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "members": [
+                        Creature.as_dict() for Creature in SquadMembers
+                        ],
+                    "pending": [
+                        Creature.as_dict() for Creature in SquadPending
+                        ],
+                    "squad": g.Squad.as_dict(),
+                    }
+            }
+        ), 200
 
 
 # API: POST ../squad/<uuid:squaduuid>/invite/<uuid:targetuuid>
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
 def squad_invite(creatureuuid, squaduuid, targetuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     CreatureTarget = RedisCreature(creatureuuid=targetuuid)
 
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if Creature.squad_rank != 'Leader':
-        msg = f'{h} PC should be the squad Leader (squaduuid:{squaduuid})'
+    if g.Creature.squad_rank != 'Leader':
+        msg = f'{g.h} PC should be the squad Leader SquadUUID({g.Squad.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -493,7 +406,7 @@ def squad_invite(creatureuuid, squaduuid, targetuuid):
             }
         ), 200
     if CreatureTarget.squad is not None:
-        msg = f'{h} Already in Squad (squaduuid:{CreatureTarget.squad})'
+        msg = f'{g.h} Already in Squad (squaduuid:{CreatureTarget.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -506,10 +419,10 @@ def squad_invite(creatureuuid, squaduuid, targetuuid):
     # Squad population check
     try:
         Members = RedisSearch().creature(
-            f"@squad:{Creature.squad.replace('-', ' ')}"
+            f"@squad:{g.Creature.squad.replace('-', ' ')}"
             )
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -523,7 +436,7 @@ def squad_invite(creatureuuid, squaduuid, targetuuid):
     maxmembers = 100
     if count == maxmembers:
         members = f'{count}/{maxmembers}'
-        msg = f'{h} Squad Full (squaduuid:{squaduuid},members:{members})'
+        msg = f'{g.h} Squad Full (squaduuid:{squaduuid},members:{members})'
         logger.error(msg)
         return jsonify(
             {
@@ -537,7 +450,7 @@ def squad_invite(creatureuuid, squaduuid, targetuuid):
         CreatureTarget.squad = str(squaduuid)
         CreatureTarget.squad_rank = 'Pending'
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -547,77 +460,55 @@ def squad_invite(creatureuuid, squaduuid, targetuuid):
             }
         ), 200
     else:
-        try:
-            Squad = RedisSquad(squaduuid=squaduuid)
-        except Exception as e:
-            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
-            logger.error(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": g.Squad.as_dict(),
+                "route": 'mypc/{id1}/squad',
+                "scope": 'squad',
                 }
-            ), 200
-        else:
-            # Broadcast Queue
-            yqueue_put(
-                YQ_BROADCAST,
-                {
-                    "ciphered": False,
-                    "payload": Squad.as_dict(),
-                    "route": 'mypc/{id1}/squad',
-                    "scope": 'squad',
-                    }
-                )
-            # Discord Queue
-            yqueue_put(
-                YQ_DISCORD,
-                {
-                    "ciphered": False,
-                    "payload": (
-                        f':information_source: '
-                        f'**{Creature.name}** '
-                        f'invited '
-                        f'**{CreatureTarget.name}** '
-                        f'in this Squad'
-                        ),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}',
-                    }
-                )
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{g.Creature.name}** '
+                    f'invited '
+                    f'**{CreatureTarget.name}** '
+                    f'in this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{g.Creature.squad}',
+                }
+            )
 
-            msg = f'{h} Squad invite OK (squaduuid:{squaduuid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": Squad.as_dict(),
-                }
-            ), 200
+        msg = f'{g.h} Squad invite OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": g.Squad.as_dict(),
+            }
+        ), 200
 
 
 # API: POST ../squad/<uuid:squaduuid>/kick/<uuid:targetuuid>
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
+@check_creature_in_squad
 def squad_kick(creatureuuid, squaduuid, targetuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     CreatureTarget = RedisCreature(creatureuuid=targetuuid)
 
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if Creature.squad_rank != 'Leader':
-        msg = f'{h} PC should be the squad Leader (squaduuid:{squaduuid})'
+    if g.Creature.squad_rank != 'Leader':
+        msg = f'{g.h} PC should be the squad Leader SquadUUID({g.Squad.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -627,7 +518,7 @@ def squad_kick(creatureuuid, squaduuid, targetuuid):
             }
         ), 200
     if CreatureTarget.squad is None:
-        msg = f'{h} Should be in Squad (squaduuid:{CreatureTarget.squad})'
+        msg = f'{g.h} Should be in Squad (squaduuid:{CreatureTarget.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -636,8 +527,8 @@ def squad_kick(creatureuuid, squaduuid, targetuuid):
                 "payload": None,
             }
         ), 200
-    if CreatureTarget.id == Creature.id:
-        msg = f'{h} Cannot kick yourself (squaduuid:{CreatureTarget.squad})'
+    if CreatureTarget.id == g.Creature.id:
+        msg = f'{g.h} Cannot kick yourself (squaduuid:{CreatureTarget.squad})'
         logger.warning(msg)
         return jsonify(
             {
@@ -651,7 +542,7 @@ def squad_kick(creatureuuid, squaduuid, targetuuid):
         CreatureTarget.squad = None
         CreatureTarget.squad_rank = None
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -661,75 +552,53 @@ def squad_kick(creatureuuid, squaduuid, targetuuid):
             }
         ), 200
     else:
-        try:
-            Squad = RedisSquad(squaduuid=squaduuid)
-        except Exception as e:
-            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
-            logger.error(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": g.Squad.as_dict(),
+                "route": 'mypc/{id1}/squad',
+                "scope": 'squad',
                 }
-            ), 200
-        else:
-            # Broadcast Queue
-            yqueue_put(
-                YQ_BROADCAST,
-                {
-                    "ciphered": False,
-                    "payload": Squad.as_dict(),
-                    "route": 'mypc/{id1}/squad',
-                    "scope": 'squad',
-                    }
-                )
-            # Discord Queue
-            yqueue_put(
-                YQ_DISCORD,
-                {
-                    "ciphered": False,
-                    "payload": (
-                        f':information_source: '
-                        f'**{Creature.name}** '
-                        f'kicked '
-                        f'**{CreatureTarget.name}** '
-                        f'from this Squad'
-                        ),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}',
-                    }
-                )
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{g.Creature.name}** '
+                    f'kicked '
+                    f'**{CreatureTarget.name}** '
+                    f'from this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{g.Creature.squad}',
+                }
+            )
 
-            msg = f'{h} Squad kick OK (squaduuid:{squaduuid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": Squad.as_dict(),
-                }
-            ), 200
+        msg = f'{g.h} Squad kick OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": g.Squad.as_dict(),
+            }
+        ), 200
 
 
 # API: ../squad/<uuid:squaduuid>/leave
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_squad_exists
+@check_creature_in_squad
 def squad_leave(creatureuuid, squaduuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.squad != str(squaduuid):
-        msg = f'{h} Squad request outside your scope (squaduuid:{squaduuid})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if Creature.squad_rank == 'Leader':
-        msg = f'{h} PC cannot be the squad Leader (squaduuid:{squaduuid})'
+    if g.Creature.squad_rank == 'Leader':
+        msg = f'{g.h} PC cannot be the squad Leader SquadUUID({g.Squad.id})'
         logger.warning(msg)
         return jsonify(
             {
@@ -740,10 +609,10 @@ def squad_leave(creatureuuid, squaduuid):
         ), 200
 
     try:
-        Creature.squad = None
-        Creature.squad_rank = None
+        g.Creature.squad = None
+        g.Creature.squad_rank = None
     except Exception as e:
-        msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
+        msg = f'{g.h} Squad Query KO SquadUUID({g.Squad.id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -753,50 +622,37 @@ def squad_leave(creatureuuid, squaduuid):
             }
         ), 200
     else:
-        try:
-            Squad = RedisSquad(squaduuid=squaduuid)
-        except Exception as e:
-            msg = f'{h} Squad Query KO (squaduuid:{squaduuid}) [{e}]'
-            logger.error(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
+        # Broadcast Queue
+        yqueue_put(
+            YQ_BROADCAST,
+            {
+                "ciphered": False,
+                "payload": g.Squad.as_dict(),
+                "route": 'mypc/{id1}/squad',
+                "scope": 'squad',
                 }
-            ), 200
-        else:
-            # Broadcast Queue
-            yqueue_put(
-                YQ_BROADCAST,
-                {
-                    "ciphered": False,
-                    "payload": Squad.as_dict(),
-                    "route": 'mypc/{id1}/squad',
-                    "scope": 'squad',
-                    }
-                )
-            # Discord Queue
-            yqueue_put(
-                YQ_DISCORD,
-                {
-                    "ciphered": False,
-                    "payload": (
-                        f':information_source: '
-                        f'**{Creature.name}** '
-                        f'left this Squad'
-                        ),
-                    "embed": None,
-                    "scope": f'Squad-{Creature.squad}',
-                    }
-                )
+            )
+        # Discord Queue
+        yqueue_put(
+            YQ_DISCORD,
+            {
+                "ciphered": False,
+                "payload": (
+                    f':information_source: '
+                    f'**{g.Creature.name}** '
+                    f'left this Squad'
+                    ),
+                "embed": None,
+                "scope": f'Squad-{g.Creature.squad}',
+                }
+            )
 
-            msg = f'{h} Squad leave OK (squaduuid:{squaduuid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": Squad.as_dict(),
-                }
-            ), 200
+        msg = f'{g.h} Squad leave OK'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": g.Squad.as_dict(),
+            }
+        ), 200

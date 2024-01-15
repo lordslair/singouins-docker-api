@@ -7,6 +7,8 @@ from loguru                     import logger
 from nosql.models.RedisUser     import RedisUser
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisItem     import RedisItem
+from nosql.models.RedisKorp     import RedisKorp
+from nosql.models.RedisSquad     import RedisSquad
 
 
 def check_creature_exists(func):
@@ -39,6 +41,48 @@ def check_creature_in_instance(func):
     def wrapper(*args, **kwargs):
         if g.Creature.instance is None:
             msg = f'[Creature.id:{g.Creature.id}] Creature not in an instance'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+        else:
+            return func(*args, **kwargs)
+
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+def check_creature_in_korp(func):
+    """ Decorator to check if g.Creature is in g.Korp """
+    def wrapper(*args, **kwargs):
+        if g.Creature.korp != g.Korp.id:
+            msg = f'[Creature.id:{g.Creature.id}] Creature not in this Korp'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+        else:
+            return func(*args, **kwargs)
+
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+def check_creature_in_squad(func):
+    """ Decorator to check if g.Creature is in g.Squad """
+    def wrapper(*args, **kwargs):
+        if g.Creature.squad != g.Squad.id:
+            msg = f'[Creature.id:{g.Creature.id}] Creature not in this Squad'
             logger.warning(msg)
             return jsonify(
                 {
@@ -116,6 +160,56 @@ def check_item_exists(func):
             return func(*args, **kwargs)
         else:
             msg = f'[Item.id:None] ItemUUID({itemuuid}) NOTFOUND'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+def check_korp_exists(func):
+    """ Decorator to check if a Korp exists in DB or not. """
+    def wrapper(*args, **kwargs):
+        korpuuid = str(kwargs.get('korpuuid'))
+        if RedisKorp().exists(korpuuid=korpuuid):
+            g.Korp = RedisKorp(korpuuid=korpuuid)
+            logger.trace(f'[Korp.id:{g.Korp.id}] Creature FOUND')
+            g.h = f'[Korp.id:{g.Creature.id}]'
+            return func(*args, **kwargs)
+        else:
+            msg = f'[Korp.id:None] KorpUUID({korpuuid}) NOTFOUND'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+def check_squad_exists(func):
+    """ Decorator to check if a Squad exists in DB or not. """
+    def wrapper(*args, **kwargs):
+        squaduuid = str(kwargs.get('squaduuid'))
+        if RedisSquad().exists(squaduuid=squaduuid):
+            g.Squad = RedisSquad(squaduuid=squaduuid)
+            logger.trace(f'[Squad.id:{g.Squad.id}] Creature FOUND')
+            g.h = f'[Squad.id:{g.Creature.id}]'
+            return func(*args, **kwargs)
+        else:
+            msg = f'[Squad.id:None] SquadUUID({squaduuid}) NOTFOUND'
             logger.warning(msg)
             return jsonify(
                 {
