@@ -1,8 +1,7 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify, request
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify, request
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 from random                     import choices
 
@@ -10,14 +9,13 @@ from nosql.metas                import (
     metaRecipes,
     metaConsumables,
     )
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisWallet   import RedisWallet
 
-from utils.routehelper          import (
-    creature_check,
-    request_json_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_is_json,
     )
 
 
@@ -26,11 +24,10 @@ from utils.routehelper          import (
 #
 # API: PUT /mypc/<uuid:creatureuuid>/action/craft/consumable/<int:recipeid>
 @jwt_required()
+# Custom decorators
+@check_is_json
+@check_creature_exists
 def consumable(creatureuuid, recipeid):
-    request_json_check(request)
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     # Retrieving recipe
     try:
         # We grab the race wanted from metaRaces
@@ -40,7 +37,7 @@ def consumable(creatureuuid, recipeid):
                 )[0]
             )  # Gruikfix
     except Exception as e:
-        msg = f'{h} metaRecipe Query KO (recipeid:{recipeid}) [{e}]'
+        msg = f'{g.h} metaRecipe Query KO (recipeid:{recipeid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -51,7 +48,7 @@ def consumable(creatureuuid, recipeid):
         ), 200
 
     if metaRecipe is None:
-        msg = f'{h} metaRecipe NotFound (recipeid:{recipeid})'
+        msg = f'{g.h} metaRecipe NotFound (recipeid:{recipeid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -62,8 +59,8 @@ def consumable(creatureuuid, recipeid):
         ), 200
 
     # We load a lot of Redis Objects for later
-    Wallet = RedisWallet(creatureuuid=Creature.id)
-    HighScores = RedisHS(creatureuuid=Creature.id)
+    Wallet = RedisWallet(creatureuuid=g.Creature.id)
+    HighScores = RedisHS(creatureuuid=g.Creature.id)
 
     # Check if requirements are met WITH extra components
     request_data = request.get_json()
@@ -77,7 +74,7 @@ def consumable(creatureuuid, recipeid):
                 if wallet_value >= needed_value:
                     setattr(Wallet, key, wallet_value - needed_value)
                 else:
-                    msg = f'{h} Not enough. Wallet.{key} < ({needed_value})'
+                    msg = f'{g.h} Not enough. Wallet.{key} < ({needed_value})'
                     logger.warning(msg)
                     return jsonify(
                         {
@@ -118,17 +115,17 @@ def consumable(creatureuuid, recipeid):
         if 'currency' in metaRecipe['component']['wallet']:
             # OK, we have to
             currency = metaRecipe['component']['wallet']['currency']
-            if Creature.race in [1, 2, 3, 4]:
+            if g.Creature.race in [1, 2, 3, 4]:
                 # Creature is a Singouin, we remove bananas
                 Wallet.bananas -= currency
-            elif Creature.race in [5, 6, 7, 8]:
+            elif g.Creature.race in [5, 6, 7, 8]:
                 # Creature is a Pourchon, we remove sausages
                 Wallet.sausages -= currency
             else:
                 # We fucked up
                 pass
     else:
-        msg = f'{h} Not enough data'
+        msg = f'{g.h} Not enough data'
         logger.error(msg)
         return jsonify(
             {
@@ -166,14 +163,14 @@ def consumable(creatureuuid, recipeid):
                 )
             )[0]
         )  # Gruikfix
-    logger.debug(f'{h} Crafted item:{metaConsumable}')
+    logger.debug(f'{g.h} Crafted item:{metaConsumable}')
 
     # We set the HS
     HighScores.incr(metaRecipe['hs'])
 
     # We create the Creature Event
     RedisEvent().new(
-        action_src=Creature.id,
+        action_src=g.Creature.id,
         action_dst=None,
         action_type='action/craft',
         action_text='Crafted something',
@@ -187,7 +184,7 @@ def consumable(creatureuuid, recipeid):
     But that will be for later, here is just a prototype
     """
 
-    msg = f'{h} Craft Query OK (recipeid:{recipeid})'
+    msg = f'{g.h} Craft Query OK (recipeid:{recipeid})'
     logger.debug(msg)
 
     return jsonify(
