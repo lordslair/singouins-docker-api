@@ -63,7 +63,6 @@ class RedisCreature:
         return self.__str__()
 
     def exists(self, creatureuuid):
-        logger.debug(f'{self.hkey}:{creatureuuid}')
         if r.exists(f'{self.hkey}:{creatureuuid}'):
             logger.trace(f'{self.logh} Method >> (HASH Found)')
             return True

@@ -1,22 +1,21 @@
 # -*- coding: utf8 -*-
 
-from flask                               import jsonify, request
-from flask_jwt_extended                  import (jwt_required,
-                                                 get_jwt_identity)
-from loguru                              import logger
-from random                              import choices, randint
+from flask                      import g, jsonify, request
+from flask_jwt_extended         import jwt_required
+from loguru                     import logger
+from random                     import choices, randint
 
-from nosql.maps                          import get_map
-from nosql.publish                       import publish
-from nosql.queue                         import yqueue_put
-from nosql.metas                         import metaNames
-from nosql.models.RedisCreature          import RedisCreature
-from nosql.models.RedisInstance          import RedisInstance
-from nosql.models.RedisStats             import RedisStats
+from nosql.maps                 import get_map
+from nosql.publish              import publish
+from nosql.queue                import yqueue_put
+from nosql.metas                import metaNames
+from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisInstance import RedisInstance
+from nosql.models.RedisStats    import RedisStats
 
-from utils.routehelper          import (
-    creature_check,
-    request_json_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_is_json,
     )
 
 from variables                           import YQ_DISCORD
@@ -27,29 +26,17 @@ from variables                           import YQ_DISCORD
 #
 # API: PUT /mypc/<uuid:creatureuuid>/instance
 @jwt_required()
+# Custom decorators
+@check_is_json
+@check_creature_exists
 def add(creatureuuid):
-    request_json_check(request)
-
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     hardcore = request.json.get('hardcore', None)
     fast     = request.json.get('fast', None)
     mapid    = request.json.get('mapid', None)
     public   = request.json.get('public', None)
 
-    if Creature.instance is not None:
-        msg = f'{h} Creature not in an instance'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
     if not isinstance(mapid, int):
-        msg = f'{h} Map ID should be an INT (mapid:{mapid})'
+        msg = f'{g.h} Map ID should be an INT (mapid:{mapid})'
         logger.warning(msg)
         return jsonify(
             {
@@ -59,7 +46,7 @@ def add(creatureuuid):
             }
         ), 200
     if not isinstance(hardcore, bool):
-        msg = f'{h} Hardcore param should be a boolean (hardcore:{hardcore})'
+        msg = f'{g.h} Hardcore param should be a boolean (hardcore:{hardcore})'
         logger.warning(msg)
         return jsonify(
             {
@@ -69,7 +56,7 @@ def add(creatureuuid):
             }
         ), 200
     if not isinstance(fast, bool):
-        msg = f'{h} Fast param should be a boolean (hardcore:{hardcore})'
+        msg = f'{g.h} Fast param should be a boolean (hardcore:{hardcore})'
         logger.warning(msg)
         return jsonify(
             {
@@ -79,7 +66,7 @@ def add(creatureuuid):
             }
         ), 200
     if not isinstance(public, bool):
-        msg = f'{h} Public param should be a boolean (hardcore:{hardcore})'
+        msg = f'{g.h} Public param should be a boolean (hardcore:{hardcore})'
         logger.warning(msg)
         return jsonify(
             {
@@ -93,7 +80,7 @@ def add(creatureuuid):
     try:
         map = get_map(mapid)
     except Exception as e:
-        msg = f'{h} Map Query KO (mapid:{mapid}) [{e}]'
+        msg = f'{g.h} Map Query KO (mapid:{mapid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -106,7 +93,7 @@ def add(creatureuuid):
     # Create the new instance
     try:
         instance_dict = {
-            "creator": Creature.id,
+            "creator": g.Creature.id,
             "fast": fast,
             "hardcore": hardcore,
             "map": mapid,
@@ -114,7 +101,7 @@ def add(creatureuuid):
         }
         Instance = RedisInstance().new(instance=instance_dict)
     except Exception as e:
-        msg = f"{h} Instance Query KO [{e}]"
+        msg = f"{g.h} Instance Query KO [{e}]"
         logger.error(msg)
         return jsonify(
             {
@@ -126,9 +113,9 @@ def add(creatureuuid):
 
     # Everything went well so far
     try:
-        Creature.instance = Instance.id
+        g.Creature.instance = Instance.id
     except Exception as e:
-        msg = f'{h} Instance({Instance.id}) Query KO [{e}]'
+        msg = f'{g.h} Instance({Instance.id}) Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -143,10 +130,10 @@ def add(creatureuuid):
     # Everything went well, creation DONE
     # We put the info in queue for Discord
     scopes = []
-    if Creature.korp is not None:
-        scopes.append(f'Korp-{Creature.korp}')
-    if Creature.squad is not None:
-        scopes.append(f'Squad-{Creature.squad}')
+    if g.Creature.korp is not None:
+        scopes.append(f'Korp-{g.Creature.korp}')
+    if g.Creature.squad is not None:
+        scopes.append(f'Squad-{g.Creature.squad}')
     for scope in scopes:
         # Discord Queue
         yqueue_put(
@@ -154,7 +141,7 @@ def add(creatureuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':map: **[{Creature.id}] {Creature.name}** '
+                    f':map: **[{g.Creature.id}] {g.Creature.name}** '
                     f'opened an Instance ({Instance.id})'
                     ),
                 "embed": None,
@@ -197,12 +184,12 @@ def add(creatureuuid):
                     )
                 RedisStats().new(Creature=Monster, classid=None)
             except Exception as e:
-                msg = (f'{h} Population in Instance KO for mob '
+                msg = (f'{g.h} Population in Instance KO for mob '
                        f'#{mobs_nbr} [{e}]')
                 logger.error(msg)
             else:
                 if Monster is None:
-                    msg = (f'{h} Population in Instance KO for mob '
+                    msg = (f'{g.h} Population in Instance KO for mob '
                            f'#{mobs_nbr}')
                     logger.warning(msg)
                 else:
@@ -221,25 +208,25 @@ def add(creatureuuid):
                                 ).get_data(),
                                 )
                     except Exception as e:
-                        msg = f'{h} Publish({pchannel}) KO [{e}]'
+                        msg = f'{g.h} Publish({pchannel}) KO [{e}]'
                         logger.error(msg)
                     else:
                         pass
 
             mobs_nbr += 1
     except Exception as e:
-        msg = f'{h} Instance({Instance.id}) Population KO [{e}]'
+        msg = f'{g.h} Instance({Instance.id}) Population KO [{e}]'
         logger.error(msg)
     else:
         if len(mobs_generated) > 0:
-            msg = (f'{h} Instance({Instance.id}) Population OK '
+            msg = (f'{g.h} Instance({Instance.id}) Population OK '
                    f'(mobs:{len(mobs_generated)})')
             logger.trace(msg)
         else:
-            msg = f'{h} Instance({Instance.id}) Population KO'
+            msg = f'{g.h} Instance({Instance.id}) Population KO'
             logger.error(msg)
     # Finally everything is done
-    msg = f'{h} Instance({Instance.id}) Create OK'
+    msg = f'{g.h} Instance({Instance.id}) Create OK'
     logger.debug(msg)
     return jsonify(
         {

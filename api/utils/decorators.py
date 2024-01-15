@@ -6,9 +6,10 @@ from loguru                     import logger
 
 from nosql.models.RedisUser     import RedisUser
 from nosql.models.RedisCreature import RedisCreature
+from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisKorp     import RedisKorp
-from nosql.models.RedisSquad     import RedisSquad
+from nosql.models.RedisSquad    import RedisSquad
 
 
 def check_creature_exists(func):
@@ -144,6 +145,30 @@ def check_is_json(func):
             ), 400
         else:
             return func(*args, **kwargs)
+
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+def check_instance_exists(func):
+    """ Decorator to check if an Instance exists in DB or not. """
+    def wrapper(*args, **kwargs):
+        instanceuuid = kwargs.get('instanceuuid')
+        if RedisInstance().exists(instanceuuid=instanceuuid):
+            g.Instance = RedisInstance(instanceuuid=instanceuuid)
+            logger.trace(f'[Instance.id:{g.Instance.id}] Instance FOUND')
+            return func(*args, **kwargs)
+        else:
+            msg = f'[Instance.id:None] InstanceUUID({instanceuuid}) NOTFOUND'
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
 
     # Renaming the function name:
     wrapper.__name__ = func.__name__
