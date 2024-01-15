@@ -27,6 +27,8 @@ def check_creature_exists(func):
                 }
             ), 200
 
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
     return wrapper
 
 
@@ -46,6 +48,8 @@ def check_creature_in_instance(func):
         else:
             return func(*args, **kwargs)
 
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
     return wrapper
 
 
@@ -74,6 +78,8 @@ def check_creature_owned(func):
                 '@check_user_exists and @check_creature_exists'
                 )
 
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
     return wrapper
 
 
@@ -93,6 +99,8 @@ def check_is_json(func):
         else:
             return func(*args, **kwargs)
 
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
     return wrapper
 
 
@@ -115,4 +123,6 @@ def check_user_exists(func):
                 }
             ), 200
 
+    # Renaming the function name:
+    wrapper.__name__ = func.__name__
     return wrapper
