@@ -4,7 +4,6 @@ from flask                      import g, jsonify, request
 from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisSearch   import RedisSearch
 
 from utils.decorators import (
@@ -21,15 +20,13 @@ from utils.decorators import (
 #
 # API: POST /mypc/<uuid:creatureuuid>/action/resolver/context
 @jwt_required()
-@check_is_json
 # Custom decorators
+@check_is_json
 @check_creature_exists
 @check_creature_in_instance
 @check_user_exists
 @check_creature_owned
 def context(creatureuuid):
-    h = f'[Creature.id:{g.Creature.id}]'
-
     try:
         Statuses = RedisSearch().status(
             query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
@@ -44,21 +41,7 @@ def context(creatureuuid):
             query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
     except Exception as e:
-        msg = f'{h} RedisSearch Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
-        Instance = RedisInstance(instanceuuid=g.Creature.instance)
-        map = Instance.map
-    except Exception as e:
-        msg = f'{h} RedisInstance Query KO [{e}]'
+        msg = f'{g.h} RedisSearch Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -74,7 +57,7 @@ def context(creatureuuid):
         fightEventactor = request.json.get('actor', None)
         fightEventparams = request.json.get('params', None)
     except Exception as e:
-        msg = f'{h} ResolverInfo Query KO [{e}]'
+        msg = f'{g.h} ResolverInfo Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -87,8 +70,8 @@ def context(creatureuuid):
     # Supposedly got all infos
     payload = {
         "context": {
-            "map": map,
-            "instance": g.Creature.instance,
+            "map": g.Instance.map,
+            "instance": g.Instance.id,
             "creatures": [
                 Creature.as_dict() for Creature in Creatures.results
                 ],
@@ -110,7 +93,7 @@ def context(creatureuuid):
         }
     }
 
-    msg = f'{h} Context Query OK'
+    msg = f'{g.h} Context Query OK'
     logger.debug(msg)
     return jsonify(
         {

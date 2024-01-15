@@ -3,20 +3,18 @@
 import json
 import requests
 
-from flask                      import jsonify, request
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify, request
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
-from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisSearch   import RedisSearch
 
 from variables                  import RESOLVER_URL
-from utils.routehelper          import (
-    creature_check,
-    request_json_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_creature_in_instance,
+    check_is_json,
     )
 
 
@@ -25,52 +23,26 @@ from utils.routehelper          import (
 #
 # API: POST /mypc/<uuid:creatureuuid>/action/resolver/move
 @jwt_required()
+# Custom decorators
+@check_is_json
+@check_creature_exists
+@check_creature_in_instance
 def move(creatureuuid):
-    request_json_check(request)
-
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.instance is None:
-        msg = f'{h} Creature not in an instance'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
     try:
         Statuses = RedisSearch().status(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
         Cds = RedisSearch().cd(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
         Effects = RedisSearch().effect(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
         Creatures = RedisSearch().creature(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
     except Exception as e:
-        msg = f'{h} RedisSearch Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
-        Instance = RedisInstance(instanceuuid=Creature.instance)
-        map = Instance.map
-    except Exception as e:
-        msg = f'{h} RedisInstance Query KO [{e}]'
+        msg = f'{g.h} RedisSearch Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -86,7 +58,7 @@ def move(creatureuuid):
         fightEventactor = request.json.get('actor', None)
         fightEventparams = request.json.get('params', None)
     except Exception as e:
-        msg = f'{h} ResolverInfo Query KO [{e}]'
+        msg = f'{g.h} ResolverInfo Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -99,8 +71,8 @@ def move(creatureuuid):
     # Supposedly got all infos
     payload = {
         "context": {
-            "map": map,
-            "instance": Creature.instance,
+            "map": g.Instance.map,
+            "instance": g.Instance.id,
             "creatures": [
                 Creature.as_dict() for Creature in Creatures.results
                 ],
@@ -125,7 +97,7 @@ def move(creatureuuid):
     try:
         response = requests.post(f'{RESOLVER_URL}/', json=payload)
     except Exception as e:
-        msg = f'{h} Resolver Query KO [{e}]'
+        msg = f'{g.h} Resolver Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -137,13 +109,13 @@ def move(creatureuuid):
     else:
         # We create the Creature Event
         RedisEvent().new(
-            action_src=Creature.id,
+            action_src=g.Creature.id,
             action_dst=None,
             action_type='action/move',
             action_text='Moved',
             action_ttl=30 * 86400
             )
-        msg = f'{h} Resolver Query OK'
+        msg = f'{g.h} Resolver Query OK'
         logger.debug(msg)
         return jsonify(
             {

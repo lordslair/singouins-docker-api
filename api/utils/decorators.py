@@ -51,6 +51,7 @@ def check_creature_in_instance(func):
                 }
             ), 200
         else:
+            g.Instance = RedisInstance(instanceuuid=g.Creature.instance)
             return func(*args, **kwargs)
 
     # Renaming the function name:
