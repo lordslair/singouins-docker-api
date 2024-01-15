@@ -24,7 +24,7 @@ def test_redis_cd_new():
     """
     Cd = RedisCd(creatureuuid=CREATURE_ID).new(
         duration_base=180,
-        extra=None,
+        extra={},
         instance=INSTANCE_ID,
         name=SKILL_NAME,
         source=CREATURE_ID,

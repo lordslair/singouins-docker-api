@@ -24,7 +24,7 @@ def test_redis_effect_new():
     """
     Effect = RedisEffect(creatureuuid=CREATURE_ID).new(
         duration_base=180,
-        extra=None,
+        extra={},
         instance=INSTANCE_ID,
         name=EFFECT_NAME,
         source=CREATURE_ID,

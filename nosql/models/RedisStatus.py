@@ -6,7 +6,7 @@ import uuid
 from loguru                      import logger
 
 from nosql.connector             import r
-from nosql.variables             import str2typed, typed2str
+from nosql.variables             import str2typed
 
 
 class RedisStatus:
@@ -25,7 +25,13 @@ class RedisStatus:
                     if r.exists(fullkey):
                         hashdict = r.hgetall(fullkey)
                         for k, v in hashdict.items():
-                            setattr(self, k, str2typed(v))
+                            # We need to convert extra to JSON
+                            if any([
+                                k == 'extra',
+                            ]):
+                                setattr(self, k, json.loads(v))
+                            else:
+                                setattr(self, k, str2typed(v))
                         self.duration_left = r.ttl(fullkey)
                         logger.trace(f'{self.logh} Method >> (HASH Loaded)')
                     else:
@@ -64,7 +70,7 @@ class RedisStatus:
             "bearer": self.bearer,
             "duration_base": self.duration_base,
             "duration_left": self.duration_left,
-            "extra": json.loads(self.extra),
+            "extra": self.extra,
             "id": self.id,
             "instance": self.instance,
             "name": self.name,
@@ -126,6 +132,7 @@ class RedisStatus:
             self.bearer        = self.creatureuuid
             self.duration_base = duration_base
             self.duration_left = duration_base
+            self.extra         = json.dumps(extra)
             self.id            = str(uuid.uuid4())
             self.instance      = instance
             self.name          = name
@@ -136,7 +143,7 @@ class RedisStatus:
                 "duration_base": self.duration_base,
                 "id": self.id,
                 "instance": self.instance,
-                "extra": typed2str(self.extra),
+                "extra": self.extra,
                 "name": self.name,
                 "source": self.source,
                 "type": self.type
