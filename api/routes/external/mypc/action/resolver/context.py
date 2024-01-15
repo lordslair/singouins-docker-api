@@ -1,17 +1,18 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify, request
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify, request
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisSearch   import RedisSearch
 
-from utils.routehelper          import (
-    creature_check,
-    request_json_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_creature_in_instance,
+    check_is_json,
+    check_user_exists,
+    check_creature_owned,
     )
 
 
@@ -20,35 +21,27 @@ from utils.routehelper          import (
 #
 # API: POST /mypc/<uuid:creatureuuid>/action/resolver/context
 @jwt_required()
+@check_is_json
+# Custom decorators
+@check_creature_exists
+@check_creature_in_instance
+@check_user_exists
+@check_creature_owned
 def context(creatureuuid):
-    request_json_check(request)
-
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
-    if Creature.instance is None:
-        msg = f'{h} Creature not in an instance'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
+    h = f'[Creature.id:{g.Creature.id}]'
 
     try:
         Statuses = RedisSearch().status(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
         Cds = RedisSearch().cd(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
         Effects = RedisSearch().effect(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
         Creatures = RedisSearch().creature(
-            query=f"@instance:{Creature.instance.replace('-', ' ')}"
+            query=f"@instance:{g.Creature.instance.replace('-', ' ')}"
             )
     except Exception as e:
         msg = f'{h} RedisSearch Query KO [{e}]'
@@ -62,7 +55,7 @@ def context(creatureuuid):
         ), 200
 
     try:
-        Instance = RedisInstance(instanceuuid=Creature.instance)
+        Instance = RedisInstance(instanceuuid=g.Creature.instance)
         map = Instance.map
     except Exception as e:
         msg = f'{h} RedisInstance Query KO [{e}]'
@@ -95,7 +88,7 @@ def context(creatureuuid):
     payload = {
         "context": {
             "map": map,
-            "instance": Creature.instance,
+            "instance": g.Creature.instance,
             "creatures": [
                 Creature.as_dict() for Creature in Creatures.results
                 ],
