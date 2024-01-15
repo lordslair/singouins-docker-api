@@ -1,18 +1,17 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisWallet   import RedisWallet
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
     )
+
 
 #
 # Routes /mypc/<uuid:creatureuuid>/item/*
@@ -21,22 +20,21 @@ from utils.routehelper          import (
 
 # API: GET /mypc/<uuid:creatureuuid>/item
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def item_get(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
         Items = RedisSearch().item(
-            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
             )
         Cosmetics = RedisSearch().cosmetic(
-            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
             )
 
-        Slots = RedisSlots(creatureuuid=Creature.id)
-        Wallet = RedisWallet(creatureuuid=Creature.id)
+        Slots = RedisSlots(creatureuuid=g.Creature.id)
+        Wallet = RedisWallet(creatureuuid=g.Creature.id)
     except Exception as e:
-        msg = f'{h} Items Query KO [{e}]'
+        msg = f'{g.h} Items Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -46,7 +44,7 @@ def item_get(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{h} Items Query OK'
+        msg = f'{g.h} Items Query OK'
         logger.debug(msg)
         return jsonify(
             {

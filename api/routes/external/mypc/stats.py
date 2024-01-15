@@ -1,15 +1,13 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisStats    import RedisStats
+from nosql.models.RedisStats   import RedisStats
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
     )
 
 
@@ -18,14 +16,13 @@ from utils.routehelper          import (
 #
 # API: GET /mypc/<uuid:creatureuuid>/stats
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def stats_get(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
         Stats = RedisStats(creatureuuid=creatureuuid)
     except Exception as e:
-        msg = f'{h} Stats Query KO [{e}]'
+        msg = f'{g.h} Stats Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -35,7 +32,7 @@ def stats_get(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{h} Stats Query OK'
+        msg = f'{g.h} Stats Query OK'
         logger.debug(msg)
         return jsonify(
             {

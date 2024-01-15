@@ -1,15 +1,13 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSearch   import RedisSearch
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
     )
 
 
@@ -18,19 +16,18 @@ from utils.routehelper          import (
 #
 # API: GET /mypc/<uuid:creatureuuid>/event
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def mypc_event_get_all(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
         Events = RedisSearch(maxpaging=100).event(
             query=(
-                f"(@src:{Creature.id.replace('-', ' ')}) | "
-                f"(@dst:{Creature.id.replace('-', ' ')})"
+                f"(@src:{g.Creature.id.replace('-', ' ')}) | "
+                f"(@dst:{g.Creature.id.replace('-', ' ')})"
                 ),
             )
     except Exception as e:
-        msg = f'{h} Event Query KO [{e}]'
+        msg = f'{g.h} Event Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -40,7 +37,7 @@ def mypc_event_get_all(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{h} Event Query OK'
+        msg = f'{g.h} Event Query OK'
         logger.debug(msg)
         return jsonify(
             {

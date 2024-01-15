@@ -1,16 +1,14 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisStats    import RedisStats
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
     )
 
 
@@ -19,22 +17,21 @@ from utils.routehelper          import (
 #
 # API: GET /mypc/<uuid:creatureuuid>/view
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def view_get(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
-        if Creature.squad is None:
+        if g.Creature.squad is None:
             # PC is solo / not in a squad
             view_final = []
             try:
-                Stats = RedisStats(creatureuuid=Creature.id)
+                Stats = RedisStats(creatureuuid=g.Creature.id)
                 range = 4 + round(Stats.p / 50)
 
-                maxx  = Creature.x + range
-                minx  = Creature.x - range
-                maxy  = Creature.y + range
-                miny  = Creature.y - range
+                maxx  = g.Creature.x + range
+                minx  = g.Creature.x - range
+                maxy  = g.Creature.y + range
+                miny  = g.Creature.y - range
 
                 CreaturesVisible = RedisSearch().creature(
                     query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
@@ -50,7 +47,7 @@ def view_get(creatureuuid):
 
                     view_final.append(creature_in_sight)
             except Exception as e:
-                msg = f'{h} View Query KO [{e}]'
+                msg = f'{g.h} View Query KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -64,12 +61,12 @@ def view_get(creatureuuid):
             # We query the Squad members in the same instance
             try:
                 SquadMembers = RedisSearch().creature(
-                    f"(@squad:{Creature.squad.replace('-', ' ')}) & "
+                    f"(@squad:{g.Creature.squad.replace('-', ' ')}) & "
                     f"(@squad_rank:-Pending) & "
-                    f"(@instance:{Creature.instance.replace('-', ' ')})"
+                    f"(@instance:{g.Creature.instance.replace('-', ' ')})"
                     )
             except Exception as e:
-                msg = f'{h} Squad Query KO (squadid:{Creature.squad}) [{e}]'
+                msg = f'{g.h} Squad Query KO Squad({g.Creature.squad}) [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -81,8 +78,8 @@ def view_get(creatureuuid):
             else:
                 if not SquadMembers or len(SquadMembers.results) == 0:
                     msg = (
-                        f'{h} Squad Query KO - NotFound '
-                        f'(squadid:{Creature.squad})'
+                        f'{g.h} Squad Query KO - NotFound '
+                        f'Squad({g.Creature.squad})'
                         )
                     logger.warning(msg)
                     return jsonify(
@@ -93,7 +90,7 @@ def view_get(creatureuuid):
                         }
                     ), 200
                 else:
-                    msg = f'{h} Squad Query OK'
+                    msg = f'{g.h} Squad Query OK'
                     logger.trace(msg)
 
             views = []       # We initialize the intermadiate array
@@ -120,7 +117,10 @@ def view_get(creatureuuid):
                         views = list(set(views + CreaturesVisible.results))
 
                 except Exception as e:
-                    msg = f'{h} View Query KO (squadid:{Creature.squad}) [{e}]'
+                    msg = (
+                        f'{g.h} View Query KO '
+                        f'Squad({g.Creature.squad}) [{e}]'
+                        )
                     logger.error(msg)
                     return jsonify(
                         {
@@ -137,12 +137,12 @@ def view_get(creatureuuid):
                         # We try to define the diplomacy based on tests
                         if creature_in_sight['race'] >= 11:
                             creature_in_sight['diplo'] = 'enemy'
-                        if creature_in_sight['squad'] == Creature.squad:
+                        if creature_in_sight['squad'] == g.Creature.squad:
                             creature_in_sight['diplo'] = 'squad'
 
                         view_final.append(creature_in_sight)
     except Exception as e:
-        msg = f'{h} View Query KO [{e}]'
+        msg = f'{g.h} View Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -152,7 +152,7 @@ def view_get(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{h} View Query OK'
+        msg = f'{g.h} View Query OK'
         logger.debug(msg)
         return jsonify(
             {

@@ -1,15 +1,13 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisSearch   import RedisSearch
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
     )
 
 
@@ -18,16 +16,15 @@ from utils.routehelper          import (
 #
 # API: GET /mypc/<uuid:creatureuuid>/effects
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def effects_get(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
         Effects = RedisSearch().effect(
-            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
             )
     except Exception as e:
-        msg = f'{h} Effects Query KO [{e}]'
+        msg = f'{g.h} Effects Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -37,7 +34,7 @@ def effects_get(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{h} Effects Query OK'
+        msg = f'{g.h} Effects Query OK'
         logger.debug(msg)
         return jsonify(
             {
@@ -47,7 +44,7 @@ def effects_get(creatureuuid):
                     "effects": [
                         Effect.as_dict() for Effect in Effects.results
                         ],
-                    "creature": Creature.as_dict(),
+                    "creature": g.Creature.as_dict(),
                     },
             }
         ), 200

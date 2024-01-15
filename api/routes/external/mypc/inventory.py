@@ -1,15 +1,13 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import (jwt_required,
-                                        get_jwt_identity)
+from flask                      import g, jsonify
+from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
 from nosql.metas                import metaNames
 from nosql.queue                import yqueue_put
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEvent    import RedisEvent
-from nosql.models.RedisItem     import RedisItem
+from nosql.models.RedisItem    import RedisItem
 from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSearch   import RedisSearch
@@ -17,8 +15,9 @@ from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_item_exists,
     )
 
 from variables                  import YQ_BROADCAST
@@ -29,12 +28,12 @@ from variables                  import YQ_BROADCAST
 #
 # API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/dismantle
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_item_exists
 def inventory_item_dismantle(creatureuuid, itemuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     if RedisPa(creatureuuid=creatureuuid).bluepa < 1:
-        msg = f'{h} Not enough PA'
+        msg = f'{g.h} Not enough PA'
         logger.warning(msg)
         return jsonify(
             {
@@ -45,52 +44,28 @@ def inventory_item_dismantle(creatureuuid, itemuuid):
         ), 200
 
     try:
-        Item = RedisItem(itemuuid=itemuuid)
-    except Exception as e:
-        msg = f'{h} Item({itemuuid}) Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        if Item.id is None:
-            msg = f'{h} Item({itemuuid}) Query KO - NotFound'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
-
-    try:
         # We add the shards in the wallet
         Wallet = RedisWallet(creatureuuid=creatureuuid)
-        if Item.rarity == 'Broken':
-            wallet_value = getattr(Wallet, Item.rarity.lower())
-            setattr(Wallet, Item.rarity.lower(), wallet_value + 6)
-        elif Item.rarity == 'Common':
-            wallet_value = getattr(Wallet, Item.rarity.lower())
-            setattr(Wallet, Item.rarity.lower(), wallet_value + 5)
-        elif Item.rarity == 'Uncommon':
-            wallet_value = getattr(Wallet, Item.rarity.lower())
-            setattr(Wallet, Item.rarity.lower(), wallet_value + 4)
-        elif Item.rarity == 'Rare':
-            wallet_value = getattr(Wallet, Item.rarity.lower())
-            setattr(Wallet, Item.rarity.lower(), wallet_value + 3)
-        elif Item.rarity == 'Epic':
-            wallet_value = getattr(Wallet, Item.rarity.lower())
-            setattr(Wallet, Item.rarity.lower(), wallet_value + 2)
-        elif Item.rarity == 'Legendary':
-            wallet_value = getattr(Wallet, Item.rarity.lower())
-            setattr(Wallet, Item.rarity.lower(), wallet_value + 1)
+        if g.Item.rarity == 'Broken':
+            wallet_value = getattr(Wallet, g.Item.rarity.lower())
+            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 6)
+        elif g.Item.rarity == 'Common':
+            wallet_value = getattr(Wallet, g.Item.rarity.lower())
+            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 5)
+        elif g.Item.rarity == 'Uncommon':
+            wallet_value = getattr(Wallet, g.Item.rarity.lower())
+            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 4)
+        elif g.Item.rarity == 'Rare':
+            wallet_value = getattr(Wallet, g.Item.rarity.lower())
+            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 3)
+        elif g.Item.rarity == 'Epic':
+            wallet_value = getattr(Wallet, g.Item.rarity.lower())
+            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 2)
+        elif g.Item.rarity == 'Legendary':
+            wallet_value = getattr(Wallet, g.Item.rarity.lower())
+            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 1)
     except Exception as e:
-        msg = f'{h} Wallet/Shards Query KO [{e}]'
+        msg = f'{g.h} Wallet/Shards Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -102,9 +77,9 @@ def inventory_item_dismantle(creatureuuid, itemuuid):
 
     try:
         # We destroy the item
-        Item.destroy()
+        g.Item.destroy()
     except Exception as e:
-        msg = f'{h} Item({itemuuid}) Query KO [{e}]'
+        msg = f'{g.h} Item({itemuuid}) Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -120,7 +95,7 @@ def inventory_item_dismantle(creatureuuid, itemuuid):
         # We add HighScore
         RedisHS(creatureuuid=creatureuuid).incr('action_dismantle')
     except Exception as e:
-        msg = f'{h} Redis Query KO [{e}]'
+        msg = f'{g.h} Redis Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -130,14 +105,14 @@ def inventory_item_dismantle(creatureuuid, itemuuid):
             }
         ), 200
     else:
-        msg = f'{h} Item({itemuuid}) Dismantle OK'
+        msg = f'{g.h} Item({itemuuid}) Dismantle OK'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "creature": Creature.as_dict(),
+                    "creature": g.Creature.as_dict(),
                     "wallet": Wallet.as_dict(),
                     },
             }
@@ -146,16 +121,15 @@ def inventory_item_dismantle(creatureuuid, itemuuid):
 
 # API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_item_exists
 def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
         Stats = RedisStats(creatureuuid=creatureuuid)
-        Item = RedisItem(itemuuid=itemuuid)
         Slots = RedisSlots(creatureuuid=creatureuuid)
     except Exception as e:
-        msg = f'{h} Stats Query KO - failed [{e}]'
+        msg = f'{g.h} Stats Query KO - failed [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -165,12 +139,12 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
             }
         ), 200
 
-    itemmeta = metaNames[type][Item.metaid]
+    itemmeta = metaNames[type][g.Item.metaid]
     sizex, sizey = itemmeta['size'].split("x")
     costpa = round(int(sizex) * int(sizey) / 2)
     if RedisPa(creatureuuid=creatureuuid).redpa < costpa:
         msg = (
-            f"{h} Not enough PA "
+            f"{g.h} Not enough PA "
             f"(redpa:{RedisPa(creatureuuid=creatureuuid).redpa},cost:{costpa})"
             )
         logger.warning(msg)
@@ -188,7 +162,7 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
         stat = getattr(Stats, carac)
         if needed > stat:
             msg = (
-                f"{h} {carac.upper()} prequisites KO "
+                f"{g.h} {carac.upper()} prequisites KO "
                 f"(min_{carac}:{needed} > {carac}:{stat})"
                 )
             logger.warning(msg)
@@ -206,10 +180,10 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
         if slotname == 'holster':
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the holster
-                Slots.holster = Item.id
+                Slots.holster = g.Item.id
             else:
-                msg = (f"{h} Item does not fit in holster "
-                       f"(itemid:{Item.id},size:{itemmeta['size']})")
+                msg = (f"{g.h} Item does not fit in holster "
+                       f"(itemid:{g.Item.id},size:{itemmeta['size']})")
                 return jsonify(
                     {
                         "success": False,
@@ -226,35 +200,35 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
                     equippedMeta = metaNames['weapon'][equipped.metaid]
                     if equippedMeta['onehanded'] is True:
                         # A 1H weapons is in RH : we replace
-                        Slots.righthand = Item.id
+                        Slots.righthand = g.Item.id
                     if equippedMeta['onehanded'] is False:
                         # A 2H weapons is in RH & LH
                         # We replace RH and clean LH
-                        Slots.righthand = Item.id
+                        Slots.righthand = g.Item.id
                         Slots.lefthand = None
                 # We equip a 2H weapon
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
-                    Slots.righthand = Item.id
-                    Slots.lefthand = Item.id
+                    Slots.righthand = g.Item.id
+                    Slots.lefthand = g.Item.id
             else:
                 # Nothing in RH
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
-                    Slots.righthand = Item.id
+                    Slots.righthand = g.Item.id
                 # We equip a 2H weapon
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
-                    Slots.righthand = Item.id
-                    Slots.lefthand = Item.id
+                    Slots.righthand = g.Item.id
+                    Slots.lefthand = g.Item.id
         elif slotname == 'lefthand':
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the left hand
-                Slots.lefthand = Item.id
+                Slots.lefthand = g.Item.id
             else:
                 msg = (
-                    f"{h} Item does not fit in left hand "
-                    f"(itemid:{Item.id},size:{itemmeta['size']})"
+                    f"{g.h} Item does not fit in left hand "
+                    f"(itemid:{g.Item.id},size:{itemmeta['size']})"
                     )
                 logger.trace(msg)
                 return jsonify(
@@ -265,9 +239,9 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
                     }
                 ), 200
         else:
-            setattr(Slots, slotname, Item.id)
+            setattr(Slots, slotname, g.Item.id)
     except Exception as e:
-        msg = (f'{h} Item({itemuuid}) Query KO [{e}]')
+        msg = (f'{g.h} Item({itemuuid}) Query KO [{e}]')
         logger.error(msg)
         return jsonify(
             {
@@ -282,7 +256,7 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
         # We consume the red PA (costpa) right now
         RedisPa(creatureuuid=creatureuuid).consume(redpa=costpa)
     except Exception as e:
-        msg = f'{h} Redis Query KO [{e}]'
+        msg = f'{g.h} Redis Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -308,14 +282,14 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
 
     # We create the Creature Event
     RedisEvent().new(
-        action_src=Creature.id,
+        action_src=g.Creature.id,
         action_dst=None,
         action_type='action/equip',
         action_text='Equipped something',
         action_ttl=30 * 86400
         )
     # JOB IS DONE
-    msg = f'{h} Item({itemuuid}) Equip OK'
+    msg = f'{g.h} Item({itemuuid}) Equip OK'
     logger.debug(msg)
     return jsonify(
         {
@@ -332,24 +306,12 @@ def inventory_item_equip(creatureuuid, type, slotname, itemuuid):
 
 # API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/unequip/<string:type>/<string:slotname> # noqa
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_item_exists
 def inventory_item_unequip(creatureuuid, type, slotname, itemuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
         Slots = RedisSlots(creatureuuid=creatureuuid)
-    except Exception as e:
-        msg = f'{h} Redis Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
         if slotname == 'righthand':
             if Slots.righthand == itemuuid:
                 if Slots.righthand == Slots.lefthand:
@@ -369,7 +331,7 @@ def inventory_item_unequip(creatureuuid, type, slotname, itemuuid):
         else:
             setattr(Slots, slotname, None)
     except Exception as e:
-        msg = f'{h} Item({itemuuid}) Unequip KO [{e}]'
+        msg = f'{g.h} Item({itemuuid}) Unequip KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -395,14 +357,14 @@ def inventory_item_unequip(creatureuuid, type, slotname, itemuuid):
 
     # We create the Creature Event
     RedisEvent().new(
-        action_src=Creature.id,
+        action_src=g.Creature.id,
         action_dst=None,
         action_type='action/unequip',
         action_text='Unequipped something',
         action_ttl=30 * 86400
         )
 
-    msg = f'{h} Item({itemuuid}) Unequip OK'
+    msg = f'{g.h} Item({itemuuid}) Unequip OK'
     logger.debug(msg)
     return jsonify(
         {
@@ -419,32 +381,19 @@ def inventory_item_unequip(creatureuuid, type, slotname, itemuuid):
 
 # API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset/<int:offsetx>/<int:offsety> # noqa
 @jwt_required()
+# Custom decorators
+@check_creature_exists
+@check_item_exists
 def inventory_item_offset(creatureuuid, itemuuid, offsetx=None, offsety=None):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature, get_jwt_identity())
-
     try:
-        Item = RedisItem(itemuuid=itemuuid)
-        Item.offsetx = offsetx
-        Item.offsety = offsety
-    except Exception as e:
-        msg = f'{h} Item({itemuuid}) Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
-        Slots = RedisSlots(creatureuuid=creatureuuid)
+        g.Item.offsetx = offsetx
+        g.Item.offsety = offsety
+        Slots = RedisSlots(creatureuuid=g.Creature.id)
         Items = RedisSearch().item(
-            query=f"@bearer:{Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
         )
     except Exception as e:
-        msg = f'{h} Redis Query KO [{e}]'
+        msg = f'{g.h} Redis Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -455,7 +404,7 @@ def inventory_item_offset(creatureuuid, itemuuid, offsetx=None, offsety=None):
         ), 200
 
     # JOB IS DONE
-    msg = f'{h} Item({itemuuid}) Offset OK'
+    msg = f'{g.h} Item({itemuuid}) Offset OK'
     logger.debug(msg)
     return jsonify(
         {

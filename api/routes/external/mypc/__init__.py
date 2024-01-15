@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify, request
+from flask                      import g, jsonify, request
 from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
@@ -14,11 +14,12 @@ from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
-from nosql.models.RedisUser     import RedisUser
 from nosql.models.RedisWallet   import RedisWallet
 
-from utils.routehelper          import (
-    creature_check,
+from utils.decorators import (
+    check_creature_exists,
+    check_is_json,
+    check_user_exists,
     )
 
 
@@ -27,9 +28,11 @@ from utils.routehelper          import (
 #
 # API: POST /mypc
 @jwt_required()
+# Custom decorators
+@check_is_json
+@check_user_exists
 def mypc_add():
-    User = RedisUser(get_jwt_identity())
-    h = f'[User.id:{User.id}]'
+    g.h = f'[User.id:{g.User.id}]'
 
     pcclass      = request.json.get('class', None)
     pccosmetic   = request.json.get('cosmetic', None)
@@ -39,7 +42,7 @@ def mypc_add():
     pcrace       = request.json.get('race', None)
 
     if len(RedisSearch().creature(query=f'@name:{pcname}').results) != 0:
-        msg = f'{h} Creature already exists (Creature.name:{pcname})'
+        msg = f'{g.h} Creature already exists (Creature.name:{pcname})'
         logger.error(msg)
         return jsonify(
             {
@@ -53,7 +56,7 @@ def mypc_add():
         metaRace = dict(list(filter(lambda x: x["id"] == pcrace,
                                     metaRaces))[0])  # Gruikfix
         if metaRace is None:
-            msg = f'{h} MetaRace not found (race:{pcrace})'
+            msg = f'{g.h} MetaRace not found (race:{pcrace})'
             logger.warning(msg)
             return jsonify(
                 {
@@ -67,10 +70,10 @@ def mypc_add():
                 name=pcname,
                 raceid=pcrace,
                 gender=pcgender,
-                accountuuid=User.id,
+                accountuuid=g.User.id,
                 )
         except Exception as e:
-            msg = f'{h} PC creation KO (pcname:{pcname}) [{e}]'
+            msg = f'{g.h} Creature creation KO (pcname:{pcname}) [{e}]'
             logger.error(msg)
             return jsonify(
                 {
@@ -80,24 +83,11 @@ def mypc_add():
                 }
             ), 200
         else:
-            if Creature is None:
-                msg = f'{h} PC creation KO (pcname:{pcname})'
-                logger.error(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
-            else:
-                h = f'[Creature.id:{Creature.id}]'  # Header for logging
-
             try:
                 # We initialize a fresh wallet
                 Wallet = RedisWallet(creatureuuid=Creature.id).new()
             except Exception as e:
-                msg = f'{h} Wallet creation KO [{e}]'
+                msg = f'{g.h} Wallet creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -108,9 +98,9 @@ def mypc_add():
                 ), 200
             else:
                 if Wallet:
-                    logger.trace(f'{h} Wallet creation OK')
+                    logger.trace(f'{g.h} Wallet creation OK')
                 else:
-                    logger.warning(f'{h} Wallet creation KO')
+                    logger.warning(f'{g.h} Wallet creation KO')
 
             try:
                 RedisCosmetic().new(
@@ -118,7 +108,7 @@ def mypc_add():
                     cosmetic_caracs=pccosmetic,
                     )
             except Exception as e:
-                msg = f'{h} Cosmetics creation KO [{e}]'
+                msg = f'{g.h} Cosmetics creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -128,14 +118,14 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{h} Cosmetics creation OK')
+                logger.trace(f'{g.h} Cosmetics creation OK')
 
             try:
                 HighScores = RedisHS(creatureuuid=Creature.id)
                 HighScores.incr('global_kills', count=0)
                 HighScores.incr('global_deaths', count=0)
             except Exception as e:
-                msg = f'{h} RedisHS creation KO [{e}]'
+                msg = f'{g.h} RedisHS creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -145,12 +135,12 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{h} RedisHS creation OK')
+                logger.trace(f'{g.h} RedisHS creation OK')
 
             try:
                 RedisSlots().new(creatureuuid=Creature.id)
             except Exception as e:
-                msg = f'{h} RedisSlots creation KO [{e}]'
+                msg = f'{g.h} RedisSlots creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -160,7 +150,7 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{h} RedisSlots creation OK')
+                logger.trace(f'{g.h} RedisSlots creation OK')
 
             if pcequipment:
                 try:
@@ -199,7 +189,7 @@ def mypc_add():
                                 }
                             )
                 except Exception as e:
-                    msg = f'{h} Weapons creation KO [{e}]'
+                    msg = f'{g.h} Weapons creation KO [{e}]'
                     logger.error(msg)
                     return jsonify(
                         {
@@ -210,13 +200,13 @@ def mypc_add():
                     ), 200
                 else:
                     # Everything has been populated. Stats can be done
-                    msg = f'{h} Weapons creation OK'
+                    msg = f'{g.h} Weapons creation OK'
                     logger.trace(msg)
                     try:
                         # We initialize a fresh stats
                         RedisStats().new(Creature=Creature, classid=pcclass)
                     except Exception as e:
-                        msg = f'{h} RedisStats creation KO [{e}]'
+                        msg = f'{g.h} RedisStats creation KO [{e}]'
                         logger.error(msg)
                         return jsonify(
                             {
@@ -226,10 +216,10 @@ def mypc_add():
                             }
                         ), 200
                     else:
-                        logger.trace(f'{h} RedisStats creation OK')
+                        logger.trace(f'{g.h} RedisStats creation OK')
 
             # Everything went well
-            msg = f'{h} Creature creation OK'
+            msg = f'{g.h} Creature creation OK'
             logger.debug(msg)
             return jsonify(
                 {
@@ -242,17 +232,17 @@ def mypc_add():
 
 # API: GET /mypc
 @jwt_required()
+# Custom decorators
+@check_user_exists
 def mypc_get_all():
-    User = RedisUser(username=get_jwt_identity())
-    h = f'[User.id:{User.id}]'
-
+    g.h = f'[User.id:{g.User.id}]'
     try:
         Creatures = RedisSearch().creature(
-            query=f"@account:{User.id.replace('-', ' ')}"
+            query=f"@account:{g.User.id.replace('-', ' ')}"
             )
     except Exception as e:
         msg = (
-            f'{h} Creatures query KO '
+            f'{g.h} Creatures query KO '
             f'(username:{get_jwt_identity()}) [{e}]'
             )
         logger.error(msg)
@@ -264,7 +254,7 @@ def mypc_get_all():
             }
         ), 200
     else:
-        msg = f'{h} Creatures Query OK'
+        msg = f'{g.h} Creatures Query OK'
         logger.debug(msg)
         return jsonify(
             {
@@ -279,12 +269,11 @@ def mypc_get_all():
 
 # API: DELETE /mypc/<uuid:creatureuuid>
 @jwt_required()
+# Custom decorators
+@check_creature_exists
 def mypc_del(creatureuuid):
-    Creature = RedisCreature(creatureuuid=creatureuuid)
-    h = creature_check(Creature)
-
-    if Creature.instance:
-        msg = f'{h} Creature should not be in an Instance({Creature.instance})'
+    if g.Creature.instance:
+        msg = f'{g.h} Cannot be in an Instance({g.Creature.instance})'
         logger.debug(msg)
         return jsonify(
             {
@@ -296,50 +285,50 @@ def mypc_del(creatureuuid):
 
     try:
         # We start do delete PC elements
-        if RedisStats(creatureuuid=Creature.id).destroy():
-            logger.trace(f'{h} RedisStats delete OK')
-        if RedisWallet(creatureuuid=Creature.id).destroy():
-            logger.trace(f'{h} Wallet delete OK')
-        if RedisSlots(creatureuuid=Creature.id).destroy():
-            logger.trace(f'{h} RedisSlots delete OK')
-        if RedisHS(creatureuuid=Creature.id).destroy():
-            logger.trace(f'{h} RedisHS delete OK')
-        if RedisPa(creatureuuid=Creature.id).destroy():
-            logger.trace(f'{h} RedisPa delete OK')
+        if RedisStats(creatureuuid=g.Creature.id).destroy():
+            logger.trace(f'{g.h} RedisStats delete OK')
+        if RedisWallet(creatureuuid=g.Creature.id).destroy():
+            logger.trace(f'{g.h} Wallet delete OK')
+        if RedisSlots(creatureuuid=g.Creature.id).destroy():
+            logger.trace(f'{g.h} RedisSlots delete OK')
+        if RedisHS(creatureuuid=g.Creature.id).destroy():
+            logger.trace(f'{g.h} RedisHS delete OK')
+        if RedisPa(creatureuuid=g.Creature.id).destroy():
+            logger.trace(f'{g.h} RedisPa delete OK')
 
         # We delete all the items belonging to the Creature
         try:
             # Finding all Creature items to loop on
             Items = RedisSearch().item(
-                query=f"@bearer:{Creature.id.replace('-', ' ')}",
+                query=f"@bearer:{g.Creature.id.replace('-', ' ')}",
                 )
             Cosmetics = RedisSearch().cosmetic(
-                query=f"@bearer:{Creature.id.replace('-', ' ')}",
+                query=f"@bearer:{g.Creature.id.replace('-', ' ')}",
                 )
         except Exception as e:
-            logger.error(f'{h} Items Query KO [{e}]')
+            logger.error(f'{g.h} Items Query KO [{e}]')
         else:
             if Items and len(Items.results) > 0:
                 try:
                     for Item in Items.results:
                         RedisItem(itemuuid=Item.id).destroy()
                 except Exception as e:
-                    logger.error(f'{h} RedisItem(s) delete KO [{e}]')
+                    logger.error(f'{g.h} RedisItem(s) delete KO [{e}]')
                 else:
-                    logger.trace(f'{h} RedisItem(s) delete OK')
+                    logger.trace(f'{g.h} RedisItem(s) delete OK')
             if Cosmetics and len(Cosmetics.results) > 0:
                 try:
                     for Cosmetic in Cosmetics.results:
                         RedisCosmetic(cosmeticuuid=Cosmetic.id).destroy()
                 except Exception as e:
-                    logger.error(f'{h} RedisCosmetic(s) delete KO [{e}]')
+                    logger.error(f'{g.h} RedisCosmetic(s) delete KO [{e}]')
                 else:
-                    logger.trace(f'{h} RedisCosmetic(s) delete OK')
+                    logger.trace(f'{g.h} RedisCosmetic(s) delete OK')
 
         # Now we can delete the Creature itself
-        Creature.destroy()
+        g.Creature.destroy()
     except Exception as e:
-        msg = f'{h} Creature delete KO [{e}]'
+        msg = f'{g.h} Creature delete KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -349,7 +338,7 @@ def mypc_del(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{h} Creature delete OK'
+        msg = f'{g.h} Creature delete OK'
         logger.debug(msg)
         return jsonify(
             {
