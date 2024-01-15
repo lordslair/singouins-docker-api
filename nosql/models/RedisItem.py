@@ -55,6 +55,15 @@ class RedisItem:
     def __repr__(self):
         return self.__str__()
 
+    def exists(self, itemuuid):
+        logger.debug(f'{self.hkey}:{itemuuid}')
+        if r.exists(f'{self.hkey}:{itemuuid}'):
+            logger.trace(f'{self.logh} Method >> (HASH Found)')
+            return True
+        else:
+            logger.warning(f'{self.logh} Method KO (HASH NotFound)')
+            return False
+
     def to_json(self):
         """
         Converts Object into a JSON

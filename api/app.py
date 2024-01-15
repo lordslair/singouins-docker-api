@@ -305,12 +305,12 @@ app.add_url_rule(
 # Routes: /action
 #
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/reload/<uuid:weaponuuid>',
+    '/mypc/<uuid:creatureuuid>/action/reload/<uuid:itemuuid>',
     methods=['POST'],
     view_func=routes.external.mypc.action.reload,
     )
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/unload/<uuid:weaponuuid>',
+    '/mypc/<uuid:creatureuuid>/action/unload/<uuid:itemuuid>',
     methods=['POST'],
     view_func=routes.external.mypc.action.unload,
     )
