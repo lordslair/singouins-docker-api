@@ -15,6 +15,7 @@ from nosql.models.RedisSearch   import RedisSearch
 from utils.requests   import (
     resolver_generic_request_get,
     RESOLVER_URL,
+    RESOLVER_CHECK_SKIP,
     )
 
 # Log System imports
@@ -22,6 +23,8 @@ logger.info('[core] System imports OK')
 
 # Pre-flight check for Resolver connection
 if os.environ.get("CI"):
+    pass
+elif RESOLVER_CHECK_SKIP:
     pass
 else:
     try:

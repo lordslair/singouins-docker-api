@@ -12,10 +12,12 @@ from nosql.models.RedisSearch import RedisSearch
 RESOLVER_HOST = os.environ.get("RESOLVER_HOST")
 RESOLVER_PORT = os.environ.get("RESOLVER_PORT")
 RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
+RESOLVER_CHECK_SKIP = os.environ.get("RESOLVER_CHECK_SKIP")
 
 logger.debug(f"RESOLVER_HOST: {RESOLVER_HOST}")
 logger.debug(f"RESOLVER_PORT: {RESOLVER_PORT}")
 logger.debug(f"RESOLVER_URL: {RESOLVER_URL}")
+logger.debug(f"RESOLVER_CHECK_SKIP: {RESOLVER_CHECK_SKIP}")
 
 
 def resolver_generic_request_get(path, code=200):
