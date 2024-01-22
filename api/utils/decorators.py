@@ -9,6 +9,7 @@ from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisKorp     import RedisKorp
+from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSquad    import RedisSquad
 
 
@@ -129,6 +130,38 @@ def check_creature_owned(func):
     # Renaming the function name:
     wrapper.__name__ = func.__name__
     return wrapper
+
+
+def check_creature_pa(red=0, blue=0):
+    """ Decorator to check if g.Creature has an amount of PA(red, blue) """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if RedisPa(creatureuuid=g.Creature.id).bluepa < blue:
+                msg = f'{g.h} Not enough PA(blue) for this action'
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": RedisPa(creatureuuid=g.Creature.id).as_dict(),
+                    }
+                ), 200
+            elif RedisPa(creatureuuid=g.Creature.id).redpa < red:
+                msg = f'{g.h} Not enough PA(red) for this action'
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": RedisPa(creatureuuid=g.Creature.id).as_dict(),
+                    }
+                ), 200
+            else:
+                return func(*args, **kwargs)
+
+        # Renaming the function name:
+        wrapper.__name__ = func.__name__
+        return wrapper
+
+    return decorator
 
 
 def check_is_json(func):
