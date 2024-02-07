@@ -1,16 +1,17 @@
 # -*- coding: utf8 -*-
 
-from flask                      import g, jsonify, request
-from flask_jwt_extended         import get_jwt_identity
-from loguru                     import logger
+from flask import g, jsonify, request
+from flask_jwt_extended import get_jwt_identity
+from loguru import logger
 
-from nosql.models.RedisUser     import RedisUser
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisInstance import RedisInstance
-from nosql.models.RedisItem     import RedisItem
-from nosql.models.RedisKorp     import RedisKorp
-from nosql.models.RedisPa       import RedisPa
-from nosql.models.RedisSquad    import RedisSquad
+from nosql.models.RedisUser       import RedisUser
+from nosql.models.RedisCreature   import RedisCreature
+from nosql.models.RedisInstance   import RedisInstance
+from nosql.models.RedisItem       import RedisItem
+from nosql.models.RedisKorp       import RedisKorp
+from nosql.models.RedisPa         import RedisPa
+from nosql.models.RedisProfession import RedisProfession
+from nosql.models.RedisSquad      import RedisSquad
 
 
 def check_creature_exists(func):
@@ -156,6 +157,33 @@ def check_creature_pa(red=0, blue=0):
                 ), 200
             else:
                 return func(*args, **kwargs)
+
+        # Renaming the function name:
+        wrapper.__name__ = func.__name__
+        return wrapper
+
+    return decorator
+
+
+def check_creature_profession(profession):
+    """ Decorator to check if g.Creature has a Profession """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            Profession = RedisProfession(creatureuuid=g.Creature.id).load()
+            if hasattr(Profession, profession):
+                # The Creature know how to perform the action
+                g.Profession = Profession
+                return func(*args, **kwargs)
+            else:
+                # The Creature DO NOT know how to perform the action
+                msg = f'{g.h} You do not know the profession ({profession})'
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
 
         # Renaming the function name:
         wrapper.__name__ = func.__name__

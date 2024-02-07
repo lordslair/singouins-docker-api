@@ -315,6 +315,11 @@ app.add_url_rule(
     view_func=routes.external.mypc.action.unload,
     )
 app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/skinning/<uuid:resourceuuid>',
+    methods=['POST'],
+    view_func=routes.external.mypc.action.profession.skinning,
+    )
+app.add_url_rule(
     '/mypc/<uuid:pcid>/action/craft/consumable/<int:recipeid>',
     methods=['PUT'],
     view_func=routes.external.mypc.action.craft.consumable,

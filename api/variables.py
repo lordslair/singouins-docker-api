@@ -53,11 +53,21 @@ else:
     DATA_PATH   = 'data'
 
 # Static data
-rarity_array = [
-    'Broken',
-    'Common',
-    'Uncommon',
-    'Rare',
-    'Epic',
-    'Legendary',
-]
+rarity_array = {
+    'creature': [
+        'Small',
+        'Medium',
+        'Big',
+        'Unique',
+        'Boss',
+        'God',
+    ],
+    'resource': [
+        'Broken',
+        'Common',
+        'Uncommon',
+        'Rare',
+        'Epic',
+        'Legendary',
+    ],
+}

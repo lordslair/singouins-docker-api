@@ -193,6 +193,41 @@ def initialize_redis_indexes():
     else:
         logger.trace('Redis init: OK cosmetic_idx (already created)')
 
+    # RedisCorpse
+    try:
+        DATA_NAME = "corpse"
+        INDEX_NAME = f"{DATA_NAME}_idx"
+        r.ft(INDEX_NAME).info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            r.ft(INDEX_NAME).create_index(
+                (
+                    TextField("account"),
+                    TextField("gender"),
+                    TextField("id"),
+                    TextField("instance"),
+                    TextField("killer"),
+                    TextField("killer_squad"),
+                    TextField("name"),
+                    NumericField("race"),
+                    TextField("rarity"),
+                    NumericField("x"),
+                    NumericField("y"),
+                ),
+                definition=IndexDefinition(
+                    prefix=[f"{DATA_NAME}s:"],
+                    score=0.5,
+                    score_field=f"{DATA_NAME}_score"
+                    )
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info(f'Redis init: OK {INDEX_NAME}')
+    else:
+        logger.trace(f'Redis init: OK {INDEX_NAME} (already created)')
+
     # RedisCreature
     try:
         r.ft("creature_idx").info()
@@ -413,6 +448,34 @@ def initialize_redis_indexes():
     else:
         logger.trace('Redis init: OK korp_idx (already created)')
 
+    # RedisSatchel
+    try:
+        DATA_NAME = "satchel"
+        INDEX_NAME = f"{DATA_NAME}_idx"
+        r.ft(INDEX_NAME).info()
+    except ResponseError:
+        # We need to create the index
+        try:
+            r.ft(INDEX_NAME).create_index(
+                (
+                    TextField("id"),
+                    NumericField("fur"),
+                    NumericField("leather"),
+                    NumericField("skin"),
+                ),
+                definition=IndexDefinition(
+                    prefix=[f"{DATA_NAME}s:"],
+                    score=0.5,
+                    score_field=f"{DATA_NAME}_score"
+                    )
+                )
+        except Exception as e:
+            logger.error(f'Redis init: KO [{e}]')
+        else:
+            logger.info(f'Redis init: OK {INDEX_NAME}')
+    else:
+        logger.trace(f'Redis init: OK {INDEX_NAME} (already created)')
+
     # RedisSquad
     try:
         r.ft("squad_idx").info()
@@ -447,34 +510,30 @@ def initialize_redis_indexes():
 
     # RedisProfession
     try:
-        r.ft("profession_idx").info()
+        DATA_NAME = "profession"
+        INDEX_NAME = f"{DATA_NAME}_idx"
+        r.ft(INDEX_NAME).info()
     except ResponseError:
         # We need to create the index
         try:
-            # Options for index creation
-            index_profession = IndexDefinition(
-                prefix=["professions:"],
-                score=0.5,
-                score_field="profession_score"
-                )
-
-            # Schema definition
-            schema = (
-                TextField("id"),
-                NumericField("mining"),
-            )
-
-            # Create an index and pass in the schema
-            r.ft("profession_idx").create_index(
-                schema,
-                definition=index_profession
+            r.ft(INDEX_NAME).create_index(
+                (
+                    TextField("id"),
+                    NumericField("skinning"),
+                    NumericField("tanning"),
+                ),
+                definition=IndexDefinition(
+                    prefix=[f"{DATA_NAME}s:"],
+                    score=0.5,
+                    score_field=f"{DATA_NAME}_score"
+                    )
                 )
         except Exception as e:
             logger.error(f'Redis init: KO [{e}]')
         else:
-            logger.info('Redis init: OK profession_idx')
+            logger.info(f'Redis init: OK {INDEX_NAME}')
     else:
-        logger.trace('Redis init: OK profession_idx (already created)')
+        logger.trace(f'Redis init: OK {INDEX_NAME} (already created)')
 
     # RedisResource
     try:

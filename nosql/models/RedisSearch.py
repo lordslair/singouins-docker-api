@@ -7,6 +7,7 @@ from nosql.connector             import r
 
 from nosql.models.RedisAuction import RedisAuction
 from nosql.models.RedisCd import RedisCd
+from nosql.models.RedisCorpse import RedisCorpse
 from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect import RedisEffect
@@ -14,6 +15,8 @@ from nosql.models.RedisEvent import RedisEvent
 from nosql.models.RedisInstance import RedisInstance
 from nosql.models.RedisItem import RedisItem
 from nosql.models.RedisKorp import RedisKorp
+from nosql.models.RedisProfession import RedisProfession
+from nosql.models.RedisResource import RedisResource
 from nosql.models.RedisSquad import RedisSquad
 from nosql.models.RedisStatus import RedisStatus
 from nosql.models.RedisUser import RedisUser
@@ -111,6 +114,32 @@ class RedisSearch:
 
             self.results.append(Cd)
             self.results_as_dict.append(Cd.as_dict())
+
+        logger.trace(f'{self.logh} Method OK')
+        return self
+
+    def corpse(self, query):
+        """
+        Search for Corpses in Redis DB using RediSearch.
+
+        Parameters:
+        query (str): Redisearch raw query
+
+        Returns: list(RedisCorpse)
+        """
+        index = 'corpse_idx'
+        self.logh = f'[Index:{index}]'
+        self.results_raw = self.search(index=index, query=query)
+
+        # If we are here, we got results
+        for result in self.results_raw:
+            logger.trace(f'{self.logh} Method >> (Filling self.results)')
+            corpseuuid = result.id.removeprefix('corpses:')
+
+            Corpse = RedisCorpse(corpseuuid=corpseuuid)
+
+            self.results.append(Corpse)
+            self.results_as_dict.append(Corpse.as_dict())
 
         logger.trace(f'{self.logh} Method OK')
         return self
@@ -294,6 +323,84 @@ class RedisSearch:
 
             self.results.append(Korp)
             self.results_as_dict.append(Korp.as_dict())
+
+        logger.trace(f'{self.logh} Method OK')
+        return self
+
+    def profession(self, query):
+        """
+        Search for Professions in Redis DB using RediSearch.
+
+        Parameters:
+        query (str): Redisearch raw query
+
+        Returns: list(RedisProfession)
+        """
+        index = 'profession_idx'
+        self.logh = f'[Index:{index}]'
+        self.results_raw = self.search(index=index, query=query)
+
+        # If we are here, we got results
+        for result in self.results_raw:
+            logger.trace(f'{self.logh} Method >> (Filling self.results)')
+            professionuuid = result.id.removeprefix('professions:')
+
+            Profession = RedisProfession(creatureuuid=professionuuid)
+
+            self.results.append(Profession)
+            self.results_as_dict.append(Profession.as_dict())
+
+        logger.trace(f'{self.logh} Method OK')
+        return self
+
+    def resource(self, query):
+        """
+        Search for Professions in Redis DB using RediSearch.
+
+        Parameters:
+        query (str): Redisearch raw query
+
+        Returns: list(RedisProfession)
+        """
+        index = 'resource_idx'
+        self.logh = f'[Index:{index}]'
+        self.results_raw = self.search(index=index, query=query)
+
+        # If we are here, we got results
+        for result in self.results_raw:
+            logger.trace(f'{self.logh} Method >> (Filling self.results)')
+            resourceuuid = result.id.removeprefix('resources:')
+
+            Resource = RedisResource(resourceuuid=resourceuuid)
+
+            self.results.append(Resource)
+            self.results_as_dict.append(Resource.as_dict())
+
+        logger.trace(f'{self.logh} Method OK')
+        return self
+
+    def satchel(self, query):
+        """
+        Search for Satchels in Redis DB using RediSearch.
+
+        Parameters:
+        query (str): Redisearch raw query
+
+        Returns: list(RedisSatchel)
+        """
+        index = 'satchel_idx'
+        self.logh = f'[Index:{index}]'
+        self.results_raw = self.search(index=index, query=query)
+
+        # If we are here, we got results
+        for result in self.results_raw:
+            logger.trace(f'{self.logh} Method >> (Filling self.results)')
+            resourceuuid = result.id.removeprefix('satchels:')
+
+            Resource = RedisResource(resourceuuid=resourceuuid)
+
+            self.results.append(Resource)
+            self.results_as_dict.append(Resource.as_dict())
 
         logger.trace(f'{self.logh} Method OK')
         return self
