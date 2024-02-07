@@ -72,32 +72,29 @@ class RedisWallet:
         Returns: dict()
         """
         return {
-            "ammo":
-                {
-                    "cal22": self.cal22,
-                    "cal223": self.cal223,
-                    "cal311": self.cal311,
-                    "cal50": self.cal50,
-                    "cal55": self.cal55,
-                    "shell": self.shell,
-                    "bolt": self.bolt,
-                    "arrow": self.arrow,
-                },
-            "currency":
-                {
-                    "bananas": self.bananas,
-                    "sausages": self.sausages,
-                },
-            "shards":
-                {
-                    "broken": self.broken,
-                    "common": self.common,
-                    "uncommon": self.uncommon,
-                    "rare": self.rare,
-                    "epic": self.epic,
-                    "legendary": self.legendary,
-                }
+            "ammo": {
+                "cal22": self.cal22,
+                "cal223": self.cal223,
+                "cal311": self.cal311,
+                "cal50": self.cal50,
+                "cal55": self.cal55,
+                "shell": self.shell,
+                "bolt": self.bolt,
+                "arrow": self.arrow,
+            },
+            "currency": {
+                "bananas": self.bananas,
+                "sausages": self.sausages,
+            },
+            "shards": {
+                "broken": self.broken,
+                "common": self.common,
+                "uncommon": self.uncommon,
+                "rare": self.rare,
+                "epic": self.epic,
+                "legendary": self.legendary,
             }
+        }
 
     def destroy(self):
         """

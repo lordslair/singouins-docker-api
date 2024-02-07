@@ -2,6 +2,7 @@
 # E221: Multiple spaces before operator
 # E272: Multiple spaces before keyword
 extend-ignore = E221, E272
+max-line-length = 99
 
 per-file-ignores =
     # E501: Line too long
