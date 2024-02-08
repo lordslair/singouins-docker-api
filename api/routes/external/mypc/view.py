@@ -12,6 +12,65 @@ from utils.decorators import (
     )
 
 
+def generate_creatures_view(Creature):
+    view_final = []
+    Stats = RedisStats(creatureuuid=Creature.id)
+    range = 4 + round(Stats.p / 50)
+
+    maxx  = Creature.x + range
+    minx  = Creature.x - range
+    maxy  = Creature.y + range
+    miny  = Creature.y - range
+
+    CreaturesVisible = RedisSearch().creature(
+        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
+        )
+
+    for CreatureVisible in CreaturesVisible.results:
+        creature_in_sight = CreatureVisible.as_dict()
+        # We define the default diplomacy title
+        creature_in_sight['diplo'] = 'neutral'
+        # We try to define the diplomacy based on tests
+        if creature_in_sight['race'] >= 11:
+            creature_in_sight['diplo'] = 'enemy'
+
+        view_final.append(creature_in_sight)
+
+    return view_final
+
+
+def generate_corpses_view(Creature):
+    Stats = RedisStats(creatureuuid=Creature.id)
+    range = 4 + round(Stats.p / 50)
+
+    maxx  = Creature.x + range
+    minx  = Creature.x - range
+    maxy  = Creature.y + range
+    miny  = Creature.y - range
+
+    CorpsesVisible = RedisSearch().corpse(
+        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
+        )
+
+    return CorpsesVisible.results_as_dict
+
+
+def generate_resources_view(Creature):
+    Stats = RedisStats(creatureuuid=Creature.id)
+    range = 4 + round(Stats.p / 50)
+
+    maxx  = Creature.x + range
+    minx  = Creature.x - range
+    maxy  = Creature.y + range
+    miny  = Creature.y - range
+
+    ResourcesVisible = RedisSearch().resource(
+        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
+        )
+
+    return ResourcesVisible.results_as_dict
+
+
 #
 # Routes /mypc/<uuid:creatureuuid>/view/*
 #
@@ -23,29 +82,8 @@ def view_get(creatureuuid):
     try:
         if g.Creature.squad is None:
             # PC is solo / not in a squad
-            view_final = []
             try:
-                Stats = RedisStats(creatureuuid=g.Creature.id)
-                range = 4 + round(Stats.p / 50)
-
-                maxx  = g.Creature.x + range
-                minx  = g.Creature.x - range
-                maxy  = g.Creature.y + range
-                miny  = g.Creature.y - range
-
-                CreaturesVisible = RedisSearch().creature(
-                    query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
-                    )
-
-                for CreatureVisible in CreaturesVisible.results:
-                    creature_in_sight = CreatureVisible.as_dict()
-                    # We define the default diplomacy title
-                    creature_in_sight['diplo'] = 'neutral'
-                    # We try to define the diplomacy based on tests
-                    if creature_in_sight['race'] >= 11:
-                        creature_in_sight['diplo'] = 'enemy'
-
-                    view_final.append(creature_in_sight)
+                creatures_view = generate_creatures_view(g.Creature)
             except Exception as e:
                 msg = f'{g.h} View Query KO [{e}]'
                 logger.error(msg)
@@ -77,10 +115,7 @@ def view_get(creatureuuid):
                 ), 200
             else:
                 if not SquadMembers or len(SquadMembers.results) == 0:
-                    msg = (
-                        f'{g.h} Squad Query KO - NotFound '
-                        f'Squad({g.Creature.squad})'
-                        )
+                    msg = (f'{g.h} Squad Query KO - NotFound Squad({g.Creature.squad})')
                     logger.warning(msg)
                     return jsonify(
                         {
@@ -93,34 +128,18 @@ def view_get(creatureuuid):
                     msg = f'{g.h} Squad Query OK'
                     logger.trace(msg)
 
-            views = []       # We initialize the intermadiate array
-            view_final = []  # We initialize the result array
+            creatures_view = []  # We initialize the result array
             for SquadMember in SquadMembers.results:
                 try:
-                    Stats = RedisStats(creatureuuid=SquadMember.id)
-                    range = 4 + round(Stats.p / 50)
-
-                    maxx  = SquadMember.x + range
-                    minx  = SquadMember.x - range
-                    maxy  = SquadMember.y + range
-                    miny  = SquadMember.y - range
-
-                    CreaturesVisible = RedisSearch().creature(
-                        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
-                        )
-
-                    if len(views) == 0:
-                        # We push the first results in the array
-                        views += CreaturesVisible.results
+                    view = generate_creatures_view(g.Creature)
+                    if len(creatures_view) == 0:
+                        # Push the first results in the array
+                        creatures_view += view
                     else:
-                        # We aggregate all the results, without duplicates
-                        views = list(set(views + CreaturesVisible.results))
-
+                        # Aggregate without duplicate
+                        creatures_view = list(set(creatures_view + view))
                 except Exception as e:
-                    msg = (
-                        f'{g.h} View Query KO '
-                        f'Squad({g.Creature.squad}) [{e}]'
-                        )
+                    msg = (f'{g.h} View Query KO Squad({g.Creature.squad}) [{e}]')
                     logger.error(msg)
                     return jsonify(
                         {
@@ -129,18 +148,6 @@ def view_get(creatureuuid):
                             "payload": None,
                         }
                     ), 200
-                else:
-                    for CreatureVisible in views:
-                        creature_in_sight = CreatureVisible.as_dict()
-                        # We define the default diplomacy title
-                        creature_in_sight['diplo'] = 'neutral'
-                        # We try to define the diplomacy based on tests
-                        if creature_in_sight['race'] >= 11:
-                            creature_in_sight['diplo'] = 'enemy'
-                        if creature_in_sight['squad'] == g.Creature.squad:
-                            creature_in_sight['diplo'] = 'squad'
-
-                        view_final.append(creature_in_sight)
     except Exception as e:
         msg = f'{g.h} View Query KO [{e}]'
         logger.error(msg)
@@ -158,6 +165,20 @@ def view_get(creatureuuid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": view_final,
+                "payload": creatures_view,
             }
         ), 200
+        """
+        When time comes, this should replace the return above:
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": {
+                    "creatures": creatures_view,
+                    "corpses": generate_corpses_view(g.Creature),
+                    "resources": generate_resources_view(g.Creature),
+                },
+            }
+        ), 200
+        """

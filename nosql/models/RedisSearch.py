@@ -136,7 +136,7 @@ class RedisSearch:
             logger.trace(f'{self.logh} Method >> (Filling self.results)')
             corpseuuid = result.id.removeprefix('corpses:')
 
-            Corpse = RedisCorpse(corpseuuid=corpseuuid)
+            Corpse = RedisCorpse(corpseuuid=corpseuuid).load()
 
             self.results.append(Corpse)
             self.results_as_dict.append(Corpse.as_dict())
