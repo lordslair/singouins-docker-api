@@ -5,7 +5,7 @@ import json
 from loguru import logger
 
 from nosql.connector import r
-from nosql.variables import str2typed, typed2str
+from nosql.variables import str2typed
 
 OBJECT = 'profession'
 BASEKEY = f'{OBJECT}s'
@@ -171,11 +171,8 @@ class RedisProfession:
             logger.trace(f'{LOGH} Method >> (Dict Creating)')
             # We push data in final dict
             hashdict = {
-                id: self.id,
+                "id": self.id,
             }
-            # We loop over object properties to create it
-            for property, value in self.as_dict().items():
-                hashdict[property] = typed2str(value)
 
             logger.trace(f'{LOGH} Method >> (HASH Storing)')
             r.hset(KEY, mapping=hashdict)
