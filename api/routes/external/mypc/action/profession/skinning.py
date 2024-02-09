@@ -148,7 +148,7 @@ def skinning(creatureuuid, resourceuuid):
         action_ttl=30 * 86400
         )
 
-    # We add the resources in the Wallet
+    # We add the resources in the Satchel
     Satchel.incr('skin', count=skin_qty)
     Satchel.incr('meat', count=meat_qty)
 
