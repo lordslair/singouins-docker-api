@@ -175,7 +175,7 @@ class RedisCorpse:
                 hashdict[property] = typed2str(value)
 
             logger.trace(f'{LOGH} Method >> (HASH Storing)')
-            r.hset(f'{KEY}', mapping=hashdict)
+            r.hset(KEY, mapping=hashdict)
         except Exception as e:
             logger.error(f'{LOGH} Method KO [{e}]')
             return None
