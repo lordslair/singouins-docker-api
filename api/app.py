@@ -28,6 +28,7 @@ from utils.gunilog                 import (InterceptHandler,
                                            StubbedGunicornLogger)
 
 import routes.external.mypc.action
+import routes.external.mypc.action.profession
 import routes.external.mypc.instance
 
 import routes.external.auth
@@ -236,11 +237,6 @@ app.add_url_rule(
 # Routes /inventory/item
 #
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/dismantle',
-    methods=['POST'],
-    view_func=routes.external.mypc.inventory.inventory_item_dismantle,
-    )
-app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname>',
     methods=['POST'],
     view_func=routes.external.mypc.inventory.inventory_item_equip,
@@ -318,6 +314,11 @@ app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/skinning/<uuid:resourceuuid>',
     methods=['POST'],
     view_func=routes.external.mypc.action.profession.skinning,
+    )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>',
+    methods=['POST'],
+    view_func=routes.external.mypc.action.profession.recycling,
     )
 app.add_url_rule(
     '/mypc/<uuid:pcid>/action/craft/consumable/<int:recipeid>',

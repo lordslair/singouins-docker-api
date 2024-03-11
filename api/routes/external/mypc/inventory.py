@@ -8,12 +8,10 @@ from nosql.metas                import metaNames
 from nosql.queue                import yqueue_put
 from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisItem    import RedisItem
-from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
-from nosql.models.RedisWallet   import RedisWallet
 
 from utils.decorators import (
     check_creature_exists,
@@ -26,99 +24,6 @@ from variables                  import YQ_BROADCAST
 #
 # Routes /mypc/<uuid:creatureuuid>/inventory/*
 #
-# API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/dismantle
-@jwt_required()
-# Custom decorators
-@check_creature_exists
-@check_item_exists
-def inventory_item_dismantle(creatureuuid, itemuuid):
-    if RedisPa(creatureuuid=creatureuuid).bluepa < 1:
-        msg = f'{g.h} Not enough PA'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
-        # We add the shards in the wallet
-        Wallet = RedisWallet(creatureuuid=creatureuuid)
-        if g.Item.rarity == 'Broken':
-            wallet_value = getattr(Wallet, g.Item.rarity.lower())
-            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 6)
-        elif g.Item.rarity == 'Common':
-            wallet_value = getattr(Wallet, g.Item.rarity.lower())
-            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 5)
-        elif g.Item.rarity == 'Uncommon':
-            wallet_value = getattr(Wallet, g.Item.rarity.lower())
-            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 4)
-        elif g.Item.rarity == 'Rare':
-            wallet_value = getattr(Wallet, g.Item.rarity.lower())
-            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 3)
-        elif g.Item.rarity == 'Epic':
-            wallet_value = getattr(Wallet, g.Item.rarity.lower())
-            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 2)
-        elif g.Item.rarity == 'Legendary':
-            wallet_value = getattr(Wallet, g.Item.rarity.lower())
-            setattr(Wallet, g.Item.rarity.lower(), wallet_value + 1)
-    except Exception as e:
-        msg = f'{g.h} Wallet/Shards Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
-        # We destroy the item
-        g.Item.destroy()
-    except Exception as e:
-        msg = f'{g.h} Item({itemuuid}) Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-
-    try:
-        # We consume the blue PA (1)
-        RedisPa(creatureuuid=creatureuuid).consume(bluepa=1)
-        # We add HighScore
-        RedisHS(creatureuuid=creatureuuid).incr('action_dismantle')
-    except Exception as e:
-        msg = f'{g.h} Redis Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        msg = f'{g.h} Item({itemuuid}) Dismantle OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": {
-                    "creature": g.Creature.as_dict(),
-                    "wallet": Wallet.as_dict(),
-                    },
-            }
-        ), 200
-
-
 # API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname> # noqa
 @jwt_required()
 # Custom decorators

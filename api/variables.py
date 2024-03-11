@@ -70,4 +70,12 @@ rarity_array = {
         'Epic',
         'Legendary',
     ],
+    'item': [
+        'Broken',
+        'Common',
+        'Uncommon',
+        'Rare',
+        'Epic',
+        'Legendary',
+    ],
 }
