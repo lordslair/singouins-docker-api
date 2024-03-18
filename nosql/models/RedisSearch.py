@@ -104,12 +104,9 @@ class RedisSearch:
         self.logh = f'[Index:{index}]'
         self.results_raw = self.search(index=index, query=query)
 
-        # If we are here, we got results
         for result in self.results_raw:
+            creatureuuid = self.results_raw[0].id.split(':')[1]
             logger.trace(f'{self.logh} Method >> (Filling self.results)')
-            creatureuuid = result.id.removeprefix('cds:')
-            creatureuuid = creatureuuid.removesuffix(f':{result.name}')
-
             Cd = RedisCd(creatureuuid=creatureuuid, name=result.name)
 
             self.results.append(Cd)
@@ -235,12 +232,9 @@ class RedisSearch:
         self.logh = f'[Index:{index}]'
         self.results_raw = self.search(index=index, query=query)
 
-        # If we are here, we got results
         for result in self.results_raw:
+            creatureuuid = self.results_raw[0].id.split(':')[1]
             logger.trace(f'{self.logh} Method >> (Filling self.results)')
-            creatureuuid = result.id.removeprefix('effects:')
-            creatureuuid = creatureuuid.removesuffix(f':{result.name}')
-
             Effect = RedisEffect(creatureuuid=creatureuuid, name=result.name)
 
             self.results.append(Effect)
@@ -446,10 +440,8 @@ class RedisSearch:
 
         # If we are here, we got results
         for result in self.results_raw:
+            creatureuuid = self.results_raw[0].id.split(':')[1]
             logger.trace(f'{self.logh} Method >> (Filling self.results)')
-            creatureuuid = result.id.removeprefix('statuses:')
-            creatureuuid = creatureuuid.removesuffix(f':{result.name}')
-
             Status = RedisStatus(creatureuuid=creatureuuid, name=result.name)
 
             self.results.append(Status)
