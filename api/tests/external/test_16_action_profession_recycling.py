@@ -28,7 +28,7 @@ def test_singouins_profession_recycling():
     weapon     = [x for x in weapons if x['id'] != holster][0]
     itemuuid   = weapon['id']
 
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/action/profession/skinning/{itemuuid}'  # POST
+    url        = f'{API_URL}/mypc/{CREATURE_ID}/action/profession/recycling/{itemuuid}'  # POST
     response   = requests.post(url, headers=headers)
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
