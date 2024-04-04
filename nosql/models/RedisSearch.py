@@ -19,7 +19,6 @@ from nosql.models.RedisProfession import RedisProfession
 from nosql.models.RedisResource import RedisResource
 from nosql.models.RedisSquad import RedisSquad
 from nosql.models.RedisStatus import RedisStatus
-from nosql.models.RedisUser import RedisUser
 
 
 class RedisSearch:
@@ -446,31 +445,6 @@ class RedisSearch:
 
             self.results.append(Status)
             self.results_as_dict.append(Status.as_dict())
-
-        logger.trace(f'{self.logh} Method OK')
-        return self
-
-    def user(self, query):
-        """
-        Search for Users in Redis DB using RediSearch.
-
-        Parameters:
-        query (str): Redisearch raw query
-
-        Returns: list(RedisUser)
-        """
-        index = 'user_idx'
-        self.logh = f'[Index:{index}]'
-        self.results_raw = self.search(index=index, query=query)
-
-        # If we are here, we got results
-        for result in self.results_raw:
-            logger.trace(f'{self.logh} Method >> (Filling self.results)')
-
-            User = RedisUser(username=result.name)
-
-            self.results.append(User)
-            self.results_as_dict.append(User.as_dict())
 
         logger.trace(f'{self.logh} Method OK')
         return self

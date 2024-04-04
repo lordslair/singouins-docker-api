@@ -101,32 +101,32 @@ def check():
 app.add_url_rule(
     '/auth/confirm/<string:token>',
     methods=['GET'],
-    view_func=routes.external.auth.auth_confirm,
+    view_func=routes.external.auth.confirm,
     )
 app.add_url_rule(
     '/auth/delete',
     methods=['DELETE'],
-    view_func=routes.external.auth.auth_delete,
+    view_func=routes.external.auth.delete,
     )
 app.add_url_rule(
     '/auth/forgotpassword',
     methods=['POST'],
-    view_func=routes.external.auth.auth_forgotpassword,
+    view_func=routes.external.auth.forgot_password,
     )
 app.add_url_rule(
     '/auth/infos',
     methods=['GET'],
-    view_func=routes.external.auth.auth_infos,
+    view_func=routes.external.auth.infos,
     )
 app.add_url_rule(
     '/auth/login',
     methods=['POST'],
-    view_func=routes.external.auth.auth_login,
+    view_func=routes.external.auth.login,
     )
 app.add_url_rule(
     '/auth/refresh',
     methods=['POST'],
-    view_func=routes.external.auth.auth_refresh,
+    view_func=routes.external.auth.refresh,
     )
 app.add_url_rule(
     '/auth/register',

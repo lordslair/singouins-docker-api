@@ -608,37 +608,3 @@ def initialize_redis_indexes():
             logger.info('Redis init: OK status_idx')
     else:
         logger.trace('Redis init: OK status_idx (already created)')
-
-    # RedisUser
-    try:
-        r.ft("user_idx").info()
-    except ResponseError:
-        # We need to create the index
-        try:
-            # Options for index creation
-            index_user = IndexDefinition(
-                prefix=["users:"],
-                score=0.5,
-                score_field="user_score"
-                )
-
-            # Schema definition
-            schema = (
-                TextField("active"),
-                TextField("d_ack"),
-                TextField("d_name"),
-                TextField("id"),
-                TextField("name"),
-            )
-
-            # Create an index and pass in the schema
-            r.ft("user_idx").create_index(
-                schema,
-                definition=index_user
-                )
-        except Exception as e:
-            logger.error(f'Redis init: KO [{e}]')
-        else:
-            logger.info('Redis init: OK user_idx')
-    else:
-        logger.trace('Redis init: OK user_idx (already created)')

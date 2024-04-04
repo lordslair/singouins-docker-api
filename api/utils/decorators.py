@@ -4,7 +4,6 @@ from flask import g, jsonify, request
 from flask_jwt_extended import get_jwt_identity
 from loguru import logger
 
-from nosql.models.RedisUser       import RedisUser
 from nosql.models.RedisCreature   import RedisCreature
 from nosql.models.RedisInstance   import RedisInstance
 from nosql.models.RedisItem       import RedisItem
@@ -12,6 +11,8 @@ from nosql.models.RedisKorp       import RedisKorp
 from nosql.models.RedisPa         import RedisPa
 from nosql.models.RedisProfession import RedisProfession
 from nosql.models.RedisSquad      import RedisSquad
+
+from mongo.models.User import UserDocument
 
 
 def check_creature_exists(func):
@@ -315,8 +316,8 @@ def check_user_exists(func):
     """ Decorator to check if a User exists in DB or not
     using the provided username in jwt_identity(). """
     def wrapper(*args, **kwargs):
-        if RedisUser().exists(username=get_jwt_identity()):
-            g.User = RedisUser(username=get_jwt_identity())
+        if UserDocument.objects(name=get_jwt_identity()).count() > 0:
+            g.User = UserDocument.objects(name=get_jwt_identity()).get()
             logger.trace(f'[User.id:{g.User.id}] User FOUND')
             return func(*args, **kwargs)
         else:
