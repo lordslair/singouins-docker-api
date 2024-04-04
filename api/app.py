@@ -320,11 +320,6 @@ app.add_url_rule(
     methods=['POST'],
     view_func=routes.external.mypc.action.profession.recycling,
     )
-app.add_url_rule(
-    '/mypc/<uuid:pcid>/action/craft/consumable/<int:recipeid>',
-    methods=['PUT'],
-    view_func=routes.external.mypc.action.craft.consumable,
-    )
 #
 # Routes: /events
 #
