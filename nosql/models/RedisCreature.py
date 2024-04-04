@@ -191,7 +191,7 @@ class RedisCreature:
         logger.trace(f'{self.logh} Method >> (Creating object)')
         try:
             self.aggro = 0
-            self.account = accountuuid
+            self.account = str(accountuuid)
             self.created = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.gender = gender
