@@ -7,8 +7,6 @@ from loguru                     import logger
 from nosql.connector            import r
 
 from nosql.metas                import metaNames
-from nosql.models.RedisItem     import RedisItem
-from nosql.models.RedisSlots    import RedisSlots
 from nosql.variables            import str2typed
 
 
@@ -74,19 +72,9 @@ class RedisStats:
                 "p": self.p,
                 "b": self.b
             },
-            "off": {
-                "capcom": self.capcom,
-                "capsho": self.capsho,
-            },
             "def": {
-                "armor": {
-                    "p": self.arm_p,
-                    "b": self.arm_b,
-                },
                 "hpmax": self.hpmax,
                 "hp": self.hp,
-                "dodge": self.r,
-                "parry": self.parry,
             }
         }
 
@@ -167,45 +155,12 @@ class RedisStats:
             self.p = self.p_race + self.p_class
             self.b = self.b_race + self.b_class
 
-            moymr       = round((self.m + self.r) / 2)
-            self.capcom = round((self.g + moymr) / 2)
-            moybr       = round((self.b + self.r) / 2)
-            self.capsho = round((self.v + moybr) / 2)
-
             self.hpmax = 100 + self.m + round(Creature.level / 2)
             self._hp   = self.hpmax
-
-            self.dodge = self.r
-            newg       = (self.g - 100) / 50
-            newm       = (self.m - 100) / 50
-            self.parry = round(newg * newm)
         except Exception as e:
-            logger.error(f'{self.logh} Method KO '
-                         f'(Building from Caracs) [{e}]')
+            logger.error(f'{self.logh} Method KO (Building from Caracs) [{e}]')
         else:
             logger.trace(f'{self.logh} Method >> (Building from Caracs)')
-
-        try:
-            # Working to find armor from equipped items
-            self.arm_b = 0
-            self.arm_p = 0
-
-            if Creature.account is not None:
-                Slots = RedisSlots(creatureuuid=Creature.id)
-                for property, value in Slots.as_dict().items():
-                    if getattr(Slots, property) is not None:
-                        Item = RedisItem(itemuuid=Slots.feet)
-                        metaArmor = metaNames[Item.metatype][Item.metaid]
-                        self.arm_b += metaArmor['arm_b']
-                        self.arm_p += metaArmor['arm_p']
-            else:
-                logger.trace(f'{self.logh} Method >> Slots Query skipped')
-        except Exception as e:
-            logger.error(f'{self.logh} Method KO '
-                         f'(Building from Equipment) [{e}]')
-        else:
-            logger.trace(f'{self.logh} Method >> '
-                         f'(Building from Equipment)')
 
         try:
             # We push data in final dict
@@ -229,14 +184,8 @@ class RedisStats:
                 "v": self.v,
                 "v_race": self.v_race,
                 "v_class": self.v_class,
-                "capcom": self.capcom,
-                "capsho": self.capsho,
-                "arm_p": self.arm_p,
-                "arm_b": self.arm_b,
                 "hpmax": self.hpmax,
                 "hp": self.hp,
-                "dodge": self.r,
-                "parry": self.parry,
                 }
 
             r.hset(f'{self.hkey}:{self.id}', mapping=hashdict)

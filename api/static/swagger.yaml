@@ -1896,34 +1896,10 @@ components:
         def:
           type: object
           properties:
-            armor:
-              type: object
-              properties:
-                b:
-                  type: integer
-                  nullable: false
-                p:
-                  type: integer
-                  nullable: false
-            dodge:
-              type: integer
-              nullable: false
             hp:
               type: integer
               nullable: false
             hpmax:
-              type: integer
-              nullable: false
-            parry:
-              type: integer
-              nullable: false
-        off:
-          type: object
-          properties:
-            capcom:
-              type: integer
-              nullable: false
-            capsho:
               type: integer
               nullable: false
 
