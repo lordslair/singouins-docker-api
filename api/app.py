@@ -133,7 +133,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/auth/register',
     methods=['POST'],
-    view_func=routes.external.auth.auth_register,
+    view_func=routes.external.auth.register,
     )
 #
 # Routes /meta
