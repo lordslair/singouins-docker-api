@@ -8,13 +8,21 @@ from loguru                     import logger
 from nosql.metas                import metaRaces
 from nosql.models.RedisCosmetic import RedisCosmetic
 from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisItem     import RedisItem
 from nosql.models.RedisPa       import RedisPa
+from nosql.models.RedisProfession import RedisProfession
 from nosql.models.RedisSearch   import RedisSearch
 from nosql.models.RedisSlots    import RedisSlots
 from nosql.models.RedisStats    import RedisStats
 from nosql.models.RedisWallet   import RedisWallet
+
+from mongo.models.Highscore import (
+    HighscoreDocument,
+    HighscoreGeneral,
+    HighscoreInternal,
+    HighscoreInternalGenericResource,
+    HighscoreProfession,
+)
 
 from utils.decorators import (
     check_creature_exists,
@@ -121,11 +129,23 @@ def mypc_add():
                 logger.trace(f'{g.h} Cosmetics creation OK')
 
             try:
-                HighScores = RedisHS(creatureuuid=Creature.id)
-                HighScores.incr('global_kills', count=0)
-                HighScores.incr('global_deaths', count=0)
+                newHighscore = HighscoreDocument(
+                    _id=Creature.id,
+                    general=HighscoreGeneral(),
+                    internal=HighscoreInternal(
+                        fur=HighscoreInternalGenericResource(),
+                        item=HighscoreInternalGenericResource(),
+                        leather=HighscoreInternalGenericResource(),
+                        meat=HighscoreInternalGenericResource(),
+                        ore=HighscoreInternalGenericResource(),
+                        shard=HighscoreInternalGenericResource(),
+                        skin=HighscoreInternalGenericResource(),
+                        ),
+                    profession=HighscoreProfession(),
+                )
+                newHighscore.save()
             except Exception as e:
-                msg = f'{g.h} RedisHS creation KO [{e}]'
+                msg = f'{g.h} HighscoreDocument creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -135,7 +155,22 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{g.h} RedisHS creation OK')
+                logger.debug(f'{g.h} HighscoreDocument creation OK')
+
+            try:
+                RedisProfession().new(creatureuuid=Creature.id)
+            except Exception as e:
+                msg = f'{g.h} RedisProfession creation KO [{e}]'
+                logger.error(msg)
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
+            else:
+                logger.trace(f'{g.h} RedisProfession creation OK')
 
             try:
                 RedisSlots().new(creatureuuid=Creature.id)
@@ -291,8 +326,11 @@ def mypc_del(creatureuuid):
             logger.trace(f'{g.h} Wallet delete OK')
         if RedisSlots(creatureuuid=g.Creature.id).destroy():
             logger.trace(f'{g.h} RedisSlots delete OK')
-        if RedisHS(creatureuuid=g.Creature.id).destroy():
-            logger.trace(f'{g.h} RedisHS delete OK')
+        # HighscoreDocument
+        if HighscoreDocument.objects(_id=g.Creature.id).first():
+            logger.debug(f'{g.h} HighscoreDocument deletion >>')
+            HighscoreDocument.objects(_id=g.Creature.id).first().delete()
+            logger.debug(f'{g.h} HighscoreDocument deletion OK')
         if RedisPa(creatureuuid=g.Creature.id).destroy():
             logger.trace(f'{g.h} RedisPa delete OK')
 

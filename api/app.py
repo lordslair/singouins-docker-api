@@ -49,6 +49,8 @@ import routes.external.mypc.statuses
 import routes.external.mypc.view
 import routes.external.pc
 
+import routes.external.mypc.highscores
+
 app = Flask(__name__)
 CORS(app)                         # We wrap around all the app the CORS
 FlaskUUID(app)                    # We wrap around all the app the UUID control
@@ -208,6 +210,14 @@ app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/effects',
     methods=['GET'],
     view_func=routes.external.mypc.effects.effects_get,
+    )
+#
+# Routes: /highscores
+#
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/highscores',
+    methods=['GET'],
+    view_func=routes.external.mypc.highscores.highscores_get,
     )
 #
 # Routes: /statuses

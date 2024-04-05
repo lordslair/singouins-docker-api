@@ -6,7 +6,6 @@ from loguru                     import logger
 
 from nosql.metas                import metaNames
 from nosql.models.RedisEvent    import RedisEvent
-from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
 from nosql.models.RedisWallet   import RedisWallet
 
@@ -76,8 +75,6 @@ def unload(creatureuuid, itemuuid):
         g.Item.ammo = 0
         # We consume the PA
         RedisPa(creatureuuid=creatureuuid).consume(bluepa=2)
-        # We add HighScore
-        RedisHS(creatureuuid=creatureuuid).incr('action_unload')
         # We create the Creature Event
         RedisEvent().new(
             action_src=g.Creature.id,

@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+from datetime import datetime
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
@@ -8,11 +9,10 @@ from random import choices, randint
 
 from nosql.models.RedisCorpse import RedisCorpse
 from nosql.models.RedisEvent import RedisEvent
-from nosql.models.RedisHS import RedisHS
 from nosql.models.RedisPa import RedisPa
-from nosql.models.RedisSatchel import RedisSatchel
 from nosql.models.RedisStats import RedisStats
 
+from mongo.models.Highscore import HighscoreDocument
 
 from utils.decorators import (
     check_creature_exists,
@@ -45,9 +45,7 @@ This Profession HAVE TO be executed in Instance.
 @check_creature_profession(PROFESSION_NAME)
 def skinning(creatureuuid, resourceuuid):
     # We load a lot of Redis Objects for later
-    HighScores = RedisHS(creatureuuid=g.Creature.id)
     Stats = RedisStats(creatureuuid=g.Creature.id)
-    Satchel = RedisSatchel(creatureuuid=g.Creature.id).load()
 
     # Check if the corpse exists
     if RedisCorpse(corpseuuid=resourceuuid).exists():
@@ -129,10 +127,14 @@ def skinning(creatureuuid, resourceuuid):
         + floor(g.Profession.skinning/20) * randint(1, 3) \
         + floor((Stats.p + Stats.r) / 2 / 100)
 
-    # We set the HS
-    HighScores.incr(f'profession_{PROFESSION_NAME}')
-    HighScores.incr('internal_skinned_meat', count=meat_qty)
-    HighScores.incr('internal_skinned_skin', count=skin_qty)
+    # We set the HighScores
+    HighScores = HighscoreDocument.objects(_id=g.Creature.id)
+    #
+    HighScores.update_one(inc__profession__tanning=1)
+    HighScores.update_one(inc__internal__skin__obtained=skin_qty)
+    HighScores.update_one(inc__internal__meat__obtained=meat_qty)
+    #
+    HighScores.update(set__updated=datetime.utcnow())
 
     # We prepare Event message
     if skin_qty > 0 or meat_qty > 0:
@@ -149,8 +151,8 @@ def skinning(creatureuuid, resourceuuid):
         )
 
     # We add the resources in the Satchel
-    Satchel.incr('skin', count=skin_qty)
-    Satchel.incr('meat', count=meat_qty)
+    # Satchel.incr('skin', count=skin_qty)
+    # Satchel.incr('meat', count=meat_qty)
 
     # Little snippet to check amount of resources // slots
     # slots_used = 0
@@ -196,7 +198,7 @@ def skinning(creatureuuid, resourceuuid):
                         "rarity": 'common',
                         },
                     ],
-                "satchel": Satchel.as_dict(),
+                "inventory": "HARDCODED_VALUE",
             }
         }
     ), 200

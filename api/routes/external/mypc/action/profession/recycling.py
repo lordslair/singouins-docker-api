@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+from datetime import datetime
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
@@ -10,8 +11,7 @@ from nosql.models.RedisEvent import RedisEvent
 from nosql.models.RedisPa import RedisPa
 from nosql.models.RedisStats import RedisStats
 
-# TOO SOON
-# from mongo.models.Highscore import HighscoreDocument
+from mongo.models.Highscore import HighscoreDocument
 
 from utils.decorators import (
     check_creature_exists,
@@ -98,12 +98,14 @@ def recycling(creatureuuid, itemuuid):
     logger.trace(f"{g.h} Roll for {PROFESSION_NAME}: {base_qty} + {prof_d3}D3 + {stat_qty}")
     logger.trace(f"{g.h} Roll for {PROFESSION_NAME}: {shards_qty}")
 
-    # TOO SOON
-    # We set the HS
-    # HighScores = HighscoreDocument.objects(_id=g.Creature.id)
-    # HighScores.update_one(inc__profession__recycling=1)
-    # HighScores.update_one(inc__internal__item__recycled=1)
-    # HighScores.update_one(inc__internal__shard__obtained=shards_qty)
+    # We set the HighScores
+    HighScores = HighscoreDocument.objects(_id=g.Creature.id)
+    #
+    HighScores.update_one(inc__profession__recycling=1)
+    HighScores.update_one(inc__internal__item__recycled=1)
+    HighScores.update_one(inc__internal__shard__obtained=shards_qty)
+    #
+    HighScores.update(set__updated=datetime.utcnow())
 
     # We prepare Event message
     if shards_qty > 0:
