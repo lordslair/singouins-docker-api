@@ -110,4 +110,7 @@ class HighscoreDocument(Document):
     profession = EmbeddedDocumentField(HighscoreProfession, required=True)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
-    meta = {'collection': 'highscore'}  # Specify the collection name
+    meta = {
+        'collection': 'highscore',
+        'uuid_representation': 'standard'  # Specify the uuid_representation globally
+        }

@@ -30,7 +30,7 @@ class UserDiscord(EmbeddedDocument):
     - name  (StringField)
     """
     ack = BooleanField(default=False)
-    name = StringField(default='')
+    name = StringField(default=None)
 
 
 class UserDocument(Document):
@@ -54,4 +54,7 @@ class UserDocument(Document):
     name = StringField(required=True)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
-    meta = {'collection': 'user'}  # Specify the collection name
+    meta = {
+        'collection': 'user',
+        'uuid_representation': 'standard'  # Specify the uuid_representation globally
+        }
