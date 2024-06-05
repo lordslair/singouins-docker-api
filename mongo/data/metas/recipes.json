@@ -1,0 +1,15 @@
+[
+    {
+        "component":{
+            "wallet":{
+                "currency":25,
+                "broken":1
+            },
+            "inventory":null
+        },
+        "id":1,
+        "hs":"craft_potion",
+        "name":"Banana Milkshake",
+        "slot":"Potion"
+    }
+]
