@@ -2,9 +2,9 @@
 
 import json
 
-from loguru                     import logger
+from loguru import logger
 
-from nosql.connector            import r
+from nosql.connector import r
 
 redpaduration  = 3600
 redpamax       = 16
