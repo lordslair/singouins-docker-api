@@ -8,7 +8,7 @@ import uuid
 LOCAL_PATH = os.path.dirname(os.path.abspath('mongo'))
 sys.path.append(LOCAL_PATH)
 
-from mongo.models.Auction import AuctionDocument  # noqa: E402
+from mongo.models.Auction import AuctionDocument, AuctionItem, AuctionSeller  # noqa: E402
 from mongo.models.Creature import CreatureDocument  # noqa: E402
 from mongo.models.Item import ItemDocument  # noqa: E402
 from nosql.metas import metaNames  # noqa: E402
@@ -30,13 +30,25 @@ def test_mongodb_auction_new():
 
     Creature = CreatureDocument.objects(_id=CREATURE_ID).get()
     assert Creature
-    Item = ItemDocument.objects(bearer=CREATURE_ID, metaid=ITEM_META_ID).get()
+    Item = ItemDocument.objects(
+        bearer=CREATURE_ID,
+        metatype=ITEM_META_TYPE,
+        metaid=ITEM_META_ID).get()
     assert Item
 
     newAuction = AuctionDocument(
-        item=Item,
+        item=AuctionItem(
+            id=Item.id,
+            metaid=Item.metaid,
+            metatype=Item.metatype,
+            name=metaNames[Item.metatype][Item.metaid]['name'],
+            rarity=Item.rarity,
+        ),
         price=AUCTION_PRICE,
-        seller=Creature,
+        seller=AuctionSeller(
+            id=Creature.id,
+            name=Creature.name,
+        ),
     )
     newAuction.save()
 
@@ -56,7 +68,7 @@ def test_mongodb_auction_search_ok():
     """
     Searching a Item
     """
-    Auction = AuctionDocument.objects(seller=CREATURE_ID)
+    Auction = AuctionDocument.objects(seller__id=CREATURE_ID)
     assert Auction.count() == 1
     assert Auction.get()
 
@@ -66,7 +78,7 @@ def test_mongodb_auction_del_ok():
     Removing a AuctionDocument
     """
 
-    Auctions = AuctionDocument.objects(seller=CREATURE_ID)
+    Auctions = AuctionDocument.objects(seller__id=CREATURE_ID)
     if Auctions.count() > 0:
         for Auction in Auctions:
             Auctions.delete()
@@ -80,7 +92,7 @@ def test_mongodb_auction_del_ko():
     > Expected to fail
     """
 
-    assert AuctionDocument.objects(seller=CREATURE_ID).delete() == 0
+    assert AuctionDocument.objects(seller__id=CREATURE_ID).delete() == 0
 
 
 def test_mongodb_auction_search_empty():
@@ -89,4 +101,4 @@ def test_mongodb_auction_search_empty():
     > Expected to fail
     """
 
-    assert AuctionDocument.objects(seller=CREATURE_ID).count() == 0
+    assert AuctionDocument.objects(seller__id=CREATURE_ID).count() == 0
