@@ -20,7 +20,7 @@ from utils.decorators import (
 @check_creature_exists
 def highscores_get(creatureuuid):
     try:
-        if HighscoreDocument.objects(_id=creatureuuid).count() == 1:
+        if HighscoreDocument.objects(_id=creatureuuid):
             Highscores = HighscoreDocument.objects(_id=creatureuuid).get()
         else:
             msg = f'{g.h} HighscoreDocument Query KO - DoesNotExist'
@@ -49,6 +49,6 @@ def highscores_get(creatureuuid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": Highscores.to_mongo().to_dict(),
+                "payload": Highscores.to_mongo(),
             }
         ), 200

@@ -7,18 +7,18 @@ from loguru import logger
 from math import floor
 from random import choices, randint
 
-from nosql.models.RedisCorpse import RedisCorpse
+from mongo.models.Corpse import CorpseDocument
+from mongo.models.Highscore import HighscoreDocument
+from nosql.models.Profession import ProfessionDocument
+from mongo.models.Satchel import SatchelDocument
+
 from nosql.models.RedisEvent import RedisEvent
 from nosql.models.RedisPa import RedisPa
-from nosql.models.RedisStats import RedisStats
-
-from mongo.models.Highscore import HighscoreDocument
 
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_instance,
     check_creature_pa,
-    check_creature_profession,
     )
 from variables import rarity_array
 
@@ -42,14 +42,10 @@ This Profession HAVE TO be executed in Instance.
 @check_creature_exists
 @check_creature_in_instance
 @check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
-@check_creature_profession(PROFESSION_NAME)
 def skinning(creatureuuid, resourceuuid):
-    # We load a lot of Redis Objects for later
-    Stats = RedisStats(creatureuuid=g.Creature.id)
-
     # Check if the corpse exists
-    if RedisCorpse(corpseuuid=resourceuuid).exists():
-        Corpse = RedisCorpse(corpseuuid=resourceuuid).load()
+    if CorpseDocument.objects(_id=resourceuuid):
+        Corpse = CorpseDocument.objects(_id=resourceuuid).get
     else:
         msg = f'{g.h} CorpseUUID({resourceuuid}) NotFound'
         logger.warning(msg)
@@ -72,20 +68,26 @@ def skinning(creatureuuid, resourceuuid):
             }
         ), 200
 
+    Profession = ProfessionDocument.objects(_id=creatureuuid).get()
+
     # We calculate the amount of Profession points acquired
-    if 100 <= g.Profession.skinning:         # 100+
+    if 100 <= Profession.skinning:         # 100+
         pass
-    elif 75 <= g.Profession.skinning < 100:  # 75-99
+    elif 75 <= Profession.skinning < 100:  # 75-99
         count = choices([0, 1], weights=[70, 30])[0]
-    elif 50 <= g.Profession.skinning < 75:   # 50-74
+    elif 50 <= Profession.skinning < 75:   # 50-74
         count = choices([0, 1], weights=[60, 40])[0]
-    elif 25 <= g.Profession.skinning < 50:   # 25-49
+    elif 25 <= Profession.skinning < 50:   # 25-49
         count = choices([0, 1], weights=[50, 50])[0]
-    elif g.Profession.skinning < 25:         # 0-24
+    elif Profession.skinning < 25:         # 0-24
         count = 1
     # We INCR the Profession accordingly
     if count >= 1:
-        g.Profession.incr(PROFESSION_NAME, count=count)
+        profession_update_query = {
+            f'inc__profession__{PROFESSION_NAME}': count,
+            "set__updated": datetime.datetime.utcnow(),
+            }
+        Profession.update(**profession_update_query)
 
     """
     * Quantity skinned depends on Profession, Corpse.rarity, and Stats
@@ -115,26 +117,27 @@ def skinning(creatureuuid, resourceuuid):
     """ We roll twice the same formula, just to have different results for skin and meat """
     logger.trace(
         f"{g.h} Roll for skinning: {rarity_array['creature'].index(Corpse.rarity)}"
-        f' + {floor(g.Profession.skinning/20)}D3'
-        f' + {floor((Stats.p + Stats.r) / 2 / 100)}'
+        f' + {floor(Profession.skinning/20)}D3'
+        f' + {floor((g.Creature.stats.total.p + g.Creature.stats.total.r) / 2 / 100)}'
         )
     # We roll for skin
     skin_qty = rarity_array['creature'].index(Corpse.rarity) \
-        + floor(g.Profession.skinning/20) * randint(1, 3) \
-        + floor((Stats.p + Stats.r) / 2 / 100)
+        + floor(Profession.skinning/20) * randint(1, 3) \
+        + floor((g.Creature.stats.total.p + g.Creature.stats.total.r) / 2 / 100)
     # We roll for meat
     meat_qty = rarity_array['creature'].index(Corpse.rarity) \
-        + floor(g.Profession.skinning/20) * randint(1, 3) \
-        + floor((Stats.p + Stats.r) / 2 / 100)
+        + floor(Profession.skinning/20) * randint(1, 3) \
+        + floor((g.Creature.stats.total.p + g.Creature.stats.total.r) / 2 / 100)
 
     # We set the HighScores
     HighScores = HighscoreDocument.objects(_id=g.Creature.id)
-    #
-    HighScores.update_one(inc__profession__tanning=1)
-    HighScores.update_one(inc__internal__skin__obtained=skin_qty)
-    HighScores.update_one(inc__internal__meat__obtained=meat_qty)
-    #
-    HighScores.update(set__updated=datetime.utcnow())
+    highscores_update_query = {
+        f'inc__profession__{PROFESSION_NAME}': 1,
+        'inc__internal__meat__obtained': meat_qty,
+        'inc__internal__skin__obtained': skin_qty,
+        "set__updated": datetime.datetime.utcnow(),
+        }
+    HighScores.update(**highscores_update_query)
 
     # We prepare Event message
     if skin_qty > 0 or meat_qty > 0:
@@ -151,8 +154,13 @@ def skinning(creatureuuid, resourceuuid):
         )
 
     # We add the resources in the Satchel
-    # Satchel.incr('skin', count=skin_qty)
-    # Satchel.incr('meat', count=meat_qty)
+    Satchel = SatchelDocument.objects(_id=creatureuuid).get()
+    satchel_update_query = {
+        "inc__resource__meat": meat_qty,
+        "inc__resource__skin": skin_qty,
+        "set__updated": datetime.datetime.utcnow(),
+        }
+    Satchel.update(**satchel_update_query)
 
     # Little snippet to check amount of resources // slots
     # slots_used = 0
@@ -164,7 +172,7 @@ def skinning(creatureuuid, resourceuuid):
     # We consume the PA
     RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
 
-    if Corpse.destroy():
+    if Corpse.delete():
         pass
     else:
         msg = f'{g.h} Corpse destroy KO'

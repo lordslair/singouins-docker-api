@@ -6,14 +6,12 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.metas import metaNames
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisSearch import RedisSearch
-from nosql.models.RedisSlots import RedisSlots
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Item import ItemDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
-from variables import rarity_item_types_discord, slots_types
+from variables import metaNames, rarity_item_types_discord
 
 
 def inventory(group_singouin):
@@ -35,20 +33,13 @@ def inventory(group_singouin):
         ctx,
         singouinuuid: str,
     ):
-        name = ctx.author.name
-        channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} inventory {singouinuuid}')
+
         file = None
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} inventory {singouinuuid}'
-            )
-
-        Creature = RedisCreature(creatureuuid=singouinuuid)
-        Items = RedisSearch().item(
-            query=f"@bearer:{singouinuuid.replace('-', ' ')}"
-            )
-        logger.debug(f'[#{channel}][{name}] ├──> Redis calls OK')
+        Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        Items = ItemDocument.objects(metatype__in=["weapon", "armor"])
 
         embed = discord.Embed(
             title=f"{Creature.name} - Inventory",
@@ -62,57 +53,29 @@ def inventory(group_singouin):
         }
 
         try:
-            Slots = RedisSlots(creatureuuid=singouinuuid)
-            equipped_uuids = []
-            for slot in slots_types:
-                slot_id = getattr(Slots, slot)
-                if slot_id is not None:
-                    equipped_uuids.append(slot_id)
-                    logger.debug(
-                        f'[#{channel}][{name}] ├──> Equipped: '
-                        f'[{slot_id}] {slot}'
-                        )
-
-            Auctions = RedisSearch().auction(
-                query=(f'@sellerid:{singouinuuid.replace("-", " ")}')
-                )
-            auctionned_uuids = []
-            for Auction in Auctions.results:
-                auctionned_uuids.append(Auction.id)
-                logger.debug(
-                    f'[#{channel}][{name}] ├──> Auctionned: '
-                    f'[{Auction.id}] {Auction.metaname}'
+            value = ''
+            for Item in Items:
+                logger.trace(f'{h} ├──> Loop on ItemUUID({Item.id})')
+                if Item.offsetx or Item.offsety:
+                    logger.trace(f'{h} ├──> Equipped')
+                    # Item is equipped, we DO NOT list it
+                    continue
+                elif hasattr(Item, 'auctionned'):
+                    logger.trace(f'{h} ├──> Auctionned')
+                    # Item is auctionned, we DO NOT list it
+                    continue
+                value += (
+                    f"> {emojis[Item.metatype]} {rarity_item_types_discord[Item.rarity]} "
+                    f"[{Item.bound_type}] "
+                    f"{metaNames[Item.metatype][Item.metaid]['name']} \n"
                     )
 
-            for metatype in ('armor', 'weapon'):
-                Items = RedisSearch().item(
-                    query=(
-                        f"(@bearer:{singouinuuid.replace('-', ' ')}) "
-                        f"& (@metatype:{metatype})"
-                        )
+            # We looped over all items in Singouin's pockets
+            embed.add_field(
+                name=':luggage: **Inventory** :',
+                value=value,
+                inline=True
                 )
-
-                value = ''
-                logger.debug(f'[#{channel}][{name}] ├──> Loop on {metatype}')
-                for Item in Items.results:
-                    if Item.id in equipped_uuids:
-                        # Item is equipped, we DO NOT list it
-                        continue
-                    elif Item.id in auctionned_uuids:
-                        # Item is auctionned, we DO NOT list it
-                        continue
-                    value += (
-                        f"> {rarity_item_types_discord[Item.rarity]} "
-                        f"[{Item.bound_type}] "
-                        f"{metaNames[Item.metatype][Item.metaid]['name']} \n"
-                        )
-
-                # We looped over all items in Singouin's pockets
-                embed.add_field(
-                    name=f'**{emojis[metatype]} {metatype.capitalize()}** :',
-                    value=value,
-                    inline=True
-                    )
 
             # We check if we have a sprite to add as thumbnail
             if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
@@ -123,7 +86,7 @@ def inventory(group_singouin):
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-Inventory Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -134,7 +97,4 @@ def inventory(group_singouin):
             return
         else:
             await ctx.respond(embed=embed, ephemeral=True, file=file)
-            logger.info(
-                f'[#{channel}][{name}] '
-                f'└──> Singouin-Inventory Query OK'
-                )
+            logger.info(f'{h} └──> Singouin-Inventory Query OK')

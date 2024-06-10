@@ -6,7 +6,7 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.models.RedisCreature import RedisCreature
+from mongo.models.Creature import CreatureDocument
 from nosql.models.RedisPa import RedisPa
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
@@ -32,17 +32,13 @@ def pa(group_singouin):
         ctx,
         singouinuuid: str,
     ):
-        name = ctx.author.name
-        channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} pa {singouinuuid}')
+
         file = None
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} pa {singouinuuid}'
-            )
-
         try:
-            Creature = RedisCreature(creatureuuid=singouinuuid)
+            Creature = CreatureDocument.objects(_id=singouinuuid).get()
             Pa = RedisPa(creatureuuid=singouinuuid)
 
             embed = discord.Embed(
@@ -76,7 +72,7 @@ def pa(group_singouin):
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-PA Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -87,4 +83,4 @@ def pa(group_singouin):
             return
         else:
             await ctx.respond(embed=embed, ephemeral=True, file=file)
-            logger.info(f'[#{channel}][{name}] └──> Singouin-PA Query OK')
+            logger.info(f'{h} └──> Singouin-PA Query OK')

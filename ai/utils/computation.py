@@ -3,79 +3,79 @@
 import math
 
 from loguru import logger
+from mongoengine import Q
 
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.Creature import CreatureDocument
 
 
 def closest_player_from_me(self):
     """
-    Fetchs the closest PC using a RedisSearch.
+    Fetchs the closest Player from self.
 
     Parameters: None
 
     Returns:
-        - RedisCreature
+        - CreatureDocument
     """
+
+    # Grab the view
+    range = 4 + round(self.stats.total.p / 50)
+
+    maxx  = self.creature.x + range
+    minx  = self.creature.x - range
+    maxy  = self.creature.y + range
+    miny  = self.creature.y - range
+
     try:
-        # Grab the view
-        range = 4 + round(self.stats.p / 50)
-
-        maxx  = self.creature.x + range
-        minx  = self.creature.x - range
-        maxy  = self.creature.y + range
-        miny  = self.creature.y - range
-
-        Creatures = RedisSearch().creature(
-            query=(
-                f'(@x:[{minx} {maxx}]) & '
-                # ^ We look for Creatures BETWEEN minx and maxx
-                f'(@y:[{miny} {maxy}]) & '
-                # ^ We look for Creatures BETWEEN miny and maxy
-                f'-(@account:None)'
-                # ^ We exclude ALL NPC
-                ),
+        query = (
+            Q(x__gte=minx) & Q(x__lte=maxx)
+            & Q(y__gte=miny) & Q(y__lte=maxy)
+            & Q(race__lt=10)
             )
-    except Exception as e:
-        logger.error(f'Calculating View KO [{e}]')
+        Creatures = CreatureDocument.objects.filter(query)
+    except CreatureDocument.DoesNotExist:
+        logger.debug("CreatureDocument Query KO (404)")
         return None
-
-    if len(Creatures.results) > 1:
-        # There are Creatures in sight - Lets find if someone has aggro
-        Creatures.results.sort(key=lambda x: x.aggro, reverse=True)
-        if Creatures.results[0].aggro > 0:
-            # This Creature in sight has the biggest aggro
-            # We move towards it
-            CreatureTarget = Creatures.results[0]
-            logger.trace(
-                f'Target found via aggro({CreatureTarget.aggro}): '
-                f'[{CreatureTarget.id}] {CreatureTarget.name} '
-                f'@({CreatureTarget.x}, {CreatureTarget.y})'
-                )
-        else:
-            # There are Creatures in sight - Lets find the closest
-            top = 100
-            CreatureTarget = None
-            for Creature in Creatures.results:
-                if Creature.id == self.creature.id:
-                    # We are seeing ourself -> NEXT
-                    continue
-                elif Creature.race > 10:
-                    # We do not move/attack towards another NPC
-                    pass
-                    # continue
-                else:
-                    hypot = math.hypot(
-                        Creature.x - self.creature.x,
-                        Creature.y - self.creature.y
-                        )
-                    if hypot < top:
-                        CreatureTarget = Creature
-                        top = hypot
-    elif len(Creatures.results) == 1:
-        CreatureTarget = Creatures.results[0]
+    except Exception as e:
+        logger.error(f'{self.logh} | CreatureDocument Query KO [{e}]')
+        return None
     else:
-        CreatureTarget = None
+        logger.trace(f'{self.logh} | CreatureDocument Query OK')
 
+    # There is ONLY ONE Player in sight
+    if Creatures.count() == 1:
+        return Creatures.get()
+
+    """
+    # There are Creatures in sight - Lets find if someone has aggro
+    Creatures.order_by('korp.rank')
+    if Creatures.results[0].aggro > 0:
+        # This Creature in sight has the biggest aggro
+        # We move towards it
+        CreatureTarget = Creatures.results[0]
+        logger.trace(
+            f'Target found via aggro({CreatureTarget.aggro}): '
+            f'[{CreatureTarget.id}] {CreatureTarget.name} '
+            f'@({CreatureTarget.x}, {CreatureTarget.y})'
+            )
+    """
+
+    # There are Creatures in sight - Lets find the closest
+    top = 100
+    CreatureTarget = None
+    for Creature in Creatures:
+        if Creature.id == self.creature.id:
+            # We are seeing ourself -> NEXT
+            continue
+        elif Creature.race > 10:
+            # We do not move/attack towards another NPC
+            pass
+            # continue
+        else:
+            hypot = math.hypot(Creature.x - self.creature.x, Creature.y - self.creature.y)
+            if hypot < top:
+                CreatureTarget = Creature
+                top = hypot
     return CreatureTarget
 
 
@@ -118,7 +118,7 @@ def next_coords_to_creature(self, CreatureTarget):
     return (x, y)
 
 
-def is_coords_empty(x, y):
+def is_coords_empty(self, x, y):
     """
     Checks if a set of coordinates is empty or not.
 
@@ -129,16 +129,13 @@ def is_coords_empty(x, y):
     Returns: bool()
     """
     try:
-        Creatures = RedisSearch().creature(
-            query=f'(@x:[{x} {x}]) & (@y:[{y} {y}])'
-            )
+        CreatureDocument.objects.filter(x=x, y=y)
+    except CreatureDocument.DoesNotExist:
+        # No Creature is on this set of coordinates
+        return True
     except Exception as e:
-        logger.error(f'Calculating View KO [{e}]')
+        logger.error(f'{self.logh} | CreatureDocument Query KO [{e}]')
         return None
     else:
-        if len(Creatures.results) == 0:
-            # No Creature is on this set of coordinates
-            return True
-        else:
-            # A Creature is on this set of coordinates
-            return False
+        # A Creature is on this set of coordinates
+        return False

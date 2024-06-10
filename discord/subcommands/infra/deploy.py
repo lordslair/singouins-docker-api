@@ -34,11 +34,10 @@ def deploy(group_admin):
         ctx,
         env: str,
     ):
-        # Header for later use
-        h = f'[#{ctx.channel.name}][{ctx.channel.name}]'
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_admin} deploy {env}')
 
         await ctx.defer()  # To defer answer (default: 15min)
-        logger.info(f'{h} /{group_admin} deploy {env}')
 
         env = env.lower()
         namespace = 'singouins-networking'

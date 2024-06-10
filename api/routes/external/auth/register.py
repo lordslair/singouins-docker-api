@@ -48,7 +48,7 @@ def register():
             ), 409
         else:
             newUser = UserDocument(
-                _id=uuid.uuid3(uuid.NAMESPACE_DNS, 'Yidhra'),
+                _id=uuid.uuid3(uuid.NAMESPACE_DNS, mail),
                 discord=UserDiscord(),
                 hash=generate_password_hash(password, rounds=10),
                 name=mail,

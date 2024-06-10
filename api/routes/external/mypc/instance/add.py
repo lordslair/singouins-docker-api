@@ -1,24 +1,36 @@
 # -*- coding: utf8 -*-
 
-from flask                      import g, jsonify, request
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
-from random                     import choices, randint
+import datetime
+import json
+import uuid
 
-from nosql.maps                 import get_map
-from nosql.publish              import publish
-from nosql.queue                import yqueue_put
-from nosql.metas                import metaNames
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisInstance import RedisInstance
-from nosql.models.RedisStats    import RedisStats
+from flask import g, jsonify, request
+from flask_jwt_extended import jwt_required
+from loguru import logger
+from random import choices, randint
+
+from mongo.models.Creature import (
+    CreatureDocument,
+    CreatureHP,
+    CreatureSlots,
+    CreatureStats,
+    CreatureStatsType,
+    CreatureSquad,
+    CreatureKorp,
+)
+from mongo.models.Instance import InstanceDocument
+
+from nosql.connector import r
+from nosql.maps import get_map
+from nosql.queue import yqueue_put
+from nosql.metas import metaNames
 
 from utils.decorators import (
     check_creature_exists,
     check_is_json,
     )
 
-from variables                           import YQ_DISCORD
+from variables import YQ_DISCORD
 
 
 #
@@ -92,14 +104,18 @@ def add(creatureuuid):
 
     # Create the new instance
     try:
-        instance_dict = {
-            "creator": g.Creature.id,
-            "fast": fast,
-            "hardcore": hardcore,
-            "map": mapid,
-            "public": public
-        }
-        Instance = RedisInstance().new(instance=instance_dict)
+        newInstance = InstanceDocument(
+            creator=g.Creature.id,
+            fast=fast,
+            hardcore=hardcore,
+            map=mapid,
+            public=public,
+            )
+        newInstance.save()
+
+        g.Creature.instance = newInstance.id
+        g.Creature.updated = datetime.datetime.utcnow()
+        g.Creature.save()
     except Exception as e:
         msg = f"{g.h} Instance Query KO [{e}]"
         logger.error(msg)
@@ -111,29 +127,13 @@ def add(creatureuuid):
             }
         ), 200
 
-    # Everything went well so far
-    try:
-        g.Creature.instance = Instance.id
-    except Exception as e:
-        msg = f'{g.h} Instance({Instance.id}) Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    else:
-        pass
-
     # Everything went well, creation DONE
     # We put the info in queue for Discord
     scopes = []
-    if g.Creature.korp is not None:
-        scopes.append(f'Korp-{g.Creature.korp}')
-    if g.Creature.squad is not None:
-        scopes.append(f'Squad-{g.Creature.squad}')
+    if hasattr(g.Creature.korp, 'id'):
+        scopes.append(f'Korp-{g.Creature.korp.id}')
+    if hasattr(g.Creature.korp, 'id'):
+        scopes.append(f'Squad-{g.Creature.squad.id}')
     for scope in scopes:
         # Discord Queue
         yqueue_put(
@@ -142,25 +142,25 @@ def add(creatureuuid):
                 "ciphered": False,
                 "payload": (
                     f':map: **[{g.Creature.id}] {g.Creature.name}** '
-                    f'opened an Instance ({Instance.id})'
+                    f'opened an Instance ({newInstance.id})'
                     ),
                 "embed": None,
                 "scope": scope,
                 }
             )
     # We need to create the mobs to populate the instance
+    (mapx, mapy) = map['size'].split('x')
+    mobs_nbr = 1
+    rarities = [
+        'Small',
+        'Medium',
+        'Big',
+        'Unique',
+        'Boss',
+        'God',
+    ]
+
     try:
-        (mapx, mapy) = map['size'].split('x')
-        mobs_generated = []
-        mobs_nbr = 1
-        rarities = [
-            'Small',
-            'Medium',
-            'Big',
-            'Unique',
-            'Boss',
-            'God',
-        ]
         while mobs_nbr < 4:
             try:
                 #
@@ -172,66 +172,88 @@ def add(creatureuuid):
                 x = randint(1, int(mapx))
                 y = randint(1, int(mapy))
 
-                Monster = RedisCreature().new(
-                    name=metaNames['race'][raceid]['name'],
-                    raceid=raceid,
+                # We grab the race wanted from metaRaces
+                metaRace = metaNames['race'][raceid]
+                if metaRace is None:
+                    msg = f'{g.h} MetaRace not found (race:{raceid})'
+                    logger.warning(msg)
+                    return jsonify(
+                        {
+                            "success": False,
+                            "msg": msg,
+                            "payload": None,
+                        }
+                    ), 200
+
+                newMonster = CreatureDocument(
+                    _id=uuid.uuid4(),
                     gender=gender,
-                    accountuuid=None,
+                    hp=CreatureHP(
+                        base=metaRace['min_m'] + 100,
+                        current=metaRace['min_m'] + 100,
+                        max=metaRace['min_m'] + 100,
+                        ),
+                    instance=newInstance.id,
+                    korp=CreatureKorp(),
+                    name=metaNames['race'][raceid]['name'],
+                    race=raceid,
                     rarity=rarity,
+                    squad=CreatureSquad(),
+                    slots=CreatureSlots(),
+                    stats=CreatureStats(
+                        spec=CreatureStatsType(),
+                        race=CreatureStatsType(
+                            b=metaRace['min_b'],
+                            g=metaRace['min_g'],
+                            m=metaRace['min_m'],
+                            p=metaRace['min_p'],
+                            r=metaRace['min_r'],
+                            v=metaRace['min_v'],
+                        ),
+                        total=CreatureStatsType(
+                            b=metaRace['min_b'],
+                            g=metaRace['min_g'],
+                            m=metaRace['min_m'],
+                            p=metaRace['min_p'],
+                            r=metaRace['min_r'],
+                            v=metaRace['min_v'],
+                        ),
+                    ),
                     x=x,
                     y=y,
-                    instanceuuid=Instance.id,
-                    )
-                RedisStats().new(Creature=Monster, classid=None)
+                )
+                newMonster.save()
             except Exception as e:
                 msg = (f'{g.h} Population in Instance KO for mob '
                        f'#{mobs_nbr} [{e}]')
                 logger.error(msg)
             else:
-                if Monster is None:
-                    msg = (f'{g.h} Population in Instance KO for mob '
-                           f'#{mobs_nbr}')
-                    logger.warning(msg)
-                else:
-                    mobs_generated.append(Monster)
-                    # We send in pubsub channel for IA to spawn the Mobs
-                    try:
-                        pchannel = 'ai-creature'
-                        publish(
-                            pchannel,
-                            jsonify(
-                                {
-                                    "action": 'pop',
-                                    "instance": Instance.as_dict(),
-                                    "creature": Monster.as_dict(),
-                                    }
-                                ).get_data(),
-                                )
-                    except Exception as e:
-                        msg = f'{g.h} Publish({pchannel}) KO [{e}]'
-                        logger.error(msg)
-                    else:
-                        pass
+                # We send in pubsub channel for IA to spawn the Mobs
+                try:
+                    r.publish(
+                        'ai-creature',
+                        json.dumps({
+                            "action": 'pop',
+                            "instance": newInstance.to_json(),
+                            "creature": newMonster.to_json(),
+                            }),
+                        )
+                except Exception as e:
+                    msg = f'{g.h} Publish(ai-creature/pop) KO [{e}]'
+                    logger.error(msg)
 
             mobs_nbr += 1
     except Exception as e:
-        msg = f'{g.h} Instance({Instance.id}) Population KO [{e}]'
+        msg = f'{g.h} Instance({newInstance.id}) Population KO [{e}]'
         logger.error(msg)
-    else:
-        if len(mobs_generated) > 0:
-            msg = (f'{g.h} Instance({Instance.id}) Population OK '
-                   f'(mobs:{len(mobs_generated)})')
-            logger.trace(msg)
-        else:
-            msg = f'{g.h} Instance({Instance.id}) Population KO'
-            logger.error(msg)
+
     # Finally everything is done
-    msg = f'{g.h} Instance({Instance.id}) Create OK'
+    msg = f'{g.h} Instance({newInstance.id}) Create OK'
     logger.debug(msg)
     return jsonify(
         {
             "success": True,
             "msg": msg,
-            "payload": Instance.as_dict(),
+            "payload": newInstance.to_mongo(),
         }
     ), 201

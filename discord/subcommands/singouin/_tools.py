@@ -5,8 +5,8 @@ import urllib.request
 from loguru import logger
 from PIL import Image
 
-from nosql.models.RedisItem import RedisItem
-from nosql.models.RedisSlots import RedisSlots
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Item import ItemDocument
 
 from variables import URL_ASSETS, slots_armor, slots_weapon
 
@@ -21,16 +21,16 @@ def creature_sprite(creatureuuid, race):
     # We keep the sprite_base for later
     sprite_base = Image.open(f'/tmp/{creatureuuid}.png').convert("RGBA")
 
-    Slots = RedisSlots(creatureuuid=creatureuuid)
+    Creature = CreatureDocument.objects(_id=creatureuuid).get()
     try:
         # We compute Armors first to be the lower layer
         for slot in slots_armor:
-            slot_id = getattr(Slots, slot)
+            slot_id = getattr(Creature.slots, slot)
             if slot_id is None:
                 # Nothing equipped, we go next
                 continue
 
-            Item = RedisItem(itemuuid=slot_id)
+            Item = ItemDocument.objects(_id=slot_id).get()
             logger.debug(f'Equipped: [{slot_id}] {slot}:{Item.metaid}')
 
             file = f'/1/{Item.metaid}.png'
@@ -45,12 +45,12 @@ def creature_sprite(creatureuuid, race):
             logger.trace(f'Merged {slot}')
 
         for slot in slots_weapon:
-            slot_id = getattr(Slots, slot)
+            slot_id = getattr(Creature.slots, slot)
             if slot_id is None:
                 # Nothing equipped, we go next
                 continue
 
-            Item = RedisItem(itemuuid=slot_id)
+            Item = ItemDocument.objects(_id=slot_id).get()
             logger.debug(f'Equipped: [{slot_id}] {slot}:{Item.metaid}')
 
             # Specifics for weapons

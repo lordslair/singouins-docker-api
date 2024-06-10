@@ -8,10 +8,16 @@ certifi==2023.11.17
     # via requests
 charset-normalizer==3.3.2
     # via requests
+dnspython==2.6.1
+    # via pymongo
 idna==3.6
     # via requests
 loguru==0.7.2
     # via -r requirements.in
+mongoengine==0.28.2
+    # via -r requirements.in
+pymongo==4.7.2
+    # via mongoengine
 redis==5.0.1
     # via -r requirements.in
 requests==2.31.0

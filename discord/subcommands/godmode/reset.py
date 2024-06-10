@@ -6,8 +6,9 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisPa import RedisPa
+from mongo.models.Creature import CreatureDocument
+
+from nosql.connector import r
 
 from subcommands.godmode._autocomplete import (
     get_instances_list,
@@ -38,23 +39,20 @@ def reset(group_godmode):
         instanceuuid: str,
         singouinuuid: str,
     ):
-        name    = ctx.author.name
-        channel = ctx.channel.name
-        # As we need roles, it CANNOT be used in PrivateMessage
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_godmode} reset {instanceuuid} {singouinuuid}'
-            )
+
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_godmode} reset {instanceuuid} {singouinuuid}')
 
         try:
-            Creature = RedisCreature(creatureuuid=singouinuuid)
-            Pa = RedisPa(creatureuuid=singouinuuid)
+            Creature = CreatureDocument.objects(_id=singouinuuid).get()
 
-            Pa.redpa = 16
-            Pa.bluepa = 8
+            if r.exists(f'pa:{Creature.id}:blue'):
+                r.delete(f'pa:{Creature.id}:blue')
+            if r.exists(f'pa:{Creature.id}:red'):
+                r.delete(f'pa:{Creature.id}:red')
         except Exception as e:
             description = f'Godmode-Reset Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -73,4 +71,4 @@ def reset(group_godmode):
             embed.set_footer(text=f"CreatureUUID: {Creature.id}")
 
             await ctx.respond(embed=embed)
-            logger.info(f'[#{channel}][{name}] └──> Godmode-Reset Query OK')
+            logger.info(f'{h} └──> Godmode-Reset Query OK')

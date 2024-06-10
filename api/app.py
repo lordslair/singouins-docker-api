@@ -249,22 +249,22 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname>',
     methods=['POST'],
-    view_func=routes.external.mypc.inventory.inventory_item_equip,
+    view_func=routes.external.mypc.inventory.equip,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset/<int:offsetx>/<int:offsety>',
     methods=['POST'],
-    view_func=routes.external.mypc.inventory.inventory_item_offset,
+    view_func=routes.external.mypc.inventory.offset,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset',
     methods=['DELETE'],
-    view_func=routes.external.mypc.inventory.inventory_item_offset,
+    view_func=routes.external.mypc.inventory.offset,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/unequip/<string:type>/<string:slotname>',
     methods=['POST'],
-    view_func=routes.external.mypc.inventory.inventory_item_unequip,
+    view_func=routes.external.mypc.inventory.unequip,
     )
 #
 # Routes: /instance
@@ -321,9 +321,24 @@ app.add_url_rule(
     view_func=routes.external.mypc.action.unload,
     )
 app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/mining/sniff',
+    methods=['PUT'],
+    view_func=routes.external.mypc.action.profession.mining.sniff,
+    )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/gathering',
+    methods=['PUT'],
+    view_func=routes.external.mypc.action.profession.gathering.gather,
+    )
+app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/skinning/<uuid:resourceuuid>',
     methods=['POST'],
     view_func=routes.external.mypc.action.profession.skinning,
+    )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/tanning/<int:quantity>',
+    methods=['POST'],
+    view_func=routes.external.mypc.action.profession.tanning,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>',
@@ -342,14 +357,14 @@ app.add_url_rule(
 # Routes /korp
 #
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>',
-    methods=['GET'],
-    view_func=routes.external.mypc.korp.korp_get_one,
-    )
-app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp',
     methods=['POST'],
     view_func=routes.external.mypc.korp.korp_create,
+    )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>',
+    methods=['GET'],
+    view_func=routes.external.mypc.korp.korp_get,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>',
@@ -387,14 +402,14 @@ app.add_url_rule(
 #
 
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>',
-    methods=['GET'],
-    view_func=routes.external.mypc.squad.squad_get_one,
-    )
-app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad',
     methods=['POST'],
     view_func=routes.external.mypc.squad.squad_create,
+    )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>',
+    methods=['GET'],
+    view_func=routes.external.mypc.squad.squad_get,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>',

@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import time
 import threading
 
 from abc                         import ABC, abstractmethod
@@ -13,10 +14,10 @@ from utils.computation import (
     is_coords_empty,
     )
 
-from nosql.models.RedisCreature  import RedisCreature
-from nosql.models.RedisStats     import RedisStats
-from nosql.models.RedisPa        import RedisPa
-from nosql.models.RedisInstance  import RedisInstance
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Instance import InstanceDocument
+
+from nosql.models.RedisPa import RedisPa
 
 
 class Mob(ABC, threading.Thread):
@@ -25,14 +26,24 @@ class Mob(ABC, threading.Thread):
     def __init__(self, creatureuuid):
         super(threading.Thread, self).__init__()
 
-        # We replicate Creature attibutes into Salamander
-        self.creature = RedisCreature(creatureuuid=creatureuuid)
-        # We add the HP/HPmax from Stats attributes
-        self.stats = RedisStats(creatureuuid=self.creature.id)
+        # We replicate Creature attibutes into Mob object
+        try:
+            self.creature = CreatureDocument.objects(_id=creatureuuid).get()
+        except CreatureDocument.DoesNotExist:
+            logger.debug("CreatureDocument Query KO (404)")
+        else:
+            logger.trace(f'CreatureDocument: {self.creature.to_json()}')
+
         # We add Instance info as we need it
-        self.instance = RedisInstance(instanceuuid=self.creature.instance)
-        # Addind Logging headers
-        self.logh = f'[{self.creature.id}] {self.creature.name:20}'
+        try:
+            self.instance = InstanceDocument.objects(_id=self.creature.instance).get()
+        except InstanceDocument.DoesNotExist:
+            logger.debug("InstanceDocument Query KO (404)")
+        else:
+            logger.trace(f'InstanceDocument: {self.instance.to_json()}')
+
+        # Logging headers
+        self.logh = f'[{self.creature.id}] {self.creature.name}'
 
     @abstractmethod
     def run(self):
@@ -46,15 +57,42 @@ class Mob(ABC, threading.Thread):
     def hit(self):
         pass
 
-    def get_pos(self):
+    def sleep(self):
+        logger.debug(f'{self.logh} | Will rest ({self.instance.tick}s)')
+        time.sleep(self.instance.tick)
+
+#
+#
+#
+
+    @abstractmethod
+    def get_name(self):
+        pass
+
+    def get_pa(self):
         try:
-            Creature = RedisCreature(creatureuuid=self.creature.id)
+            Pa = RedisPa(creatureuuid=self.creature.id)
         except Exception as e:
-            logger.error(f'{self.logh} | RedisCreature Request KO [{e}]')
+            logger.error(f'{self.logh} | RedisPa Request KO [{e}]')
         else:
-            if Creature is not None and Creature is not False:
-                self.creature = Creature
-            logger.trace(f'{self.logh} | RedisCreature Request OK')
+            if Pa is not False and Pa is not None:
+                self.pa = Pa
+            logger.trace(f'{self.logh} | RedisPa Request OK')
+
+    def get_creature(self):
+        try:
+            Creature = CreatureDocument.objects(_id=self.creature.id).get()
+        except CreatureDocument.DoesNotExist:
+            logger.debug("CreatureDocument Query KO (404)")
+        except Exception as e:
+            logger.error(f'{self.logh} | CreatureDocument Query KO [{e}]')
+        else:
+            self.creature = Creature
+            logger.trace(f'{self.logh} | CreatureDocument Query OK')
+
+#
+#
+#
 
     def set_pos(self):
         # We check the closest PC in sight
@@ -72,17 +110,11 @@ class Mob(ABC, threading.Thread):
         # Collision check
         if not is_coords_empty(x=nextx, y=nexty):
             # There is a Creature on these coordinates
-            logger.debug(
-                f"{self.logh} | Move KO | "
-                f'(Tile occupied @({nextx}, {nexty}))'
-                )
+            logger.debug(f"{self.logh} | Move KO | (Tile busy @({nextx}, {nexty}))")
             return
         else:
             # There is no one on these coordinates
-            logger.debug(
-                f"{self.logh} | Move >> | "
-                f'(Tile empty @({nextx, nexty}))'
-                )
+            logger.debug(f"{self.logh} | Move >> | (Tile empty @({nextx, nexty}))")
 
         # Proximity check
         if (nextx, nexty) and \
@@ -130,24 +162,3 @@ class Mob(ABC, threading.Thread):
                 f"from (x:{self.creature.x},y:{self.creature.y}) "
                 f"to (x:{nextx},y:{nexty}))"
                 )
-
-    @abstractmethod
-    def get_life(self):
-        pass
-
-    @abstractmethod
-    def get_name(self):
-        pass
-
-    def get_pa(self):
-        try:
-            Pa = RedisPa(creatureuuid=self.creature.id)
-        except Exception as e:
-            logger.error(f'{self.logh} | RedisPa Request KO [{e}]')
-        else:
-            if Pa is not False and Pa is not None:
-                self.pa = Pa
-            logger.trace(f'{self.logh} | RedisPa Request OK')
-
-    # @abstractmethod
-    # def move(self, dest):

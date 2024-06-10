@@ -6,6 +6,8 @@ import requests
 
 from loguru import logger
 
+from mongo.models.Creature import CreatureDocument
+
 from nosql.models.RedisSearch import RedisSearch
 
 # Resolver variables
@@ -34,22 +36,21 @@ def resolver_generic_request_get(path, code=200):
 
 
 def resolver_move(self, targetx, targety):
+    instanceuuid = self.instance.id.replace('-', ' ')
+    Effects = RedisSearch().effect(query=f"@instance:{instanceuuid}")
+    Statuses = RedisSearch().status(query=f"@instance:{instanceuuid}")
+    Cds = RedisSearch().cd(query=f"@instance:{instanceuuid}")
+
+    Creatures = CreatureDocument.objects(instance=self.instance.id)
+
     body = {
         "context": {
             "map": self.instance.map,
             "instance": self.instance.id,
-            "creatures": RedisSearch().creature(
-                query=f'@instance:{self.instance.id}'
-                ).results_as_dict,
-            "effects": RedisSearch().effect(
-                query=f'@instance:{self.instance.id}'
-                ).results_as_dict,
-            "status": RedisSearch().status(
-                query=f'@instance:{self.instance.id}'
-                ).results_as_dict,
-            "cd": RedisSearch().cd(
-                query=f'@instance:{self.instance.id}'
-                ).results_as_dict,
+            "creatures": [Creature.to_mongo() for Creature in Creatures],
+            "effects": [Effect.as_dict() for Effect in Effects.results],
+            "status": [Status.as_dict() for Status in Statuses.results],
+            "cd": [Cd.as_dict() for Cd in Cds.results],
             },
         "fightEvent": {
             "name": "RegularMovesFightClass",
@@ -80,18 +81,21 @@ def resolver_move(self, targetx, targety):
 
 
 def resolver_basic_attack(self, target):
+    Creatures = CreatureDocument.objects(instance=self.instance.id)
+
+    instanceuuid = self.instance.id.replace('-', ' ')
+    Effects = RedisSearch().effect(query=f"@instance:{instanceuuid}")
+    Statuses = RedisSearch().status(query=f"@instance:{instanceuuid}")
+    Cds = RedisSearch().cd(query=f"@instance:{instanceuuid}")
+
     body = {
         "context": {
             "map": self.instance.map,
             "instance": self.instance.id,
-            "creatures": RedisSearch().creature(
-                query=f'@instance:{self.instance.id}'),
-            "effects": RedisSearch().effect(
-                query=f'@instance:{self.instance.id}'),
-            "status": RedisSearch().status(
-                query=f'@instance:{self.instance.id}'),
-            "cd": RedisSearch().cd(
-                query=f'@instance:{self.instance.id}'),
+            "creatures": [Creature.to_mongo() for Creature in Creatures],
+            "effects": [Effect.as_dict() for Effect in Effects.results],
+            "status": [Status.as_dict() for Status in Statuses.results],
+            "cd": [Cd.as_dict() for Cd in Cds.results],
             },
         "fightEvent": {
             "name": "RegularAttacksFightClass",

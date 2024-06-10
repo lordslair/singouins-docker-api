@@ -5,7 +5,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.Creature import CreatureDocument
+from mongo.models.User import UserDocument
 
 
 def show(group_singouin, bot):
@@ -21,56 +22,36 @@ def show(group_singouin, bot):
     async def show(
         ctx,
     ):
-        name         = ctx.author.name
-        channel      = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} show')
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} show'
-            )
+        emojiRace = [
+            discord.utils.get(bot.emojis, name='raceC'),
+            discord.utils.get(bot.emojis, name='raceG'),
+            discord.utils.get(bot.emojis, name='raceM'),
+            discord.utils.get(bot.emojis, name='raceO'),
+            ]
 
-        try:
-            emojiRace = [
-                discord.utils.get(bot.emojis, name='raceC'),
-                discord.utils.get(bot.emojis, name='raceG'),
-                discord.utils.get(bot.emojis, name='raceM'),
-                discord.utils.get(bot.emojis, name='raceO'),
-                ]
-
-            discordname = f'{ctx.author.name}#{ctx.author.discriminator}'
-            Users = RedisSearch().user(f'@d_name:{discordname}')
-
-            if len(Users.results) == 0:
-                description = f'No User linked with `{discordname}`'
-                logger.error(f'[#{channel}][{name}] └──> {description}')
-                await ctx.respond(
-                    embed=discord.Embed(
-                        description=description,
-                        colour=discord.Colour.red(),
-                        ),
-                    ephemeral=True,
-                    )
-                return
-        except Exception as e:
-            description = f'Singouin-List Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+        if UserDocument.objects(discord__name=ctx.author.name).count() == 0:
+            # Discord name not found in DB
+            msg = f'Unknown Discord Name:`{ctx.author.name}` in DB'
+            logger.trace(msg)
             await ctx.respond(
                 embed=discord.Embed(
-                    description=description,
-                    colour=discord.Colour.red(),
+                    description=msg,
+                    colour=discord.Colour.orange(),
                     ),
                 ephemeral=True,
                 )
             return
+        else:
+            User = UserDocument.objects(discord__name=ctx.author.name).get()
 
         try:
-            User = Users.results[0]
-            Creatures = RedisSearch().creature(
-                query=f"@account:{User.id.replace('-', ' ')}"
-                )
+            Creatures = CreatureDocument.objects(account=User.id)
 
             mydesc = ''
-            for Creature in Creatures.results:
+            for Creature in Creatures:
                 emojiMyRace = emojiRace[Creature.race - 1]
                 mydesc += (
                     f"{emojiMyRace} "
@@ -85,7 +66,7 @@ def show(group_singouin, bot):
             )
         except Exception as e:
             description = f'Singouin-List Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -96,4 +77,4 @@ def show(group_singouin, bot):
             return
         else:
             await ctx.respond(embed=embed, ephemeral=True)
-            logger.info(f'[#{channel}][{name}] └──> Singouin-Korp Query OK')
+            logger.info(f'{h} └──> Singouin-List Query OK')

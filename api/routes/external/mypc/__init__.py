@@ -1,21 +1,29 @@
 # -*- coding: utf8 -*-
 
+import uuid
+
 from flask                      import g, jsonify, request
 from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from nosql.metas                import metaRaces
-from nosql.models.RedisCosmetic import RedisCosmetic
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem     import RedisItem
-from nosql.models.RedisPa       import RedisPa
-from nosql.models.RedisProfession import RedisProfession
-from nosql.models.RedisSearch   import RedisSearch
-from nosql.models.RedisSlots    import RedisSlots
-from nosql.models.RedisStats    import RedisStats
-from nosql.models.RedisWallet   import RedisWallet
+from nosql.metas import metaNames
+from nosql.models.RedisPa import RedisPa
 
+from mongo.models.Cosmetic import (
+    CosmeticData,
+    CosmeticDocument,
+)
+from mongo.models.Creature import (
+    CreatureDocument,
+    CreatureHP,
+    CreatureSlot,
+    CreatureSlots,
+    CreatureStats,
+    CreatureStatsType,
+    CreatureSquad,
+    CreatureKorp,
+)
 from mongo.models.Highscore import (
     HighscoreDocument,
     HighscoreGeneral,
@@ -23,6 +31,15 @@ from mongo.models.Highscore import (
     HighscoreInternalGenericResource,
     HighscoreProfession,
 )
+from mongo.models.Item import ItemDocument
+from mongo.models.Profession import ProfessionDocument
+from mongo.models.Satchel import (
+    SatchelDocument,
+    SatchelAmmo,
+    SatchelCurrency,
+    SatchelResource,
+)
+
 
 from utils.decorators import (
     check_creature_exists,
@@ -49,7 +66,7 @@ def mypc_add():
     pcname       = request.json.get('name', None)
     pcrace       = request.json.get('race', None)
 
-    if len(RedisSearch().creature(query=f'@name:{pcname}').results) != 0:
+    if CreatureDocument.objects(name=pcname).count() != 0:
         msg = f'{g.h} Creature already exists (Creature.name:{pcname})'
         logger.error(msg)
         return jsonify(
@@ -61,8 +78,7 @@ def mypc_add():
         ), 200
     else:
         # We grab the race wanted from metaRaces
-        metaRace = dict(list(filter(lambda x: x["id"] == pcrace,
-                                    metaRaces))[0])  # Gruikfix
+        metaRace = metaNames['race'][pcrace]
         if metaRace is None:
             msg = f'{g.h} MetaRace not found (race:{pcrace})'
             logger.warning(msg)
@@ -73,13 +89,93 @@ def mypc_add():
                     "payload": None,
                 }
             ), 200
+
+        if pcclass == 1:
+            spec_b = 0
+            spec_g = 0
+            spec_m = 10
+            spec_p = 0
+            spec_r = 0
+            spec_v = 0
+        if pcclass == 2:
+            spec_b = 0
+            spec_g = 0
+            spec_m = 0
+            spec_p = 0
+            spec_r = 10
+            spec_v = 0
+        if pcclass == 3:
+            spec_b = 0
+            spec_g = 10
+            spec_m = 0
+            spec_p = 0
+            spec_r = 0
+            spec_v = 0
+        if pcclass == 4:
+            spec_b = 0
+            spec_g = 0
+            spec_m = 0
+            spec_p = 0
+            spec_r = 0
+            spec_v = 10
+        if pcclass == 5:
+            spec_b = 0
+            spec_g = 0
+            spec_m = 0
+            spec_p = 10
+            spec_r = 0
+            spec_v = 0
+        if pcclass == 6:
+            spec_b = 10
+            spec_g = 0
+            spec_m = 0
+            spec_p = 0
+            spec_r = 0
+            spec_v = 0
+
         try:
-            Creature = RedisCreature().new(
-                name=pcname,
-                raceid=pcrace,
+            Creature = CreatureDocument(
+                _id=uuid.uuid3(uuid.NAMESPACE_DNS, pcname),
+                account=g.User.id,
                 gender=pcgender,
-                accountuuid=g.User.id,
-                )
+                hp=CreatureHP(
+                    base=spec_m + metaRace['min_m'] + 100,
+                    current=spec_m + metaRace['min_m'] + 100,
+                    max=spec_m + metaRace['min_m'] + 100,
+                    ),
+                korp=CreatureKorp(),
+                name=pcname,
+                race=pcrace,
+                squad=CreatureSquad(),
+                slots=CreatureSlots(),
+                stats=CreatureStats(
+                    spec=CreatureStatsType(
+                        b=spec_b,
+                        g=spec_g,
+                        m=spec_m,
+                        p=spec_p,
+                        r=spec_r,
+                        v=spec_v,
+                    ),
+                    race=CreatureStatsType(
+                        b=metaRace['min_b'],
+                        g=metaRace['min_g'],
+                        m=metaRace['min_m'],
+                        p=metaRace['min_p'],
+                        r=metaRace['min_r'],
+                        v=metaRace['min_v'],
+                    ),
+                    total=CreatureStatsType(
+                        b=spec_b + metaRace['min_b'],
+                        g=spec_g + metaRace['min_g'],
+                        m=spec_m + metaRace['min_m'],
+                        p=spec_p + metaRace['min_p'],
+                        r=spec_r + metaRace['min_r'],
+                        v=spec_v + metaRace['min_v'],
+                    ),
+                ),
+            )
+            Creature.save()
         except Exception as e:
             msg = f'{g.h} Creature creation KO (pcname:{pcname}) [{e}]'
             logger.error(msg)
@@ -92,10 +188,15 @@ def mypc_add():
             ), 200
         else:
             try:
-                # We initialize a fresh wallet
-                Wallet = RedisWallet(creatureuuid=Creature.id).new()
+                Satchel = SatchelDocument(
+                    _id=uuid.uuid3(uuid.NAMESPACE_DNS, Creature.name),
+                    ammo=SatchelAmmo(),
+                    currency=SatchelCurrency(),
+                    resource=SatchelResource(),
+                    )
+                Satchel.save()
             except Exception as e:
-                msg = f'{g.h} Wallet creation KO [{e}]'
+                msg = f'{g.h} SatchelDocument creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -105,18 +206,21 @@ def mypc_add():
                     }
                 ), 200
             else:
-                if Wallet:
-                    logger.trace(f'{g.h} Wallet creation OK')
-                else:
-                    logger.warning(f'{g.h} Wallet creation KO')
+                logger.debug(f'{g.h} SatchelDocument creation OK')
 
             try:
-                RedisCosmetic().new(
-                    creatureuuid=Creature.id,
-                    cosmetic_caracs=pccosmetic,
+                Cosmetic = CosmeticDocument(
+                    bearer=Creature.id,
+                    metaid=pccosmetic['metaid'],
+                    data=CosmeticData(
+                        beforeArmor=pccosmetic['data']['beforeArmor'],
+                        hasGender=pccosmetic['data']['hasGender'],
+                        hideArmor=pccosmetic['data']['hideArmor'],
+                        )
                     )
+                Cosmetic.save()
             except Exception as e:
-                msg = f'{g.h} Cosmetics creation KO [{e}]'
+                msg = f'{g.h} CosmeticDocument creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -126,7 +230,7 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{g.h} Cosmetics creation OK')
+                logger.trace(f'{g.h} CosmeticDocument creation OK')
 
             try:
                 newHighscore = HighscoreDocument(
@@ -158,9 +262,12 @@ def mypc_add():
                 logger.debug(f'{g.h} HighscoreDocument creation OK')
 
             try:
-                RedisProfession().new(creatureuuid=Creature.id)
+                newProfession = ProfessionDocument(
+                    _id=Creature.id,
+                )
+                newProfession.save()
             except Exception as e:
-                msg = f'{g.h} RedisProfession creation KO [{e}]'
+                msg = f'{g.h} ProfessionDocument creation KO [{e}]'
                 logger.error(msg)
                 return jsonify(
                     {
@@ -170,61 +277,47 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{g.h} RedisProfession creation OK')
+                logger.trace(f'{g.h} ProfessionDocument creation OK')
 
-            try:
-                RedisSlots().new(creatureuuid=Creature.id)
-            except Exception as e:
-                msg = f'{g.h} RedisSlots creation KO [{e}]'
-                logger.error(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
-            else:
-                logger.trace(f'{g.h} RedisSlots creation OK')
+            for slot in pcequipment:
+                """
+                Gruik: This is done only for Alpha/Beta
+                It is needed as players can't either find/buy/craft ammo
+                So we fill the weapon when we create it
+                """
+                metatype = pcequipment[slot]['metatype']
+                metaid = pcequipment[slot]['metaid']
+                itemmeta = metaNames[metatype][metaid]
+                ammo = None
 
-            if pcequipment:
+                if metatype == 'weapon' and itemmeta['ranged']:
+                    ammo = itemmeta['max_ammo']
+                """
+                # TODO: Delete the block above for poduction
+                """
+
                 try:
-                    # Items are added
-                    if pcequipment['righthand'] is not None:
-                        RedisItem().new(
-                            creatureuuid=Creature.id,
-                            item_caracs={
-                                "metatype":
-                                    pcequipment['righthand']['metatype'],
-                                "metaid":
-                                    pcequipment['righthand']['metaid'],
-                                "bound": True,
-                                "bound_type": 'BoP',
-                                "modded": False,
-                                "mods": None,
-                                "state": 100,
-                                "rarity": 'Common'
-                                }
+                    Item = ItemDocument(
+                        _id=uuid.uuid4(),
+                        ammo=ammo,
+                        bearer=Creature.id,
+                        metatype=metatype,
+                        metaid=metaid,
+                        )
+                    Item.save()
+                    # We put the item in the slot
+                    setattr(
+                        Creature.slots,
+                        slot,
+                        CreatureSlot(
+                            id=Item.id,
+                            metaid=Item.metaid,
+                            metatype=Item.metatype,
                             )
-
-                    if pcequipment['lefthand'] is not None:
-                        RedisItem().new(
-                            creatureuuid=Creature.id,
-                            item_caracs={
-                                "metatype":
-                                    pcequipment['lefthand']['metatype'],
-                                "metaid":
-                                    pcequipment['lefthand']['metaid'],
-                                "bound": True,
-                                "bound_type": 'BoP',
-                                "modded": False,
-                                "mods": None,
-                                "state": 100,
-                                "rarity": 'Common'
-                                }
-                            )
+                    )
+                    Creature.save()
                 except Exception as e:
-                    msg = f'{g.h} Weapons creation KO [{e}]'
+                    msg = f'{g.h} ItemDocument creation KO [{e}]'
                     logger.error(msg)
                     return jsonify(
                         {
@@ -234,24 +327,7 @@ def mypc_add():
                         }
                     ), 200
                 else:
-                    # Everything has been populated. Stats can be done
-                    msg = f'{g.h} Weapons creation OK'
-                    logger.trace(msg)
-                    try:
-                        # We initialize a fresh stats
-                        RedisStats().new(Creature=Creature, classid=pcclass)
-                    except Exception as e:
-                        msg = f'{g.h} RedisStats creation KO [{e}]'
-                        logger.error(msg)
-                        return jsonify(
-                            {
-                                "success": False,
-                                "msg": msg,
-                                "payload": None,
-                            }
-                        ), 200
-                    else:
-                        logger.trace(f'{g.h} RedisStats creation OK')
+                    logger.debug(f'{g.h} ItemDocument({slot}) creation OK')
 
             # Everything went well
             msg = f'{g.h} Creature creation OK'
@@ -260,7 +336,7 @@ def mypc_add():
                 {
                     "success": True,
                     "msg": msg,
-                    "payload": Creature.as_dict(),
+                    "payload": Creature.to_mongo().to_dict(),
                 }
             ), 201
 
@@ -272,14 +348,9 @@ def mypc_add():
 def mypc_get_all():
     g.h = f'[User.id:{g.User.id}]'
     try:
-        Creatures = RedisSearch().creature(
-            query=f"@account:{g.User.id.replace('-', ' ')}"
-            )
+        Creatures = CreatureDocument.objects(account=g.User.id)
     except Exception as e:
-        msg = (
-            f'{g.h} Creatures query KO '
-            f'(username:{get_jwt_identity()}) [{e}]'
-            )
+        msg = f'{g.h} Creatures query KO (username:{get_jwt_identity()}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -295,9 +366,7 @@ def mypc_get_all():
             {
                 "success": True,
                 "msg": msg,
-                "payload": [
-                    Creature.as_dict() for Creature in Creatures.results
-                    ],
+                "payload": [Creature.to_mongo() for Creature in Creatures],
             }
         ), 200
 
@@ -320,51 +389,47 @@ def mypc_del(creatureuuid):
 
     try:
         # We start do delete PC elements
-        if RedisStats(creatureuuid=g.Creature.id).destroy():
-            logger.trace(f'{g.h} RedisStats delete OK')
-        if RedisWallet(creatureuuid=g.Creature.id).destroy():
-            logger.trace(f'{g.h} Wallet delete OK')
-        if RedisSlots(creatureuuid=g.Creature.id).destroy():
-            logger.trace(f'{g.h} RedisSlots delete OK')
+        # SatchelDocument
+        if SatchelDocument.objects(_id=g.Creature.id):
+            logger.debug(f'{g.h} SatchelDocument deletion >>')
+            SatchelDocument.objects(_id=g.Creature.id).get().delete()
+            logger.debug(f'{g.h} SatchelDocument deletion OK')
         # HighscoreDocument
-        if HighscoreDocument.objects(_id=g.Creature.id).first():
+        if HighscoreDocument.objects(_id=g.Creature.id):
             logger.debug(f'{g.h} HighscoreDocument deletion >>')
-            HighscoreDocument.objects(_id=g.Creature.id).first().delete()
+            HighscoreDocument.objects(_id=g.Creature.id).get().delete()
             logger.debug(f'{g.h} HighscoreDocument deletion OK')
+        # ProfessionDocument
+        if ProfessionDocument.objects(_id=g.Creature.id):
+            logger.debug(f'{g.h} ProfessionDocument deletion >>')
+            ProfessionDocument.objects(_id=g.Creature.id).get().delete()
+            logger.debug(f'{g.h} ProfessionDocument deletion OK')
         if RedisPa(creatureuuid=g.Creature.id).destroy():
             logger.trace(f'{g.h} RedisPa delete OK')
-
-        # We delete all the items belonging to the Creature
-        try:
-            # Finding all Creature items to loop on
-            Items = RedisSearch().item(
-                query=f"@bearer:{g.Creature.id.replace('-', ' ')}",
-                )
-            Cosmetics = RedisSearch().cosmetic(
-                query=f"@bearer:{g.Creature.id.replace('-', ' ')}",
-                )
-        except Exception as e:
-            logger.error(f'{g.h} Items Query KO [{e}]')
-        else:
-            if Items and len(Items.results) > 0:
-                try:
-                    for Item in Items.results:
-                        RedisItem(itemuuid=Item.id).destroy()
-                except Exception as e:
-                    logger.error(f'{g.h} RedisItem(s) delete KO [{e}]')
-                else:
-                    logger.trace(f'{g.h} RedisItem(s) delete OK')
-            if Cosmetics and len(Cosmetics.results) > 0:
-                try:
-                    for Cosmetic in Cosmetics.results:
-                        RedisCosmetic(cosmeticuuid=Cosmetic.id).destroy()
-                except Exception as e:
-                    logger.error(f'{g.h} RedisCosmetic(s) delete KO [{e}]')
-                else:
-                    logger.trace(f'{g.h} RedisCosmetic(s) delete OK')
+        # CosmeticDocument
+        if CosmeticDocument.objects(bearer=g.Creature.id):
+            try:
+                logger.debug(f'{g.h} CosmeticDocument(s) deletion >>')
+                CosmeticDocument.objects(bearer=g.Creature.id).delete()
+            except Exception as e:
+                logger.error(f'{g.h} CosmeticDocument(s) delete KO [{e}]')
+            else:
+                logger.debug(f'{g.h} CosmeticDocument(s) deletion OK')
+        # ItemDocument
+        if ItemDocument.objects(bearer=g.Creature.id):
+            try:
+                logger.debug(f'{g.h} ItemDocument(s) deletion >>')
+                ItemDocument.objects(bearer=g.Creature.id).delete()
+            except Exception as e:
+                logger.error(f'{g.h} ItemDocument(s) delete KO [{e}]')
+            else:
+                logger.debug(f'{g.h} ItemDocument(s) deletion OK')
 
         # Now we can delete the Creature itself
-        g.Creature.destroy()
+        if CreatureDocument.objects(_id=g.Creature.id).count() == 1:
+            logger.debug(f'{g.h} CreatureDocument deletion >>')
+            CreatureDocument.objects(_id=g.Creature.id).first().delete()
+            logger.debug(f'{g.h} CreatureDocument deletion OK')
     except Exception as e:
         msg = f'{g.h} Creature delete KO [{e}]'
         logger.error(msg)

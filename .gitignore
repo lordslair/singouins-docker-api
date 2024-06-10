@@ -62,7 +62,7 @@ db.sqlite3
 db.sqlite3-journal
 
 # Flask stuff:
-instance/
+# instance/ #  Sadly I need this @Lordslair
 .webassets-cache
 
 # Scrapy stuff:

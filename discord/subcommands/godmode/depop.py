@@ -1,15 +1,14 @@
 # -*- coding: utf8 -*-
 
 import discord
-import json
 
 from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisStats import RedisStats
-from nosql.publish import publish
+from nosql.connector import r
+
+from mongo.models.Creature import CreatureDocument
 
 from subcommands.godmode._autocomplete import (
     get_instances_list,
@@ -18,7 +17,7 @@ from subcommands.godmode._autocomplete import (
 
 from variables import (
     URL_ASSETS,
-    rarity_monster_types_discord,
+    rarity_monster_types_discord as rmtd,
     )
 
 
@@ -45,18 +44,15 @@ def depop(group_godmode):
         instanceuuid: str,
         creatureuuid: str,
     ):
-        name    = ctx.author.name
-        channel = ctx.channel.name
-        # As we need roles, it CANNOT be used in PrivateMessage
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_godmode} depop {instanceuuid} {creatureuuid}'
-            )
 
-        Creature = RedisCreature(creatureuuid=creatureuuid)
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_godmode} depop {instanceuuid} {creatureuuid}')
+
+        Creature = CreatureDocument.objects(_id=creatureuuid).get()
+        logger.trace(f"{h} ├──> Godmode-Depop {rmtd[Creature.rarity]} {Creature.name}")
 
         # WE WILL KILL HERE ONLY NON PLAYABLE CREATURES FOR SAFETY
-        if Creature.account is not None:
+        if Creature.account:
             msg = 'You can only kill NPC Creatures'
             logger.warning(msg)
             embed = discord.Embed(
@@ -67,23 +63,20 @@ def depop(group_godmode):
 
         try:
             # It is a NON playable Creature (Monster)
-            # We destroy the RedisStats
-            RedisStats(creatureuuid=Creature.id).destroy()
             # We destroy the Creature
-            RedisCreature(creatureuuid=Creature.id).destroy()
+            Creature.delete()
             # We put the info in pubsub channel for IA to regulate the instance
             try:
                 pmsg = {
                     "action": 'kill',
-                    "instance": Creature.instance,
-                    "creature": Creature.as_dict(),
+                    "creature": Creature.to_json(),
                     }
-                publish('ai-creature', json.dumps(pmsg))
+                r.publish('ai-creature', pmsg)
             except Exception as e:
                 logger.error(f'Publish(ai-creature) KO [{e}]')
         except Exception as e:
             description = f'Godmode-Depop Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -97,17 +90,12 @@ def depop(group_godmode):
                 colour=discord.Colour.green()
                 )
 
-            position = f"({Creature.x},{Creature.y})"
-            embed_field_name = (
-                f"{rarity_monster_types_discord[Creature.rarity]} "
-                f"{Creature.name}"
-                )
             embed_field_value  = f"> Instance : `{Creature.instance}`\n"
             embed_field_value += f"> Level : `{Creature.level}`\n"
-            embed_field_value += f"> Position : `{position}`\n"
+            embed_field_value += f"> Position : `({Creature.x},{Creature.y})`\n"
 
             embed.add_field(
-                name=f'**{embed_field_name}**',
+                name=f'{rmtd[Creature.rarity]} **{Creature.name}**',
                 value=embed_field_value,
                 inline=True,
                 )
@@ -119,4 +107,4 @@ def depop(group_godmode):
             embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
 
             await ctx.respond(embed=embed)
-            logger.info(f'[#{channel}][{name}] └──> Godmode-Depop Query OK')
+            logger.info(f'{h} └──> Godmode-Depop Query OK')

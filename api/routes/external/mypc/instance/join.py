@@ -1,10 +1,12 @@
 # -*- coding: utf8 -*-
 
-from flask                      import g, jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
+import datetime
 
-from nosql.queue                import yqueue_put
+from flask import g, jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
+
+from nosql.queue import yqueue_put
 
 from utils.decorators import (
     check_creature_exists,
@@ -14,16 +16,13 @@ from utils.decorators import (
 from variables import YQ_DISCORD
 
 
-#
-# Routes /mypc/<uuid:creatureuuid>/instance/*
-#
 # API: POST /mypc/<uuid:creatureuuid>/instance/<uuid:instanceuuid>/join
 @jwt_required()
 # Custom decorators
 @check_creature_exists
 @check_instance_exists
 def join(creatureuuid, instanceuuid):
-    if g.Creature.instance is not None:
+    if hasattr(g.Creature.instance, 'id'):
         msg = f'{g.h} in in Instance({g.Creature.instance})'
         logger.warning(msg)
         return jsonify(
@@ -37,6 +36,8 @@ def join(creatureuuid, instanceuuid):
     # We add the Creature into the instance
     try:
         g.Creature.instance = g.Instance.id
+        g.Creature.updated = datetime.datetime.utcnow()
+        g.Creature.save()
     except Exception as e:
         msg = f'{g.h} Instance({g.Instance.id}) Query KO [{e}]'
         logger.error(msg)
@@ -50,10 +51,10 @@ def join(creatureuuid, instanceuuid):
     else:
         # We put the info in queue for Discord
         scopes = []
-        if g.Creature.korp is not None:
-            scopes.append(f'Korp-{g.Creature.korp}')
-        if g.Creature.squad is not None:
-            scopes.append(f'Squad-{g.Creature.squad}')
+        if hasattr(g.Creature.korp, 'id'):
+            scopes.append(f'Korp-{g.Creature.korp.id}')
+        if hasattr(g.Creature.korp, 'id'):
+            scopes.append(f'Squad-{g.Creature.squad.id}')
         for scope in scopes:
             # Discord Queue
             yqueue_put(
@@ -75,6 +76,6 @@ def join(creatureuuid, instanceuuid):
             {
                 "success": True,
                 "msg": msg,
-                "payload": g.Creature.as_dict(),
+                "payload": g.Creature.to_mongo(),
             }
         ), 200

@@ -6,9 +6,8 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.metas import metaNames
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem import RedisItem
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Item import ItemDocument
 
 from subcommands.godmode._autocomplete import (
     get_singouins_list,
@@ -16,6 +15,7 @@ from subcommands.godmode._autocomplete import (
     )
 
 from variables import (
+    metaNames,
     URL_ASSETS,
     rarity_item_types_discord,
     )
@@ -44,22 +44,51 @@ def take(group_godmode):
         singouinuuid: str,
         itemuuid: str,
     ):
-        name    = ctx.author.name
-        channel = ctx.channel.name
-        # As we need roles, it CANNOT be used in PrivateMessage
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_godmode} take '
-            f'{singouinuuid} {itemuuid}'
-            )
+
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_godmode} take {singouinuuid} {itemuuid}')
 
         try:
-            Creature = RedisCreature(creatureuuid=singouinuuid)
-            Item = RedisItem(itemuuid=itemuuid)
-            RedisItem(itemuuid=itemuuid).destroy()
+            Creature = CreatureDocument.objects(_id=singouinuuid).get()
+            Item = ItemDocument.objects(_id=itemuuid).get()
+        except CreatureDocument.DoesNotExist:
+            msg = 'Auction NotFound'
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{h} └──> Auction-Remove Query KO ({msg})')
+            return
+        except ItemDocument.DoesNotExist:
+            msg = 'Item NotFound'
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{h} └──> Auction-Remove Query KO ({msg})')
+            return
         except Exception as e:
             description = f'Godmode-Take Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=description,
+                    colour=discord.Colour.red(),
+                    )
+                )
+            return
+
+        try:
+            Item.delete()
+        except Exception as e:
+            description = f'Godmode-Take Query KO [{e}]'
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -93,4 +122,4 @@ def take(group_godmode):
             embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
 
             await ctx.respond(embed=embed)
-            logger.info(f'[#{channel}][{name}] └──> Godmode-Take Query OK')
+            logger.info(f'{h} └──> Godmode-Take Query OK')

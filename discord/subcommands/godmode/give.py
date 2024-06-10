@@ -6,9 +6,8 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.metas import metaNames, metaWeapons
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem import RedisItem
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Item import ItemDocument
 
 from subcommands.godmode._autocomplete import (
     get_metanames_list,
@@ -17,6 +16,7 @@ from subcommands.godmode._autocomplete import (
     )
 
 from variables import (
+    metaNames,
     URL_ASSETS,
     rarity_item_types_discord,
     )
@@ -62,34 +62,33 @@ def give(group_godmode):
         metatype: str,
         metaid: int,
     ):
-        name    = ctx.author.name
-        channel = ctx.channel.name
-        # As we need roles, it CANNOT be used in PrivateMessage
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_godmode} give '
-            f'{singouinuuid} {rarity} {metatype} {metaid}'
-            )
 
-        Creature = RedisCreature(creatureuuid=singouinuuid)
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_godmode} give {singouinuuid} {rarity} {metatype} {metaid}')
+
+        Creature = CreatureDocument.objects(_id=singouinuuid).get()
 
         try:
-            Item = RedisItem().new(
-                creatureuuid=singouinuuid,
-                item_caracs={
-                    "metatype": metatype,
-                    "metaid": metaid,
-                    "bound": True,
-                    "bound_type": 'BoP',
-                    "modded": False,
-                    "mods": None,
-                    "state": 100,
-                    "rarity": rarity,
-                },
-            )
+            if metatype == 'armor':
+                max_ammo = None
+            elif metatype == 'weapon':
+                max_ammo = metaNames[metatype][metaid]['max_ammo']
+            else:
+                max_ammo = None
+
+            Item = ItemDocument(
+                ammo=max_ammo,
+                bearer=singouinuuid,
+                bound=True,
+                bound_type='BoP',
+                metaid=metaid,
+                metatype=metatype,
+                rarity=rarity,
+                )
+            Item.save()
         except Exception as e:
             description = f'Godmode-Give Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -97,48 +96,36 @@ def give(group_godmode):
                     )
                 )
             return
-        else:
-            if Item.metatype == 'armor':
-                max_ammo = None
-            elif Item.metatype == 'weapon':
-                meta = dict(
-                    list(
-                        filter(lambda x: x["id"] == Item.metaid, metaWeapons)
-                        )[0]
-                    )  # Gruikfix
-                max_ammo = meta['max_ammo']
-            else:
-                pass
 
-            embed = discord.Embed(
-                title="A new item appears!",
-                colour=discord.Colour.green()
-                )
+        embed = discord.Embed(
+            title="A new item appears!",
+            colour=discord.Colour.green()
+            )
 
-            embed_field_name = (
-                f"{rarity_item_types_discord[Item.rarity]} "
-                f"{metaNames[Item.metatype][Item.metaid]['name']}"
-                )
-            embed_field_value  = f"> Bearer : `{Creature.name}`\n"
-            embed_field_value += f"> Bearer : `UUID({Item.bearer})`\n"
-            embed_field_value += (
-                f"> Bound : `{Item.bound} ({Item.bound_type})`\n"
-                )
+        embed_field_name = (
+            f"{rarity_item_types_discord[Item.rarity]} "
+            f"{metaNames[Item.metatype][Item.metaid]['name']}"
+            )
+        embed_field_value  = f"> Bearer : `{Creature.name}`\n"
+        embed_field_value += f"> Bearer : `UUID({Item.bearer})`\n"
+        embed_field_value += (
+            f"> Bound : `{Item.bound} ({Item.bound_type})`\n"
+            )
 
-            if max_ammo is not None:
-                embed_field_value += f"> Ammo : `{Item.ammo}/{max_ammo}`\n"
+        if max_ammo:
+            embed_field_value += f"> Ammo : `{Item.ammo}/{max_ammo}`\n"
 
-            embed.add_field(
-                name=f'**{embed_field_name}**',
-                value=embed_field_value,
-                inline=True,
-                )
+        embed.add_field(
+            name=f'**{embed_field_name}**',
+            value=embed_field_value,
+            inline=True,
+            )
 
-            embed.set_footer(text=f"ItemUUID: {Item.id}")
+        embed.set_footer(text=f"ItemUUID: {Item.id}")
 
-            URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
-            logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
-            embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
+        URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
+        logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
+        embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
 
-            await ctx.respond(embed=embed)
-            logger.info(f'[#{channel}][{name}] └──> Godmode-Give Query OK')
+        await ctx.respond(embed=embed)
+        logger.info(f'{h} └──> Godmode-Give Query OK')

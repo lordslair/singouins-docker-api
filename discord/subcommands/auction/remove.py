@@ -1,19 +1,18 @@
 # -*- coding: utf8 -*-
 
+import datetime
 import discord
 
 from discord.commands import option
 from loguru import logger
 
-from nosql.metas import metaNames
-from nosql.models.RedisAuction import RedisAuction
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem import RedisItem
+from mongo.models.Auction import AuctionDocument
+from mongo.models.Item import ItemDocument
 
-from subcommands.auction._autocomplete import get_singouin_auctioned_item_list
+from subcommands.auction._autocomplete import get_singouin_auctions_list
 from subcommands.singouin._autocomplete import get_mysingouins_list
 
-from variables import rarity_item_types_discord
+from variables import item_types_discord, rarity_item_types_discord
 
 
 def remove(group_auction):
@@ -38,33 +37,31 @@ def remove(group_auction):
             )
         )
     @option(
-        "itemuuid",
-        description="Item UUID",
-        autocomplete=get_singouin_auctioned_item_list
+        "auctionuuid",
+        description="Auction UUID",
+        autocomplete=get_singouin_auctions_list
         )
     async def remove(
         ctx: discord.ApplicationContext,
         selleruuid: str,
         metatype: str,
-        itemuuid: str,
+        auctionuuid: str,
     ):
 
-        name = ctx.author.name
-        # Pre-flight checks
-        if ctx.channel.type is discord.ChannelType.private:
-            channel = ctx.channel.type
-        else:
-            channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_auction} remove {selleruuid} {auctionuuid}')
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_auction} remove {selleruuid} {itemuuid}'
-            )
-
-        Creature = RedisCreature(creatureuuid=selleruuid)
-        Item = RedisItem(itemuuid=itemuuid)
-
-        if Item.id is None:
+        try:
+            Auction = AuctionDocument.objects(
+                _id=auctionuuid,
+                seller__id=selleruuid,
+                ).get()
+            Item = ItemDocument.objects(
+                _id=Auction.item.id,
+                auctioned=True,
+                bearer=selleruuid,
+                ).get()
+        except ItemDocument.DoesNotExist:
             msg = 'Item NotFound'
             await ctx.respond(
                 embed=discord.Embed(
@@ -73,10 +70,10 @@ def remove(group_auction):
                     ),
                 ephemeral=True,
                 )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
+            logger.info(f'{h} └──> Auction-Remove Query KO ({msg})')
             return
-        if Item.bearer != Creature.id:
-            msg = 'Item does not belong to you'
+        except AuctionDocument.DoesNotExist:
+            msg = 'Auction NotFound'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -84,14 +81,17 @@ def remove(group_auction):
                     ),
                 ephemeral=True,
                 )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
+            logger.info(f'{h} └──> Auction-Remove Query KO ({msg})')
             return
 
         try:
-            RedisAuction(auctionuuid=Item.id).destroy()
+            Auction.delete()
+            Item.auctioned = False
+            Item.updated = datetime.datetime.utcnow()
+            Item.save()
         except Exception as e:
             description = f'Auction-Remove Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -104,12 +104,12 @@ def remove(group_auction):
         embed = discord.Embed(
             title="Removed from the Auction House:",
             description=(
-                f"{rarity_item_types_discord[Item.rarity]} "
-                f"**{metaNames[Item.metatype][Item.metaid]['name']}**"
+                f"> {item_types_discord[Item.metatype]} "
+                f"{rarity_item_types_discord[Item.rarity]} **{Auction.item.name}**"
                 ),
             colour=discord.Colour.green(),
             )
         embed.set_footer(text=f"ItemUUID: {Item.id}")
         await ctx.respond(embed=embed, ephemeral=True)
-        logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
+        logger.info(f'{h} └──> Auction-Remove Query OK')
         return

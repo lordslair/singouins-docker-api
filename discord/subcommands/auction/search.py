@@ -4,14 +4,14 @@ import discord
 
 from discord.commands import option
 from loguru import logger
+from mongoengine import Q
 
-from nosql.metas import metaNames
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.Auction import AuctionDocument
 
-from subcommands.auction._tools import human_time
+from subcommands.auction._tools import auction_time_left
 from subcommands.godmode._autocomplete import get_metanames_list
 
-from variables import rarity_item_types_discord
+from variables import metaNames, rarity_item_types_discord
 
 
 def search(group_auction, bot):
@@ -42,26 +42,15 @@ def search(group_auction, bot):
         metaid: str,
     ):
 
-        name = ctx.author.name
-        # Pre-flight checks
-        if ctx.channel.type is discord.ChannelType.private:
-            channel = ctx.channel.type
-        else:
-            channel = ctx.channel.name
-
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_auction} search {metatype} {metaid}'
-            )
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_auction} search {metatype} {metaid}')
 
         try:
             if metaid and isinstance(metaid, str):
                 metaid = int(metaid)
-                metaname = metaNames[metatype][metaid]
-                search = f'*{metaname}*'
+                search = f'*{metaNames[metatype][metaid]}*'
             else:
                 metaid = None
-                metaname = None
                 search = '*'
         except Exception as e:
             msg = f'Meta ID parsing failed [{e}]'
@@ -70,18 +59,21 @@ def search(group_auction, bot):
         # We get the Item from the Auctions
         try:
             if metatype and metaid:
-                query = (
-                    f'(@metatype:{metatype}) & '
-                    f'(@metaid:[{metaid} {metaid}])'
-                    )
+                logger.success(f"1 {metatype}, {metaid}")
+                query = Q(item__metatype=metatype) & Q(item__metaid=metaid)
             elif metatype:
-                query = f'@metatype:{metatype}'
+                logger.success(f"2 {metatype}, {metaid}")
+                query = Q(item__metatype=metatype)
             elif metaid:
-                query = f'@metaid:[{metaid} {metaid}]'
-            Auctions = RedisSearch().auction(query=query)
+                logger.success(f"3 {metatype}, {metaid}")
+                query = Q(item__metaid=metaid)
+            else:
+                logger.error(f"4 {metatype}, {metaid}")
+
+            Auctions = AuctionDocument.objects(query)
         except Exception as e:
             description = f'Auction-Search Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -91,9 +83,9 @@ def search(group_auction, bot):
                 )
             return
 
-        if len(Auctions.results) == 0:
+        if Auctions.count() == 0:
             description = 'No items were found matching these criterias.'
-            logger.debug(f'[#{channel}][{name}] └──> {description}')
+            logger.debug(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -104,46 +96,36 @@ def search(group_auction, bot):
             return
 
         # Dirty Gruik to find the max(len(metaname))
-        metaname_width = max(
-            len(Auction.metaname) for Auction in Auctions.results
-            )
-        # We need to put a floor to respech the Tableau header
-        metaname_width = max(9, metaname_width)
+        mw = max(len(Auction.item.name) for Auction in Auctions)
+        # We need to put a floor to respect the Tableau header
+        mw = max(9, mw)
         # Dirty Gruik to find the max(len(sellername))
-        sellername_width = max(
-            len(Auction.sellername) for Auction in Auctions.results
-            )
+        sw = max(len(Auction.seller.name) for Auction in Auctions)
 
         # We add a header for the results "Tableau"
         itemname, price, seller, end = 'Item name', 'Price', 'Seller', 'End'
-        description = (
-                f"💱 `{itemname:{metaname_width}}` | "
-                f"`{price:8}` | "
-                f"`{end:7}` | "
-                f"`{seller:{sellername_width}}`"
-                f"\n"
-                )
-        itemname, seller = '-' * (metaname_width + 3), '-' * sellername_width
+        description = f"💱 `{itemname:{mw}}` | `{price:8}` | `{end:8}` | `{seller:{sw}}`\n"
+        itemname, seller = '-' * (mw + 3), '-' * sw
         description += (
-                f"`{itemname:{metaname_width}}` | "
+                f"`{itemname:{mw}}` | "
                 f"`--------` | "
-                f"`-------` | "
-                f"`{seller:{sellername_width}}`"
+                f"`--------` | "
+                f"`{seller:{sw}}`"
                 f"\n"
                 )
         # We loop on items retrieved in Auctions
-        for Auction in Auctions.results:
+        for Auction in Auctions:
             description += (
-                f"{rarity_item_types_discord[Auction.rarity]} "
-                f"`{Auction.metaname:{metaname_width}}` | "
+                f"{rarity_item_types_discord[Auction.item.rarity]} "
+                f"`{Auction.item.name:{mw}}` | "
                 f"`{Auction.price:5}` "
                 f"{discord.utils.get(bot.emojis, name='moneyB')} | "
-                f"`{human_time(Auction.duration_left):7}` | "
-                f"`{Auction.sellername:{sellername_width}}`"
+                f"`{auction_time_left(Auction.created):8}` | "
+                f"`{Auction.seller.name:{sw}}`"
                 "\n"
                 )
 
-        logger.info(f'[#{channel}][{name}] └──> Auction Search Query OK')
+        logger.info(f'{h} └──> Auction-Search Query OK')
         await ctx.respond(
                 embed=discord.Embed(
                     title=f'Searched for {metatype.upper()}:{search}',

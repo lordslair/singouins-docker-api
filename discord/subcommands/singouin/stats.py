@@ -2,12 +2,13 @@
 
 import discord
 
+from datetime import datetime, timedelta
 from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisStats import RedisStats
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Aggro import AggroDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
@@ -29,24 +30,44 @@ def stats(group_singouin, bot):
         ctx,
         singouinuuid: str,
     ):
-        name = ctx.author.name
-        channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} stats {singouinuuid}')
+
         file = None
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} stats {singouinuuid}'
-            )
+        Creature = CreatureDocument.objects(_id=singouinuuid).get()
+
+        # Getting Aggro
+        # Perform the aggregation
+        pipeline = [
+            {
+                "$match": {
+                    "created": {
+                        "$gte": datetime.utcnow() - timedelta(hours=48),
+                        "$lte": datetime.utcnow()
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_amount": {"$sum": "$amount"}
+                }
+            }
+        ]
+        # Reading the aggregated result
+        Aggro = list(AggroDocument.objects.aggregate(*pipeline))
+        if Aggro:
+            aggro = Aggro[0].get('total_amount', 0)
+        else:
+            aggro = 0
 
         try:
-            Creature = RedisCreature(creatureuuid=singouinuuid)
-            Stats = RedisStats(creatureuuid=singouinuuid)
-
             embed = discord.Embed(
                 title=Creature.name,
                 description=(
-                    f":heart_decoration: : "
-                    f"`{Stats.hp}/{Stats.hpmax} HP`\n"
+                    f":heart_decoration: : `{Creature.hp.max}/{Creature.hp.max} HP`\n"
+                    f":anger: : `{aggro}`\n"
                     ),
                 colour=discord.Colour.blue()
             )
@@ -63,9 +84,10 @@ def stats(group_singouin, bot):
             # We generate base Stats field
             value = ''
             for stat in emojiStats:
-                value += f"> {emojiStats[stat]} : `{getattr(Stats, stat)}`\n"
+                value += f"> {emojiStats[stat]} : `{getattr(Creature.stats.total, stat)}`\n"
             embed.add_field(name='**Base Stats**', value=value, inline=True)
 
+            """
             # We generate DEF Stats field
             value  = f"> :dash: : `{Stats.dodge}`\n"
             value += f"> :shield: : `{Stats.parry}`\n"
@@ -78,6 +100,7 @@ def stats(group_singouin, bot):
             value  = f"> :axe: : `{Stats.capcom}`\n"
             value += f"> :gun: : `{Stats.capsho}`\n"
             embed.add_field(name='**OFF Stats**', value=value, inline=True)
+            """
 
             # We check if we have a sprite to add as thumbnail
             if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
@@ -88,7 +111,7 @@ def stats(group_singouin, bot):
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-Stats Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -98,6 +121,6 @@ def stats(group_singouin, bot):
                 )
             return
         else:
-            logger.info(f'[#{channel}][{name}] └──> Singouin-Squad Query OK')
+            logger.info(f'{h} └──> Singouin-Stats Query OK')
             await ctx.respond(embed=embed, ephemeral=True, file=file)
             return
