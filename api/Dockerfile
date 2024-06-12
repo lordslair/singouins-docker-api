@@ -6,6 +6,7 @@ ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 COPY --chown=api:api /api   /code
+COPY --chown=api:api /mongo /code/mongo
 COPY --chown=api:api /nosql /code/nosql
 
 WORKDIR /code

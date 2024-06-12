@@ -23,7 +23,7 @@ from mongoengine.fields import (
 #
 
 
-class EventDocument(Document):
+class ResourceDocument(Document):
     """
     Define the document for: Resource
 
