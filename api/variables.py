@@ -6,31 +6,16 @@ import os
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
 TOKEN_DURATION = int(os.environ.get("SEP_TOKEN_DURATION", 60))
 
-# MySQL variables
-MYSQL_USER     = os.environ.get("SEP_MYSQL_USER")
-MYSQL_PASSWORD = os.environ.get("SEP_MYSQL_PASSWORD")
-MYSQL_DB       = os.environ.get("SEP_MYSQL_DB")
-MYSQL_HOST     = os.environ.get("SEP_MYSQL_HOST", '127.0.0.1')
-MYSQL_PORT     = os.environ.get("SEP_MYSQL_PORT", 3306)
-
-# SQLAlchemy variables
-SQL_DSN        = (f'{MYSQL_USER}:{MYSQL_PASSWORD}@'
-                  f'{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}')
-
 # External URL
-API_URL        = os.environ.get("SEP_API_URL", 'http://127.0.0.1:5000')
-
-# PCS variables for remote storage
-PCS_URL       = os.environ.get("SEP_PCS_URL", 'http://127.0.0.1')
+API_URL = os.environ.get("SEP_API_URL", 'http://127.0.0.1:5000')
 
 # Discord permanent invite link
-DISCORD_URL   = os.environ.get("SEP_DISCORD_URL", 'http://127.0.0.1')
+DISCORD_URL = os.environ.get("SEP_DISCORD_URL", 'http://127.0.0.1')
+
 # Resolver variables
-RESOLVER_HOST    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_HOST",
-                                  '127.0.0.1')
-RESOLVER_PORT    = os.environ.get("SEP_BACKEND_RESOLVER_SVC_SERVICE_PORT",
-                                  5000)
-RESOLVER_URL     = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
+RESOLVER_HOST = os.environ.get("RESOLVER_HOST", 'resolver-svc')
+RESOLVER_PORT = os.environ.get("RESOLVER_PORT", 3000)
+RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
 
 # Gunicorn variables
 GUNICORN_CHDIR   = os.environ.get("GUNICORN_CHDIR", '/code')
@@ -48,9 +33,9 @@ YQ_DISCORD   = os.environ.get("SEP_YQ_DISCORD", 'yarqueue:discord')
 # GitHub check to position relative paths correctly
 if os.environ.get("CI"):
     # Here we are inside GitHub CI process
-    DATA_PATH   = 'api/data'
+    DATA_PATH = 'api/data'
 else:
-    DATA_PATH   = 'data'
+    DATA_PATH = 'data'
 
 # Static data
 rarity_array = {
