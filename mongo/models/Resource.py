@@ -19,7 +19,7 @@ from mongoengine.fields import (
 )
 
 #
-# Collection: event
+# Collection: resource
 #
 
 
