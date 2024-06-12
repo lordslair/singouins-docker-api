@@ -8,7 +8,6 @@ from loguru import logger
 from mongo.models.Highscore import HighscoreDocument
 
 from nosql.models.RedisEffect import RedisEffect
-from nosql.models.RedisEvent import RedisEvent
 from nosql.models.RedisPa import RedisPa
 
 from utils.decorators import (
@@ -56,15 +55,6 @@ def track(creatureuuid):
         "set__updated": datetime.datetime.utcnow(),
         }
     HighScores.update(**highscores_update_query)
-
-    # We create the Creature Event
-    RedisEvent().new(
-        action_src=g.Creature.id,
-        action_dst=None,
-        action_type='action/profession/tracking',
-        action_text='Tried to spot things in the area',
-        action_ttl=30 * 86400
-        )
 
     # We consume the PA
     RedisPa(creatureuuid=creatureuuid).consume(

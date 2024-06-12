@@ -11,7 +11,6 @@ from mongo.models.Highscore import HighscoreDocument
 from nosql.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
-from nosql.models.RedisEvent import RedisEvent
 from nosql.models.RedisPa import RedisPa
 
 from utils.decorators import (
@@ -109,20 +108,6 @@ def recycling(creatureuuid, itemuuid):
         "set__updated": datetime.datetime.utcnow(),
         }
     HighScores.update(**highscores_update_query)
-
-    # We prepare Event message
-    if shards_qty > 0:
-        action_text = 'Recycled an item and got something !'
-    else:
-        action_text = 'Recycled an item and got nothing.'
-    # We create the Creature Event
-    RedisEvent().new(
-        action_src=g.Creature.id,
-        action_dst=None,
-        action_type=f'action/profession/{PROFESSION_NAME}',
-        action_text=action_text,
-        action_ttl=30 * 86400
-        )
 
     # We add the resources in the Satchel
     Satchel = SatchelDocument.objects(_id=creatureuuid).get()

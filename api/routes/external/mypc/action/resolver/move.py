@@ -98,14 +98,6 @@ def move(creatureuuid):
             }
         ), 200
 
-        """# We create the Creature Event
-        RedisEvent().new(
-            action_src=g.Creature.id,
-            action_dst=None,
-            action_type='action/move',
-            action_text='Moved',
-            action_ttl=30 * 86400
-            )"""
     if response:
         msg = f'{g.h} Resolver Query OK'
         logger.debug(msg)

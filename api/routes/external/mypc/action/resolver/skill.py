@@ -11,7 +11,6 @@ from mongo.models.Creature import CreatureDocument
 
 from nosql.models.RedisCd       import RedisCd
 from nosql.models.RedisEffect   import RedisEffect
-from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisStatus   import RedisStatus
 
 from variables                  import RESOLVER_URL
@@ -140,14 +139,6 @@ def skill(creatureuuid, skill_name):
             }
         ), 200
     else:
-        # We create the Creature Event
-        RedisEvent().new(
-            action_src=g.Creature.id,
-            action_dst=None,
-            action_type='skill',
-            action_text=f'Used a Skill ({skill_name})',
-            action_ttl=30 * 86400
-            )
         msg = f'{g.h} Resolver Query OK'
         logger.debug(msg)
         return jsonify(

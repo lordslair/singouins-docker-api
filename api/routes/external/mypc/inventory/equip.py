@@ -8,7 +8,7 @@ from loguru import logger
 
 from nosql.metas import metaNames
 from nosql.queue import yqueue_put
-from nosql.models.RedisEvent import RedisEvent
+
 from nosql.models.RedisPa import RedisPa
 
 from mongo.models.Creature import CreatureSlot
@@ -192,14 +192,6 @@ def equip(creatureuuid, type, slotname, itemuuid):
             }
         )
 
-    # We create the Creature Event
-    RedisEvent().new(
-        action_src=g.Creature.id,
-        action_dst=None,
-        action_type='action/equip',
-        action_text='Equipped something',
-        action_ttl=30 * 86400
-        )
     # JOB IS DONE
     msg = f'{g.h} Equip Query OK'
     logger.debug(msg)

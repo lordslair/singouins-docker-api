@@ -9,7 +9,6 @@ from random import choices
 from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Resource import ResourceDocument
 
-from nosql.models.RedisEvent import RedisEvent
 from nosql.models.RedisPa import RedisPa
 
 from utils.decorators import (
@@ -97,11 +96,6 @@ def gather(creatureuuid, resourceuuid):
         0,
         1 + round(g.Profession.gathering/20 - rarity_array.index(rarity))
         )
-    # We prepare Event message
-    if quantity == 0:
-        action_text = 'Gathered nothing.'
-    else:
-        action_text = f'Gathered something ({Resource.material}).'
 
     # We set the HighScores
     HighScores = HighscoreDocument.objects(_id=g.Creature.id)
@@ -110,15 +104,6 @@ def gather(creatureuuid, resourceuuid):
     HighScores.update_one(inc__internal__ore__obtained=quantity)
     #
     HighScores.update(set__updated=datetime.utcnow())
-
-    # We create the Creature Event
-    RedisEvent().new(
-        action_src=g.Creature.id,
-        action_dst=None,
-        action_type='action/profession/{PROFESSION_NAME}',
-        action_text=action_text,
-        action_ttl=30 * 86400
-        )
 
     # We add the resources in the Wallet
     #

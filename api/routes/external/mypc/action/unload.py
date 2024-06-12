@@ -7,7 +7,6 @@ from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
 from nosql.metas                import metaNames
-from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisPa       import RedisPa
 
 from mongo.models.Satchel import SatchelDocument
@@ -75,14 +74,6 @@ def unload(creatureuuid, itemuuid):
         g.Item.save()
         # We consume the PA
         RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE)
-        # We create the Creature Event
-        RedisEvent().new(
-            action_src=g.Creature.id,
-            action_dst=None,
-            action_type='action/unload',
-            action_text='Unloaded a weapon',
-            action_ttl=30 * 86400
-            )
     except Exception as e:
         msg = f'{g.h} Unload Query KO [{e}]'
         logger.error(msg)

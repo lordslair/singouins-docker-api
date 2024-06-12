@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required
 from loguru import logger
 
 from nosql.queue import yqueue_put
-from nosql.models.RedisEvent import RedisEvent
+
 from nosql.models.RedisPa import RedisPa
 
 from utils.decorators import (
@@ -80,15 +80,6 @@ def unequip(creatureuuid, type, slotname, itemuuid):
                 "scope": 'broadcast',
                 },
             }
-        )
-
-    # We create the Creature Event
-    RedisEvent().new(
-        action_src=g.Creature.id,
-        action_dst=None,
-        action_type='action/unequip',
-        action_text='Unequipped something',
-        action_ttl=30 * 86400
         )
 
     msg = f'{g.h} Unequip OK'
