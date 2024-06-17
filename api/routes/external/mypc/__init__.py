@@ -38,6 +38,7 @@ from mongo.models.Satchel import (
     SatchelAmmo,
     SatchelCurrency,
     SatchelResource,
+    SatchelShard,
 )
 
 
@@ -193,6 +194,7 @@ def mypc_add():
                     ammo=SatchelAmmo(),
                     currency=SatchelCurrency(),
                     resource=SatchelResource(),
+                    shard=SatchelShard(),
                     )
                 Satchel.save()
             except Exception as e:
@@ -277,7 +279,7 @@ def mypc_add():
                     }
                 ), 200
             else:
-                logger.trace(f'{g.h} ProfessionDocument creation OK')
+                logger.debug(f'{g.h} ProfessionDocument creation OK')
 
             for slot in pcequipment:
                 """
