@@ -50,8 +50,6 @@ def context(creatureuuid):
             }
         ), 200
 
-    logger.success(request.json)
-
     try:
         fightEventname = request.json.get('name', None)
         fightEventtype = request.json.get('type', None)

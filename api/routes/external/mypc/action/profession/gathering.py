@@ -15,7 +15,6 @@ from utils.decorators import (
     check_creature_exists,
     check_creature_in_instance,
     check_creature_pa,
-    check_creature_profession,
     )
 from variables import rarity_array
 
@@ -36,8 +35,7 @@ PROFESSION_NAME = 'gathering'
 @check_creature_exists
 @check_creature_in_instance
 @check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
-@check_creature_profession(PROFESSION_NAME)
-def gather(creatureuuid, resourceuuid):
+def gathering(creatureuuid, resourceuuid):
     # Check if the resource exists
     if ResourceDocument.objects(_id=resourceuuid):
         Resource = ResourceDocument.objects(_id=resourceuuid).get()

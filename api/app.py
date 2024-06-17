@@ -44,7 +44,6 @@ import routes.external.mypc.inventory
 import routes.external.mypc.korp
 import routes.external.mypc.pa
 import routes.external.mypc.squad
-import routes.external.mypc.stats
 import routes.external.mypc.statuses
 import routes.external.mypc.view
 import routes.external.pc
@@ -109,11 +108,6 @@ app.add_url_rule(
     '/auth/delete',
     methods=['DELETE'],
     view_func=routes.external.auth.delete,
-    )
-app.add_url_rule(
-    '/auth/forgotpassword',
-    methods=['POST'],
-    view_func=routes.external.auth.forgot_password,
     )
 app.add_url_rule(
     '/auth/infos',
@@ -186,14 +180,6 @@ app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/pa',
     methods=['GET'],
     view_func=routes.external.mypc.pa.pa_get,
-    )
-#
-# Routes: /stats
-#
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/stats',
-    methods=['GET'],
-    view_func=routes.external.mypc.stats.stats_get,
     )
 #
 # Routes: /cds
@@ -277,7 +263,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/instance/<uuid:instanceuuid>',
     methods=['GET'],
-    view_func=routes.external.mypc.instance.get,
+    view_func=routes.external.mypc.instance.instance_get,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/instance/<uuid:instanceuuid>/join',
@@ -321,14 +307,14 @@ app.add_url_rule(
     view_func=routes.external.mypc.action.unload,
     )
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/profession/mining/sniff',
-    methods=['PUT'],
-    view_func=routes.external.mypc.action.profession.mining.sniff,
-    )
-app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/gathering',
     methods=['PUT'],
-    view_func=routes.external.mypc.action.profession.gathering.gather,
+    view_func=routes.external.mypc.action.profession.gathering,
+    )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>',
+    methods=['POST'],
+    view_func=routes.external.mypc.action.profession.recycling,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/skinning/<uuid:resourceuuid>',
@@ -339,11 +325,6 @@ app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/tanning/<int:quantity>',
     methods=['POST'],
     view_func=routes.external.mypc.action.profession.tanning,
-    )
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>',
-    methods=['POST'],
-    view_func=routes.external.mypc.action.profession.recycling,
     )
 #
 # Routes: /events

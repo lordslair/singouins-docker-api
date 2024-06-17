@@ -7,7 +7,7 @@ from loguru import logger
 from random import choices
 
 from mongo.models.Highscore import HighscoreDocument
-from nosql.models.Profession import ProfessionDocument
+from mongo.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
 from nosql.models.RedisPa import RedisPa

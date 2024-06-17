@@ -35,7 +35,7 @@ PROFESSION_NAME = 'tracking'
 @check_creature_exists
 @check_creature_in_instance
 @check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
-def track(creatureuuid):
+def tracking(creatureuuid):
     # A tracking extends Creature view for X tiles for Y seconds
     # We need to add the Effect for that
     # The real job is done in /view
