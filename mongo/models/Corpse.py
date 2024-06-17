@@ -45,7 +45,7 @@ class CorpseDocument(Document):
     account = UUIDField(binary=False, default=None)
     created = DateTimeField(default=datetime.datetime.utcnow)
     gender = BooleanField(required=True)
-    instance = UUIDField(binary=False)
+    instance = UUIDField(binary=False, required=True)
     killer = UUIDField(binary=False)
     level = IntField(required=True, default=1)
     name = StringField(required=True)

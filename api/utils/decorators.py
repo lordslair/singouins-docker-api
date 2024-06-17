@@ -42,8 +42,21 @@ def check_creature_exists(func):
 def check_creature_in_instance(func):
     """ Decorator to check if a Creature is in an Instance. """
     def wrapper(*args, **kwargs):
-        if hasattr(g.Creature, 'instance') is False:
-            msg = f'[Creature.id:{g.Creature.id}] Creature not in an Instance'
+        try:
+            if hasattr(g.Creature, 'instance'):
+                logger.trace(f'[Creature.id:{g.Creature.id}] Creature in an Instance')
+            else:
+                msg = f'[Creature.id:{g.Creature.id}] Creature not in an Instance'
+                logger.warning(msg)
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
+        except Exception as e:
+            msg = f'[Creature.id:{g.Creature.id}] Query KO [{e}]'
             logger.warning(msg)
             return jsonify(
                 {
@@ -53,12 +66,23 @@ def check_creature_in_instance(func):
                 }
             ), 200
 
-        if InstanceDocument.objects(_id=g.Creature.instance):
-            g.Instance = InstanceDocument.objects(_id=g.Creature.instance).get()
-            logger.trace(f'[Instance.id:{g.Instance.id}] InstanceDocument FOUND')
-            return func(*args, **kwargs)
-        else:
-            msg = f'[Instance.id:None] InstanceUUID({g.Creature.instance}) NOTFOUND'
+        try:
+            if InstanceDocument.objects(_id=g.Creature.instance):
+                g.Instance = InstanceDocument.objects(_id=g.Creature.instance).get()
+                logger.trace(f'[Instance.id:{g.Instance.id}] InstanceDocument FOUND')
+                return func(*args, **kwargs)
+            else:
+                msg = f'[Instance.id:None] InstanceUUID({g.Creature.instance}) NOTFOUND'
+                logger.warning(msg)
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": msg,
+                        "payload": None,
+                    }
+                ), 200
+        except Exception as e:
+            msg = f'[Creature.id:{g.Creature.id}] Query KO [{e}]'
             logger.warning(msg)
             return jsonify(
                 {

@@ -6,6 +6,7 @@
 ├── account (UUIDField)
 ├── active (BooleanField)
 ├── created (DateTimeField)
+├── diplo (StringField)
 ├── gender (BooleanField)
 ├── hp
 │   ├── base (IntField)

@@ -41,7 +41,7 @@ class ResourceDocument(Document):
     """
     _id = UUIDField(binary=False, primary_key=True, default=uuid.uuid4())
     created = DateTimeField(default=datetime.datetime.utcnow)
-    instance = UUIDField(binary=False, default=None)
+    instance = UUIDField(binary=False, required=True)
     material = StringField(required=True)
     rarity = StringField(required=True, default='Common')
     sprite = StringField(required=True)
