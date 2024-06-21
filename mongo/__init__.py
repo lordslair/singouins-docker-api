@@ -14,11 +14,23 @@ MONGO_USER = os.environ.get("MONGO_USER", 'singouins')
 
 username = urllib.parse.quote_plus(MONGO_USER)
 password = urllib.parse.quote_plus(MONGO_PASS)
-MONGO_URI = 'mongodb+srv://%s:%s@%s/%s?authSource=admin&replicaSet=replicaset&tls=true' % (
+
+if os.environ.get("CI"):
+    # Here we are inside GitHub CI process
+    # And we don't use replicas
+    MONGO_CONN = 'mongodb'
+    MONGO_REPL = ''
+else:
+    MONGO_CONN = 'mongodb+srv'
+    MONGO_REPL = '&replicaSet=replicaset'
+
+MONGO_URI = '%s://%s:%s@%s/%s?authSource=admin%s&tls=true' % (
+    MONGO_CONN,
     username,
     password,
     MONGO_HOST,
     MONGO_BASE,
+    MONGO_REPL,
     )
 
 connect(host=MONGO_URI)
