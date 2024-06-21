@@ -44,7 +44,9 @@ def test_redis_indexes():
     Checking the correctly built indexes from initialize_redis_indexes()
     """
     for index in [
-        'user_idx',
+        'cd_idx',
+        'effect_idx',
+        'status_idx',
     ]:
         info = r.ft(index).info()
         assert info is not None
