@@ -20,17 +20,20 @@ if os.environ.get("CI"):
     # And we don't use replicas
     MONGO_CONN = 'mongodb'
     MONGO_REPL = ''
+    MONGO_STLS = ''
 else:
     MONGO_CONN = 'mongodb+srv'
     MONGO_REPL = '&replicaSet=replicaset'
+    MONGO_STLS = '&tls=true'
 
-MONGO_URI = '%s://%s:%s@%s/%s?authSource=admin%s&tls=true' % (
+MONGO_URI = '%s://%s:%s@%s/%s?authSource=admin%s%s' % (
     MONGO_CONN,
     username,
     password,
     MONGO_HOST,
     MONGO_BASE,
     MONGO_REPL,
+    MONGO_STLS,
     )
 
 
