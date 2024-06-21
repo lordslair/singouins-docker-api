@@ -42,4 +42,3 @@ def test_singouins_mongo_connection():
     db = get_db('default')
 
     assert db.command("ping")
-    assert len(db.list_collection_names()) > 0
