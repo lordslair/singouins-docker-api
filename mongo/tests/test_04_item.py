@@ -39,18 +39,26 @@ def test_mongodb_item_new():
     assert Item.metatype == ITEM_META_TYPE
 
 
-def test_mongodb_item_get_ok():
+def test_mongodb_item_get():
     """
     Querying a ItemDocument
     """
     pass
 
 
-def test_mongodb_item_search_ok():
+def test_mongodb_item_search():
     """
-    Searching a Item
+    Searching a ItemDocument
     """
     assert ItemDocument.objects(bearer=CREATURE_ID).count() == 1
 
     Item = ItemDocument.objects(bearer=CREATURE_ID).first()
     assert str(Item.metatype) == ITEM_META_TYPE
+
+
+def test_mongodb_item_del():
+    """
+    Removing a ItemDocument
+    """
+    # This part is handled in the purge tests
+    pass

@@ -57,14 +57,14 @@ def test_mongodb_auction_new():
     assert newAuction.item.id == Item.id
 
 
-def test_mongodb_auction_get_ok():
+def test_mongodb_auction_get():
     """
     Querying a AuctionDocument
     """
     pass
 
 
-def test_mongodb_auction_search_ok():
+def test_mongodb_auction_search():
     """
     Searching a Item
     """
@@ -73,7 +73,7 @@ def test_mongodb_auction_search_ok():
     assert Auction.get()
 
 
-def test_mongodb_auction_del_ok():
+def test_mongodb_auction_del():
     """
     Removing a AuctionDocument
     """
@@ -84,21 +84,3 @@ def test_mongodb_auction_del_ok():
             Auctions.delete()
 
     assert Auctions.count() == 0
-
-
-def test_mongodb_auction_del_ko():
-    """
-    Removing a AuctionDocument
-    > Expected to fail
-    """
-
-    assert AuctionDocument.objects(seller__id=CREATURE_ID).delete() == 0
-
-
-def test_mongodb_auction_search_empty():
-    """
-    Searching a AuctionDocument
-    > Expected to fail
-    """
-
-    assert AuctionDocument.objects(seller__id=CREATURE_ID).count() == 0

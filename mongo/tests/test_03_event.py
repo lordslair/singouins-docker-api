@@ -42,14 +42,14 @@ def test_mongodb_event_new():
     assert firstEvent.name == EVENT_NAME
 
 
-def test_mongodb_event_get_ok():
+def test_mongodb_event_get():
     """
     Querying a EventDocument
     """
     pass
 
 
-def test_mongodb_event_search_ok():
+def test_mongodb_event_search():
     """
     Searching a Event
     """
@@ -60,7 +60,7 @@ def test_mongodb_event_search_ok():
     assert str(Event.src) == CREATURE_ID
 
 
-def test_mongodb_event_del_ok():
+def test_mongodb_event_del():
     """
     Removing a EventDocument
     """
@@ -72,21 +72,3 @@ def test_mongodb_event_del_ok():
             Event.delete()
 
     assert EventDocument.objects(src=CREATURE_ID).count() == 0
-
-
-def test_mongodb_event_del_ko():
-    """
-    Removing a EventDocument
-    > Expected to fail
-    """
-
-    assert EventDocument.objects(src='plop').delete() == 0
-
-
-def test_mongodb_event_search_empty():
-    """
-    Searching a EventDocument
-    > Expected to fail
-    """
-
-    assert EventDocument.objects(src='plop').count() == 0

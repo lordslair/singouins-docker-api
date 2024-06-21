@@ -34,14 +34,14 @@ def test_mongodb_user_new():
     assert newUser.name == USER_NAME
 
 
-def test_mongodb_user_get_ok():
+def test_mongodb_user_get():
     """
     Querying a UserDocument
     """
     pass
 
 
-def test_mongodb_user_search_ok():
+def test_mongodb_user_search():
     """
     Searching a User
     """

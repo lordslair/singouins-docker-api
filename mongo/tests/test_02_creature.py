@@ -70,14 +70,14 @@ def test_mongodb_creature_new():
     assert newCreature.gender is True
 
 
-def test_mongodb_creature_get_ok():
+def test_mongodb_creature_get():
     """
     Querying a CreatureDocument
     """
     pass
 
 
-def test_mongodb_creature_search_ok():
+def test_mongodb_creature_search():
     """
     Searching a Creature
     """
@@ -85,5 +85,4 @@ def test_mongodb_creature_search_ok():
     assert CreatureDocument.objects(name=CREATURE_NAME).count() == 1
 
     Creature = CreatureDocument.objects(_id=CREATURE_ID).first()
-    print(Creature.to_mongo().to_dict())
     assert str(Creature.id) == CREATURE_ID

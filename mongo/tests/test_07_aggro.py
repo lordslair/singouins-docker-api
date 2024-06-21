@@ -44,7 +44,7 @@ def test_mongodb_aggro_get():
 
 def test_mongodb_aggro_search():
     """
-    Searching a Aggro
+    Searching a AggroDocument
     """
     assert AggroDocument.objects(bearer=CREATURE_ID).count() == 1
 
