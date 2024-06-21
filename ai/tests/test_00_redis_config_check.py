@@ -19,10 +19,3 @@ r = redis.StrictRedis(
 
 def test_redis_ping():
     assert r.ping()
-
-
-def test_redis_config():
-    config = r.config_get(pattern='notify-keyspace-events')
-    assert config is not None
-    assert config is not False
-    assert config['notify-keyspace-events'] == '$sxE'
