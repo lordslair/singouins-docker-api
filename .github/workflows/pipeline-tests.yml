@@ -121,6 +121,8 @@ jobs:
       run: |
         echo "--- Moving nosql lib where it belongs"
         cp -a nosql ${{ matrix.python-app }}/
+        echo "--- Moving mongo lib where it belongs"
+        cp -a mongo ${{ matrix.python-app }}/
         echo "--- Starting app in background"
         # Used for ws, ai
         if [ -f ${{ matrix.python-app }}/main.py ]
