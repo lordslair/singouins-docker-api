@@ -116,10 +116,11 @@ jobs:
     - name: Test with PyTest ⚙️
       env:
           LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
-          GUNICORN_CHDIR: ${{ secrets.GUNICORN_CHDIR }}
+          GUNICORN_CHDIR: ${{ vars.GUNICORN_CHDIR }}
 
           SEP_SECRET_KEY: ${{ secrets.SEP_SECRET_KEY }}
 
+          MONGO_HOST: ${{ vars.MONGO_HOST }}
           MONGO_PASS: ${{ secrets.MONGO_PASS }}
 
           SEP_SMTP_FROM: ${{ secrets.SEP_SMTP_FROM }}
