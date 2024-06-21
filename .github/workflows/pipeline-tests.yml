@@ -110,7 +110,7 @@ jobs:
       with:
         mongodb-version: ${{ vars.MONGO_VERS }}
         mongodb-username: ${{ vars.MONGO_USER }}
-        mongodb-password: ${{ vars.MONGO_PASS }}
+        mongodb-password: ${{ secrets.MONGO_PASS }}
         mongodb-db: ${{ vars.MONGO_BASE }}
 
     - name: Test with PyTest ⚙️
