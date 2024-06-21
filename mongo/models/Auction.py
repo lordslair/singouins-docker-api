@@ -19,6 +19,15 @@ from mongoengine.fields import (
     UUIDField,
 )
 
+ITEM_RARITY = [
+    'Broken',
+    'Common',
+    'Uncommon',
+    'Rare',
+    'Epic',
+    'Legendary',
+    ]
+
 #
 # Collection: auction
 #
@@ -38,7 +47,7 @@ class AuctionItem(EmbeddedDocument):
     metaid = IntField(required=True)
     metatype = StringField(required=True)
     name = StringField(required=True)
-    rarity = StringField(required=True)
+    rarity = StringField(required=True, choices=ITEM_RARITY)
 
 
 class AuctionSeller(EmbeddedDocument):

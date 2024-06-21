@@ -18,6 +18,15 @@ from mongoengine.fields import (
     UUIDField,
 )
 
+RESOURCE_RARITY = [
+    'Broken',
+    'Common',
+    'Uncommon',
+    'Rare',
+    'Epic',
+    'Legendary',
+    ]
+
 #
 # Collection: resource
 #
@@ -43,7 +52,7 @@ class ResourceDocument(Document):
     created = DateTimeField(default=datetime.datetime.utcnow)
     instance = UUIDField(binary=False, required=True)
     material = StringField(required=True)
-    rarity = StringField(required=True, default='Common')
+    rarity = StringField(required=True, choices=RESOURCE_RARITY, default='Common')
     sprite = StringField(required=True)
     updated = DateTimeField(default=datetime.datetime.utcnow)
     visible = BooleanField(required=True, default=False)

@@ -38,7 +38,7 @@ class EventDocument(Document):
     - name      (StringField)
     - src       (UUIDField)
     - trigger   (UUIDField)
-    - type      (StringField)
+    - type      (IntField)
     """
     _id = UUIDField(binary=False, primary_key=True, default=uuid.uuid4())
     action = StringField(required=True)
@@ -59,3 +59,10 @@ class EventDocument(Document):
         ],
         'uuid_representation': 'pythonLegacy'  # Specify the uuid_representation globally
     }
+
+
+"""
+Comment about EventDocument.type:
+Indices < 10 will be Fight Actions ones (reserved for Resolver)
+Indices 10++ will be Generic Actions ones
+"""

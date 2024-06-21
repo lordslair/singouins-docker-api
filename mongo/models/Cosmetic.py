@@ -18,6 +18,22 @@ from mongoengine.fields import (
     UUIDField,
 )
 
+ITEM_RARITY = [
+    'Broken',
+    'Common',
+    'Uncommon',
+    'Rare',
+    'Epic',
+    'Legendary',
+    ]
+
+ITEM_BIND = [
+    'BoA',  # Bind on Account
+    'BoE',  # Bind on Equip
+    'BoP',  # Bind on Pick Up
+    'BoU',  # Bind on Use
+    ]
+
 #
 # Collection: cosmetic
 #
@@ -48,11 +64,11 @@ class CosmeticDocument(Document):
     _id = UUIDField(binary=False, primary_key=True, default=uuid.uuid4())
     bearer = UUIDField(required=True, binary=False)
     bound = BooleanField(required=True, default=True)
-    bound_type = StringField(required=True, default='BoP')
+    bound_type = StringField(required=True, choices=ITEM_BIND, default='BoP')
     created = DateTimeField(default=datetime.datetime.utcnow)
     data = EmbeddedDocumentField(CosmeticData, required=True)
     metaid = IntField(required=True)
-    rarity = StringField(required=True, default='Common')
+    rarity = StringField(required=True, choices=ITEM_RARITY, default='Common')
     state = IntField(required=True, default=100)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 

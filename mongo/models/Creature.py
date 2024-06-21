@@ -18,6 +18,15 @@ from mongoengine.fields import (
     UUIDField,
 )
 
+CREATURE_RARITY = [
+    'Small',
+    'Medium',
+    'Big',
+    'Unique',
+    'Boss',
+    'God',
+    ]
+
 #
 # Collection: creature
 #
@@ -166,7 +175,7 @@ class CreatureDocument(Document):
     level = IntField(required=True, default=1)
     name = StringField(required=True)
     race = IntField(required=True)
-    rarity = StringField(required=True, default='Medium')
+    rarity = StringField(required=True, choices=CREATURE_RARITY, default='Medium')
     slots = EmbeddedDocumentField(CreatureSlots, required=True)
     squad = EmbeddedDocumentField(CreatureSquad, required=True)
     stats = EmbeddedDocumentField(CreatureStats, required=True)

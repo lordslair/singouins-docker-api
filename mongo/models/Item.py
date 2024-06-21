@@ -18,6 +18,15 @@ from mongoengine.fields import (
     UUIDField,
 )
 
+ITEM_RARITY = [
+    'Broken',
+    'Common',
+    'Uncommon',
+    'Rare',
+    'Epic',
+    'Legendary',
+    ]
+
 #
 # Collection: item
 #
@@ -44,7 +53,7 @@ class ItemDocument(Document):
     mods = ListField(default=[])
     offsetx = IntField(default=None)
     offsety = IntField(default=None)
-    rarity = StringField(required=True, default='Common')
+    rarity = StringField(required=True, choices=ITEM_RARITY, default='Common')
     state = IntField(required=True, default=100)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
