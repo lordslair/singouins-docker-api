@@ -23,7 +23,9 @@ charset-normalizer==3.3.2
     #   aiohttp
     #   requests
 dnspython==2.4.2
-    # via email-validator
+    # via
+    #   email-validator
+    #   pymongo
 email-validator==2.1.1
     # via -r requirements.in
 frozenlist==1.4.1
@@ -83,7 +85,7 @@ six==1.16.0
     #   python-dateutil
 strenum==0.4.15
     # via yarqueue
-urllib3==1.26.18
+urllib3==1.26.19
     # via
     #   kubernetes
     #   requests
