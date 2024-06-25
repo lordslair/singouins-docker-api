@@ -18,7 +18,7 @@ requests==2.32.2
     # via -r requirements.in
 strenum==0.4.15
     # via yarqueue
-urllib3==2.1.0
+urllib3==2.2.2
     # via requests
 yarqueue==0.4.1
     # via -r requirements.in
