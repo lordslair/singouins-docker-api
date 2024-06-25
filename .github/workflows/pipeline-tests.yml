@@ -59,6 +59,60 @@ jobs:
         pytest nosql/tests/test_*.py
 
 
+  mongo-pytest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ "3.11" ]
+
+    needs:
+    - nosql-pytest
+
+    if: ${{ needs.nosql-pytest.result == 'success' }}
+
+    steps:
+    - name: Checkout 🛎️
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }} 🐍
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install requirements ⏬
+      run: |
+        echo "--- Installing PIP"
+        python -m pip install --upgrade pip
+        echo "--- Installing PyTest prerequisites"
+        pip install cryptography flake8 pytest requests 
+        echo "--- Installing requirements"
+        if [ -f mongo/requirements.txt ]; \
+          then pip install -r mongo/requirements.txt; \
+        fi
+
+    - name: Lint with flake8 📝
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        echo "--- Linting with flake8"
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Start MongoDB 🌱
+      uses: supercharge/mongodb-github-action@1.11.0
+      with:
+        mongodb-version: ${{ vars.MONGO_VERS }}
+        mongodb-username: ${{ vars.MONGO_USER }}
+        mongodb-password: ${{ secrets.MONGO_PASS }}
+        mongodb-db: ${{ vars.MONGO_BASE }}
+
+    - name: Test with PyTest ⚙️
+      env:
+          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
+      run: |
+        echo "--- Starting PyTest"
+        pytest mongo/tests/test_*.py
+
+
   app-pytest:
     runs-on: ubuntu-latest
 
@@ -68,9 +122,9 @@ jobs:
         python-app: [ "ai", "ws", "api" ]
 
     needs:
-    - nosql-pytest
+    - mongo-pytest
 
-    if: ${{ needs.nosql-pytest.result == 'success' }}
+    if: ${{ needs.mongo-pytest.result == 'success' }}
 
     environment:
       name: api
