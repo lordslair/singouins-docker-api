@@ -14,6 +14,8 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via flask
+dnspython==2.6.1
+    # via pymongo
 flask==3.0.0
     # via
     #   -r requirements.in
@@ -24,7 +26,7 @@ flask==3.0.0
     #   prometheus-flask-exporter
 flask-bcrypt==1.0.1
     # via -r requirements.in
-flask-cors==4.0.0
+flask-cors==4.0.1
     # via -r requirements.in
 flask-jwt-extended==4.6.0
     # via -r requirements.in
@@ -56,6 +58,8 @@ prometheus-flask-exporter==0.23.0
     # via -r requirements.in
 pyjwt==2.8.0
     # via flask-jwt-extended
+pymongo==4.7.3
+    # via mongoengine
 redis==5.0.1
     # via yarqueue
 requests==2.31.0
