@@ -233,7 +233,7 @@ app.add_url_rule(
 # Routes /inventory/item
 #
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname>',
+    '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname>',  # noqa E501
     methods=['POST'],
     view_func=routes.external.mypc.inventory.equip,
     )
@@ -248,7 +248,7 @@ app.add_url_rule(
     view_func=routes.external.mypc.inventory.offset,
     )
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/unequip/<string:type>/<string:slotname>',
+    '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/unequip/<string:type>/<string:slotname>',  # noqa E501
     methods=['POST'],
     view_func=routes.external.mypc.inventory.unequip,
     )

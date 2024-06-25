@@ -134,13 +134,9 @@ jobs:
         echo "--- Moving mongo lib where it belongs"
         cp -a mongo ${{ matrix.python-app }}/
         echo "--- Starting app in background"
-        # Used for ws, ai
+        # Used for ai, api, ws
         if [ -f ${{ matrix.python-app }}/main.py ]
           then python3 ${{ matrix.python-app }}/main.py &
-        fi
-        # Used for api
-        if [ -f ${{ matrix.python-app }}/app.py ]
-          then python3 ${{ matrix.python-app }}/app.py &
         fi
         echo "--- Sleep(3)"
         sleep 3

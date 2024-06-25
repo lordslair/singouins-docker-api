@@ -25,9 +25,9 @@ RUN apk update --no-cache \
         "python3-dev>=3.11" \
     && su api -c \
         "pip3 install --break-system-packages --user -U -r requirements.txt && \
-        rm requirements.* Dockerfile" \
+        rm requirements.* Dockerfile*" \
     && apk del .build-deps
 
 USER api
 
-ENTRYPOINT ["/usr/bin/python3", "app.py"]
+ENTRYPOINT ["/code/main.py"]
