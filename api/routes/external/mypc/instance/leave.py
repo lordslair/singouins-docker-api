@@ -57,6 +57,8 @@ def leave(creatureuuid, instanceuuid):
 
         try:
             g.Creature.instance = None
+            g.Creature.x = None
+            g.Creature.y = None
             g.Creature.updated = datetime.datetime.utcnow()
             g.Creature.save()
         except Exception as e:
@@ -140,6 +142,8 @@ def leave(creatureuuid, instanceuuid):
         logger.debug(f'{g.h} Not the last in Instance (pcs:{Players.count()})')
         try:
             g.Creature.instance = None
+            g.Creature.x = None
+            g.Creature.y = None
             g.Creature.updated = datetime.datetime.utcnow()
             g.Creature.save()
         except Exception as e:
