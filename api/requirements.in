@@ -8,5 +8,5 @@ gunicorn                  ~= 21.2
 loguru                    ~= 0.7
 mongoengine               == 0.28.2
 prometheus-flask-exporter ~= 0.23
-requests                  ~= 2.31
+requests                  ~= 2.32
 yarqueue                  == 0.4.1
