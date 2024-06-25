@@ -34,7 +34,7 @@ flask-swagger-ui==4.11.1
     # via -r requirements.in
 flask-uuid==0.2
     # via -r requirements.in
-gunicorn==21.2.0
+gunicorn==22.0.0
     # via -r requirements.in
 idna==3.7
     # via requests
