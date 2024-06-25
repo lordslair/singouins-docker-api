@@ -7,9 +7,9 @@ import time
 
 
 # Redis variables
-REDIS_HOST = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
-REDIS_PORT = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
-REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
+REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+REDIS_BASE = os.environ.get("REDIS_BASE", 0)
 PUBSUB_PATH = os.environ.get('PUBSUB_PATH', 'ai-creature')
 
 INSTANCE_UUID = "00000000-0000-0000-0000-000000000000"
@@ -35,20 +35,11 @@ CREATURE = {
     "xp": 0,
     "y": 100,
     }
-INSTANCE = {
-    "creator": CREATURE_UUID,
-    "fast": False,
-    "hardcore": True,
-    "id": INSTANCE_UUID,
-    "map": 1,
-    "public": True,
-    "tick": 3600,
-    }
 
 r = redis.StrictRedis(
     host=REDIS_HOST,
     port=REDIS_PORT,
-    db=REDIS_DB_NAME,
+    db=REDIS_BASE,
     encoding='utf-8',
     decode_responses=True,
     )
@@ -57,7 +48,6 @@ r = redis.StrictRedis(
 def test_creature_pop():
     EXPECTED_MSG = {
         "action": 'pop',
-        "instance": INSTANCE,
         "creature": CREATURE,
         }
     # We subscribe
@@ -89,7 +79,6 @@ def test_creature_pop():
 def test_creature_kill():
     EXPECTED_MSG = {
         "action": 'kill',
-        "instance": INSTANCE,
         "creature": CREATURE,
         }
     # We subscribe

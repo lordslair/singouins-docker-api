@@ -6,9 +6,8 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisKorp import RedisKorp
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Korp import KorpDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
@@ -30,45 +29,40 @@ def korp(group_singouin, bot):
         ctx,
         singouinuuid: str,
     ):
-        name = ctx.author.name
-        channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} korp {singouinuuid}')
+
         file = None
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} korp {singouinuuid}'
-            )
-
-        try:
-            Creature = RedisCreature(creatureuuid=singouinuuid)
-
-            if Creature.korp is None:
-                description = (
-                    f"Your Singouin **{Creature.name}** is not in a Korp"
-                    )
-                logger.error(f'[#{channel}][{name}] └──> {description}')
+        Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        if Creature.korp:
+            if KorpDocument.objects(_id=Creature.korp.id).count() == 0:
+                # Discord name not found in DB
+                msg = f'Korp `{Creature.korp.id}` NotFound in DB'
+                logger.warning(msg)
                 await ctx.respond(
                     embed=discord.Embed(
-                        description=description,
-                        colour=discord.Colour.red(),
-                        ),
-                    ephemeral=True,
-                    )
-                return
-
-            Korp = RedisKorp(korpuuid=Creature.korp)
-            if Korp.id is None:
-                description = 'Singouin-Korp Query KO (Korp Not Found)'
-                logger.warning(f'[#{channel}][{name}] └──> {description}')
-                await ctx.respond(
-                    embed=discord.Embed(
-                        description=description,
+                        description=msg,
                         colour=discord.Colour.orange(),
                         ),
                     ephemeral=True,
                     )
                 return
+            else:
+                Korp = KorpDocument.objects(_id=Creature.korp.id).get()
+        else:
+            description = f"Your Singouin **{Creature.name}** is not in a Korp"
+            logger.error(f'{h} └──> {description}')
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=description,
+                    colour=discord.Colour.red(),
+                    ),
+                ephemeral=True,
+                )
+            return
 
+        try:
             emojiRace = [
                 discord.utils.get(bot.emojis, name='raceC'),
                 discord.utils.get(bot.emojis, name='raceG'),
@@ -76,45 +70,22 @@ def korp(group_singouin, bot):
                 discord.utils.get(bot.emojis, name='raceO'),
                 ]
 
-            KorpMembers = RedisSearch().creature(
-                f"(@korp:{Korp.id.replace('-', ' ')}) & "
-                f"(@korp_rank:-Pending)"
-                )
-            KorpPending = RedisSearch().creature(
-                f"(@korp:{Korp.id.replace('-', ' ')}) & "
-                f"(@korp_rank:Pending)"
-                )
+            KorpMembers = CreatureDocument.objects(korp__id=Creature.korp.id)
+            KorpMembers.order_by('korp.rank')
 
             # Dirty Gruik to find the max(len(Member.name))
-            KorpAll = KorpMembers.results + KorpPending.results
-            membername_width = max(
-                len(Member.name) for Member in KorpAll
-                )
+            w = max(len(KorpMember.name) for KorpMember in KorpMembers)
 
             mydesc = ''
-            for Member in KorpMembers.results:
-                emojiMyRace = emojiRace[Member.race - 1]
-                if Member.id == Korp.leader:
+            for KorpMember in KorpMembers:
+                emojiMyRace = emojiRace[KorpMember.race - 1]
+                if KorpMember.id == Korp.leader:
                     # This Singouin is the leader
                     title = ':first_place: Leader'
                 else:
                     title = ':second_place: Member'
-                level = f"(lvl:{Member.level})"
-                mydesc += (
-                    f"{emojiMyRace} "
-                    f"`{Member.name:<{membername_width}} {level:>8}` | "
-                    f"{title}\n"
-                    )
-
-            for Pending in KorpPending.results:
-                emojiMyRace = emojiRace[Pending.race - 1]
-                title = ':third_place: Pending'
-                level = f"(lvl:{Pending.level})"
-                mydesc += (
-                    f"{emojiMyRace} "
-                    f"`{Pending.name:<{membername_width}} {level:>8}` | "
-                    f"{title}\n"
-                    )
+                level = f"(lvl:{KorpMember.level})"
+                mydesc += f"{emojiMyRace} `{KorpMember.name:<{w}} {level:>8}` | {title}\n"
 
             embed = discord.Embed(
                 title=f"Korp <{Korp.name}>",
@@ -131,7 +102,7 @@ def korp(group_singouin, bot):
             embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-Korp Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -141,6 +112,6 @@ def korp(group_singouin, bot):
                 )
             return
         else:
-            logger.info(f'[#{channel}][{name}] └──> Singouin-Korp Query OK')
+            logger.info(f'{h} └──> Singouin-Korp Query OK')
             await ctx.respond(embed=embed, ephemeral=True, file=file)
             return

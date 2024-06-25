@@ -1,0 +1,12 @@
+{
+    "_id": "0000-00-00-0000",
+    "created": "Wed, 07 Sep 2022 14:37:35 GMT",
+    "instance": "0000-00-00-0000",
+    "src": "0000-00-00-0000",
+    "dst": "0000-00-00-0000",
+    "trigger": "0000-00-00-0000",
+    "name": "PLOP",
+    "type": 3,
+    "action": "Human Readable TEXT",
+    "harmful": false
+}

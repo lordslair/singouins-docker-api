@@ -3,18 +3,16 @@
 import json
 import requests
 
-from variables import (AUTH_PAYLOAD,
-                       API_URL,
-                       CREATURE_ID,
-                       CREATURE_NAME)
+from variables import (
+    API_URL,
+    CREATURE_ID,
+    CREATURE_NAME,
+    access_token_get,
+    )
 
 
 def test_singouins_mypc_create():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-    payload     = {
+    payload  = {
         'name': CREATURE_NAME,
         'gender': True,
         'race': 2,
@@ -39,94 +37,69 @@ def test_singouins_mypc_create():
         }
     }
 
-    url      = f'{API_URL}/mypc'  # POST
-    response = requests.post(url, json=payload, headers=headers)
+    response  = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=payload,
+        )
 
     assert response.status_code == 201
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_mypc_infos():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
+    response  = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcname   = json.loads(response.text)['payload'][0]['name']
-
-    assert pcname == CREATURE_NAME
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
+
+    assert json.loads(response.text)['payload'][0]['name'] == CREATURE_NAME
 
 
 def test_singouins_mypc_view():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/view'  # GET
-    response = requests.get(url, headers=headers)
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_mypc_stats():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/stats'  # GET
-    response = requests.get(url, headers=headers)
+    response  = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/view',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_mypc_effects():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/effects'  # GET
-    response = requests.get(url, headers=headers)
+    response  = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/effects',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    payload = json.loads(response.text)['payload']
-    assert isinstance(payload['effects'], list)
+
+    assert isinstance(json.loads(response.text)['payload']['effects'], list)
 
 
 def test_singouins_mypc_cds():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/cds'  # GET
-    response = requests.get(url, headers=headers)
+    response  = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/cds',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    payload = json.loads(response.text)['payload']
-    assert isinstance(payload['cds'], list)
+
+    assert isinstance(json.loads(response.text)['payload']['cds'], list)
 
 
 def test_singouins_mypc_statuses():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/statuses'  # GET
-    response = requests.get(url, headers=headers)
+    response  = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/statuses',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    payload = json.loads(response.text)['payload']
-    assert isinstance(payload['statuses'], list)
+
+    assert isinstance(json.loads(response.text)['payload']['statuses'], list)

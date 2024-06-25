@@ -5,9 +5,10 @@ import discord
 from discord.commands import option
 from discord.ext import commands
 from loguru import logger
+from mongoengine import EmbeddedDocument
 
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisHS import RedisHS
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Highscore import HighscoreDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
@@ -29,24 +30,20 @@ def highscores(group_singouin, bot):
         ctx,
         singouinuuid: str,
     ):
-        name = ctx.author.name
-        channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} highscores {singouinuuid}')
+
         file = None
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} highscores {singouinuuid}'
-            )
-
-        Creature = RedisCreature(creatureuuid=singouinuuid)
-        HS = RedisHS(creatureuuid=singouinuuid)
+        Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        Highscore = HighscoreDocument.objects(_id=singouinuuid).get()
 
         """
         # We try to fetch the TOP1 HighScores
         try:
             maxhs_score = {}
-            HighScores = RedisHS().search(query='*')
-            if HighScores and len(HighScores) > 0:
+            HighScores = HighscoreDocument.objects()
+            if HighScores and HighScores.count() > 0:
                 for HighScore in HighScores:
                     for key, val in HighScore.items():
                         if key == 'payload':
@@ -84,28 +81,22 @@ def highscores(group_singouin, bot):
             colour=discord.Colour.blue()
         )
 
-        tree = {}
-        for key, val in HS.as_dict().items():
-            t = tree
-            prev = None
-            for part in key.split('_'):
-                if prev is not None:
-                    t = t.setdefault(prev, {})
-                prev = part
-            else:
-                t.setdefault(prev, val)
-
-        for section in tree:
-            embed_field_value  = ''
-            if not isinstance(tree[section], dict):
+        # Iterate over HighscoreDocument fields
+        for field_name, field in Highscore._fields.items():
+            logger.info(field_name)
+            if field_name in ['_id', 'created', 'updated', 'internal']:
                 continue
-            for subsection in tree[section]:
-                embed_field_value += (
-                    f"> {subsection.capitalize()} : "
-                    f"`{tree[section][subsection]}`\n"
-                    )
+
+            embed_field_value = ""
+            value = getattr(Highscore, field_name)
+            if isinstance(value, EmbeddedDocument):
+                print(f"{field_name.capitalize()}:")
+                for sub_field_name, sub_field in value._fields.items():
+                    sub_field_value = getattr(value, sub_field_name)
+                    embed_field_value += f"> {sub_field_name} : `{sub_field_value}`\n"
+
             embed.add_field(
-                name=f'**{section.capitalize()}:**',
+                name=f'**{field_name.capitalize()}:**',
                 value=embed_field_value,
                 inline=True,
                 )
@@ -119,4 +110,4 @@ def highscores(group_singouin, bot):
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
 
         await ctx.respond(embed=embed, ephemeral=True, file=file)
-        logger.info(f'[#{channel}][{name}] └──> Singouin-HighScore Query OK')
+        logger.info(f'{h} └──> Singouin-HighScore Query OK')

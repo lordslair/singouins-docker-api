@@ -1,12 +1,12 @@
 # -*- coding: utf8 -*-
 
-from flask                      import g, jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
+from flask import g, jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
 
-from nosql.models.RedisSearch   import RedisSearch
-from nosql.models.RedisSlots    import RedisSlots
-from nosql.models.RedisWallet   import RedisWallet
+from mongo.models.Cosmetic import CosmeticDocument
+from mongo.models.Item import ItemDocument
+from mongo.models.Satchel import SatchelDocument
 
 from utils.decorators import (
     check_creature_exists,
@@ -24,17 +24,11 @@ from utils.decorators import (
 @check_creature_exists
 def item_get(creatureuuid):
     try:
-        Items = RedisSearch().item(
-            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
-            )
-        Cosmetics = RedisSearch().cosmetic(
-            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
-            )
-
-        Slots = RedisSlots(creatureuuid=g.Creature.id)
-        Wallet = RedisWallet(creatureuuid=g.Creature.id)
+        Cosmetics = CosmeticDocument.objects(bearer=g.Creature.id)
+        Items = ItemDocument.objects(bearer=g.Creature.id)
+        Satchel = SatchelDocument.objects(_id=g.Creature.id)
     except Exception as e:
-        msg = f'{g.h} Items Query KO [{e}]'
+        msg = f'{g.h} Document(s) Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -44,26 +38,18 @@ def item_get(creatureuuid):
             }
         ), 200
     else:
-        msg = f'{g.h} Items Query OK'
+        msg = f'{g.h} Document(s) Query OK'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "weapon": [
-                        Item.as_dict() for Item in Items.results
-                        if Item.metatype == 'weapon'
-                        ],
-                    "armor": [
-                        Item.as_dict() for Item in Items.results
-                        if Item.metatype == 'armor'
-                        ],
-                    "equipment": Slots.as_dict(),
-                    "cosmetic": [
-                        Cosmetic.as_dict() for Cosmetic in Cosmetics.results
-                        ],
-                    "wallet": Wallet.as_dict(),
+                    "armor": [Item.to_mongo() for Item in Items if Item.metatype == 'armor'],
+                    "equipment": g.Creature.slots.to_mongo(),
+                    "cosmetic": [Cosmetic.to_mongo() for Cosmetic in Cosmetics],
+                    "satchel": Satchel.get().to_mongo(),
+                    "weapon": [Item.to_mongo() for Item in Items if Item.metatype == 'weapon'],
                 },
             }
         ), 200

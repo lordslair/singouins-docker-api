@@ -4,28 +4,21 @@ import discord
 
 from loguru import logger
 
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.Creature import CreatureDocument
+from mongo.models.User import UserDocument
 
 
 async def get_mysingouins_list(ctx: discord.AutocompleteContext):
     try:
-        DiscordUser = ctx.interaction.user
-        discordname = f'{DiscordUser.name}#{DiscordUser.discriminator}'
-        Users = RedisSearch().user(query=f'@d_name:{discordname}')
-
-        if len(Users.results) == 0:
-            return []
-        else:
-            User = Users.results[0]
-            account = User.id.replace('-', ' ')
-            Creatures = RedisSearch().creature(query=f'@account:{account}')
+        User = UserDocument.objects(discord__name=ctx.interaction.user.name).get()
+        Creatures = CreatureDocument.objects(account=User.id)
     except Exception as e:
-        logger.error(f'Redis Query KO [{e}]')
+        logger.error(f'MongoDB Query KO [{e}]')
         return None
     else:
         db_list = []
-        for Creature in Creatures.results:
+        for Creature in Creatures:
             db_list.append(
-                discord.OptionChoice(Creature.name, value=Creature.id)
+                discord.OptionChoice(Creature.name, value=str(Creature.id))
                 )
         return db_list

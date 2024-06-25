@@ -6,6 +6,7 @@ ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 COPY --chown=api:api /api   /code
+COPY --chown=api:api /mongo /code/mongo
 COPY --chown=api:api /nosql /code/nosql
 
 WORKDIR /code
@@ -24,9 +25,9 @@ RUN apk update --no-cache \
         "python3-dev>=3.11" \
     && su api -c \
         "pip3 install --break-system-packages --user -U -r requirements.txt && \
-        rm requirements.* Dockerfile" \
+        rm requirements.* Dockerfile*" \
     && apk del .build-deps
 
 USER api
 
-ENTRYPOINT ["/usr/bin/python3", "app.py"]
+ENTRYPOINT ["/code/main.py"]

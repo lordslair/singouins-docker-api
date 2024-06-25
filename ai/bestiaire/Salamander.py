@@ -1,11 +1,9 @@
 # -*- coding: utf8 -*-
 
-import time
+from loguru import logger
+from random import randint
 
-from loguru                      import logger
-from random                      import randint
-
-from bestiaire.Mob               import Mob
+from bestiaire._Mob import Mob
 
 
 class Salamander(Mob):
@@ -14,21 +12,21 @@ class Salamander(Mob):
         Mob.__init__(self, creatureuuid)
 
     def run(self):
-        SLEEP_TIME = self.instance.tick
-
-        while self.stats.hp > 0:
+        while self.creature.hp.current > 0:
             self.get_pa()
-            self.get_pos()
+            self.get_creature()
 
-            logger.debug(
-                f'{self.logh} | Alive ({self.stats.hp}HP) '
-                f'[🔴 :{self.pa.redpa},🔵 :{self.pa.bluepa}] '
-                f'@(x:{self.creature.x},y:{self.creature.y})'
-                )
+            pas = f'[🔴 :{self.pa.redpa},🔵 :{self.pa.bluepa}] '
+            pos = f'@(x:{self.creature.x},y:{self.creature.y})'
+            hp = f'{self.creature.hp.current}/{self.creature.hp.max}HP'
+            logger.debug(f'{self.logh} | Alive:{hp} {pas} {pos}')
 
             # MOVE
             if self.pa.bluepa > 4 and randint(0, 1):
-                self.set_pos()
+                logger.success(f'{self.logh} | Will move')
+                # self.set_pos()
+            else:
+                logger.warning(f'{self.logh} | Will not move')
 
             """
             # BASIC ATTACK
@@ -66,7 +64,7 @@ class Salamander(Mob):
                         f"@({closest['x'], closest['y']}))"
                         )
         """
-            time.sleep(SLEEP_TIME)
+            self.sleep()
         return
 
     def attack(self):
@@ -74,9 +72,6 @@ class Salamander(Mob):
 
     def hit(self):
         pass
-
-    def get_life(self):
-        return self.stats.hp
 
     def get_name(self):
         return self.internal_name

@@ -2,54 +2,36 @@
 
 import json
 
-from loguru                     import logger
+from loguru import logger
 
-from nosql.connector            import r
+from nosql.connector import r
 
-redpaduration  = 3600
-redpamax       = 16
-redmaxttl      = redpaduration * redpamax
+# Constants
+PA_DURATION = 3600
 
-bluepaduration = 3600
-bluepamax      = 8
-bluemaxttl     = bluepaduration * bluepamax
+RED_PA_MAX = 16
+RED_MAX_TTL = PA_DURATION * RED_PA_MAX
+
+BLUE_PA_MAX = 8
+BLUE_MAX_TTL = PA_DURATION * BLUE_PA_MAX
 
 
 class RedisPa:
     def __init__(self, creatureuuid):
-        self.hkey     = 'pa'
-        self.logh     = f'[Creature.id:{creatureuuid}]'
+        """
+        Initialize RedisPa instance.
+
+        Parameters:
+        creature_uuid (str): UUID of the creature.
+        """
+        self.hkey = 'pa'
+        self.logh = f'[Creature.id:{creatureuuid}]'
+        self.id = creatureuuid
 
         if creatureuuid:
             logger.trace(f'{self.logh} Method >> Initialization')
-            self.id = creatureuuid
-            if r.exists(f'{self.hkey}:{self.id}:red'):
-                logger.trace(f'{self.logh} Method >> (HASH Loading) RED')
-                try:
-                    self.redttl   = r.ttl(f'{self.hkey}:{self.id}:red')
-                    redpa_temp    = redmaxttl - abs(self.redttl)
-                    self.redpa    = int(round(redpa_temp / redpaduration))
-                    self.redttnpa = self.redttl % redpaduration
-                except Exception as e:
-                    logger.error(f'{self.logh} Method KO [{e}]')
-            else:
-                self.redttl = 0
-                self.redpa = redpamax
-                self.redttnpa = redpaduration
-
-            if r.exists(f'{self.hkey}:{self.id}:blue'):
-                logger.trace(f'{self.logh} Method >> (HASH Loading) BLUE')
-                try:
-                    self.bluettl   = r.ttl(f'{self.hkey}:{self.id}:blue')
-                    bluepa_temp    = bluemaxttl - abs(self.bluettl)
-                    self.bluepa    = int(round(bluepa_temp / bluepaduration))
-                    self.bluettnpa = self.bluettl % bluepaduration
-                except Exception as e:
-                    logger.error(f'{self.logh} Method KO [{e}]')
-            else:
-                self.bluettl = 0
-                self.bluepa = bluepamax
-                self.bluettnpa = bluepaduration
+            self.redttl, self.redpa, self.redttnpa = self._load_pa('red', RED_PA_MAX, RED_MAX_TTL)  # noqa E501
+            self.bluettl, self.bluepa, self.bluettnpa = self._load_pa('blue', BLUE_PA_MAX, BLUE_MAX_TTL)  # noqa E501
 
     def __iter__(self):
         yield from self.as_dict().items()
@@ -60,105 +42,128 @@ class RedisPa:
     def __repr__(self):
         return self.__str__()
 
+    def _load_pa(self, color, pa_max, max_ttl, duration=PA_DURATION):
+        """
+        Load PA values from Redis.
+
+        Parameters:
+        color (str): Color key (red/blue).
+        max_ttl (int): Maximum TTL.
+        duration (int): Duration per PA.
+        pa_max (int): Maximum PA count.
+
+        Returns:
+        tuple: ttl, pa, ttnpa
+        """
+        key = f'{self.hkey}:{self.id}:{color}'
+        if r.exists(key):
+            logger.trace(f'{self.logh} Method >> (HASH Loading) {color.upper()}')
+            try:
+                ttl = r.ttl(key)
+                pa_temp = max_ttl - abs(ttl)
+                pa = int(round(pa_temp / duration))
+                ttnpa = ttl % duration
+            except Exception as e:
+                logger.error(f'{self.logh} Method KO [{e}]')
+            else:
+                logger.trace(f'{self.logh} Method OK (HASH Loaded) {color.upper()}:{pa}')
+                return ttl, pa, ttnpa
+        return 0, pa_max, duration
+
+    def _update_pa(self, color, pa, pa_max, duration=PA_DURATION):
+        """
+        Update PA values in Redis.
+
+        Parameters:
+        color (str): Color key (red/blue).
+        pa (int): Number of PAs to consume.
+        duration (int): Duration per PA.
+        pa_max (int): Maximum PA count.
+        """
+        key = f'{self.hkey}:{self.id}:{color}'
+        ttl = r.ttl(key)
+        new_ttl = ttl + (pa * duration)
+
+        if new_ttl < duration * pa_max:
+            # Update the object
+            setattr(self, f'{color}pa', pa)
+            setattr(self, f'{color}ttl', new_ttl)
+            setattr(self, f'{color}ttnpa', self.bluettl % duration)
+
+            if ttl > 0:
+                # Key still exists (PA count < PA max)
+                r.expire(key, new_ttl)
+            else:
+                # Key does not exist anymore (PA count = PA max)
+                r.set(key, 'None', ex=new_ttl)
+
     def to_json(self):
         """
-        Converts Object into a JSON
+        Converts Object into a JSON.
 
-        Parameters: None
-
-        Returns: str()
+        Returns:
+        str: JSON representation of the object.
         """
         return self.__str__()
 
     def as_dict(self):
         """
-        Converts Object into a Python dict
+        Converts Object into a Python dict.
 
-        Parameters: None
-
-        Returns: dict()
+        Returns:
+        dict: Dictionary representation of the object.
         """
         return {
             "blue": {
                 "pa": self.bluepa,
                 "ttnpa": self.bluettnpa,
                 "ttl": self.bluettl,
-                },
+            },
             "red": {
                 "pa": self.redpa,
                 "ttnpa": self.redttnpa,
                 "ttl": self.redttl,
-                },
-            }
+            },
+        }
 
     def destroy(self):
         """
         Destroys an Object and DEL it from Redis DB.
 
-        Parameters: None
-
-        Returns: bool()
+        Returns:
+        bool: True if successfully destroyed, False otherwise.
         """
-        if hasattr(self, 'id') is False:
-            logger.warning(f'{self.logh} Method KO - ID NotSet')
-            return False
-        if self.id is None:
-            logger.warning(f'{self.logh} Method KO - ID NotFound')
+        if not hasattr(self, 'id') or self.id is None:
+            logger.warning(f'{self.logh} Method KO - ID NotSet or NotFound')
             return False
 
         try:
             logger.trace(f'{self.logh} Method >> (HASH Destroying)')
-            if r.exists(f'{self.hkey}:{self.id}:blue'):
-                r.delete(f'{self.hkey}:{self.id}:blue')
-            if r.exists(f'{self.hkey}:{self.id}:red'):
-                r.delete(f'{self.hkey}:{self.id}:red')
+            for color in ['blue', 'red']:
+                r.delete(f'{self.hkey}:{self.id}:{color}')
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
-            return None
+            return False
         else:
             logger.trace(f'{self.logh} Method >> (HASH Destroyed)')
             return True
 
     def consume(self, redpa=0, bluepa=0):
+        """
+        Consume PAs and update Redis.
+
+        Parameters:
+        redpa (int): Number of red PAs to consume.
+        bluepa (int): Number of blue PAs to consume.
+
+        Returns:
+        bool: True if successfully updated, None if an error occurred.
+        """
         try:
             if bluepa > 0:
-                logger.trace(f'{self.logh} Method >> (KEY Updating) BLUE')
-                # An action consumed a blue PA, we need to update
-                key    = f'{self.hkey}:{self.id}:blue'
-                ttl    = r.ttl(key)
-                newttl = ttl + (bluepa * bluepaduration)
-
-                if newttl < bluepaduration * bluepamax:
-                    # We update the object
-                    self.bluepa = bluepa
-                    self.bluettl = newttl
-                    self.bluettnpa = self.bluettl % bluepaduration
-
-                    if ttl > 0:
-                        # Key still exists (PA count < PA max)
-                        r.expire(key, newttl)
-                    else:
-                        # Key does not exist anymore (PA count = PA max)
-                        r.set(key, 'None', ex=newttl)
+                self._update_pa('blue', bluepa, BLUE_PA_MAX)
             if redpa > 0:
-                logger.trace(f'{self.logh} Method >> (KEY Updating) RED')
-                # An action consumed a red PA, we need to update
-                key    = f'{self.hkey}:{self.id}:red'
-                ttl    = r.ttl(key)
-                newttl = ttl + (redpa * redpaduration)
-
-                if newttl < redpaduration * redpamax:
-                    # We update the object
-                    self.redpa = redpa
-                    self.redttl = newttl
-                    self.redttnpa = self.redttl % redpaduration
-
-                    if ttl > 0:
-                        # Key still exists (PA count < PA max)
-                        r.expire(key, newttl)
-                    else:
-                        # Key does not exist anymore (PA count = PA max)
-                        r.set(key, 'None', ex=newttl)
+                self._update_pa('red', redpa, RED_PA_MAX)
         except Exception as e:
             logger.error(f'{self.logh} Method KO [{e}]')
             return None

@@ -5,12 +5,12 @@ import discord
 from discord.commands import option
 from loguru import logger
 
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.Auction import AuctionDocument
 
-from subcommands.auction._tools import human_time
 from subcommands.singouin._autocomplete import get_mysingouins_list
+from subcommands.auction._tools import auction_time_left
 
-from variables import rarity_item_types_discord
+from variables import item_types_discord, metaNames, rarity_item_types_discord
 
 
 def show(group_auction, bot):
@@ -29,23 +29,12 @@ def show(group_auction, bot):
         selleruuid: str,
     ):
 
-        name = ctx.author.name
-        # Pre-flight checks
-        if ctx.channel.type is discord.ChannelType.private:
-            channel = ctx.channel.type
-        else:
-            channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_auction} show {selleruuid}')
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_auction} show {selleruuid}'
-            )
+        Auctions = AuctionDocument.objects(seller__id=selleruuid)
 
-        Auctions = RedisSearch().auction(
-            query=(f'@sellerid:{selleruuid.replace("-", " ")}')
-            )
-
-        if len(Auctions.results) == 0:
+        if Auctions.count() == 0:
             msg = 'You are not selling anything in the Auction House'
             await ctx.respond(
                 embed=discord.Embed(
@@ -54,49 +43,39 @@ def show(group_auction, bot):
                     ),
                 ephemeral=True,
                 )
-            logger.debug(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
+            logger.debug(f'{h} └──> Auction-Show Query KO ({msg})')
             return
 
         # Dirty Gruik to find the max(len(metaname))
-        metaname_width = max(
-            len(Auction.metaname) for Auction in Auctions.results
-            )
+        w = max(len(Auction.item.name) for Auction in Auctions)
         # We need to put a floor to respect the Tableau header
-        metaname_width = max(9, metaname_width)
+        w = max(9, w)
 
         # We add a header for the results "Tableau"
         itemname, price, end = 'Item name', 'Price', 'End'
-        description = (
-                f"💱 `{itemname:{metaname_width}}` | "
-                f"`{price:8}` | "
-                f"`{end:7}`"
-                f"\n"
-                )
-        itemname = '-' * (metaname_width + 3)
-        description += (
-                f"`{itemname:{metaname_width}}` | "
-                f"`--------` | "
-                f"`-------`"
-                f"\n"
-                )
+        description = f"ℹ️ 💱 `{itemname:{w}}` | `{price:8}` | `{end:8}`\n"
+        itemname = '-' * (w + 6)
+        description += f"`{itemname:{w}}` | `--------` | `--------`\n"
         # We loop on items retrieved in Auctions
-        for Auction in Auctions.results:
+        for Auction in Auctions:
+            itemname = metaNames[Auction.item.metatype][Auction.item.metaid]['name']
             description += (
-                f"{rarity_item_types_discord[Auction.rarity]} "
-                f"`{Auction.metaname:{metaname_width}}` | "
+                f"{item_types_discord[Auction.item.metatype]} "
+                f"{rarity_item_types_discord[Auction.item.rarity]} "
+                f"`{itemname:{w}}` | "
                 f"`{Auction.price:5}` "
                 f"{discord.utils.get(bot.emojis, name='moneyB')} | "
-                f"`{human_time(Auction.duration_left):7}`"
+                f"`{auction_time_left(Auction.created):8}`"
                 "\n"
                 )
 
         await ctx.respond(
             embed=discord.Embed(
-                title=f'Your auctions ({len(Auctions.results)}):',
+                title=f'Your auctions ({Auctions.count()}):',
                 description=description,
                 colour=discord.Colour.green()
                 ),
             ephemeral=True,
             )
-        logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
+        logger.info(f'{h} └──> Auction-Show Query OK')
         return

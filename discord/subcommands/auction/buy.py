@@ -32,28 +32,19 @@ def buy(group_auction):
             )
         )
     @option(
-        "itemuuid",
-        description="Item UUID",
+        "auctionuuid",
+        description="Auction UUID",
         autocomplete=get_auctioned_item_list
         )
     async def buy(
         ctx: discord.ApplicationContext,
         buyeruuid: str,
         metatype: str,
-        itemuuid: str,
+        auctionuuid: str,
     ):
 
-        name = ctx.author.name
-        # Pre-flight checks
-        if ctx.channel.type is discord.ChannelType.private:
-            channel = ctx.channel.type
-        else:
-            channel = ctx.channel.name
-
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/auction buy {buyeruuid} {itemuuid}'
-            )
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_auction} buy {buyeruuid} {auctionuuid}')
 
         try:
             embed = discord.Embed(
@@ -67,12 +58,12 @@ def buy(group_auction):
             )
             await ctx.respond(
                 embed=embed,
-                view=buyView(ctx, buyeruuid, itemuuid),
+                view=buyView(ctx, buyeruuid, auctionuuid),
                 ephemeral=True,
                 )
         except Exception as e:
             description = f'Auction-Buy View KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -82,5 +73,5 @@ def buy(group_auction):
                 )
             return
         else:
-            logger.info(f'[#{channel}][{name}] └──> Auction View OK')
+            logger.info(f'{h} └──> Auction-Buy View OK')
             return

@@ -1,17 +1,25 @@
 # -*- coding: utf8 -*-
 
 import discord
-import json
+import uuid
 
 from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 from random import randint
 
-from nosql.metas import metaNames
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisStats import RedisStats
-from nosql.publish import publish
+from nosql.connector import r
+
+from mongo.models.Creature import (
+    CreatureDocument,
+    CreatureHP,
+    CreatureStats,
+    CreatureStatsType,
+    CreatureSquad,
+    CreatureSlots,
+    CreatureKorp
+    )
+from mongo.models.Instance import InstanceDocument
 
 from subcommands.godmode._autocomplete import (
     get_instances_list,
@@ -20,8 +28,9 @@ from subcommands.godmode._autocomplete import (
     )
 
 from variables import (
+    metaNames,
     URL_ASSETS,
-    rarity_monster_types_discord,
+    rarity_monster_types_discord as rmtd,
     )
 
 
@@ -66,42 +75,59 @@ def pop(group_godmode):
         posx: int,
         posy: int,
     ):
-        name    = ctx.author.name
-        channel = ctx.channel.name
-        # As we need roles, it CANNOT be used in PrivateMessage
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_godmode} pop {monster} {instanceuuid}'
-            )
 
-        # We create first the Creature (It will be a monster)
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_godmode} pop {monster} {instanceuuid} {rarity}')
+
         try:
-            Creature = RedisCreature().new(
-                name=metaNames['race'][monster]['name'],
-                raceid=monster,
+            Instance = InstanceDocument.objects(_id=instanceuuid).get()
+        except InstanceDocument.DoesNotExist:
+            logger.debug(f"{h} ├──> Godmode-Pop InstanceDocument Query KO (404)")
+            return None
+        except Exception as e:
+            logger.error(f'{h} ├──> Godmode-Pop InstanceDocument Query KO [{e}]')
+            return None
+
+        # We create the Monster
+        try:
+            metaMonster = metaNames['race'][monster - 1]
+            logger.trace(f"{h} ├──> Godmode-Pop {rmtd[rarity]} {metaMonster['name']}")
+
+            newCreature = CreatureDocument(
+                _id=uuid.uuid3(uuid.NAMESPACE_DNS, metaMonster['name']),
+                account=None,
                 gender=True,
-                accountuuid=None,
+                hp=CreatureHP(
+                    base=metaMonster['min_m'] + 100,
+                    current=metaMonster['min_m'] + 100,
+                    max=metaMonster['min_m'] + 100,
+                    ),
+                instance=instanceuuid,
+                korp=CreatureKorp(),
+                name=metaMonster['name'],
+                race=monster,
                 rarity=rarity,
+                squad=CreatureSquad(),
+                slots=CreatureSlots(),
+                stats=CreatureStats(
+                    spec=CreatureStatsType(),
+                    race=CreatureStatsType(),
+                    total=CreatureStatsType(
+                        b=metaMonster['min_b'],
+                        g=metaMonster['min_g'],
+                        m=metaMonster['min_m'],
+                        p=metaMonster['min_p'],
+                        r=metaMonster['min_r'],
+                        v=metaMonster['min_v'],
+                    ),
+                ),
                 x=posx,
                 y=posy,
-                instanceuuid=instanceuuid,
-                )
-            Stats = RedisStats().new(Creature=Creature, classid=None)
-            # We put the info in pubsub channel for IA to populate the instance
-            try:
-                pmsg = {
-                    "action": 'pop',
-                    "instance": None,
-                    "creature": Creature.as_dict(),
-                    "stats": Stats.as_dict(),
-                    }
-                publish('ai-creature', json.dumps(pmsg))
-            except Exception as e:
-                msg = f'Publish(ai-creature) KO [{e}]'
-                logger.error(msg)
+            )
+            newCreature.save()
         except Exception as e:
             description = f'Godmode-Pop Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -109,32 +135,42 @@ def pop(group_godmode):
                     )
                 )
             return
-        else:
-            embed = discord.Embed(
-                title="A new creature appears!",
-                colour=discord.Colour.green()
-                )
 
-            position = f"({Creature.x},{Creature.y})"
-            embed_field_name = (
-                f"{rarity_monster_types_discord[Creature.rarity]} "
-                f"{Creature.name}"
-                )
-            embed_field_value  = f"> Instance : `{Creature.instance}`\n"
-            embed_field_value += f"> Level : `{Creature.level}`\n"
-            embed_field_value += f"> Position : `{position}`\n"
+        # We put the info in pubsub channel for IA to populate the instance
+        try:
+            pmsg = {
+                "action": 'pop',
+                "creature": newCreature.to_json(),
+                "instance": Instance.to_json(),
+                }
+            r.publish('ai-creature', pmsg)
+        except Exception as e:
+            msg = f'Publish(ai-creature) KO [{e}]'
+            logger.error(msg)
 
-            embed.add_field(
-                name=f'**{embed_field_name}**',
-                value=embed_field_value,
-                inline=True,
-                )
+        # MongoDB CreatureDocument should be created
+        # Pub/Sub message should be sent
 
-            embed.set_footer(text=f"CreatureUUID: {Creature.id}")
+        embed = discord.Embed(
+            title="A new creature appears!",
+            colour=discord.Colour.green()
+            )
 
-            URI_PNG = f'sprites/creatures/{Creature.race}.png'
-            logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
-            embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
+        embed_field_value  = f"> Instance : `{newCreature.instance}`\n"
+        embed_field_value += f"> Level : `{newCreature.level}`\n"
+        embed_field_value += f"> Position : `({newCreature.x},{newCreature.y})`\n"
 
-            await ctx.respond(embed=embed)
-            logger.info(f'[#{channel}][{name}] └──> Godmode-Pop Query OK')
+        embed.add_field(
+            name=f'{rmtd[newCreature.rarity]} **{newCreature.name}**',
+            value=embed_field_value,
+            inline=True,
+            )
+
+        embed.set_footer(text=f"CreatureUUID: {newCreature.id}")
+
+        URI_PNG = f'sprites/creatures/{newCreature.race}.png'
+        logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
+        embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
+
+        await ctx.respond(embed=embed)
+        logger.info(f'{h} └──> Godmode-Pop Query OK')

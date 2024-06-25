@@ -3,20 +3,18 @@
 import json
 import requests
 
-from variables import (AUTH_PAYLOAD,
-                       API_URL,
-                       CREATURE_ID,
-                       )
+from variables import (
+    API_URL,
+    CREATURE_ID,
+    access_token_get,
+    )
 
 
 def test_singouins_inventory_item_get():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
-    response   = requests.get(url, headers=headers)
+    response = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/item',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
@@ -25,122 +23,128 @@ def test_singouins_inventory_item_get():
     assert [x for x in weapon if x['metaid'] == 34][0] is not None
 
     equipment = json.loads(response.text)['payload']['equipment']
-    assert equipment['righthand'] is None
+    assert equipment['righthand']['metaid'] == 34
 
 
 def test_singouins_inventory_item_equip():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
+    response  = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/item',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
-    response = requests.get(url, headers=headers)
     weapon   = json.loads(response.text)['payload']['weapon']
     item     = [x for x in weapon if x['metaid'] == 34][0]
 
-    url       = f"{API_URL}/mypc/{CREATURE_ID}/inventory/item/{item['id']}/equip/weapon/holster"  # POST # noqa
-    response  = requests.post(url, headers=headers)
-    equipment = json.loads(response.text)['payload']['equipment']
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/inventory/item/{item['_id']}/equip/weapon/holster",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert equipment['holster'] == item['id']
+
+    slots = json.loads(response.text)['payload']['creature']['slots']
+    assert slots['holster']['id'] == item['_id']
 
 
 def test_singouins_inventory_item_unequip():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
-    response   = requests.get(url, headers=headers)
-    itemid     = json.loads(response.text)['payload']['equipment']['holster']
+    response = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/item',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
+
+    itemid = json.loads(response.text)['payload']['equipment']['holster']['id']
     assert itemid is not None
 
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/unequip/weapon/holster'  # POST # noqa
-    response   = requests.post(url, headers=headers)
-    equipment  = json.loads(response.text)['payload']['equipment']
+    response = requests.post(
+        f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/unequip/weapon/holster',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert equipment['holster'] is None
+
+    slots = json.loads(response.text)['payload']['creature']['slots']
+    assert 'holster' not in slots
 
     # We need to re-equip it for some tests later
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/equip/weapon/holster'  # POST # noqa
-    response   = requests.post(url, headers=headers)
-    equipment  = json.loads(response.text)['payload']['equipment']
+    response = requests.post(
+        f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/equip/weapon/holster',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert equipment['holster'] == itemid
+
+    slots = json.loads(response.text)['payload']['creature']['slots']
+    assert slots['holster']['id'] == itemid
 
 
 def test_singouins_inventory_item_offset_move():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
-    response   = requests.get(url, headers=headers)
+    response = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/item',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
-    weapons    = json.loads(response.text)['payload']['weapon']
+    weapons = json.loads(response.text)['payload']['weapon']
     # We know one weapon is in holster
-    holster    = json.loads(response.text)['payload']['equipment']['holster']
-    # So we need the other one
-    weapon     = [x for x in weapons if x['id'] != holster][0]
-    itemid     = weapon['id']
-    assert weapon['offsetx'] is None
-    assert weapon['offsety'] is None
+    holster = json.loads(response.text)['payload']['equipment']['holster']
+    # So we need to find the weapon details
+    weapon = [x for x in weapons if x['_id'] != holster][0]
+    # There should not be any offset as item is equipped
+    assert 'offsetx' not in weapon
+    assert 'offsety' not in weapon
 
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/offset/1/1'  # POST # noqa
-    response   = requests.post(url, headers=headers)
+    # This test is pure bullshit, and can't happen in real life
+    # but it's easiest way to test /offset/{x}/{y}
+    itemid = weapon['_id']
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/inventory/item/{weapon['_id']}/offset/1/1",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
-    weapons    = json.loads(response.text)['payload']['weapon']
+    weapons = json.loads(response.text)['payload']['weapon']
     # We know one weapon is in holster
-    holster    = json.loads(response.text)['payload']['equipment']['holster']
-    # So we need the other one
-    weapon     = [x for x in weapons if x['id'] == itemid][0]
+    holster = json.loads(response.text)['payload']['creature']['slots']['holster']
+    # So we need to find the weapon details
+    weapon = [x for x in weapons if x['_id'] == itemid][0]
+    # There should offset as we moved item
     assert weapon['offsetx'] == 1
     assert weapon['offsety'] == 1
 
 
 def test_singouins_inventory_item_offset_del():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
-    response   = requests.get(url, headers=headers)
+    response = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/item',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    weapons    = json.loads(response.text)['payload']['weapon']
+
+    weapons = json.loads(response.text)['payload']['weapon']
     # We know one weapon is in holster
-    holster    = json.loads(response.text)['payload']['equipment']['holster']
-    # So we need the other one
-    weapon     = [x for x in weapons if x['id'] != holster][0]
-    itemid     = weapon['id']
+    holster = json.loads(response.text)['payload']['equipment']['holster']
 
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/offset'  # DELETE # noqa
-    response   = requests.delete(url, headers=headers)
+    itemid = holster['id']
+    response = requests.delete(
+        f'{API_URL}/mypc/{CREATURE_ID}/inventory/item/{itemid}/offset',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
-    weapons    = json.loads(response.text)['payload']['weapon']
-    weapon     = [x for x in weapons if x['id'] == itemid][0]
-    assert weapon['offsetx'] is None
-    assert weapon['offsety'] is None
+    weapons = json.loads(response.text)['payload']['weapon']
+    weapon = [x for x in weapons if x['_id'] == itemid][0]
+    assert 'offsetx' not in weapon
+    assert 'offsety' not in weapon

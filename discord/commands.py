@@ -5,7 +5,7 @@ import discord
 import os
 import time
 
-from loguru             import logger
+from loguru import logger
 
 from subcommands import (
     auction,
@@ -19,8 +19,8 @@ from subcommands import (
 logger.info('Imports OK')
 
 # Discord variables
-DISCORD_GUILD = os.environ.get("SEP_DISCORD_GUILD", None)
-DISCORD_TOKEN = os.environ.get("SEP_DISCORD_TOKEN")
+DISCORD_GUILD = os.environ.get("DISCORD_GUILD", None)
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 # Log Internal imports
 logger.info('Internal ENV vars loading OK')

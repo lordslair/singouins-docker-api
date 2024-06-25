@@ -105,13 +105,23 @@ jobs:
       with:
         redis version: ${{ vars.REDIS_VERSION }}
 
+    - name: Start MongoDB 🌱
+      uses: supercharge/mongodb-github-action@1.11.0
+      with:
+        mongodb-version: ${{ vars.MONGO_VERS }}
+        mongodb-username: ${{ vars.MONGO_USER }}
+        mongodb-password: ${{ secrets.MONGO_PASS }}
+        mongodb-db: ${{ vars.MONGO_BASE }}
+
     - name: Test with PyTest ⚙️
       env:
           LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
-          GUNICORN_CHDIR: ${{ secrets.GUNICORN_CHDIR }}
+          GUNICORN_CHDIR: ${{ vars.GUNICORN_CHDIR }}
 
-          SEP_INTERNAL_TOKEN: ${{ secrets.SEP_INTERNAL_TOKEN }}
           SEP_SECRET_KEY: ${{ secrets.SEP_SECRET_KEY }}
+
+          MONGO_HOST: ${{ vars.MONGO_HOST }}
+          MONGO_PASS: ${{ secrets.MONGO_PASS }}
 
           SEP_SMTP_FROM: ${{ secrets.SEP_SMTP_FROM }}
           SEP_SMTP_SERVER: ${{ secrets.SEP_SMTP_SERVER }}
@@ -121,14 +131,12 @@ jobs:
       run: |
         echo "--- Moving nosql lib where it belongs"
         cp -a nosql ${{ matrix.python-app }}/
+        echo "--- Moving mongo lib where it belongs"
+        cp -a mongo ${{ matrix.python-app }}/
         echo "--- Starting app in background"
-        # Used for ws, ai
+        # Used for ai, api, ws
         if [ -f ${{ matrix.python-app }}/main.py ]
           then python3 ${{ matrix.python-app }}/main.py &
-        fi
-        # Used for api
-        if [ -f ${{ matrix.python-app }}/app.py ]
-          then python3 ${{ matrix.python-app }}/app.py &
         fi
         echo "--- Sleep(3)"
         sleep 3

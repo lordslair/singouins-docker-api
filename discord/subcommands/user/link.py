@@ -1,13 +1,13 @@
 # -*- coding: utf8 -*-
 
+import datetime
 import discord
-import uuid
 
 from loguru import logger
 from discord.commands import option
 from email_validator import validate_email, EmailNotValidError
 
-from nosql.models.RedisSearch import RedisSearch
+from mongo.models.User import UserDocument, UserDiscord
 
 
 def link(group_user, bot):
@@ -24,10 +24,8 @@ def link(group_user, bot):
         mail: str,
     ):
         if ctx.channel.type is not discord.ChannelType.private:
-            logger.info(
-                f'[#{ctx.channel.name}][{ctx.author.name}] '
-                f'/{group_user} link <{mail}>'
-                )
+            logger.info(f'[#{ctx.channel.name}][{ctx.author.name}] /{group_user} link <{mail}>')
+
             try:
                 embed = discord.Embed(
                     description=(
@@ -62,12 +60,8 @@ def link(group_user, bot):
                 return
 
         # OK, we are in DM, we can work
-        logger.info(
-                f'[#{ctx.channel.type}][{ctx.author.name}] '
-                f'/{group_user} link <{mail}>'
-                )
+        logger.info(f'[#{ctx.channel.type}][{ctx.author.name}] /{group_user} link <{mail}>')
         try:
-            discordname = f'{ctx.author.name}#{ctx.author.discriminator}'
             try:
                 validate_email(mail)
             except EmailNotValidError as e:
@@ -79,11 +73,7 @@ def link(group_user, bot):
                     )
                 return
 
-            useruuid = str(uuid.uuid3(uuid.NAMESPACE_DNS, mail))
-            Users = RedisSearch().user(
-                query=f"@id:{useruuid.replace('-', ' ')}"
-                )
-            if len(Users.results) == 0:
+            if UserDocument.objects(name=mail).count() == 0:
                 msg = f'No User with mail:`{mail}` in DB'
                 logger.trace(msg)
                 await ctx.respond(
@@ -94,9 +84,9 @@ def link(group_user, bot):
                     )
                 return
             else:
-                User = Users.results[0]
+                User = UserDocument.objects(name=mail).get()
 
-            if User.d_name is not None:
+            if User.discord.name:
                 msg = 'Discord & Singouin link already done'
                 logger.debug(msg)
                 await ctx.respond(
@@ -108,8 +98,12 @@ def link(group_user, bot):
                 return
 
             try:
-                User.d_name = discordname
-                User.d_ack = True
+                User.discord = UserDiscord(
+                    name=ctx.author.name,
+                    ack=True,
+                )
+                User.updated = datetime.datetime.utcnow()
+                User.save()
             except Exception as e:
                 msg = f'Discord & Singouin link KO [{e}]'
                 logger.trace(msg)
@@ -121,15 +115,9 @@ def link(group_user, bot):
                     )
                 return
         except Exception as e:
-            logger.error(
-                f'[#{ctx.channel.type}][{ctx.author.name}] '
-                f'└──> Embed KO [{e}]'
-                )
+            logger.error(f'[#{ctx.channel.type}][{ctx.author.name}] └──> Embed KO [{e}]')
         else:
-            logger.info(
-                f'[#{ctx.channel.type}][{ctx.author.name}] '
-                f'├──> Query OK'
-                )
+            logger.info(f'[#{ctx.channel.type}][{ctx.author.name}] ├──> Query OK')
             await ctx.respond(
                 embed=discord.Embed(
                     description="Discord & Singouin link :ok: ",
@@ -137,7 +125,4 @@ def link(group_user, bot):
                     )
                 )
             return
-            logger.info(
-                f'[#{ctx.channel.type}][{ctx.author.name}] '
-                f'└──> Answer sent'
-                )
+            logger.info(f'[#{ctx.channel.type}][{ctx.author.name}] └──> Answer sent')

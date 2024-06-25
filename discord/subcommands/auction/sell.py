@@ -1,20 +1,19 @@
 # -*- coding: utf8 -*-
 
+import datetime
 import discord
 
 from discord.commands import option
 from loguru import logger
 
-from nosql.models.RedisAuction import RedisAuction
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem import RedisItem
+from mongo.models.Auction import AuctionDocument, AuctionItem, AuctionSeller
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Item import ItemDocument
 
-from subcommands.auction._autocomplete import (
-    get_singouin_auctionable_item_list,
-    )
+from subcommands.auction._autocomplete import get_singouin_auctionable_item_list
 from subcommands.singouin._autocomplete import get_mysingouins_list
 
-from variables import rarity_item_types_discord
+from variables import item_types_discord, metaNames, rarity_item_types_discord
 
 
 def sell(group_auction):
@@ -44,23 +43,19 @@ def sell(group_auction):
         price: int,
     ):
 
-        name = ctx.author.name
-        # Pre-flight checks
-        if ctx.channel.type is discord.ChannelType.private:
-            channel = ctx.channel.type
-        else:
-            channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_auction} sell {selleruuid} {itemuuid} {price}')
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_auction} sell {selleruuid} {itemuuid} {price}'
-            )
-
-        Creature = RedisCreature(creatureuuid=selleruuid)
-        Item = RedisItem(itemuuid=itemuuid)
-
-        if Item.id is None:
-            msg = 'Item NotFound'
+        try:
+            Item = ItemDocument.objects(
+                _id=itemuuid,
+                auctioned=False,
+                bearer=selleruuid,
+                bound_type='BoE',
+                ).get()
+            Creature = CreatureDocument.objects(_id=selleruuid).get()
+        except ItemDocument.DoesNotExist:
+            msg = 'Item NotFound or not matching criterias'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -68,10 +63,10 @@ def sell(group_auction):
                     ),
                 ephemeral=True,
                 )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
+            logger.info(f'{h} └──> Auction-Sell Query KO ({msg})')
             return
-        if Item.bearer != Creature.id:
-            msg = 'Item does not belong to you'
+        except CreatureDocument.DoesNotExist:
+            msg = 'Seller NotFound'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -79,36 +74,32 @@ def sell(group_auction):
                     ),
                 ephemeral=True,
                 )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
-            return
-        if Item.bound_type is False:
-            msg = 'Item should not be bound'
-            await ctx.respond(
-                embed=discord.Embed(
-                    description=msg,
-                    colour=discord.Colour.orange()
-                    ),
-                ephemeral=True,
-                )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
-            return
-        if hasattr(RedisAuction(auctionuuid=itemuuid), 'id'):
-            msg = 'Item already sold in the Auction House'
-            await ctx.respond(
-                embed=discord.Embed(
-                    description=msg,
-                    colour=discord.Colour.orange()
-                    ),
-                ephemeral=True,
-                )
-            logger.info(f'[#{channel}][{name}] └──> Auction Query KO ({msg})')
+            logger.info(f'{h} └──> Auction-Sell Query KO ({msg})')
             return
 
         try:
-            Auction = RedisAuction().new(Creature, Item, price, 172800)
+            newAuction = AuctionDocument(
+                item=AuctionItem(
+                    id=Item.id,
+                    metaid=Item.metaid,
+                    metatype=Item.metatype,
+                    name=metaNames[Item.metatype][Item.metaid]['name'],
+                    rarity=Item.rarity,
+                ),
+                price=price,
+                seller=AuctionSeller(
+                    id=Creature.id,
+                    name=Creature.name,
+                ),
+            )
+            newAuction.save()
+
+            Item.auctioned = True
+            Item.updated = datetime.datetime.utcnow()
+            Item.save()
         except Exception as e:
             description = f'Auction-Sell Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -119,14 +110,15 @@ def sell(group_auction):
             return
 
         embed = discord.Embed(
-            title="Added from the Auction House:",
+            title="Added to the Auction House:",
             description=(
-                f"{rarity_item_types_discord[Item.rarity]} "
-                f"**{Auction.metaname}** (Price:{price})"
+                f"> {item_types_discord[Item.metatype]} "
+                f"{rarity_item_types_discord[Item.rarity]} **{newAuction.item.name}** "
+                f"(Price:{price})"
                 ),
             colour=discord.Colour.green(),
             )
         embed.set_footer(text=f"ItemUUID: {Item.id}")
         await ctx.respond(embed=embed, ephemeral=True)
-        logger.info(f'[#{channel}][{name}] └──> Auction Query OK')
+        logger.info(f'{h} └──> Auction-Sell Query OK')
         return

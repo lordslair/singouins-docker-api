@@ -2,7 +2,28 @@
 
 import os
 
-URL_ASSETS = os.environ.get("SEP_URL_ASSETS")
+from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
+
+"""
+DISCLAIMER: This is some fat shit I dumped here
+
+This is a HUGE Dictionary to manipulate pore easiliy all the metas
+Without having to query MongoDB all the time internally
+
+Do not modifiy unless you're ready for consequences
+"""
+metaNames = {
+    'armor': [doc.to_mongo().to_dict() for doc in MetaArmor.objects()],
+    'weapon': [doc.to_mongo().to_dict() for doc in MetaWeapon.objects()],
+    'race': [doc.to_mongo().to_dict() for doc in MetaRace.objects()]
+}
+
+URL_ASSETS = os.environ.get("URL_ASSETS")
+
+item_types_discord = {
+    'armor': ':shirt:',
+    'weapon': ':dagger:'
+    }
 
 rarity_item_types_emoji = {
     'Broken': '🟤 ',

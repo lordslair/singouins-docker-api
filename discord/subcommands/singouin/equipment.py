@@ -6,14 +6,17 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.metas import metaNames
-from nosql.models.RedisCreature import RedisCreature
-from nosql.models.RedisItem import RedisItem
-from nosql.models.RedisSlots import RedisSlots
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Item import ItemDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
-from variables import rarity_item_types_discord
+from variables import (
+    metaNames,
+    rarity_item_types_discord,
+    slots_armor,
+    slots_weapon,
+    )
 
 
 def equipment(group_singouin):
@@ -35,17 +38,12 @@ def equipment(group_singouin):
         ctx,
         singouinuuid: str,
     ):
-        name = ctx.author.name
-        channel = ctx.channel.name
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_singouin} equipment {singouinuuid}')
+
         file = None
 
-        logger.info(
-            f'[#{channel}][{name}] '
-            f'/{group_singouin} equipment {singouinuuid}'
-            )
-
-        Creature = RedisCreature(creatureuuid=singouinuuid)
-        Slots = RedisSlots(creatureuuid=singouinuuid)
+        Creature = CreatureDocument.objects(_id=singouinuuid).get()
 
         try:
             embed = discord.Embed(
@@ -64,29 +62,24 @@ def equipment(group_singouin):
             """
 
             value  = ''
-            pieces = {
-                'head': ':military_helmet:',
-                'shoulders': ':mechanical_arm:',
-                'torso': ':shirt:',
-                'hands': ':hand_splayed:',
-                'legs': ':mechanical_leg:',
-                'feet': ':athletic_shoe:',
-                }
-
-            for piece in pieces:
-                itemuuid = getattr(Slots, piece)
-                if itemuuid is not None:
-                    Item = RedisItem(itemuuid=itemuuid)
+            for piece in slots_armor:
+                logger.debug(f'EquippedItem search: {piece}')
+                EquippedItem = getattr(Creature.slots, piece)
+                if EquippedItem:
+                    logger.trace(f'EquippedItem found: {piece}')
+                    Item = ItemDocument.objects(_id=EquippedItem._id).get()
                     square = rarity_item_types_discord[Item.rarity]
                     name   = metaNames[Item.metatype][Item.metaid]['name']
                     item   = f'{square} {name}'
                 else:
                     item   = ':no_entry_sign:'
-                value += f"> {pieces[piece]} : {item}\n"
+                value += f"> {slots_armor[piece]} : {item}\n"
 
-            embed.add_field(name='**Equipment**',
-                            value=value,
-                            inline=True)
+            embed.add_field(
+                name='**Equipment**',
+                value=value,
+                inline=True,
+                )
 
             """
             emojiHO = discord.utils.get(client.emojis, name='itemHolster')
@@ -95,26 +88,24 @@ def equipment(group_singouin):
             """
 
             value   = ''
-            weapons = {
-                'holster': ':school_satchel:',
-                'lefthand': ':left_fist:',
-                'righthand': ':right_fist:',
-                }
-
-            for weapon in weapons:
-                itemuuid = getattr(Slots, weapon)
-                if itemuuid is not None:
-                    Item = RedisItem(itemuuid=itemuuid)
+            for weapon in slots_weapon:
+                logger.debug(f'EquippedWeapon search: {weapon}')
+                EquippedWeapon = getattr(Creature.slots, weapon)
+                if EquippedWeapon:
+                    logger.trace(f'EquippedWeapon found: {weapon}')
+                    Item = ItemDocument.objects(_id=EquippedWeapon._id).get()
                     square = rarity_item_types_discord[Item.rarity]
                     name   = metaNames[Item.metatype][Item.metaid]['name']
                     item   = f'{square} {name}'
                 else:
                     item   = ':no_entry_sign:'
-                value += f"> {weapons[weapon]} : {item}\n"
+                value += f"> {slots_weapon[weapon]} : {item}\n"
 
-            embed.add_field(name='**Weapons**',
-                            value=value,
-                            inline=True)
+            embed.add_field(
+                name='**Weapons**',
+                value=value,
+                inline=True,
+                )
 
             # We check if we have a sprite to add as thumbnail
             if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
@@ -126,7 +117,7 @@ def equipment(group_singouin):
 
         except Exception as e:
             description = f'Singouin-Equipment Query KO [{e}]'
-            logger.error(f'[#{channel}][{name}] └──> {description}')
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,
@@ -137,7 +128,4 @@ def equipment(group_singouin):
             return
         else:
             await ctx.respond(embed=embed, ephemeral=True, file=file)
-            logger.info(
-                f'[#{channel}][{name}] '
-                f'└──> Singouin-Equipment Query OK'
-                )
+            logger.info(f'{h} └──> Singouin-Equipment Query OK')

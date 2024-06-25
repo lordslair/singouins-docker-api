@@ -1,21 +1,29 @@
 # -*- coding: utf8 -*-
 
+import datetime
+
 from flask                      import g, jsonify
 from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
 from nosql.metas                import metaNames
-from nosql.models.RedisEvent    import RedisEvent
-from nosql.models.RedisHS       import RedisHS
 from nosql.models.RedisPa       import RedisPa
-from nosql.models.RedisWallet   import RedisWallet
+
+from mongo.models.Satchel import SatchelDocument
 
 from utils.decorators import (
     check_creature_exists,
     check_item_exists,
     check_user_exists,
     check_creature_owned,
+    check_creature_pa,
     )
+
+#
+# Action.reload specifics
+#
+PA_COST_RED = 0
+PA_COST_BLUE = 2
 
 
 #
@@ -24,14 +32,15 @@ from utils.decorators import (
 # API: POST /mypc/<uuid:creatureuuid>/action/reload/<uuid:itemuuid>
 @jwt_required()
 # Custom decorators
-@check_creature_exists
-@check_item_exists
 @check_user_exists
+@check_creature_exists
 @check_creature_owned
+@check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@check_item_exists
 def reload(creatureuuid, itemuuid):
     itemmeta = metaNames[g.Item.metatype][g.Item.metaid]
     if itemmeta['pas_reload'] is None:
-        msg = f'{g.h} Item is not reloadable ItemUUID({g.Item.id})'
+        msg = f'{g.h} Not reloadable'
         logger.warning(msg)
         return jsonify(
             {
@@ -41,7 +50,7 @@ def reload(creatureuuid, itemuuid):
             }
         ), 200
     if g.Item.ammo == itemmeta['max_ammo']:
-        msg = f'{g.h} Item is already loaded ItemUUID({g.Item.id})'
+        msg = f"{g.h} Already loaded ({g.Item.ammo}/{itemmeta['max_ammo']})"
         return jsonify(
             {
                 "success": False,
@@ -50,34 +59,16 @@ def reload(creatureuuid, itemuuid):
             }
         ), 200
 
-    Pa = RedisPa(creatureuuid=g.Creature.id)
-    if Pa.redpa < itemmeta['pas_reload']:
-        # Not enough PA to reload
-        msg = f'{g.h} Not enough PA to reload'
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": {
-                    "red": Pa.as_dict()['red'],
-                    "blue": Pa.as_dict()['blue'],
-                    "weapon": None,
-                },
-            }
-        ), 200
-
     try:
-        # We add the shards in the wallet
-        Wallet     = RedisWallet(creatureuuid=g.Creature.id)
-        walletammo = getattr(Wallet, itemmeta['caliber'])
-        neededammo = itemmeta['max_ammo'] - g.Item.ammo
+        Satchel = SatchelDocument.objects().filter(_id=g.Creature.id).get()
 
-        if walletammo < neededammo:
-            # Not enough ammo to reload
-            msg = (f"{g.h} Not enough Ammo to reload "
-                   f"(cal:{itemmeta['caliber']},"
-                   f"ammo:{walletammo}<{neededammo})"
-                   )
+        # We calculate the amount of needed ammo to reload
+        ownedammo = getattr(Satchel.ammo, itemmeta['caliber'])
+        neededammo = itemmeta['max_ammo'] - g.Item.ammo
+        details = f"(cal:{itemmeta['caliber']}, ammo:{neededammo}/{ownedammo})"
+
+        if ownedammo < neededammo:
+            msg = f"{g.h} Not enough Ammo to reload {details}"
             logger.debug(msg)
             return jsonify(
                 {
@@ -86,27 +77,24 @@ def reload(creatureuuid, itemuuid):
                     "payload": None,
                 }
             ), 200
+        else:
+            logger.trace(f"{g.h} Enough Ammo to reload {details}")
 
         # We reload the weapon
-        g.Item.ammo = neededammo
-        # We remove the ammo from wallet
-        setattr(Wallet, itemmeta['caliber'], walletammo - neededammo)
+        g.Item.ammo = itemmeta['max_ammo']
+        g.Item.updated = datetime.datetime.utcnow()
+        g.Item.save()
+        # We remove the ammo from Satchel
+        Satchel = SatchelDocument.objects().filter(_id=g.Creature.id)
+        update_query = {
+            f"inc__ammo__{itemmeta['caliber']}": -neededammo,
+            "set__updated": datetime.datetime.utcnow(),
+            }
+        Satchel.update(**update_query)
         # We consume the PA
-        RedisPa(creatureuuid=g.Creature.id).consume(
-            redpa=itemmeta['pas_reload']
-            )
-        # Wa add HighScore
-        RedisHS(creatureuuid=g.Creature.id).incr('action_reload')
-        # We create the Creature Event
-        RedisEvent().new(
-            action_src=g.Creature.id,
-            action_dst=None,
-            action_type='action/reload',
-            action_text='Reloaded a weapon',
-            action_ttl=30 * 86400
-            )
+        RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE)
     except Exception as e:
-        msg = f'{g.h} Reload Query KO ItemUUID({g.Item.id}) [{e}]'
+        msg = f'{g.h} Reload Query KO [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -116,17 +104,16 @@ def reload(creatureuuid, itemuuid):
             }
         ), 200
     else:
-        msg = f'{g.h} Reload Query OK ItemUUID({g.Item.id})'
+        msg = f'{g.h} Reload Query OK'
         logger.debug(msg)
-        Pa = RedisPa(creatureuuid=g.Creature.id)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "red": Pa.as_dict()['red'],
-                    "blue": Pa.as_dict()['blue'],
-                    "weapon": g.Item.as_dict(),
+                    "red": RedisPa(creatureuuid=creatureuuid).as_dict()['red'],
+                    "blue": RedisPa(creatureuuid=creatureuuid).as_dict()['blue'],
+                    "weapon": g.Item.to_mongo(),
                 },
             }
         ), 200

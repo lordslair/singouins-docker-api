@@ -7,10 +7,10 @@ from flask                      import g, jsonify, request
 from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
+from mongo.models.Creature import CreatureDocument
+
 from nosql.models.RedisCd       import RedisCd
-from nosql.models.RedisCreature import RedisCreature
 from nosql.models.RedisEffect   import RedisEffect
-from nosql.models.RedisEvent    import RedisEvent
 from nosql.models.RedisStatus   import RedisStatus
 
 from variables                  import RESOLVER_URL
@@ -88,9 +88,7 @@ def skill(creatureuuid, skill_name):
         fightEventactor = request.json.get('actor', None)
         fightEventparams = request.json.get('params', None)
 
-        Creatures = RedisCreature().search(
-            query=f"@instance:{g.Instance.id.replace('-', ' ')}"
-            )
+        Creatures = CreatureDocument.objects(instance=g.Instance.id)
     except Exception as e:
         msg = f'{g.h} ResolverInfo Query KO [{e}]'
         logger.error(msg)
@@ -108,9 +106,7 @@ def skill(creatureuuid, skill_name):
         "context": {
             "map": g.Instance.map,
             "instance": g.Instance.id,
-            "creatures": [
-                Creature.as_dict() for Creature in Creatures.results
-                ],
+            "creatures": [Creature.to_mongo() for Creature in Creatures],
             "effects": [
                 Effect.as_dict() for Effect in Effects.results
                 ],
@@ -143,14 +139,6 @@ def skill(creatureuuid, skill_name):
             }
         ), 200
     else:
-        # We create the Creature Event
-        RedisEvent().new(
-            action_src=g.Creature.id,
-            action_dst=None,
-            action_type='skill',
-            action_text=f'Used a Skill ({skill_name})',
-            action_ttl=30 * 86400
-            )
         msg = f'{g.h} Resolver Query OK'
         logger.debug(msg)
         return jsonify(

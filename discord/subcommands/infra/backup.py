@@ -10,6 +10,8 @@ from kubernetes.stream import stream
 
 from subcommands.infra._tools import log_pretty
 
+NAMESPACE = 'singouins-databases'
+
 
 def backup(group_admin):
     @group_admin.command(
@@ -28,13 +30,10 @@ def backup(group_admin):
         ctx,
         action: str,
     ):
-        # Header for later use
-        h = f'[#{ctx.channel.name}][{ctx.channel.name}]'
-
-        NAMESPACE = 'singouins-databases'
+        h = f'[#{ctx.channel.name}][{ctx.author.name}]'
+        logger.info(f'{h} /{group_admin} backup {action}')
 
         await ctx.defer()  # To defer answer (default: 15min)
-        logger.info(f'{h} /{group_admin} backup {action}')
 
         try:
             config.load_kube_config("/etc/k8s/kubeconfig.yaml")

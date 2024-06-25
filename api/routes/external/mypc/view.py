@@ -1,74 +1,17 @@
 # -*- coding: utf8 -*-
 
-from flask                      import g, jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
+from flask import g, jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
+from mongoengine import Q
 
-from nosql.models.RedisSearch   import RedisSearch
-from nosql.models.RedisStats    import RedisStats
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Corpse import CorpseDocument
+from mongo.models.Resource import ResourceDocument
 
 from utils.decorators import (
     check_creature_exists,
     )
-
-
-def generate_creatures_view(Creature):
-    view_final = []
-    Stats = RedisStats(creatureuuid=Creature.id)
-    range = 4 + round(Stats.p / 50)
-
-    maxx  = Creature.x + range
-    minx  = Creature.x - range
-    maxy  = Creature.y + range
-    miny  = Creature.y - range
-
-    CreaturesVisible = RedisSearch().creature(
-        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
-        )
-
-    for CreatureVisible in CreaturesVisible.results:
-        creature_in_sight = CreatureVisible.as_dict()
-        # We define the default diplomacy title
-        creature_in_sight['diplo'] = 'neutral'
-        # We try to define the diplomacy based on tests
-        if creature_in_sight['race'] >= 11:
-            creature_in_sight['diplo'] = 'enemy'
-
-        view_final.append(creature_in_sight)
-
-    return view_final
-
-
-def generate_corpses_view(Creature):
-    Stats = RedisStats(creatureuuid=Creature.id)
-    range = 4 + round(Stats.p / 50)
-
-    maxx  = Creature.x + range
-    minx  = Creature.x - range
-    maxy  = Creature.y + range
-    miny  = Creature.y - range
-
-    CorpsesVisible = RedisSearch().corpse(
-        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
-        )
-
-    return CorpsesVisible.results_as_dict
-
-
-def generate_resources_view(Creature):
-    Stats = RedisStats(creatureuuid=Creature.id)
-    range = 4 + round(Stats.p / 50)
-
-    maxx  = Creature.x + range
-    minx  = Creature.x - range
-    maxy  = Creature.y + range
-    miny  = Creature.y - range
-
-    ResourcesVisible = RedisSearch().resource(
-        query=f'(@x:[{minx} {maxx}]) & (@y:[{miny} {maxy}])',
-        )
-
-    return ResourcesVisible.results_as_dict
 
 
 #
@@ -79,106 +22,142 @@ def generate_resources_view(Creature):
 # Custom decorators
 @check_creature_exists
 def view_get(creatureuuid):
-    try:
-        if g.Creature.squad is None:
-            # PC is solo / not in a squad
-            try:
-                creatures_view = generate_creatures_view(g.Creature)
-            except Exception as e:
-                msg = f'{g.h} View Query KO [{e}]'
-                logger.error(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
-        else:
-            # PC is in a squad
-            # We query the Squad members in the same instance
-            try:
-                SquadMembers = RedisSearch().creature(
-                    f"(@squad:{g.Creature.squad.replace('-', ' ')}) & "
-                    f"(@squad_rank:-Pending) & "
-                    f"(@instance:{g.Creature.instance.replace('-', ' ')})"
-                    )
-            except Exception as e:
-                msg = f'{g.h} Squad Query KO Squad({g.Creature.squad}) [{e}]'
-                logger.error(msg)
-                return jsonify(
-                    {
-                        "success": False,
-                        "msg": msg,
-                        "payload": None,
-                    }
-                ), 200
-            else:
-                if not SquadMembers or len(SquadMembers.results) == 0:
-                    msg = (f'{g.h} Squad Query KO - NotFound Squad({g.Creature.squad})')
-                    logger.warning(msg)
-                    return jsonify(
-                        {
-                            "success": False,
-                            "msg": msg,
-                            "payload": None,
-                        }
-                    ), 200
-                else:
-                    msg = f'{g.h} Squad Query OK'
-                    logger.trace(msg)
 
-            creatures_view = []  # We initialize the result array
-            for SquadMember in SquadMembers.results:
-                try:
-                    view = generate_creatures_view(g.Creature)
-                    if len(creatures_view) == 0:
-                        # Push the first results in the array
-                        creatures_view += view
-                    else:
-                        # Aggregate without duplicate
-                        creatures_view = list(set(creatures_view + view))
-                except Exception as e:
-                    msg = (f'{g.h} View Query KO Squad({g.Creature.squad}) [{e}]')
-                    logger.error(msg)
-                    return jsonify(
-                        {
-                            "success": False,
-                            "msg": msg,
-                            "payload": None,
-                        }
-                    ), 200
-    except Exception as e:
-        msg = f'{g.h} View Query KO [{e}]'
-        logger.error(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
+    if g.Creature.instance:
+        logger.trace(f'{g.h} Creature in an Instance:{g.Creature.instance}')
     else:
-        msg = f'{g.h} View Query OK'
+        # Creature is not in an instance, view is empty
+        logger.trace(f'{g.h} Creature not in an Instance')
+        msg = f'{g.h} View Query OK (WORLDMAP)'
         logger.debug(msg)
         return jsonify(
             {
                 "success": True,
                 "msg": msg,
-                "payload": creatures_view,
-            }
-        ), 200
-        """
-        When time comes, this should replace the return above:
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
                 "payload": {
-                    "creatures": creatures_view,
-                    "corpses": generate_corpses_view(g.Creature),
-                    "resources": generate_resources_view(g.Creature),
+                    "creatures": [],
+                    "corpses": [],
+                    "resources": [],
                 },
             }
         ), 200
-        """
+
+    if g.Creature.squad.id:
+        logger.trace(f'{g.h} Creature in an Squad:{g.Creature.squad.id}')
+        try:
+            query = (
+                Q(squad__id=g.Creature.squad.id) &
+                Q(instance=g.Creature.instance) &
+                Q(squad__rank__ne="Pending")
+                )
+            SquadMembers = CreatureDocument.objects(query)
+        except Exception as e:
+            msg = f'{g.h} Squad({g.Creature.squad.id}) Query KO [{e}]'
+            logger.error(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+        except CreatureDocument.DoesNotExist:
+            msg = (f'{g.h} Squad({g.Creature.squad.id}) Query KO (404)')
+            logger.warning(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+        else:
+            logger.trace(f'{g.h} Squad({g.Creature.squad.id}) Query OK')
+
+        try:
+            CreaturesUnduplicated = []  # We initialize the result array
+            ResourcesUnduplicated = []  # We initialize the result array
+            CorpsesUnduplicated = []  # We initialize the result array
+
+            for SquadMember in SquadMembers:
+                range = 4 + round(g.Creature.stats.total.p / 50)
+                query_view = (
+                    Q(instance=g.Creature.instance) &
+                    Q(x__gte=SquadMember.x - range) &
+                    Q(x__lte=SquadMember.x + range) &
+                    Q(y__gte=SquadMember.y - range) &
+                    Q(y__lte=SquadMember.y + range)
+                    )
+
+                # We do the job for Creatures
+                CreaturesSeen = CreatureDocument.objects(query_view)
+                CreaturesCount = CreaturesSeen.count()
+                if CreaturesCount > 0:
+                    logger.trace(f'[{SquadMember.id}] {SquadMember.name} (sees:{CreaturesCount})')
+                    CreaturesUnduplicated.extend(list(CreaturesSeen))
+                # We do the job for Corpses
+                CorpsesSeen = CorpseDocument.objects(query_view)
+                CorpsesCount = CorpsesSeen.count()
+                if CorpsesCount > 0:
+                    logger.trace(f'[{SquadMember.id}] {SquadMember.name} (sees:{CorpsesCount})')
+                    CorpsesUnduplicated.extend(list(CorpsesSeen))
+                # We do the job for Resources
+                ResourcesSeen = ResourceDocument.objects(query_view)
+                ResourcesCount = ResourcesSeen.count()
+                if ResourcesCount > 0:
+                    logger.trace(f'[{SquadMember.id}] {SquadMember.name} (sees:{ResourcesCount})')
+                    ResourcesUnduplicated.extend(list(ResourcesSeen))
+
+            # Use a dictionary to remove duplicates based on the _id field
+            Creatures = {Creature._id: Creature for Creature in CreaturesUnduplicated}.values()
+            Corpses = {Corpse._id: Corpse for Corpse in CorpsesUnduplicated}.values()
+            Resources = {Resource._id: Resource for Resource in ResourcesUnduplicated}.values()
+        except Exception as e:
+            msg = (f'{g.h} Squad({g.Creature.squad.id}) View Query KO [{e}]')
+            logger.error(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+    else:
+        # Creature not in a squad
+        try:
+            range = 4 + round(g.Creature.stats.total.p / 50)
+            query_view = (
+                Q(instance=g.Creature.instance) &
+                Q(x__gte=g.Creature.x - range) &
+                Q(x__lte=g.Creature.x + range) &
+                Q(y__gte=g.Creature.y - range) &
+                Q(y__lte=g.Creature.y + range)
+                )
+
+            Creatures = CreatureDocument.objects(query_view)
+            Corpses = CorpseDocument.objects(query_view)
+            Resources = ResourceDocument.objects(query_view)
+        except Exception as e:
+            msg = f'{g.h} View Query KO [{e}]'
+            logger.error(msg)
+            return jsonify(
+                {
+                    "success": False,
+                    "msg": msg,
+                    "payload": None,
+                }
+            ), 200
+
+    msg = f'{g.h} View Query OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": {
+                "creatures": [Creature.to_mongo() for Creature in Creatures],
+                "corpses": [Corpse.to_mongo() for Corpse in Corpses],
+                "resources": [Resource.to_mongo() for Resource in Resources],
+            },
+        }
+    ), 200
