@@ -3,87 +3,14 @@
 import json
 import requests
 
-from variables import (API_URL,
-                       AUTH_PAYLOAD,
-                       CREATURE_ID,
-                       CREATURE_NAME,
-                       )
+from variables import (
+    API_URL,
+    CREATURE_ID,
+    CREATURE_NAME,
+    access_token_get,
+    )
 
-
-def test_singouins_mypc_instance_create():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/instance'  # PUT
-    payload  = {"mapid": 1,
-                "hardcore": True,
-                "fast": False,
-                "public": True}
-    response = requests.put(url, json=payload, headers=headers)
-
-    assert response.status_code == 201
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_mypc_instance_get():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
-    # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-
-    url      = f"{API_URL}/mypc/{CREATURE_ID}/instance/{pc['instance']}"  # GET
-    response = requests.get(url, headers=headers)
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_mypc_instance_leave():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
-    # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-
-    url      = f"{API_URL}/mypc/{CREATURE_ID}/instance/{pc['instance']}/leave"  # POST # noqa
-    response = requests.post(url, headers=headers)
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_mypc_instance_join():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
-    # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-    assert pc['instance'] is None
-
-    # We create a PJTestInstanceJoin
-    url = f'{API_URL}/mypc'  # POST
-    payload_c = {
+PJTEST_BODY = {
         'name': 'PJTestInstanceJoin',
         'gender': True,
         'race': 2,
@@ -107,42 +34,114 @@ def test_singouins_mypc_instance_join():
             }
         }
     }
-    response = requests.post(url, json=payload_c, headers=headers)
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
-    # We need the PC (name:PJTestInstanceJoin)
-    target   = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
 
-    # PJTestInstanceJoin creates an instance
-    url      = f"{API_URL}/mypc/{target['id']}/instance"  # PUT
-    payload  = {"mapid": 1,
-                "hardcore": True,
-                "fast": False,
-                "public": True}
-    response = requests.put(url, json=payload, headers=headers)
-
-    instanceid = json.loads(response.text)['payload']['id']
+def test_singouins_mypc_instance_create():
+    response  = requests.put(
+        f'{API_URL}/mypc/{CREATURE_ID}/instance',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json={"mapid": 1, "hardcore": True, "fast": False, "public": True}
+        )
 
     assert response.status_code == 201
     assert json.loads(response.text)['success'] is True
+
+
+def test_singouins_mypc_instance_get():
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+
+    response = requests.get(
+        f"{API_URL}/mypc/{CREATURE_ID}/instance/{pc['instance']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+
+
+def test_singouins_mypc_instance_leave():
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/instance/{pc['instance']}/leave",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+
+
+def test_singouins_mypc_instance_join():
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
+    # We need the PC (name:PJTest)
+    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+    assert 'instance' not in pc
+
+    # We create a PJTestInstanceJoin
+    response = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=PJTEST_BODY,
+        )
+
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
+    # We need the PC (name:PJTestInstanceJoin)
+    target = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
+
+    # PJTestInstanceJoin creates an instance
+    response  = requests.put(
+        f"{API_URL}/mypc/{target['_id']}/instance",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json={"mapid": 1, "hardcore": True, "fast": False, "public": True}
+        )
+
+    assert response.status_code == 201
+    assert json.loads(response.text)['success'] is True
+
+    instanceid = json.loads(response.text)['payload']['_id']
     assert instanceid is not None
 
     # We join PJTestInstanceJoin instance
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/instance/{instanceid}/join'  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/instance/{instanceid}/join",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
     # We check that we are linked in the instance
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-    pcjoin   = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
+    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+    pcjoin = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
@@ -150,21 +149,25 @@ def test_singouins_mypc_instance_join():
     assert pcjoin['instance'] == instanceid
 
     # We leave the instance with PJTest
-    url      = f"{API_URL}/mypc/{CREATURE_ID}/instance/{instanceid}/leave"  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/instance/{instanceid}/leave",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
     # We check that we are not linked in the instance anymore
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-    pcjoin   = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
+    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+    pcjoin = [x for x in pcs if x['name'] == 'PJTestInstanceJoin'][0]
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
-    assert pc['instance'] is None
+    assert 'instance' not in pc
     assert pcjoin['instance'] == instanceid

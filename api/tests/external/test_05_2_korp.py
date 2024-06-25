@@ -3,13 +3,14 @@
 import json
 import requests
 
-from variables import (AUTH_PAYLOAD,
-                       API_URL,
-                       CREATURE_ID,
-                       )
+from variables import (
+    API_URL,
+    CREATURE_ID,
+    access_token_get,
+    )
 
 # To reuse in many calls
-payload_pjtest = {
+PJTEST_BODY = {
     'name': 'PJTestKorpInvite',
     'gender': True,
     'race': 2,
@@ -33,17 +34,15 @@ payload_pjtest = {
         }
     }
 }
+KORP_BODY = {"name": 'KorpTest'}
 
 
 def test_singouins_korp_create():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url       = f'{API_URL}/mypc/{CREATURE_ID}/korp'  # POST
-    payload_s = {"name": 'KorpTest'}
-    response  = requests.post(url, json=payload_s, headers=headers)
+    response = requests.post(
+        f'{API_URL}/mypc/{CREATURE_ID}/korp',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=KORP_BODY,
+        )
 
     assert response.status_code == 201
     assert json.loads(response.text)['success'] is True
@@ -51,282 +50,324 @@ def test_singouins_korp_create():
 
 
 def test_singouins_korp_get():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
 
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}'  # GET
-    response = requests.get(url, headers=headers)
+    response = requests.get(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{pc['korp']['id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
+
     members = json.loads(response.text)['payload']['members']
     # We need the PC (name:PJTest)
     pc  = [x for x in members if x['name'] == 'PJTest'][0]
-    assert pc['korp_rank'] == 'Leader'
+    assert pc['korp']['rank'] == 'Leader'
     assert 'Korp Query OK' in json.loads(response.text)['msg']
 
 
 def test_singouins_korp_invite():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
+    korpid  = pc['korp']['id']
 
     # We create a PJTestKorpInvite
-    payload_pjtest['name'] = 'PJTestKorpInvite'
+    PJTEST_BODY['name'] = 'PJTestKorpInvite'
 
-    url      = f'{API_URL}/mypc'  # POST
-    response = requests.post(url, json=payload_pjtest, headers=headers)
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=PJTEST_BODY,
+        )
+
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTestKorpInvite)
-    target   = [x for x in pcs if x['name'] == 'PJTestKorpInvite'][0]
-    targetid = target['id']
-
+    target = [x for x in pcs if x['name'] == 'PJTestKorpInvite'][0]
     # We invite PJTestKorpInvite
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp invite OK' in json.loads(response.text)['msg']
 
     # We cleanup the PJTestKorpInvite
-    url      = f'{API_URL}/mypc/{targetid}'  # DELETE
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(
+        f"{API_URL}/mypc/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_korp_kick():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
+    korpid  = pc['korp']['id']
 
     # We create a PJTestKorpKick
-    payload_pjtest['name'] = 'PJTestKorpInvite'
+    PJTEST_BODY['name'] = 'PJTestKorpInvite'
 
-    url      = f'{API_URL}/mypc'  # POST
-    response = requests.post(url, json=payload_pjtest, headers=headers)
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=PJTEST_BODY,
+        )
+
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTestKorpInvite)
-    target   = [x for x in pcs if x['name'] == 'PJTestKorpInvite'][0]
-    targetid = target['id']
+    target = [x for x in pcs if x['name'] == 'PJTestKorpInvite'][0]
 
     # We invite PJTestKorpKick
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp invite OK' in json.loads(response.text)['msg']
 
     # We kick PJTestKorpKick
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/kick/{targetid}'  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/kick/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp kick OK' in json.loads(response.text)['msg']
 
     # We cleanup the PJTestKorpKick
-    url      = f'{API_URL}/mypc/{targetid}'  # DELETE
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(
+        f"{API_URL}/mypc/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_korp_accept():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
+    korpid  = pc['korp']['id']
 
     # We create a PJTestKorpAccept
-    payload_pjtest['name'] = 'PJTestKorpAccept'
-
-    url      = f'{API_URL}/mypc'  # POST
-    response = requests.post(url, json=payload_pjtest, headers=headers)
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    PJTEST_BODY['name'] = 'PJTestKorpAccept'
+    response = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=PJTEST_BODY,
+        )
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTestKorpAccept)
-    target   = [x for x in pcs if x['name'] == 'PJTestKorpAccept'][0]
-    targetid = target['id']
+    target = [x for x in pcs if x['name'] == 'PJTestKorpAccept'][0]
 
     # We invite PJTestKorpAccept
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST# noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp invite OK' in json.loads(response.text)['msg']
 
     # PJTestKorpAccept accepts the request
-    url      = f'{API_URL}/mypc/{targetid}/korp/{korpid}/accept'  # POST
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{target['_id']}/korp/{korpid}/accept",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp accept OK' in json.loads(response.text)['msg']
 
     # We cleanup the PJTestKorpAccept
-    url      = f'{API_URL}/mypc/{targetid}'  # DELETE
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(
+        f"{API_URL}/mypc/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_korp_decline():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
+    korpid  = pc['korp']['id']
 
     # We create a PJTestKorpDecline
-    payload_pjtest['name'] = 'PJTestKorpDecline'
+    PJTEST_BODY['name'] = 'PJTestKorpDecline'
 
-    url      = f'{API_URL}/mypc'  # POST
-    response = requests.post(url, json=payload_pjtest, headers=headers)
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=PJTEST_BODY,
+        )
+
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTestKorpAccept)
-    target   = [x for x in pcs if x['name'] == 'PJTestKorpDecline'][0]
-    targetid = target['id']
+    target = [x for x in pcs if x['name'] == 'PJTestKorpDecline'][0]
 
     # We invite PJTestKorpDecline
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp invite OK' in json.loads(response.text)['msg']
 
     # PJTestKorpDecline declines the request
-    url      = f'{API_URL}/mypc/{targetid}/korp/{korpid}/decline'  # POST
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{target['_id']}/korp/{korpid}/decline",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp decline OK' in json.loads(response.text)['msg']
 
     # We cleanup the PJTestKorpDecline
-    url      = f'{API_URL}/mypc/{targetid}'  # DELETE
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(
+        f"{API_URL}/mypc/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_korp_leave():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
-
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
+    korpid  = pc['korp']['id']
 
     # We create a PJTestKorpLeave
-    payload_pjtest['name'] = 'PJTestKorpLeave'
+    PJTEST_BODY['name'] = 'PJTestKorpLeave'
 
-    url      = f'{API_URL}/mypc'  # POST
-    response = requests.post(url, json=payload_pjtest, headers=headers)
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    response = requests.post(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        json=PJTEST_BODY,
+        )
+
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTestKorpAccept)
-    target   = [x for x in pcs if x['name'] == 'PJTestKorpLeave'][0]
-    targetid = target['id']
+    target = [x for x in pcs if x['name'] == 'PJTestKorpLeave'][0]
 
     # We invite PJTestKorpLeave
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{targetid}'  # POST # noqa
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}/invite/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp invite OK' in json.loads(response.text)['msg']
 
     # PJTestKorpLeave leave the request
-    url      = f'{API_URL}/mypc/{targetid}/korp/{korpid}/leave'  # POST
-    response = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{target['_id']}/korp/{korpid}/leave",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
     assert 'Korp leave OK' in json.loads(response.text)['msg']
 
     # We cleanup the PJTestKorpLeave
-    url      = f'{API_URL}/mypc/{targetid}'  # DELETE
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(
+        f"{API_URL}/mypc/{target['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
 
 def test_singouins_korp_delete():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
+    response = requests.get(
+        f'{API_URL}/mypc',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
-    url      = f'{API_URL}/mypc'  # GET
-    response = requests.get(url, headers=headers)
-    pcs      = json.loads(response.text)['payload']
+    assert response.status_code == 200
+    assert json.loads(response.text)['success'] is True
+
+    pcs = json.loads(response.text)['payload']
     # We need the PC (name:PJTest)
-    pc       = [x for x in pcs if x['name'] == 'PJTest'][0]
-    korpid   = pc['korp']
+    pc = [x for x in pcs if x['name'] == 'PJTest'][0]
 
-    url      = f'{API_URL}/mypc/{CREATURE_ID}/korp/{korpid}'  # DELETE
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(
+        f"{API_URL}/mypc/{CREATURE_ID}/korp/{pc['korp']['id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True

@@ -4,31 +4,29 @@ import json
 import requests
 
 from variables import (
-    AUTH_PAYLOAD,
     API_URL,
     CREATURE_ID,
+    access_token_get,
     )
 
 
 def test_singouins_profession_recycling():
-    url      = f'{API_URL}/auth/login'  # POST
-    response = requests.post(url, json=AUTH_PAYLOAD)
-    token    = json.loads(response.text)['access_token']
-    headers  = {"Authorization": f"Bearer {token}"}
+    response = requests.get(
+        f'{API_URL}/mypc/{CREATURE_ID}/item',
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
 
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/item'  # GET
-    response   = requests.get(url, headers=headers)
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
 
-    weapons    = json.loads(response.text)['payload']['weapon']
-    # We know one weapon is in holster (bc of precedent tests on items)
-    holster    = json.loads(response.text)['payload']['equipment']['holster']
-    # So we need the other one
-    weapon     = [x for x in weapons if x['id'] != holster][0]
-    itemuuid   = weapon['id']
+    weapons = json.loads(response.text)['payload']['weapon']
+    # We need the Machette à bananes (metaid:11)
+    weapon = [x for x in weapons if x['metaid'] == 11][0]
 
-    url        = f'{API_URL}/mypc/{CREATURE_ID}/action/profession/recycling/{itemuuid}'  # POST
-    response   = requests.post(url, headers=headers)
+    response = requests.post(
+        f"{API_URL}/mypc/{CREATURE_ID}/action/profession/recycling/{weapon['_id']}",
+        headers={"Authorization": f"Bearer {access_token_get()}"},
+        )
+
     assert response.status_code == 200
     assert json.loads(response.text)['success'] is True
