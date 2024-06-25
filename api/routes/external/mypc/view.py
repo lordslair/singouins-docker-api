@@ -23,7 +23,7 @@ from utils.decorators import (
 @check_creature_exists
 def view_get(creatureuuid):
 
-    if hasattr(g.Creature, 'instance'):
+    if g.Creature.instance:
         logger.trace(f'{g.h} Creature in an Instance:{g.Creature.instance}')
     else:
         # Creature is not in an instance, view is empty

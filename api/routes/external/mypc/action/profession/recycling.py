@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
-from datetime import datetime
+import datetime
+
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
@@ -69,7 +70,7 @@ def recycling(creatureuuid, itemuuid):
     # We INCR the Profession accordingly
     if count >= 1:
         profession_update_query = {
-            f'inc__profession__{PROFESSION_NAME}': count,
+            f'inc__{PROFESSION_NAME}': count,
             "set__updated": datetime.datetime.utcnow(),
             }
         Profession.update(**profession_update_query)
@@ -112,7 +113,7 @@ def recycling(creatureuuid, itemuuid):
     # We add the resources in the Satchel
     Satchel = SatchelDocument.objects(_id=creatureuuid).get()
     satchel_update_query = {
-        f"inc__shard__{g.Item.rarity}": shards_qty,
+        f"inc__shard__{g.Item.rarity.lower()}": shards_qty,
         "set__updated": datetime.datetime.utcnow(),
         }
     Satchel.update(**satchel_update_query)
@@ -120,11 +121,10 @@ def recycling(creatureuuid, itemuuid):
     # We consume the PA
     RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
 
-    if g.Item.destroy():
-        pass
+    if g.Item.delete():
+        logger.debug(f'{g.h} Item destroy OK')
     else:
-        msg = f'{g.h} Item destroy KO'
-        logger.warning(msg)
+        logger.warning(f'{g.h} Item destroy KO')
 
     # We're done
     msg = f'{g.h} Profession ({PROFESSION_NAME}) Query OK'

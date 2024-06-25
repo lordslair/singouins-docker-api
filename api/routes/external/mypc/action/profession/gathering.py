@@ -7,6 +7,7 @@ from loguru import logger
 from random import choices
 
 from mongo.models.Highscore import HighscoreDocument
+from mongo.models.Profession import ProfessionDocument
 from mongo.models.Resource import ResourceDocument
 
 from nosql.models.RedisPa import RedisPa
@@ -50,22 +51,28 @@ def gathering(creatureuuid, resourceuuid):
             }
         ), 200
 
+    Profession = ProfessionDocument.objects(_id=creatureuuid).get()
+
     # We calculate the amount of Profession points acquired
     # You CANNOT get more than 1 point
     # You CAN have 0 points if you are already skilled enough and learned nothing
-    if 100 <= g.Profession.gathering:         # 100+
+    if 100 <= Profession.gathering:         # 100+
         pass
-    elif 75 <= g.Profession.gathering < 100:  # 75-99
+    elif 75 <= Profession.gathering < 100:  # 75-99
         count = choices([0, 1], weights=[70, 30])[0]
-    elif 50 <= g.Profession.gathering < 75:   # 50-74
+    elif 50 <= Profession.gathering < 75:   # 50-74
         count = choices([0, 1], weights=[60, 40])[0]
-    elif 25 <= g.Profession.gathering < 50:   # 25-49
+    elif 25 <= Profession.gathering < 50:   # 25-49
         count = choices([0, 1], weights=[50, 50])[0]
-    elif g.Profession.gathering < 25:         # 0-24
+    elif Profession.gathering < 25:         # 0-24
         count = 1
     # We INCR the Profession accordingly
     if count >= 1:
-        g.Profession.incr(PROFESSION_NAME, count=count)
+        profession_update_query = {
+            f'inc__{PROFESSION_NAME}': count,
+            "set__updated": datetime.datetime.utcnow(),
+            }
+        Profession.update(**profession_update_query)
 
     """
     We cap possible gathered resources to Resource.rarity
@@ -92,7 +99,7 @@ def gathering(creatureuuid, resourceuuid):
     rarity = choices(rarity_array, k=1)[0]
     quantity = max(
         0,
-        1 + round(g.Profession.gathering/20 - rarity_array.index(rarity))
+        1 + round(Profession.gathering/20 - rarity_array.index(rarity))
         )
 
     # We set the HighScores

@@ -21,7 +21,7 @@ from utils.decorators import (
 def statuses_get(creatureuuid):
     try:
         Statuses = RedisSearch().status(
-            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{str(g.Creature.id).replace('-', ' ')}"
             )
     except Exception as e:
         msg = f'{g.h} Statuses Query KO [{e}]'
@@ -41,10 +41,8 @@ def statuses_get(creatureuuid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "statuses": [
-                        Status.as_dict() for Status in Statuses.results
-                        ],
-                    "creature": g.Creature.as_dict(),
+                    "statuses": [Status.as_dict() for Status in Statuses.results],
+                    "creature": g.Creature.to_mongo(),
                     },
             }
         ), 200

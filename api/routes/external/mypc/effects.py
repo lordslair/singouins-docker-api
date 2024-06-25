@@ -21,7 +21,7 @@ from utils.decorators import (
 def effects_get(creatureuuid):
     try:
         Effects = RedisSearch().effect(
-            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{str(g.Creature.id).replace('-', ' ')}"
             )
     except Exception as e:
         msg = f'{g.h} Effects Query KO [{e}]'
@@ -41,10 +41,8 @@ def effects_get(creatureuuid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "effects": [
-                        Effect.as_dict() for Effect in Effects.results
-                        ],
-                    "creature": g.Creature.as_dict(),
+                    "effects": [Effect.as_dict() for Effect in Effects.results],
+                    "creature": g.Creature.to_mongo(),
                     },
             }
         ), 200

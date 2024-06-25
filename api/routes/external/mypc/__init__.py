@@ -266,6 +266,7 @@ def mypc_add():
             try:
                 newProfession = ProfessionDocument(
                     _id=Creature.id,
+                    recycling=0,
                 )
                 newProfession.save()
             except Exception as e:

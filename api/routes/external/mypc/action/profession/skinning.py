@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
-from datetime import datetime
+
+import datetime
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
@@ -83,7 +84,7 @@ def skinning(creatureuuid, resourceuuid):
     # We INCR the Profession accordingly
     if count >= 1:
         profession_update_query = {
-            f'inc__profession__{PROFESSION_NAME}': count,
+            f'inc__{PROFESSION_NAME}': count,
             "set__updated": datetime.datetime.utcnow(),
             }
         Profession.update(**profession_update_query)

@@ -69,9 +69,8 @@ def unequip(creatureuuid, type, slotname, itemuuid):
         g.Creature.save()
 
     # We put the info in queue for ws
-    yqueue_put(
-        YQ_BROADCAST,
-        {
+    try:
+        qmsg = {
             "ciphered": False,
             "payload": g.Creature.to_mongo(),
             "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
@@ -80,7 +79,10 @@ def unequip(creatureuuid, type, slotname, itemuuid):
                 "scope": 'broadcast',
                 },
             }
-        )
+        yqueue_put(YQ_BROADCAST, jsonify(qmsg).get_data(as_text=True))
+    except Exception as e:
+        msg = (f'{g.h} Equip Queue KO [{e}]')
+        logger.error(msg)
 
     msg = f'{g.h} Unequip OK'
     logger.debug(msg)
@@ -91,7 +93,7 @@ def unequip(creatureuuid, type, slotname, itemuuid):
             "payload": {
                 "red": RedisPa(creatureuuid=creatureuuid).redpa,
                 "blue": RedisPa(creatureuuid=creatureuuid).bluepa,
-                "equipment": g.Creature.to_mongo(),
+                "creature": g.Creature.to_mongo(),
             },
         }
     ), 200

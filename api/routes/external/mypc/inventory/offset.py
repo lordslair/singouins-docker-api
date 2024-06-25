@@ -2,9 +2,9 @@
 
 import datetime
 
-from flask                      import g, jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
+from flask import g, jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
 
 from mongo.models.Item import ItemDocument
 
@@ -17,7 +17,7 @@ from utils.decorators import (
 #
 # Routes /mypc/<uuid:creatureuuid>/inventory/*
 #
-# API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset/<int:offsetx>/<int:offsety> # noqa
+# API: POST /mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset/<int:offsetx>/<int:offsety> # noqa E501
 @jwt_required()
 # Custom decorators
 @check_creature_exists
@@ -51,7 +51,7 @@ def offset(creatureuuid, itemuuid, offsetx=None, offsety=None):
             "msg": msg,
             "payload": {
                 "armor": [Item.to_mongo() for Item in Items if Item.metatype == 'armor'],
-                "equipment": g.Creature.to_mongo(),
+                "creature": g.Creature.to_mongo(),
                 "weapon": [Item.to_mongo() for Item in Items if Item.metatype == 'weapon'],
             },
         }

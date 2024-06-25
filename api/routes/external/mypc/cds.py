@@ -21,7 +21,7 @@ from utils.decorators import (
 def cds_get(creatureuuid):
     try:
         Cds = RedisSearch().cd(
-            query=f"@bearer:{g.Creature.id.replace('-', ' ')}"
+            query=f"@bearer:{str(g.Creature.id).replace('-', ' ')}"
             )
     except Exception as e:
         msg = f'{g.h} Cds Query KO [{e}]'
@@ -41,10 +41,8 @@ def cds_get(creatureuuid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "cds": [
-                        Cd.as_dict() for Cd in Cds.results
-                        ],
-                    "creature": g.Creature.as_dict(),
+                    "cds": [Cd.as_dict() for Cd in Cds.results],
+                    "creature": g.Creature.to_mongo(),
                     },
             }
         ), 200

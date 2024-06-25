@@ -62,7 +62,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the holster
                 g.Creature.slots.holster = CreatureSlot(
-                    _id=g.Item.id,
+                    id=g.Item.id,
                     metaid=g.Item.metaid,
                     metatype=g.Item.metatype,
                     )
@@ -84,7 +84,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
                     if equippedMeta['onehanded'] is True:
                         # A 1H weapons is in RH : we replace
                         g.Creature.slots.righthand = CreatureSlot(
-                            _id=g.Item.id,
+                            id=g.Item.id,
                             metaid=g.Item.metaid,
                             metatype=g.Item.metatype,
                             )
@@ -92,7 +92,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
                         # A 2H weapons is in RH & LH
                         # We replace RH and clean LH
                         g.Creature.slots.righthand = CreatureSlot(
-                            _id=g.Item.id,
+                            id=g.Item.id,
                             metaid=g.Item.metaid,
                             metatype=g.Item.metatype,
                             )
@@ -101,12 +101,12 @@ def equip(creatureuuid, type, slotname, itemuuid):
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
                     g.Creature.slots.righthand = CreatureSlot(
-                        _id=g.Item.id,
+                        id=g.Item.id,
                         metaid=g.Item.metaid,
                         metatype=g.Item.metatype,
                         )
                     g.Creature.slots.lefthand = CreatureSlot(
-                        _id=g.Item.id,
+                        id=g.Item.id,
                         metaid=g.Item.metaid,
                         metatype=g.Item.metatype,
                         )
@@ -115,7 +115,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
                 # We equip a 1H weapon
                 if int(sizex) * int(sizey) <= 6:
                     g.Creature.slots.righthand = CreatureSlot(
-                        _id=g.Item.id,
+                        id=g.Item.id,
                         metaid=g.Item.metaid,
                         metatype=g.Item.metatype,
                         )
@@ -123,12 +123,12 @@ def equip(creatureuuid, type, slotname, itemuuid):
                 if int(sizex) * int(sizey) > 6:
                     # It is a 2H weapon: it fits inside the RH & LH
                     g.Creature.slots.righthand = CreatureSlot(
-                        _id=g.Item.id,
+                        id=g.Item.id,
                         metaid=g.Item.metaid,
                         metatype=g.Item.metatype,
                         )
                     g.Creature.slots.lefthand = CreatureSlot(
-                        _id=g.Item.id,
+                        id=g.Item.id,
                         metaid=g.Item.metaid,
                         metatype=g.Item.metatype,
                         )
@@ -136,7 +136,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
             if int(sizex) * int(sizey) <= 4:
                 # It fits inside the left hand
                 g.Creature.slots.lefthand = CreatureSlot(
-                    _id=g.Item.id,
+                    id=g.Item.id,
                     metaid=g.Item.metaid,
                     metatype=g.Item.metatype,
                     )
@@ -155,7 +155,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
                 g.Creature.slots,
                 slotname,
                 CreatureSlot(
-                    _id=g.Item.id,
+                    id=g.Item.id,
                     metaid=g.Item.metaid,
                     metatype=g.Item.metatype,
                     )
@@ -179,9 +179,8 @@ def equip(creatureuuid, type, slotname, itemuuid):
     RedisPa(creatureuuid=creatureuuid).consume(redpa=PA_COST_BLUE)
 
     # We put the info in queue for ws
-    yqueue_put(
-        YQ_BROADCAST,
-        {
+    try:
+        qmsg = {
             "ciphered": False,
             "payload": g.Creature.to_mongo(),
             "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
@@ -190,7 +189,10 @@ def equip(creatureuuid, type, slotname, itemuuid):
                 "scope": 'broadcast',
                 },
             }
-        )
+        yqueue_put(YQ_BROADCAST, jsonify(qmsg).get_data(as_text=True))
+    except Exception as e:
+        msg = (f'{g.h} Equip Queue KO [{e}]')
+        logger.error(msg)
 
     # JOB IS DONE
     msg = f'{g.h} Equip Query OK'
@@ -202,7 +204,7 @@ def equip(creatureuuid, type, slotname, itemuuid):
             "payload": {
                 "red": RedisPa(creatureuuid=creatureuuid).redpa,
                 "blue": RedisPa(creatureuuid=creatureuuid).bluepa,
-                "equipment": g.Creature.to_mongo(),
+                "creature": g.Creature.to_mongo(),
             },
         }
     ), 200
