@@ -22,7 +22,7 @@ charset-normalizer==3.3.2
     # via
     #   aiohttp
     #   requests
-dnspython==2.4.2
+dnspython==2.6.1
     # via
     #   email-validator
     #   pymongo
