@@ -55,7 +55,7 @@ oauthlib==3.2.2
     #   requests-oauthlib
 pillow==10.3.0
     # via -r requirements.in
-py-cord==2.4.1
+py-cord==2.5.0
     # via -r requirements.in
 pyasn1==0.5.1
     # via
