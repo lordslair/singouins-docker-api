@@ -13,14 +13,9 @@ sys.path.append(LOCAL_PATH)
 from mongo.models.Creature import CreatureDocument  # noqa: E402
 from mongo.models.Item import ItemDocument  # noqa: E402
 from mongo.models.User import UserDocument  # noqa: E402
-from nosql.metas import metaNames  # noqa: E402
 
 CREATURE_NAME = 'PyTest Creature'
 CREATURE_ID = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))
-
-ITEM_META_TYPE = 'weapon'
-ITEM_META_ID = 32
-ITEM_META = metaNames[ITEM_META_TYPE][ITEM_META_ID]
 
 USER_NAME = 'user@exemple.net'
 USER_ID = str(uuid.uuid3(uuid.NAMESPACE_DNS, USER_NAME))

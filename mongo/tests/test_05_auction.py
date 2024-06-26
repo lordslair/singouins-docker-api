@@ -11,7 +11,13 @@ sys.path.append(LOCAL_PATH)
 from mongo.models.Auction import AuctionDocument, AuctionItem, AuctionSeller  # noqa: E402
 from mongo.models.Creature import CreatureDocument  # noqa: E402
 from mongo.models.Item import ItemDocument  # noqa: E402
-from nosql.metas import metaNames  # noqa: E402
+from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon  # noqa: E402
+
+metaNames = {
+    'armor': [doc.to_mongo().to_dict() for doc in MetaArmor.objects()],
+    'weapon': [doc.to_mongo().to_dict() for doc in MetaWeapon.objects()],
+    'race': [doc.to_mongo().to_dict() for doc in MetaRace.objects()]
+}
 
 CREATURE_NAME = 'PyTest Creature'
 CREATURE_ID = str(uuid.uuid3(uuid.NAMESPACE_DNS, CREATURE_NAME))

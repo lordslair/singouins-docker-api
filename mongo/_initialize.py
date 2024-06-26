@@ -7,7 +7,7 @@ from loguru import logger
 
 from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
 
-# Metafiles location for Redis init
+# Metafiles location for Mongo init
 META_FILES = {
     'armor': 'mongo/data/metas/armors.json',
     'consumable': 'mongo/data/metas/consumables.json',
