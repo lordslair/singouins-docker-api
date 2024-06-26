@@ -14,7 +14,7 @@ loguru==0.7.2
     # via -r requirements.in
 redis==5.0.1
     # via yarqueue
-requests==2.32.2
+requests==2.32.3
     # via -r requirements.in
 strenum==0.4.15
     # via yarqueue
