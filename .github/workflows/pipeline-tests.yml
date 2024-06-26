@@ -106,9 +106,12 @@ jobs:
     - name: Test with PyTest ⚙️
       env:
           LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
+
+          MONGO_HOST: ${{ vars.MONGO_HOST }}
+          MONGO_PASS: ${{ secrets.MONGO_PASS }}
       run: |
         echo "--- Starting PyTest"
-        pytest mongo/tests/test_*.py
+        pytest mongo/tests
 
 
   app-pytest:
