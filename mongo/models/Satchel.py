@@ -123,5 +123,5 @@ class SatchelDocument(Document):
     meta = {
         'collection': 'satchels',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

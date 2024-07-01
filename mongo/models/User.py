@@ -56,4 +56,6 @@ class UserDocument(Document):
 
     meta = {
         'collection': 'users',
+        'indexes': [],
+        'uuid_representation': 'standard'
         }

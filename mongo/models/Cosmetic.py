@@ -75,5 +75,5 @@ class CosmeticDocument(Document):
     meta = {
         'collection': 'cosmetics',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

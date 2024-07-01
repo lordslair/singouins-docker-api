@@ -86,5 +86,5 @@ class AuctionDocument(Document):
         'indexes': [
             {'fields': ['created'], 'expireAfterSeconds': 172800}  # == 48 hours
         ],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

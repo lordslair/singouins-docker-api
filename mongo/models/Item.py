@@ -60,5 +60,5 @@ class ItemDocument(Document):
     meta = {
         'collection': 'items',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

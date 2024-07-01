@@ -112,4 +112,6 @@ class HighscoreDocument(Document):
 
     meta = {
         'collection': 'highscores',
+        'indexes': [],
+        'uuid_representation': 'standard'
         }

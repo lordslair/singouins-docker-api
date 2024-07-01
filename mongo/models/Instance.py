@@ -49,5 +49,5 @@ class InstanceDocument(Document):
     meta = {
         'collection': 'instances',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

@@ -40,5 +40,5 @@ class ProfessionDocument(Document):
     meta = {
         'collection': 'professions',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

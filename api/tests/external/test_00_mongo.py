@@ -38,7 +38,7 @@ MONGO_URI = '%s://%s:%s@%s/%s?authSource=admin%s%s' % (
 
 
 def test_singouins_mongo_connection():
-    connect(host=MONGO_URI)
+    connect(host=MONGO_URI, uuidRepresentation='standard')
     db = get_db('default')
 
     assert db.command("ping")

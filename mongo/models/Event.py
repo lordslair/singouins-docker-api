@@ -57,7 +57,7 @@ class EventDocument(Document):
         'indexes': [
             {'fields': ['created'], 'expireAfterSeconds': 2592000}  # ~= 1 month
         ],
-        'uuid_representation': 'pythonLegacy'  # Specify the uuid_representation globally
+        'uuid_representation': 'standard'
     }
 
 

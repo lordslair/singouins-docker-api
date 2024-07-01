@@ -188,5 +188,5 @@ class CreatureDocument(Document):
     meta = {
         'collection': 'creatures',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

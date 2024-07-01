@@ -62,5 +62,5 @@ class ResourceDocument(Document):
     meta = {
         'collection': 'resources',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

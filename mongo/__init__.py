@@ -36,7 +36,7 @@ MONGO_URI = '%s://%s:%s@%s/%s?authSource=admin%s%s' % (
     MONGO_STLS,
     )
 
-connect(host=MONGO_URI)
+connect(host=MONGO_URI, uuidRepresentation='standard')
 
 # Load all Meta in DB
 initialize_mongodb_meta()

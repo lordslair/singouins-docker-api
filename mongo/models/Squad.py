@@ -38,5 +38,5 @@ class SquadDocument(Document):
     meta = {
         'collection': 'squads',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

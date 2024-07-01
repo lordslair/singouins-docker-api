@@ -66,5 +66,5 @@ class CorpseDocument(Document):
     meta = {
         'collection': 'corpses',
         'indexes': [],
-        'uuid_representation': 'pythonLegacy'
+        'uuid_representation': 'standard'
     }

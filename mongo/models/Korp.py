@@ -37,4 +37,8 @@ class KorpDocument(Document):
     name = StringField(binary=False, required=True)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
+    meta = {
         'collection': 'korps',
+        'indexes': [],
+        'uuid_representation': 'standard'
+    }
