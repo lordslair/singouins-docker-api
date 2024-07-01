@@ -26,7 +26,7 @@ dnspython==2.6.1
     # via
     #   email-validator
     #   pymongo
-email-validator==2.1.1
+email-validator==2.2.0
     # via -r requirements.in
 frozenlist==1.4.1
     # via
