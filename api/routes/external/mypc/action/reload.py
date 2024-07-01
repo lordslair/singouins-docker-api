@@ -6,7 +6,6 @@ from flask                      import g, jsonify
 from flask_jwt_extended         import jwt_required
 from loguru                     import logger
 
-from nosql.metas                import metaNames
 from nosql.models.RedisPa       import RedisPa
 
 from mongo.models.Satchel import SatchelDocument
@@ -18,6 +17,8 @@ from utils.decorators import (
     check_creature_owned,
     check_creature_pa,
     )
+
+from variables import metaNames
 
 #
 # Action.reload specifics
@@ -38,7 +39,7 @@ PA_COST_BLUE = 2
 @check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
 @check_item_exists
 def reload(creatureuuid, itemuuid):
-    itemmeta = metaNames[g.Item.metatype][g.Item.metaid]
+    itemmeta = [x for x in metaNames[g.Item.metatype] if x['_id'] == g.Item.metaid][0]
     if itemmeta['pas_reload'] is None:
         msg = f'{g.h} Not reloadable'
         logger.warning(msg)

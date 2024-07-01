@@ -7,7 +7,6 @@ from flask_jwt_extended         import (jwt_required,
                                         get_jwt_identity)
 from loguru                     import logger
 
-from nosql.metas import metaNames
 from nosql.models.RedisPa import RedisPa
 
 from mongo.models.Cosmetic import (
@@ -47,6 +46,8 @@ from utils.decorators import (
     check_is_json,
     check_user_exists,
     )
+
+from variables import metaNames
 
 
 #

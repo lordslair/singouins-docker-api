@@ -426,7 +426,7 @@ app.add_url_rule(
 # Routes /map
 #
 app.add_url_rule(
-    '/map/<int:mapid>',
+    '/map/<int:map_id>',
     methods=['GET'],
     view_func=routes.external.map.map_get,
     )

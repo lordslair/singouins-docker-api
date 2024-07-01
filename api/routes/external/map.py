@@ -1,27 +1,32 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
+from flask import jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
 
-from nosql.maps                 import get_map
+from mongo.models.Meta import MetaMap
 
 
 #
 # Routes /map
 #
-# API: GET /map/<int:mapid>
+# API: GET /map/<int:map_id>
 @jwt_required()
-def map_get(mapid):
-    # Pre-flight checks
-    if not isinstance(mapid, int):
-        return jsonify({"success": False,
-                        "msg": f'Map ID should be an integer (mapid:{mapid})',
-                        "payload": None}), 200
+def map_get(map_id):
     try:
-        map = get_map(mapid)
+        Map = MetaMap.objects(_id=map_id)
+    except MetaMap.DoesNotExist:
+        msg = 'MetaMap Query KO (404)'
+        logger.warning(msg)
+        return jsonify(
+            {
+                "success": False,
+                "msg": msg,
+                "payload": None,
+            }
+        ), 200
     except Exception as e:
-        msg = f'Map query KO (mapid:{mapid}) [{e}]'
+        msg = f'Map query KO (map_id:{map_id}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -31,23 +36,12 @@ def map_get(mapid):
             }
         ), 200
     else:
-        if map:
-            msg = f'Map query OK (mapid:{mapid})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": map,
-                }
-            ), 200
-        else:
-            msg = f'Map query KO - Not Found (mapid:{mapid})'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'Map query OK (map_id:{map_id})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": Map.get().to_mongo(),
+            }
+        ), 200

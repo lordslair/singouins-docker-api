@@ -1,80 +1,21 @@
 # -*- coding: utf8 -*-
 
-import json
-import os.path
-
-from loguru                      import logger
-from redis                       import ResponseError
+from loguru import logger
+from redis import ResponseError
 from redis.commands.search.field import NumericField, TextField
 from redis.commands.search.indexDefinition import IndexDefinition
 
-from nosql.connector             import r
-
-from .variables                  import MAP_FILES, META_FILES
+from nosql.connector import r
 
 
 def initialize_redis_config():
     try:
         config = r.config_get(pattern='notify-keyspace-events')
-        if config is None or config != '':
+        if 'notify-keyspace-events' not in config or config['notify-keyspace-events'] == '':
             r.config_set(name='notify-keyspace-events', value='$sxE')
+            logger.debug('Redis init: notify-keyspace-events OK')
     except Exception as e:
         logger.error(f'Redis init: notify-keyspace-events KO [{e}]')
-    else:
-        logger.debug('Redis init: notify-keyspace-events OK')
-
-
-def initialize_redis_meta():
-    try:
-        for meta, file in META_FILES.items():
-            if os.path.exists(file):
-                with open(file) as f:
-                    content = f.read()
-                    logger.debug(f'Redis init: creating system:meta:{meta}')
-                    r.set(f'system:meta:{meta}', content)
-    except Exception as e:
-        logger.error(f'Redis init: KO [{e}]')
-    else:
-        logger.info('Redis init: OK system:meta:*')
-
-    try:
-        for metatype, file in META_FILES.items():
-            metas = json.loads(r.get(f'system:meta:{metatype}'))
-            logger.debug(f'Redis init: creating metas:{metatype}:*')
-            for meta in metas:
-                for k, v in meta.items():
-                    if v is None:
-                        meta[k] = 'None'
-                    elif v is False:
-                        meta[k] = 'False'
-                    elif v is True:
-                        meta[k] = 'True'
-                    elif isinstance(v, dict):
-                        meta[k] = str(v)
-                r.hset(f"metas:{metatype}:{meta['id']}", mapping=meta)
-    except Exception as e:
-        logger.error(f'Redis init: KO [{e}]')
-    else:
-        logger.info('Redis init: OK metas:*')
-
-    try:
-        for map, file in MAP_FILES.items():
-            if os.path.exists(file):
-                with open(file) as f:
-                    content = f.read()
-                    data = json.loads(content)
-                    logger.debug(f'Redis init: creating system:map:{map}')
-                    r.set(f'system:map:{map}:data', content)
-                    r.set(f'system:map:{map}:type', 'Instance')
-                    r.set(f'system:map:{map}:mode', 'Normal')
-                    r.set(
-                        f'system:map:{map}:size',
-                        f"{data['height']}x{data['width']}"
-                        )
-    except Exception as e:
-        logger.error(f'Redis init: KO [{e}]')
-    else:
-        logger.info('Redis init: OK system:map:*')
 
 
 def initialize_redis_indexes():

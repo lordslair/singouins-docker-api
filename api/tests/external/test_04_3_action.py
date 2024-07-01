@@ -22,10 +22,9 @@ def test_singouins_action_unload():
     weapons  = json.loads(response.text)['payload']['weapon']
     # We need the Pistolet (metaid:34)
     weapon   = [x for x in weapons if x['metaid'] == 34][0]
-    itemid   = weapon['_id']
 
     response = requests.post(
-        f'{API_URL}/mypc/{CREATURE_ID}/action/unload/{itemid}',
+        f"{API_URL}/mypc/{CREATURE_ID}/action/unload/{weapon['_id']}",
         headers={"Authorization": f"Bearer {access_token_get()}"},
         )
 

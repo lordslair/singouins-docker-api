@@ -5,7 +5,10 @@ import urllib.parse
 
 from mongoengine import connect
 
-from mongo._initialize import initialize_mongodb_meta
+from mongo._initialize import (
+    initialize_mongodb_map,
+    initialize_mongodb_meta,
+    )
 
 MONGO_BASE = os.environ.get("MONGO_BASE", 'singouins')
 MONGO_HOST = os.environ.get("MONGO_HOST", '127.0.0.1')
@@ -39,4 +42,5 @@ MONGO_URI = '%s://%s:%s@%s/%s?authSource=admin%s%s' % (
 connect(host=MONGO_URI, uuidRepresentation='standard')
 
 # Load all Meta in DB
+initialize_mongodb_map()
 initialize_mongodb_meta()

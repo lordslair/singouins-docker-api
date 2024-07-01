@@ -6,7 +6,6 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.metas import metaNames
 from nosql.queue import yqueue_put
 
 from nosql.models.RedisPa import RedisPa
@@ -19,7 +18,7 @@ from utils.decorators import (
     check_item_exists,
     )
 
-from variables import YQ_BROADCAST
+from variables import metaNames, YQ_BROADCAST
 
 #
 # Inventory.equip specifics
@@ -38,7 +37,7 @@ PA_COST_BLUE = 2
 @check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
 @check_item_exists
 def equip(creatureuuid, type, slotname, itemuuid):
-    itemmeta = metaNames[type][g.Item.metaid]
+    itemmeta = [x for x in metaNames[type] if x['_id'] == g.Item.metaid][0]
     sizex, sizey = itemmeta['size'].split("x")
 
     # Pre-requisite checks

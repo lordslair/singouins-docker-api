@@ -21,18 +21,17 @@ from mongo.models.Creature import (
     CreatureKorp,
 )
 from mongo.models.Instance import InstanceDocument
+from mongo.models.Meta import MetaMap
 
 from nosql.connector import r
-from nosql.maps import get_map
 from nosql.queue import yqueue_put
-from nosql.metas import metaNames
 
 from utils.decorators import (
     check_creature_exists,
     check_is_json,
     )
 
-from variables import YQ_DISCORD
+from variables import metaNames, rarity_array, YQ_DISCORD
 
 
 #
@@ -92,7 +91,9 @@ def add(creatureuuid):
 
     # Check if map related to mapid exists
     try:
-        map = get_map(mapid)
+        Map = MetaMap.objects(_id=mapid).get()
+    except CreatureDocument.DoesNotExist:
+        logger.warning("MetaMap Query KO (404)")
     except Exception as e:
         msg = f'{g.h} Map Query KO (mapid:{mapid}) [{e}]'
         logger.error(msg)
@@ -110,7 +111,7 @@ def add(creatureuuid):
             creator=g.Creature.id,
             fast=fast,
             hardcore=hardcore,
-            map=mapid,
+            map=Map.id,
             public=public,
             )
         newInstance.save()
@@ -150,42 +151,25 @@ def add(creatureuuid):
                 "scope": scope,
                 }
             )
-    # We need to create the mobs to populate the instance
-    (mapx, mapy) = map['size'].split('x')
-    mobs_nbr = 1
-    rarities = [
-        'Small',
-        'Medium',
-        'Big',
-        'Unique',
-        'Boss',
-        'God',
-    ]
 
+    # We need to create the mobs to populate the instance
     try:
-        while mobs_nbr < 4:
+        mobs_nbr = 1
+        while mobs_nbr <= 3:
             try:
                 #
                 raceid = randint(11, 16)
                 gender = randint(0, 1)
-                rarity = choices(rarities,
-                                 weights=(20, 30, 20, 10, 15, 5),
-                                 k=1)[0]
-                x = randint(1, int(mapx))
-                y = randint(1, int(mapy))
+                rarity = choices(
+                    rarity_array['creature'],
+                    weights=(20, 30, 20, 10, 15, 5),
+                    k=1,
+                    )[0]
+                x = randint(1, Map.data['width'])
+                y = randint(1, Map.data['height'])
 
                 # We grab the race wanted from metaRaces
-                metaRace = metaNames['race'][raceid]
-                if metaRace is None:
-                    msg = f'{g.h} MetaRace not found (race:{raceid})'
-                    logger.warning(msg)
-                    return jsonify(
-                        {
-                            "success": False,
-                            "msg": msg,
-                            "payload": None,
-                        }
-                    ), 200
+                metaRace = metaNames['race'][raceid - 1]
 
                 newMonster = CreatureDocument(
                     _id=uuid.uuid4(),
@@ -226,9 +210,7 @@ def add(creatureuuid):
                 )
                 newMonster.save()
             except Exception as e:
-                msg = (f'{g.h} Population in Instance KO for mob '
-                       f'#{mobs_nbr} [{e}]')
-                logger.error(msg)
+                logger.error(f'{g.h} Population in Instance KO for mob #{mobs_nbr} [{e}]')
             else:
                 # We send in pubsub channel for IA to spawn the Mobs
                 try:

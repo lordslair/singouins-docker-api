@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import os
 import re
 
 redpaduration  = 3600
@@ -10,26 +9,6 @@ redmaxttl      = redpaduration * redpamax
 bluepaduration = 3600
 bluepamax      = 8
 bluemaxttl     = bluepaduration * bluepamax
-
-if os.environ.get("CI"):
-    # Here we are inside GitHub CI process
-    DATA_PATH   = 'api/data'
-else:
-    DATA_PATH   = 'data'
-
-# Metafiles location for Redis init
-META_FILES = {
-    'armor': f'{DATA_PATH}/metas/armors.json',
-    'consumable': f'{DATA_PATH}/metas/consumables.json',
-    'race': f'{DATA_PATH}/metas/races.json',
-    'recipe': f'{DATA_PATH}/metas/recipes.json',
-    'weapon': f'{DATA_PATH}/metas/weapons.json',
-}
-# Mapfiles location for Redis init
-MAP_FILES = {
-    '1': f'{DATA_PATH}/maps/1.json',
-    '2': f'{DATA_PATH}/maps/2.json'
-}
 
 
 def str2typed(string):

@@ -1,30 +1,24 @@
 # -*- coding: utf8 -*-
 
-from flask                      import jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
-
-from nosql.metas                import get_meta
+from flask import jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
+from mongoengine.connection import get_db
 
 
 #
 # Routes /meta
 #
-# API: GET /meta/item/{metatype}
+# API: GET /meta/item/<string:metatype>
 @jwt_required()
 def external_meta_get_one(metatype):
-    # Pre-flight checks
-    if not isinstance(metatype, str):
-        return jsonify(
-            {
-                "success": True,
-                "msg": f'Meta should be a String (metatype:{metatype})',
-                "payload": None,
-            }
-        ), 200
 
     try:
-        meta = get_meta(metatype)
+        # Get the database object
+        db = get_db()
+        # Access a collection by its name
+        my_collection = db[f'_meta{metatype}s']
+        results = list(my_collection.find())
     except Exception as e:
         msg = f'Query KO (metatype:{metatype}) [{e}]'
         logger.error(msg)
@@ -36,23 +30,12 @@ def external_meta_get_one(metatype):
             }
         ), 200
     else:
-        if meta:
-            msg = f'Meta Query OK (metatype:{metatype})'
-            logger.debug(msg)
-            return jsonify(
-                {
-                    "success": True,
-                    "msg": msg,
-                    "payload": meta,
-                }
-            ), 200
-        else:
-            msg = f'Meta Query KO - Not Found (metatype:{metatype})'
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "success": False,
-                    "msg": msg,
-                    "payload": None,
-                }
-            ), 200
+        msg = f'Meta Query OK (metatype:{metatype})'
+        logger.debug(msg)
+        return jsonify(
+            {
+                "success": True,
+                "msg": msg,
+                "payload": results,
+            }
+        ), 200

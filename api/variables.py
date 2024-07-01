@@ -2,6 +2,8 @@
 
 import os
 
+from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
+
 # JWT variables
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
 TOKEN_DURATION = int(os.environ.get("SEP_TOKEN_DURATION", 60))
@@ -63,4 +65,18 @@ rarity_array = {
         'Epic',
         'Legendary',
     ],
+}
+
+"""
+DISCLAIMER: This is some fat shit I dumped here
+
+This is a HUGE Dictionary to manipulate pore easiliy all the metas
+Without having to query MongoDB all the time internally
+
+Do not modifiy unless you're ready for consequences
+"""
+metaNames = {
+    'armor': [doc.to_mongo().to_dict() for doc in MetaArmor.objects()],
+    'weapon': [doc.to_mongo().to_dict() for doc in MetaWeapon.objects()],
+    'race': [doc.to_mongo().to_dict() for doc in MetaRace.objects()]
 }
