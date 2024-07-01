@@ -33,8 +33,6 @@ jobs:
       run: |
         echo "--- Installing PIP"
         python -m pip install --upgrade pip
-        echo "--- Installing PyTest prerequisites"
-        pip install cryptography flake8 pytest requests 
         echo "--- Installing requirements"
         if [ -f nosql/requirements.txt ]; \
           then pip install -r nosql/requirements.txt; \
