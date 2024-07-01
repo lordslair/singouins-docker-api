@@ -54,7 +54,7 @@ jobs:
           LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
       run: |
         echo "--- Starting PyTest"
-        pytest nosql/tests/test_*.py
+        pytest nosql
 
 
   mongo-pytest:
@@ -109,7 +109,7 @@ jobs:
           MONGO_PASS: ${{ secrets.MONGO_PASS }}
       run: |
         echo "--- Starting PyTest"
-        pytest mongo/tests
+        pytest mongo
 
 
   app-pytest:
