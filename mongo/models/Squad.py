@@ -36,7 +36,7 @@ class SquadDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'squad',
+        'collection': 'squads',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

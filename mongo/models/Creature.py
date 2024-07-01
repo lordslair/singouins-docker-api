@@ -186,7 +186,7 @@ class CreatureDocument(Document):
     y = IntField(default=None)
 
     meta = {
-        'collection': 'creature',
+        'collection': 'creatures',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

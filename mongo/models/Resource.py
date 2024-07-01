@@ -60,7 +60,7 @@ class ResourceDocument(Document):
     y = IntField(required=True)
 
     meta = {
-        'collection': 'resource',
+        'collection': 'resources',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

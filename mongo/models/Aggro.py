@@ -41,7 +41,7 @@ class AggroDocument(Document):
     instance = UUIDField(binary=False, default=None)
 
     meta = {
-        'collection': 'aggro',
+        'collection': 'aggros',
         'indexes': [
             {'fields': ['created'], 'expireAfterSeconds': 2592000}  # ~= 1 month
         ],

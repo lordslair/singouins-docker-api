@@ -47,7 +47,7 @@ class InstanceDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'instance',
+        'collection': 'instances',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

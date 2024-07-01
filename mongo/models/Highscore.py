@@ -111,6 +111,5 @@ class HighscoreDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'highscore',
-        'uuid_representation': 'standard'  # Specify the uuid_representation globally
+        'collection': 'highscores',
         }

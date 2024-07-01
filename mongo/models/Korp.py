@@ -37,4 +37,4 @@ class KorpDocument(Document):
     name = StringField(binary=False, required=True)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
-    meta = {'collection': 'korp'}  # Specify the collection name
+        'collection': 'korps',

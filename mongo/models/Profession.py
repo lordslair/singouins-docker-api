@@ -38,7 +38,7 @@ class ProfessionDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'profession',
+        'collection': 'professions',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

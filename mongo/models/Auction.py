@@ -82,7 +82,7 @@ class AuctionDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'auction',
+        'collection': 'auctions',
         'indexes': [
             {'fields': ['created'], 'expireAfterSeconds': 172800}  # == 48 hours
         ],

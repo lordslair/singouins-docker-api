@@ -73,7 +73,7 @@ class CosmeticDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'cosmetic',
+        'collection': 'cosmetics',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

@@ -121,7 +121,7 @@ class SatchelDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'satchel',
+        'collection': 'satchels',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

@@ -55,6 +55,5 @@ class UserDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'user',
-        'uuid_representation': 'standard'  # Specify the uuid_representation globally
+        'collection': 'users',
         }

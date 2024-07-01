@@ -64,7 +64,7 @@ class CorpseDocument(Document):
     y = IntField(default=None)
 
     meta = {
-        'collection': 'corpse',
+        'collection': 'corpses',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

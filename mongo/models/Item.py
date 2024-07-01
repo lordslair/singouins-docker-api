@@ -58,7 +58,7 @@ class ItemDocument(Document):
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        'collection': 'item',
+        'collection': 'items',
         'indexes': [],
         'uuid_representation': 'pythonLegacy'
     }

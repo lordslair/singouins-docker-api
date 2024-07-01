@@ -53,7 +53,7 @@ class EventDocument(Document):
     type = IntField(required=True)
 
     meta = {
-        'collection': 'event',
+        'collection': 'events',
         'indexes': [
             {'fields': ['created'], 'expireAfterSeconds': 2592000}  # ~= 1 month
         ],
