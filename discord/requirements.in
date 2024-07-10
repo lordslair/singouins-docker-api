@@ -2,6 +2,6 @@ email-validator ~= 2.2
 kubernetes      ~= 30.1
 loguru          ~= 0.7
 mongoengine     ~= 0.28
-Pillow          ~= 10.3
+Pillow          ~= 10.4
 py-cord         ~= 2.5.0
 yarqueue        == 0.4.1
