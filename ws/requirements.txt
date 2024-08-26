@@ -10,7 +10,7 @@ redis==5.0.1
     # via yarqueue
 strenum==0.4.15
     # via yarqueue
-websockets==12.0
+websockets==13.0
     # via -r requirements.in
 yarqueue==0.4.1
     # via -r requirements.in
