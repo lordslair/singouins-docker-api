@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required
 from loguru import logger
 
 from nosql.queue import yqueue_put
-
+from routes.external.mypc.instance._tools import get_empty_coords
 from utils.decorators import (
     check_creature_exists,
     check_instance_exists,
@@ -35,6 +35,11 @@ def join(creatureuuid, instanceuuid):
 
     # We add the Creature into the instance
     try:
+        # We find an empty spot to land the Creature
+        (x, y) = get_empty_coords()
+
+        g.Creature.x = x
+        g.Creature.y = y
         g.Creature.instance = g.Instance.id
         g.Creature.updated = datetime.datetime.utcnow()
         g.Creature.save()
