@@ -14,7 +14,7 @@ loguru==0.7.2
     # via -r requirements.in
 mccabe==0.7.0
     # via flake8
-mongoengine==0.28.2
+mongoengine==0.29.0
     # via -r requirements.in
 packaging==24.1
     # via pytest
