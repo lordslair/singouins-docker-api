@@ -6,64 +6,55 @@ from flask import jsonify, request
 from flask_bcrypt import check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
 from loguru import logger
+from pydantic import BaseModel, ValidationError
 
 from mongo.models.User import UserDocument
 from utils.decorators import check_is_json
 from variables import TOKEN_DURATION
 
 
+class LoginUserSchema(BaseModel):
+    username: str
+    password: str
+
+
 # API: POST /auth/login
 @check_is_json
 def login():
-    username = request.json.get('username', None)
-    password = request.json.get('password', None)
-
-    if not username:
+    try:
+        Login = LoginUserSchema(**request.json)  # Validate and parse the JSON data
+    except ValidationError as e:
         return jsonify(
             {
-                "msg": "Missing username parameter",
-            }
-        ), 400
-    if not password:
-        return jsonify(
-            {
-                "msg": "Missing password parameter",
+                "success": False,
+                "msg": "Validation and parsing error",
+                "payload": e.errors(),
             }
         ), 400
 
     try:
-        if UserDocument.objects(name=username).count() > 0:
-            # User exists
-            User = UserDocument.objects(name=username).get()
-            if not check_password_hash(User.hash, password):
-                msg = "Wrong password"
-                logger.warning(msg)
-                return jsonify(
-                    {
-                        "msg": msg,
-                    }
-                ), 401
-        else:
-            msg = "Bad username"
-            logger.warning(msg)
-            return jsonify(
-                {
-                    "msg": msg,
-                }
-            ), 401
-    except Exception as e:
-        msg = f'User Query KO (mail:{username}) [{e}]'
-        logger.error(msg)
+        User = UserDocument.objects(name=Login.username).get()
+    except UserDocument.DoesNotExist:
+        logger.debug("UserDocument Query KO (404)")
+
+    # If password mismatch
+    if not check_password_hash(User.hash, Login.password):
+        msg = "Wrong password"
+        logger.warning(msg)
+        return jsonify(
+            {
+                "msg": msg,
+            }
+        ), 401
 
     # Identity can be any data that is json serializable
-    msg = "Access Token Query OK"
-    logger.trace(msg)
+    logger.trace("Access Token Query OK")
     return jsonify(
         {
             'access_token': create_access_token(
-                identity=username,
+                identity=Login.username,
                 expires_delta=datetime.timedelta(minutes=TOKEN_DURATION)
             ),
-            'refresh_token': create_refresh_token(identity=username)
+            'refresh_token': create_refresh_token(identity=Login.username)
         }
     ), 200

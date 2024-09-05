@@ -8,8 +8,7 @@ from loguru import logger
 # API: POST /auth/refresh
 @jwt_required(refresh=True)
 def refresh():
-    msg = "Refresh Token Query OK"
-    logger.trace(msg)
+    logger.trace("Refresh Token Query OK")
     return jsonify(
         {
             'access_token': create_access_token(identity=get_jwt_identity())

@@ -13,4 +13,4 @@ def infos():
     # Access the identity of the current user with get_jwt_identity
     return jsonify(
         logged_in_as=get_jwt_identity(),
-        ), 200
+    ), 200
