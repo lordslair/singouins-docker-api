@@ -5,6 +5,7 @@ import datetime
 from flask import g, jsonify, request
 from flask_jwt_extended import jwt_required
 from loguru import logger
+from pydantic import BaseModel, ValidationError
 
 from nosql.queue import yqueue_put
 
@@ -19,13 +20,26 @@ from utils.decorators import (
 from variables import YQ_BROADCAST, YQ_DISCORD
 
 
+class CreateKorpSchema(BaseModel):
+    name: str
+
+
 # API: POST ../korp
 @jwt_required()
 # Custom decorators
 @check_is_json
 @check_creature_exists
 def korp_create(creatureuuid):
-    korpname = request.json.get('name', None)
+    try:
+        korp = CreateKorpSchema(**request.json)  # Validate and parse the JSON data
+    except ValidationError as e:
+        return jsonify(
+            {
+                "success": False,
+                "msg": "Validation and parsing error",
+                "payload": e.errors(),
+            }
+        ), 400
 
     if g.Creature.korp.id is not None:
         msg = f'{g.h} Already in a Korp'
@@ -39,20 +53,20 @@ def korp_create(creatureuuid):
         ), 200
 
     try:
-        if KorpDocument.objects(name=korpname):
+        if KorpDocument.objects(name=korp.name):
             msg = f'{g.h} Korp Query KO - Already exists'
             logger.debug(msg)
             return jsonify(
                 {
                     "success": False,
                     "msg": msg,
-                    "payload": KorpDocument.objects(name=korpname).to_mongo(),
+                    "payload": KorpDocument.objects(name=korp.name).to_mongo(),
                 }
             ), 409
         else:
             newKorp = KorpDocument(
                 leader=g.Creature.id,
-                name=korpname,
+                name=korp.name,
                 )
             newKorp.save()
     except Exception as e:
