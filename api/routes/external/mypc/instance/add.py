@@ -7,6 +7,7 @@ import uuid
 from flask import g, jsonify, request
 from flask_jwt_extended import jwt_required
 from loguru import logger
+from pydantic import BaseModel, ValidationError
 from random import choices, randint
 
 from mongo.models.Creature import (
@@ -32,6 +33,13 @@ from utils.decorators import (
 from variables import metaNames, rarity_array, YQ_DISCORD
 
 
+class AddInstanceSchema(BaseModel):
+    hardcore: bool
+    fast: bool
+    mapid: int
+    public: bool
+
+
 #
 # Routes /mypc/<uuid:creatureuuid>/instance/*
 #
@@ -41,59 +49,24 @@ from variables import metaNames, rarity_array, YQ_DISCORD
 @check_is_json
 @check_creature_exists
 def add(creatureuuid):
-    hardcore = request.json.get('hardcore', None)
-    fast     = request.json.get('fast', None)
-    mapid    = request.json.get('mapid', None)
-    public   = request.json.get('public', None)
-
-    if not isinstance(mapid, int):
-        msg = f'{g.h} Map ID should be an INT (mapid:{mapid})'
-        logger.warning(msg)
+    try:
+        instance = AddInstanceSchema(**request.json)  # Validate and parse the JSON data
+    except ValidationError as e:
         return jsonify(
             {
                 "success": False,
-                "msg": msg,
-                "payload": None,
+                "msg": "Validation and parsing error",
+                "payload": e.errors(),
             }
-        ), 200
-    if not isinstance(hardcore, bool):
-        msg = f'{g.h} Hardcore param should be a boolean (hardcore:{hardcore})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if not isinstance(fast, bool):
-        msg = f'{g.h} Fast param should be a boolean (hardcore:{hardcore})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
-    if not isinstance(public, bool):
-        msg = f'{g.h} Public param should be a boolean (hardcore:{hardcore})'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
+        ), 400
 
     # Check if map related to mapid exists
     try:
-        Map = MetaMap.objects(_id=mapid).get()
+        Map = MetaMap.objects(_id=instance.mapid).get()
     except CreatureDocument.DoesNotExist:
         logger.warning("MetaMap Query KO (404)")
     except Exception as e:
-        msg = f'{g.h} Map Query KO (mapid:{mapid}) [{e}]'
+        msg = f'{g.h} Map Query KO (mapid:{instance.mapid}) [{e}]'
         logger.error(msg)
         return jsonify(
             {
@@ -107,10 +80,10 @@ def add(creatureuuid):
     try:
         newInstance = InstanceDocument(
             creator=g.Creature.id,
-            fast=fast,
-            hardcore=hardcore,
+            fast=instance.fast,
+            hardcore=instance.hardcore,
             map=Map.id,
-            public=public,
+            public=instance.public,
             )
         newInstance.save()
 
