@@ -1,8 +1,8 @@
 # -*- coding: utf8 -*-
 
-from ._root import mypc_add
-from ._root import mypc_del
-from ._root import mypc_get_all
+from .add import mypc_add
+from .delete import mypc_del
+from .get_all import mypc_get_all
 
 __all__ = [
     'mypc_add',
