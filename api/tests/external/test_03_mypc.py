@@ -16,7 +16,7 @@ def test_singouins_mypc_create():
         'name': CREATURE_NAME,
         'gender': True,
         'race': 2,
-        'class': 3,
+        'vocation': 3,
         'cosmetic': {
             'metaid': 8,
             'data': {

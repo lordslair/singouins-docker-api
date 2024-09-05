@@ -14,7 +14,7 @@ PJTEST_BODY = {
         'name': 'PJTestInstanceJoin',
         'gender': True,
         'race': 2,
-        'class': 3,
+        'vocation': 3,
         'cosmetic': {
             'metaid': 8,
             'data': {
