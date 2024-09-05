@@ -72,7 +72,7 @@ class EquipmentSchema(BaseModel):
 
 
 class AddSingouinSchema(BaseModel):
-    class: int
+    vocation: int
     gender: bool
     name: str
     race: int
@@ -142,9 +142,9 @@ def mypc_add():
             account=g.User.id,
             gender=Singouin.gender,
             hp=CreatureHP(
-                base=specs[Singouin.class]['spec_m'] + metaRace['min_m'] + 100,
-                current=specs[Singouin.class]['spec_m'] + metaRace['min_m'] + 100,
-                max=specs[Singouin.class]['spec_m'] + metaRace['min_m'] + 100,
+                base=specs[Singouin.vocation]['spec_m'] + metaRace['min_m'] + 100,
+                current=specs[Singouin.vocation]['spec_m'] + metaRace['min_m'] + 100,
+                max=specs[Singouin.vocation]['spec_m'] + metaRace['min_m'] + 100,
                 ),
             korp=CreatureKorp(),
             name=Singouin.name,
@@ -153,12 +153,12 @@ def mypc_add():
             slots=CreatureSlots(),
             stats=CreatureStats(
                 spec=CreatureStatsType(
-                    b=specs[Singouin.class]['spec_b'],
-                    g=specs[Singouin.class]['spec_g'],
-                    m=specs[Singouin.class]['spec_m'],
-                    p=specs[Singouin.class]['spec_p'],
-                    r=specs[Singouin.class]['spec_r'],
-                    v=specs[Singouin.class]['spec_v'],
+                    b=specs[Singouin.vocation]['spec_b'],
+                    g=specs[Singouin.vocation]['spec_g'],
+                    m=specs[Singouin.vocation]['spec_m'],
+                    p=specs[Singouin.vocation]['spec_p'],
+                    r=specs[Singouin.vocation]['spec_r'],
+                    v=specs[Singouin.vocation]['spec_v'],
                 ),
                 race=CreatureStatsType(
                     b=metaRace['min_b'],
@@ -169,12 +169,12 @@ def mypc_add():
                     v=metaRace['min_v'],
                 ),
                 total=CreatureStatsType(
-                    b=specs[Singouin.class]['spec_b'] + metaRace['min_b'],
-                    g=specs[Singouin.class]['spec_g'] + metaRace['min_g'],
-                    m=specs[Singouin.class]['spec_m'] + metaRace['min_m'],
-                    p=specs[Singouin.class]['spec_p'] + metaRace['min_p'],
-                    r=specs[Singouin.class]['spec_r'] + metaRace['min_r'],
-                    v=specs[Singouin.class]['spec_v'] + metaRace['min_v'],
+                    b=specs[Singouin.vocation]['spec_b'] + metaRace['min_b'],
+                    g=specs[Singouin.vocation]['spec_g'] + metaRace['min_g'],
+                    m=specs[Singouin.vocation]['spec_m'] + metaRace['min_m'],
+                    p=specs[Singouin.vocation]['spec_p'] + metaRace['min_p'],
+                    r=specs[Singouin.vocation]['spec_r'] + metaRace['min_r'],
+                    v=specs[Singouin.vocation]['spec_v'] + metaRace['min_v'],
                 ),
             ),
         )
