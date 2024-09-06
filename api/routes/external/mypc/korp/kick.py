@@ -80,11 +80,8 @@ def korp_kick(creatureuuid, korpuuid, targetuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'kicked '
-                    f'**{CreatureTarget.name}** '
-                    f'from this Korp'
+                    f':information_source: **{g.Creature.name}** '
+                    f'kicked **{CreatureTarget.name}** from this Korp (**{g.Korp.name}**)'
                     ),
                 "embed": None,
                 "scope": f'Korp-{g.Korp.id}',

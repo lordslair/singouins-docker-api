@@ -117,11 +117,8 @@ def korp_invite(creatureuuid, korpuuid, targetuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'invited '
-                    f'**{CreatureTarget.name}** '
-                    f'in this Korp'
+                    f':information_source: **{g.Creature.name}** '
+                    f'invited **{CreatureTarget.name}** in this Korp (**{g.Korp.name}**)'
                     ),
                 "embed": None,
                 "scope": f'Korp-{g.Korp.id}',

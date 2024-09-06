@@ -119,10 +119,7 @@ def leave(creatureuuid, instanceuuid):
                     YQ_DISCORD,
                     {
                         "ciphered": False,
-                        "payload": (
-                            f':map: **[{g.Creature.id}] {g.Creature.name}** '
-                            f'closed an Instance ({g.Instance.id})'
-                            ),
+                        "payload": f':map: **{g.Creature.name}** closed an Instance',
                         "embed": None,
                         "scope": scope,
                         }
@@ -169,10 +166,7 @@ def leave(creatureuuid, instanceuuid):
                     YQ_DISCORD,
                     {
                         "ciphered": False,
-                        "payload": (
-                            f':map: **[{g.Creature.id}] {g.Creature.name}** '
-                            f'left an Instance ({g.Instance.id})'
-                            ),
+                        "payload": f':map: **{g.Creature.name}** left an Instance',
                         "embed": None,
                         "scope": scope,
                         }

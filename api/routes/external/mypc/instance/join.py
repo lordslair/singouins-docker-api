@@ -66,10 +66,7 @@ def join(creatureuuid, instanceuuid):
                 YQ_DISCORD,
                 {
                     "ciphered": False,
-                    "payload": (
-                        f':map: **[{g.Creature.id}] {g.Creature.name}** '
-                        f'joined an Instance ({g.Instance.id})'
-                        ),
+                    "payload": f':map: **{g.Creature.name}** joined a new Instance',
                     "embed": None,
                     "scope": scope,
                     }

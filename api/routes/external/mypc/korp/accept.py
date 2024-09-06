@@ -71,9 +71,8 @@ def korp_accept(creatureuuid, korpuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'joined this Korp'
+                    f':information_source: **{g.Creature.name}** '
+                    f'joined this Korp (**{g.Korp.name}**)'
                     ),
                 "embed": None,
                 "scope": f'Korp-{g.Korp.id}',

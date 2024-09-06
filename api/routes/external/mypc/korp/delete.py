@@ -81,9 +81,8 @@ def korp_delete(creatureuuid, korpuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'deleted this Korp'
+                    f':information_source: **{g.Creature.name}** '
+                    f'deleted this Korp (**{g.Korp.name}**)'
                     ),
                 "embed": None,
                 "scope": f'Korp-{g.Korp.id}',

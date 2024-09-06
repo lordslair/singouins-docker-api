@@ -3,6 +3,7 @@
 
 import asyncio
 import discord
+import json
 import os
 import re
 import time
@@ -51,6 +52,50 @@ async def on_ready():
         if channel:
             logger.info(f'Discord on_ready OK ({bot.user})')
 
+
+#
+# Helpers
+#
+async def send_wildcard(answer, embed, msg):
+    try:
+        # We check if the channel exists
+        if msg['scope'].lower().startswith('korp'):
+            channel_name = 'korps-wildcard'
+        elif msg['scope'].lower().startswith('squad'):
+            channel_name = 'squads-wildcard'
+        channel = discord.utils.get(bot.get_all_channels(), name=channel_name)
+    except Exception as e:
+        logger.error(f"Channel Query KO (channel:{channel_name}) [{e}]")
+    else:
+        if channel:
+            try:
+                logger.trace(f'Send message >> (channel:{channel.name})')
+                await channel.send(answer, embed=embed)
+            except Exception as e:
+                logger.error(f'Send message KO (channel:{channel.name}) [{e}]')
+            else:
+                logger.debug(f'Send message OK (channel:{channel.name})')
+        else:
+            logger.warning(f"Channel Query KO (channel:{channel_name}) - NotFound")
+
+
+async def send_channel(answer, embed, msg):
+    try:
+        # We check if the channel exists
+        channel_name = msg['scope'].lower()
+        channel = discord.utils.get(bot.get_all_channels(), name=channel_name)
+    except Exception as e:
+        logger.error(f"Channel Query KO (channel:{channel_name}) [{e}]")
+    else:
+        if channel:
+            try:
+                await channel.send(answer, embed=embed)
+            except Exception as e:
+                logger.error(f'Send message KO (channel:{channel.name}) [{e}]')
+            else:
+                logger.debug(f'Send message OK (channel:{channel.name})')
+        else:
+            logger.warning(f"Channel Query KO (channel:{channel_name}) - NotFound")
 #
 # Tasks definition
 #
@@ -73,43 +118,30 @@ async def yqueue_check(timer):
             if len(msgs) == 0:
                 logger.debug('Message Queue OK - But empty')
             else:
-                logger.debug('Message Queue OK')
-                msgs.reverse()
+                logger.debug(f'Message Queue OK - Got {len(msgs)} msgs')
+                # msgs_list = list(msgs).reverse()
 
-            for msg in msgs:
+            for msg_str in msgs:
+                msg = json.loads(msg_str)
                 logger.debug(f'Message type {type(msg)} Received {msg}')
                 if msg['payload'] is None:
-                    """
-                    We are reading a WEIRD message
-                    -> We don't do anything
-                    """
+                    # We are reading a WEIRD message: We don't do anything
                     logger.trace(f'Message skipped ({msg}) - No Payload')
                     continue
-                else:
-                    pass
 
                 if msg['scope'] is None:
-                    """
-                    We DO NOT HAVE have a Scope
-                    -> We don't do anything
-                    """
+                    # We DO NOT HAVE have a Scope: We don't do anything
                     logger.trace(f'Message skipped ({msg}) - No Scope')
                     continue
-                else:
-                    pass
 
                 if msg['embed'] is None:
-                    """
-                    We are reading a STANDARD message
-                    -> We prepare to send
-                    """
+                    # We are reading a STANDARD message: We prepare to send
+                    logger.trace('Message STANDARD')
                     answer = msg['payload']
                     embed  = msg['embed']
                 elif msg['payload']['winner'] and msg['payload']['item']:
-                    """
-                    We are reading a LOOT message
-                    -> We prepare to send
-                    """
+                    # We are reading a LOOT message: We prepare to send
+                    logger.trace('Message LOOT')
                     item = msg['payload']['item']
                     winner = msg['payload']['winner']
                     User = UserDocument.objects(_id=winner['id'])
@@ -137,7 +169,7 @@ async def yqueue_check(timer):
                         logger.debug('User Not Linked - Cannot @tag him')
 
                     answer = None
-                    embed  = discord.Embed(
+                    embed = discord.Embed(
                         color=rarity_item_types_integer[item['rarity']]
                         )
 
@@ -168,35 +200,12 @@ async def yqueue_check(timer):
                     embed.set_footer(text=f"ItemUUID: {item['id']}")
 
                 else:
-                    """
-                    We are reading a UNKNOWN message
-                    -> We don't do anything
-                    """
+                    # We are reading a Unknown message: We don't do anything
                     logger.trace(f'Message skipped ({msg}) - Unknown')
                     continue
 
-                try:
-                    # We check if the channel exists
-                    channel = discord.utils.get(
-                        bot.get_all_channels(),
-                        name=msg['scope'].lower()
-                        )
-                except Exception as e:
-                    logger.error(f"Channel Query KO (channel:{msg['scope']}) [{e}]")
-                else:
-                    if channel:
-                        """
-                        Now we have all we need
-                        -> We send
-                        """
-                        try:
-                            await channel.send(answer, embed=embed)
-                        except Exception as e:
-                            logger.error(f'Send message KO (channel:{channel.name}) [{e}]')
-                        else:
-                            logger.info(f'Send message OK (channel:{channel.name})')
-                    else:
-                        logger.warning(f"Channel Query KO (channel:{msg['scope']}) - NotFound")
+                await send_wildcard(answer, embed, msg)
+                await send_channel(answer, embed, msg)
 
         await asyncio.sleep(timer)
 
@@ -253,7 +262,7 @@ async def squad_channel_create(timer):
             else:
                 # We skip the loop if no squads are returned
                 if Squads.count() == 0:
-                    logger.info('Squads Query OK - But empty')
+                    logger.debug('Squads Query OK - But empty')
                     continue
                 else:
                     logger.trace('Squads Query OK')

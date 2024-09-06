@@ -114,10 +114,7 @@ def add(creatureuuid):
             YQ_DISCORD,
             {
                 "ciphered": False,
-                "payload": (
-                    f':map: **[{g.Creature.id}] {g.Creature.name}** '
-                    f'opened an Instance ({newInstance.id})'
-                    ),
+                "payload": f':map: **{g.Creature.name}** opened a new Instance',
                 "embed": None,
                 "scope": scope,
                 }

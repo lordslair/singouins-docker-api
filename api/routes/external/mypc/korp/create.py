@@ -115,9 +115,8 @@ def korp_create(creatureuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'created this Korp'
+                    f':information_source: **{g.Creature.name}** '
+                    f'created this Korp (**{newKorp.name}**)'
                     ),
                 "embed": None,
                 "scope": f'Korp-{newKorp.id}',

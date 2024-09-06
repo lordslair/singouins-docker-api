@@ -68,9 +68,7 @@ def korp_leave(creatureuuid, korpuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'left this Korp'
+                    f':information_source: **{g.Creature.name}** left this Korp ({g.Korp.name})'
                     ),
                 "embed": None,
                 "scope": f'Korp-{g.Korp.id}',
