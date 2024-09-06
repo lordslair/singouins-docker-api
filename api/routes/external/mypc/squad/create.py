@@ -97,8 +97,7 @@ def squad_create(creatureuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
+                    f':information_source: **{g.Creature.name}** '
                     f'created this Squad'
                     ),
                 "embed": None,

@@ -117,11 +117,8 @@ def squad_invite(creatureuuid, squaduuid, targetuuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
-                    f'invited '
-                    f'**{CreatureTarget.name}** '
-                    f'in this Squad'
+                    f':information_source: **{g.Creature.name}** '
+                    f'invited **{CreatureTarget.name}** in this Squad'
                     ),
                 "embed": None,
                 "scope": f'Squad-{g.Squad.id}',

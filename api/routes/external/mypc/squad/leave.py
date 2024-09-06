@@ -68,8 +68,7 @@ def squad_leave(creatureuuid, squaduuid):
             {
                 "ciphered": False,
                 "payload": (
-                    f':information_source: '
-                    f'**{g.Creature.name}** '
+                    f':information_source: **{g.Creature.name}** '
                     f'left this Squad'
                     ),
                 "embed": None,
