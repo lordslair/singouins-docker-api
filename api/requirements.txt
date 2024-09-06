@@ -50,7 +50,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
-mongoengine==0.28.2
+mongoengine==0.29.0
     # via -r requirements.in
 packaging==24.1
     # via gunicorn
