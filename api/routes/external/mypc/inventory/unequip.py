@@ -6,8 +6,7 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.queue import yqueue_put
-
+from nosql.connector import r
 from nosql.models.RedisPa import RedisPa
 
 from utils.decorators import (
@@ -15,8 +14,6 @@ from utils.decorators import (
     check_creature_pa,
     check_item_exists,
     )
-
-from variables import YQ_BROADCAST
 
 #
 # Inventory.unequip specifics
@@ -68,18 +65,21 @@ def unequip(creatureuuid, type, slotname, itemuuid):
         g.Creature.updated = datetime.datetime.utcnow()
         g.Creature.save()
 
-    # We put the info in queue for ws
+    # We send in pubsub channel for WS
     try:
-        qmsg = {
-            "ciphered": False,
-            "payload": g.Creature.to_mongo(),
-            "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
-            "scope": {
-                "id": None,
-                "scope": 'broadcast',
-                },
-            }
-        yqueue_put(YQ_BROADCAST, jsonify(qmsg).get_data(as_text=True))
+        r.publish(
+            'ws-broadcast',
+            jsonify({
+                "ciphered": False,
+                "payload": g.Creature.to_mongo(),
+                "route": "mypc/{id1}/inventory/item/{id2}/unequip/{id3}/{id4}",
+                "scope": {
+                    "id": None,
+                    "instance_id": g.Creature.instance,
+                    "scope": 'broadcast',
+                    },
+                }).get_data(as_text=True),
+            )
     except Exception as e:
         msg = (f'{g.h} Equip Queue KO [{e}]')
         logger.error(msg)

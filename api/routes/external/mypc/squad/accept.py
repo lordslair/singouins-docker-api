@@ -8,15 +8,14 @@ from loguru import logger
 
 from mongo.models.Creature import CreatureSquad
 
-from nosql.queue import yqueue_put
-
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_squad,
     check_squad_exists,
     )
-
-from variables import YQ_BROADCAST, YQ_DISCORD
+from utils.pubsub import cput
+from utils.queue import qput
+from variables import PS_BROADCAST, YQ_DISCORD
 
 
 # API: POST /mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>/accept
@@ -54,36 +53,30 @@ def squad_accept(creatureuuid, squaduuid):
                 "payload": None,
             }
         ), 200
-    else:
-        # Broadcast Queue
-        yqueue_put(
-            YQ_BROADCAST,
-            {
-                "ciphered": False,
-                "payload": g.Squad.to_json(),
-                "route": 'mypc/{id1}/squad',
-                "scope": 'squad',
-                }
-            )
-        # Discord Queue
-        yqueue_put(
-            YQ_DISCORD,
-            {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: **{g.Creature.name}** '
-                    f'joined this Squad'
-                    ),
-                "embed": None,
-                "scope": f'Squad-{g.Squad.id}',
-                }
-            )
-        msg = f'{g.h} Squad accept OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": g.Squad.to_mongo(),
-            }
-        ), 200
+
+    # Everything went well
+    # Broadcast Channel
+    cput(PS_BROADCAST, {
+        "ciphered": False,
+        "payload": g.Squad.to_json(),
+        "route": 'mypc/{id1}/squad',
+        "scope": 'squad'})
+    # Discord Queue
+    qput(YQ_DISCORD, {
+        "ciphered": False,
+        "payload": (
+            f':information_source: **{g.Creature.name}** '
+            f'joined this Squad (**{g.Squad.name}**)'
+            ),
+        "embed": None,
+        "scope": f'Squad-{g.Squad.id}'})
+
+    msg = f'{g.h} Squad accept OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": g.Squad.to_mongo(),
+        }
+    ), 200

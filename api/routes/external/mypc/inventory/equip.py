@@ -6,8 +6,7 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.queue import yqueue_put
-
+from nosql.connector import r
 from nosql.models.RedisPa import RedisPa
 
 from mongo.models.Creature import CreatureSlot
@@ -18,7 +17,7 @@ from utils.decorators import (
     check_item_exists,
     )
 
-from variables import metaNames, YQ_BROADCAST
+from variables import metaNames
 
 #
 # Inventory.equip specifics
@@ -179,16 +178,19 @@ def equip(creatureuuid, type, slotname, itemuuid):
 
     # We put the info in queue for ws
     try:
-        qmsg = {
-            "ciphered": False,
-            "payload": g.Creature.to_mongo(),
-            "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
-            "scope": {
-                "id": None,
-                "scope": 'broadcast',
-                },
-            }
-        yqueue_put(YQ_BROADCAST, jsonify(qmsg).get_data(as_text=True))
+        r.publish(
+            'ws-broadcast',
+            jsonify({
+                "ciphered": False,
+                "payload": g.Creature.to_mongo(),
+                "route": "mypc/{id1}/inventory/item/{id2}/equip/{id3}/{id4}",
+                "scope": {
+                    "id": None,
+                    "instance_id": g.Creature.instance,
+                    "scope": 'broadcast',
+                    },
+                }).get_data(as_text=True),
+            )
     except Exception as e:
         msg = (f'{g.h} Equip Queue KO [{e}]')
         logger.error(msg)

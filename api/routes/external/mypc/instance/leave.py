@@ -11,13 +11,12 @@ from mongoengine import Q
 from mongo.models.Creature import CreatureDocument
 
 from nosql.connector import r
-from nosql.queue import yqueue_put
 
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_instance,
     )
-
+from utils.queue import qput
 from variables import YQ_DISCORD
 
 
@@ -115,15 +114,11 @@ def leave(creatureuuid, instanceuuid):
                 scopes.append(f'Squad-{g.Creature.squad.id}')
             for scope in scopes:
                 # Discord Queue
-                yqueue_put(
-                    YQ_DISCORD,
-                    {
-                        "ciphered": False,
-                        "payload": f':map: **{g.Creature.name}** closed an Instance',
-                        "embed": None,
-                        "scope": scope,
-                        }
-                    )
+                qput(YQ_DISCORD, {
+                    "ciphered": False,
+                    "payload": f':map: **{g.Creature.name}** closed an Instance',
+                    "embed": None,
+                    "scope": scope})
             # Finally everything is done
             msg = f'{g.h} Instance({g.Instance.id}) leave OK'
             logger.debug(msg)
@@ -162,15 +157,11 @@ def leave(creatureuuid, instanceuuid):
                 scopes.append(f'Squad-{g.Creature.squad.id}')
             for scope in scopes:
                 # Discord Queue
-                yqueue_put(
-                    YQ_DISCORD,
-                    {
-                        "ciphered": False,
-                        "payload": f':map: **{g.Creature.name}** left an Instance',
-                        "embed": None,
-                        "scope": scope,
-                        }
-                    )
+                qput(YQ_DISCORD, {
+                    "ciphered": False,
+                    "payload": f':map: **{g.Creature.name}** left an Instance',
+                    "embed": None,
+                    "scope": scope})
 
             msg = f'{g.h} Instance({g.Instance.id}) Leave OK'
             logger.debug(msg)

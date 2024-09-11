@@ -23,13 +23,13 @@ from mongo.models.Instance import InstanceDocument
 from mongo.models.Meta import MetaMap
 
 from nosql.connector import r
-from nosql.queue import yqueue_put
+
 from routes.external.mypc.instance._tools import get_empty_coords
 from utils.decorators import (
     check_creature_exists,
     check_is_json,
     )
-
+from utils.queue import qput
 from variables import metaNames, rarity_array, YQ_DISCORD
 
 
@@ -110,15 +110,11 @@ def add(creatureuuid):
         scopes.append(f'Squad-{g.Creature.squad.id}')
     for scope in scopes:
         # Discord Queue
-        yqueue_put(
-            YQ_DISCORD,
-            {
-                "ciphered": False,
-                "payload": f':map: **{g.Creature.name}** opened a new Instance',
-                "embed": None,
-                "scope": scope,
-                }
-            )
+        qput(YQ_DISCORD, {
+            "ciphered": False,
+            "payload": f':map: **{g.Creature.name}** opened a new Instance',
+            "embed": None,
+            "scope": scope})
 
     # We need to create the mobs to populate the instance
     try:

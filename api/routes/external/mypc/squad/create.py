@@ -6,16 +6,12 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.queue import yqueue_put
-
 from mongo.models.Creature import CreatureSquad
 from mongo.models.Squad import SquadDocument
 
-from utils.decorators import (
-    check_creature_exists,
-    )
-
-from variables import YQ_BROADCAST, YQ_DISCORD
+from utils.decorators import check_creature_exists
+from utils.queue import qput
+from variables import YQ_DISCORD
 
 
 # API: POST ../squad
@@ -80,37 +76,21 @@ def squad_create(creatureuuid):
                 "payload": None,
             }
         ), 200
-    else:
-        # Broadcast Queue
-        yqueue_put(
-            YQ_BROADCAST,
-            {
-                "ciphered": False,
-                "payload": newSquad.to_json(),
-                "route": 'mypc/{id1}/squad',
-                "scope": 'squad',
-                }
-            )
-        # Discord Queue
-        yqueue_put(
-            YQ_DISCORD,
-            {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: **{g.Creature.name}** '
-                    f'created this Squad'
-                    ),
-                "embed": None,
-                "scope": f'Squad-{newSquad.id}',
-                }
-            )
 
-        msg = f'{g.h} Squad create OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": newSquad.to_mongo(),
-            }
-        ), 201
+    # Everything went well
+    # Discord Queue
+    qput(YQ_DISCORD, {
+        "ciphered": False,
+        "payload": f':information_source: **{g.Creature.name}** created this Squad',
+        "embed": None,
+        "scope": f'Squad-{newSquad.id}'})
+
+    msg = f'{g.h} Squad create OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": newSquad.to_mongo(),
+        }
+    ), 201

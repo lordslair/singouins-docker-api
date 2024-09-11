@@ -7,17 +7,12 @@ from flask_jwt_extended import jwt_required
 from loguru import logger
 from pydantic import BaseModel, ValidationError
 
-from nosql.queue import yqueue_put
-
 from mongo.models.Creature import CreatureKorp
 from mongo.models.Korp import KorpDocument
 
-from utils.decorators import (
-    check_creature_exists,
-    check_is_json,
-    )
-
-from variables import YQ_BROADCAST, YQ_DISCORD
+from utils.decorators import check_creature_exists, check_is_json
+from utils.queue import qput
+from variables import YQ_DISCORD
 
 
 class CreateKorpSchema(BaseModel):
@@ -98,37 +93,21 @@ def korp_create(creatureuuid):
                 "payload": None,
             }
         ), 200
-    else:
-        # Broadcast Queue
-        yqueue_put(
-            YQ_BROADCAST,
-            {
-                "ciphered": False,
-                "payload": newKorp.to_json(),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp',
-                }
-            )
-        # Discord Queue
-        yqueue_put(
-            YQ_DISCORD,
-            {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: **{g.Creature.name}** '
-                    f'created this Korp (**{newKorp.name}**)'
-                    ),
-                "embed": None,
-                "scope": f'Korp-{newKorp.id}',
-                }
-            )
 
-        msg = f'{g.h} Korp create OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": newKorp.to_mongo(),
-            }
-        ), 201
+    # Everything went well
+    # Discord Queue
+    qput(YQ_DISCORD, {
+        "ciphered": False,
+        "payload": f':information_source: **{g.Creature.name}** created this Korp',
+        "embed": None,
+        "scope": f'Korp-{newKorp.id}'})
+
+    msg = f'{g.h} Korp create OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": newKorp.to_mongo(),
+        }
+    ), 201

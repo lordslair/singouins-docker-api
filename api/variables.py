@@ -4,12 +4,17 @@ import os
 
 from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
 
-# JWT variables
+# API variables
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
 TOKEN_DURATION = int(os.environ.get("SEP_TOKEN_DURATION", 60))
+API_URL = os.environ.get("API_URL", 'http://127.0.0.1:5000')
+API_ENV = os.environ.get("API_ENV", None)
 
-# External URL
-API_URL = os.environ.get("SEP_API_URL", 'http://127.0.0.1:5000')
+# YarQueue variables
+YQ_BROADCAST = os.environ.get("YQ_BROADCAST", f'{API_ENV}:yarqueue:broadcast')
+YQ_DISCORD   = os.environ.get("YQ_DISCORD", f'{API_ENV}:yarqueue:discord')
+# PubSub variables
+PS_BROADCAST = os.environ.get("PS_BROADCAST", 'ws-broadcast')
 
 # Discord permanent invite link
 DISCORD_URL = os.environ.get("SEP_DISCORD_URL", 'http://127.0.0.1')
@@ -27,10 +32,6 @@ GUNICORN_BIND    = f'{GUNICORN_HOST}:{GUNICORN_PORT}'
 GUNICORN_WORKERS = os.environ.get("GUNICORN_WORKERS", 1)
 GUNICORN_THREADS = os.environ.get("GUNICORN_THREADS", 2)
 GUNICORN_RELOAD  = os.environ.get("GUNICORN_RELOAD", True)
-
-# YarQueue variables
-YQ_BROADCAST = os.environ.get("SEP_YQ_BROADCAST", 'yarqueue:broadcast')
-YQ_DISCORD   = os.environ.get("SEP_YQ_DISCORD", 'yarqueue:discord')
 
 # GitHub check to position relative paths correctly
 if os.environ.get("CI"):

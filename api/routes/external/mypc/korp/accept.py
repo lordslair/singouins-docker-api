@@ -8,15 +8,14 @@ from loguru import logger
 
 from mongo.models.Creature import CreatureKorp
 
-from nosql.queue import yqueue_put
-
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_korp,
     check_korp_exists,
     )
-
-from variables import YQ_BROADCAST, YQ_DISCORD
+from utils.pubsub import cput
+from utils.queue import qput
+from variables import PS_BROADCAST, YQ_DISCORD
 
 
 # API: POST /mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>/accept
@@ -54,36 +53,30 @@ def korp_accept(creatureuuid, korpuuid):
                 "payload": None,
             }
         ), 200
-    else:
-        # Broadcast Queue
-        yqueue_put(
-            YQ_BROADCAST,
-            {
-                "ciphered": False,
-                "payload": g.Korp.to_json(),
-                "route": 'mypc/{id1}/korp',
-                "scope": 'korp',
-                }
-            )
-        # Discord Queue
-        yqueue_put(
-            YQ_DISCORD,
-            {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: **{g.Creature.name}** '
-                    f'joined this Korp (**{g.Korp.name}**)'
-                    ),
-                "embed": None,
-                "scope": f'Korp-{g.Korp.id}',
-                }
-            )
-        msg = f'{g.h} Korp accept OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": g.Korp.to_mongo(),
-            }
-        ), 200
+
+    # Everything went well
+    # Broadcast Channel
+    cput(PS_BROADCAST, {
+        "ciphered": False,
+        "payload": g.Korp.to_json(),
+        "route": 'mypc/{id1}/korp',
+        "scope": 'korp'})
+    # Discord Queue
+    qput(YQ_DISCORD, {
+        "ciphered": False,
+        "payload": (
+            f':information_source: **{g.Creature.name}** '
+            f'joined this Korp (**{g.Korp.name}**)'
+            ),
+        "embed": None,
+        "scope": f'Korp-{g.Korp.id}'})
+
+    msg = f'{g.h} Korp accept OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": g.Korp.to_mongo(),
+        }
+    ), 200

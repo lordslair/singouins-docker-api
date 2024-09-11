@@ -6,13 +6,12 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.queue import yqueue_put
 from routes.external.mypc.instance._tools import get_empty_coords
 from utils.decorators import (
     check_creature_exists,
     check_instance_exists,
     )
-
+from utils.queue import qput
 from variables import YQ_DISCORD
 
 
@@ -62,15 +61,11 @@ def join(creatureuuid, instanceuuid):
             scopes.append(f'Squad-{g.Creature.squad.id}')
         for scope in scopes:
             # Discord Queue
-            yqueue_put(
-                YQ_DISCORD,
-                {
-                    "ciphered": False,
-                    "payload": f':map: **{g.Creature.name}** joined a new Instance',
-                    "embed": None,
-                    "scope": scope,
-                    }
-                )
+            qput(YQ_DISCORD, {
+                "ciphered": False,
+                "payload": f':map: **{g.Creature.name}** joined a new Instance',
+                "embed": None,
+                "scope": scope})
         # Everything went well
         msg = f'{g.h} Instance({g.Instance.id}) Join OK'
         logger.debug(msg)

@@ -6,8 +6,6 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.queue import yqueue_put
-
 from mongo.models.Creature import CreatureDocument, CreatureSquad
 from mongo.models.Squad import SquadDocument
 
@@ -16,8 +14,9 @@ from utils.decorators import (
     check_creature_in_squad,
     check_squad_exists,
     )
-
-from variables import YQ_BROADCAST, YQ_DISCORD
+from utils.pubsub import cput
+from utils.queue import qput
+from variables import PS_BROADCAST, YQ_DISCORD
 
 
 # API: DELETE ../squad/<uuid:squaduuid>
@@ -64,37 +63,30 @@ def squad_delete(creatureuuid, squaduuid):
                 "payload": None,
             }
         ), 200
-    else:
-        # Broadcast Queue
-        yqueue_put(
-            YQ_BROADCAST,
-            {
-                "ciphered": False,
-                "payload": None,
-                "route": 'mypc/{id1}/squad',
-                "scope": 'squad',
-                }
-            )
-        # Discord Queue
-        yqueue_put(
-            YQ_DISCORD,
-            {
-                "ciphered": False,
-                "payload": (
-                    f':information_source: **{g.Creature.name}** '
-                    f'deleted this Squad'
-                    ),
-                "embed": None,
-                "scope": f'Squad-{g.Squad.id}',
-                }
-            )
 
-        msg = f'{g.h} Squad delete OK'
-        logger.debug(msg)
-        return jsonify(
-            {
-                "success": True,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
+    # Everything went well
+    # Broadcast Channel
+    cput(PS_BROADCAST, {
+        "ciphered": False,
+        "payload": g.Squad.to_json(),
+        "route": 'mypc/{id1}/squad',
+        "scope": 'squad'})
+    # Discord Queue
+    qput(YQ_DISCORD, {
+        "ciphered": False,
+        "payload": (
+            f':information_source: **{g.Creature.name}** '
+            f'deleted this Squad (**{g.Squad.name}**)'
+            ),
+        "embed": None,
+        "scope": f'Squad-{g.Squad.id}'})
+
+    msg = f'{g.h} Squad delete OK'
+    logger.debug(msg)
+    return jsonify(
+        {
+            "success": True,
+            "msg": msg,
+            "payload": None,
+        }
+    ), 200
