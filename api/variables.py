@@ -41,31 +41,15 @@ else:
     DATA_PATH = 'data'
 
 # Static data
+rarity_levels = {
+    'creature': ['Small', 'Medium', 'Big', 'Unique', 'Boss', 'God'],
+    'standard': ['Broken', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary']
+}
+
 rarity_array = {
-    'creature': [
-        'Small',
-        'Medium',
-        'Big',
-        'Unique',
-        'Boss',
-        'God',
-    ],
-    'resource': [
-        'Broken',
-        'Common',
-        'Uncommon',
-        'Rare',
-        'Epic',
-        'Legendary',
-    ],
-    'item': [
-        'Broken',
-        'Common',
-        'Uncommon',
-        'Rare',
-        'Epic',
-        'Legendary',
-    ],
+    'creature': rarity_levels['creature'],
+    'resource': rarity_levels['standard'],
+    'item': rarity_levels['standard'],
 }
 
 """
