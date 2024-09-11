@@ -75,7 +75,7 @@ def squad_kick(creatureuuid, squaduuid, targetuuid):
         "ciphered": False,
         "payload": (
             f':information_source: **{g.Creature.name}** '
-            f'kicked **{CreatureTarget.name}** from this Squad (**{g.Squad.name}**)'
+            f'kicked **{CreatureTarget.name}** from this Squad'
             ),
         "embed": None,
         "scope": f'Squad-{g.Squad.id}'})

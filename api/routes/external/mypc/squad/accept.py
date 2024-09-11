@@ -66,7 +66,7 @@ def squad_accept(creatureuuid, squaduuid):
         "ciphered": False,
         "payload": (
             f':information_source: **{g.Creature.name}** '
-            f'joined this Squad (**{g.Squad.name}**)'
+            f'joined this Squad'
             ),
         "embed": None,
         "scope": f'Squad-{g.Squad.id}'})

@@ -76,7 +76,7 @@ def squad_delete(creatureuuid, squaduuid):
         "ciphered": False,
         "payload": (
             f':information_source: **{g.Creature.name}** '
-            f'deleted this Squad (**{g.Squad.name}**)'
+            f'deleted this Squad'
             ),
         "embed": None,
         "scope": f'Squad-{g.Squad.id}'})

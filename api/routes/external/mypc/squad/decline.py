@@ -63,7 +63,7 @@ def squad_decline(creatureuuid, squaduuid):
         "ciphered": False,
         "payload": (
             f':information_source: **{g.Creature.name}** '
-            f'declined this Squad (**{g.Squad.name}**)'
+            f'declined this Squad'
             ),
         "embed": None,
         "scope": f'Squad-{g.Squad.id}'})
