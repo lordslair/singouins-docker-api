@@ -32,7 +32,8 @@ ENV PATH="/code/.local/bin:${PATH}"
 # Install dependencies
 RUN apk update --no-cache \
     && apk add --no-cache \
-        python3=~3.11
+        python3=~3.11 \
+        py3-pip>=23
 
 # Copy the necessary files from the build stage
 COPY --chown=ai:ai --from=builder /code /code
