@@ -5,15 +5,9 @@ import json
 import os
 import threading
 
+from flask import Flask, jsonify
 from loguru import logger
-from mongoengine import Q
-
-from bestiaire import (
-    Salamander,
-    Fungus
-    )
-
-from mongo.models.Creature import CreatureDocument
+from prometheus_client import start_http_server
 
 from nosql.connector import r, redis
 from utils.actions import creature_init, creature_kill, creature_pop
@@ -28,6 +22,9 @@ from variables import (
 
 # Log System imports
 logger.info('[core] System imports OK')
+
+# Create a Flask application
+app = Flask(__name__)
 
 # Pre-flight check for Resolver connection
 if os.environ.get("CI"):
@@ -70,7 +67,48 @@ for path in SUB_PATHS:
     else:
         logger.info(f'[core] Subscribe to Redis:"{path}" OK')
 
+# Defining Flask app
+app = Flask(__name__)
+
+
+# Defining Flask routes
+@app.route('/check', methods=['GET'])
+def check_get():
+    return jsonify({
+        "success": True,
+        "payload": {'status': 'ok'},
+    }), 200
+
+
+@app.route('/threads', methods=['GET'])
+def threads_get():
+    threads_dict = []
+    for i, t in enumerate(threads):
+        threads_dict.append({
+            "id": t.creature.id,
+            "instance": t.instance.to_mongo(),
+            "creature": t.creature.to_mongo(),
+        })
+
+    return jsonify({
+        "success": True,
+        "payload": threads_dict,
+    }), 200
+
+
+# Expose metrics on /metrics
+def start_prometheus_server():
+    start_http_server(8000)  # Expose metrics on port 8000
+
+
 if __name__ == '__main__':
+    # Start the Flask server in a separate thread
+    flask_thread = threading.Thread(target=lambda: app.run(host="0.0.0.0", port=5000))
+    flask_thread.start()
+
+    # Start the Prometheus server
+    start_prometheus_server()
+
     # List to store threads
     threads = []
 
