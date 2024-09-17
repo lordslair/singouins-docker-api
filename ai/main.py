@@ -3,6 +3,7 @@
 
 import json
 import os
+import threading
 
 from loguru import logger
 from mongoengine import Q
@@ -15,11 +16,14 @@ from bestiaire import (
 from mongo.models.Creature import CreatureDocument
 
 from nosql.connector import r, redis
+from utils.actions import creature_init, creature_kill, creature_pop
+from utils.requests import resolver_generic_request_get
 
-from utils.requests import (
-    resolver_generic_request_get,
-    RESOLVER_URL,
+from variables import (
+    CREATURE_PATH,
+    INSTANCE_PATH,
     RESOLVER_CHECK_SKIP,
+    RESOLVER_URL,
     )
 
 # Log System imports
@@ -45,7 +49,7 @@ else:
             logger.warning(f'[core] >> Resolver KO ({RESOLVER_URL})')
 
 # Subscriber pattern
-SUB_PATHS = ['ai-instance', 'ai-creature']
+SUB_PATHS = [CREATURE_PATH, INSTANCE_PATH]
 
 # Opening Redis connection
 try:
@@ -59,6 +63,7 @@ else:
 # Starting subscription
 for path in SUB_PATHS:
     try:
+        logger.trace(f'[core] Subscribe to Redis:"{path}" >>')
         pubsub.psubscribe(path)
     except Exception as e:
         logger.error(f'[core] Subscribe to Redis:"{path}" KO [{e}]')
@@ -66,33 +71,11 @@ for path in SUB_PATHS:
         logger.info(f'[core] Subscribe to Redis:"{path}" OK')
 
 if __name__ == '__main__':
-    # We initialise counters
-    threads_bestiaire = []
-    try:
-        # We Initialize with ALL the existing NPC Creatures in an instance
-        query = (Q(instance__exists=True) & Q(race__gt=10))
-        Creatures = CreatureDocument.objects(query)
-    except CreatureDocument.DoesNotExist:
-        logger.debug("[Initialization] Skipped (no Creatures fetched)")
-    except Exception as e:
-        logger.error(f"[Initialization] Creatures Query KO [{e}]")
-    else:
-        logger.trace("[Initialization] Creatures Query OK")
-        logger.trace("Creature Loading >>")
-        for Creature in Creatures:
-            # Like a lazy ass, we publish it into the channel
-            # to be treated in the listen() code
-            try:
-                pmsg = {
-                    "action": 'pop',
-                    "creature": Creature.to_json(),
-                    }
-                r.publish('ai-creature', json.dumps(pmsg))
-            except Exception as e:
-                logger.error(f"Creature publish KO | [{Creature.id}] {Creature.name} [{e}]")
-            else:
-                logger.trace(f"Creature publish OK | [{Creature.id}] {Creature.name}")
-        logger.debug("Creature Loading OK")
+    # List to store threads
+    threads = []
+
+    # Initialize the Threads with existing Creatures in DB
+    creature_init()
 
     # We receive the events from Redis
     for msg in pubsub.listen():
@@ -109,81 +92,19 @@ if __name__ == '__main__':
         }
         """
 
-        if msg['channel'] in ['ai-creature'] and msg['type'] == 'pmessage':
-            try:
-                data = json.loads(msg['data'])
-            except Exception as e:
-                logger.warning(f"Unable to json.loads ({msg['data']}) [{e}]")
-                continue
-            else:
+        if msg['type'] != 'pmessage':
+            logger.trace(f"Message receive do not contains a pmessage ({msg})")
+            continue
+        else:
+            data = json.loads(msg['data'])
+
+        if msg['channel'] == CREATURE_PATH:
+            if data['action'] == 'pop':
+                creature_pop(data['creature'], threads)
+            elif data['action'] == 'kill':
+                creature_kill(data['creature'], threads)
+            elif data['action'] == 'update':
+                # Some shit happened to a Creature - need to update thread info
                 pass
         else:
-            continue
-
-        if msg['channel'] == 'ai-creature' and data['action'] == 'pop':
-            # We have to pop a new creature somewhere
-            creature = json.loads(data['creature'])
-            logger.trace(f'pmessage["data"]: {creature}')
-            name = f"[{creature['_id']}] {creature['name']}"
-            # We check that it exists in MongoDB
-            try:
-                Creature = CreatureDocument.objects(_id=creature['_id']).get()
-            except CreatureDocument.DoesNotExist:
-                logger.warning(f'Creature pop KO | {name} (NotFound in MongoDB)')
-            else:
-                try:
-                    if Creature.race in [11, 12, 13, 14]:
-                        # Need to pop a Salamander
-                        logger.trace('We pop a Salamander')
-                        t = Salamander(creatureuuid=Creature.id)
-                    elif Creature.race in [15, 16]:
-                        # Need to pop a Fungus
-                        logger.trace('We pop a Fungus')
-                        t = Fungus(creatureuuid=Creature.id)
-                    else:
-                        # Gruik
-                        pass
-                        logger.warning(data)
-
-                    t.start()
-                    threads_bestiaire.append(t)
-                except Exception as e:
-                    logger.error(f'Creature pop KO | {name} [{e}]')
-                else:
-                    logger.debug(f'Creature pop OK | {name}')
-        elif msg['channel'] == 'ai-creature' and data['action'] == 'kill':
-            # We have to kill an existing creature somewhere
-            creature = json.loads(data['creature'])
-            try:
-                killed = False
-                name = f"[{creature['_id']}] {creature['name']}"
-                for index, thread in enumerate(threads_bestiaire):
-                    if thread.creature.id == creature['_id']:
-                        # We got the dead Creature
-                        logger.trace(f'Creature to kill found: {name}')
-                        thread.creature.hp = 0
-                        threads_bestiaire.remove(thread)
-                        killed = True
-            except Exception as e:
-                logger.error(f"Creature kill KO | {name} [{e}]")
-            else:
-                if killed is True:
-                    logger.debug(f"Creature kill OK | {name}")
-                else:
-                    logger.warning(f"Creature kill KO | {name} (NotFound in threads)")
-        elif msg['channel'] == 'ai-creature' and data['action'] == 'update':
-            # Some shit happened to a Creature - need to update thread info
-            pass
-        else:
             logger.warning(f"Message unknown (data:{data})")
-
-        # Every msg received we print bestiaire count
-        if len(threads_bestiaire) > 0:
-            logger.success(f'========== Status BEGIN ({len(threads_bestiaire)})')
-            for index, thread in enumerate(threads_bestiaire):
-                logger.success(
-                    f"[{thread.creature.id}] {thread.creature.name} : "
-                    f"{thread.creature.hp.current}/{thread.creature.hp.max} "
-                    f"@({thread.creature.x},{thread.creature.y})"
-                    )
-            logger.success('========== Status END')
