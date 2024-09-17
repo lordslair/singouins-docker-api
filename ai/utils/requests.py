@@ -1,33 +1,19 @@
 # -*- coding: utf8 -*-
 
 import json
-import os
 import requests
 
 from loguru import logger
 
 from mongo.models.Creature import CreatureDocument
-
 from nosql.models.RedisSearch import RedisSearch
 
-# Resolver variables
-RESOLVER_HOST = os.environ.get("RESOLVER_HOST")
-RESOLVER_PORT = os.environ.get("RESOLVER_PORT")
-RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
-RESOLVER_CHECK_SKIP = os.environ.get("RESOLVER_CHECK_SKIP")
-
-logger.debug(f"RESOLVER_HOST: {RESOLVER_HOST}")
-logger.debug(f"RESOLVER_PORT: {RESOLVER_PORT}")
-logger.debug(f"RESOLVER_URL: {RESOLVER_URL}")
-logger.debug(f"RESOLVER_CHECK_SKIP: {RESOLVER_CHECK_SKIP}")
+from variables import RESOLVER_URL
 
 
 def resolver_generic_request_get(path, code=200):
     try:
-        response = requests.get(
-            f'{RESOLVER_URL}{path}',
-            timeout=(1, 1)
-            )
+        response = requests.get(f'{RESOLVER_URL}{path}', timeout=(1, 1))
     except Exception as e:
         logger.error(f'Request Query KO [{e}]')
         return None
@@ -68,11 +54,7 @@ def resolver_move(self, targetx, targety):
         }
 
     try:
-        response = requests.post(
-            f'{RESOLVER_URL}/',
-            json=body,
-            timeout=(1, 1),
-            )
+        response = requests.post(f'{RESOLVER_URL}/', json=body, timeout=(1, 1))
     except Exception as e:
         logger.error(f'Request Query KO [{e}]')
         return None
@@ -116,11 +98,7 @@ def resolver_basic_attack(self, target):
         }
 
     try:
-        response = requests.post(
-            f'{RESOLVER_URL}/',
-            json=body,
-            timeout=(1, 1),
-            )
+        response = requests.post(f'{RESOLVER_URL}/', json=body, timeout=(1, 1))
     except Exception as e:
         logger.error(f'Request Query KO [{e}]')
         return None
@@ -140,27 +118,17 @@ def check_response(response, code):
     if response:
         if response.status_code == code:
             if response.text:
-                logger.trace(
-                    f'Request Query {response.status_code} OK '
-                    f'response:{json.loads(response.text)}'
-                    )
+                logger.trace(f'Request {response.status_code} OK ({json.loads(response.text)})')
                 return json.loads(response.text)
             else:
-                logger.warning(
-                    f'Request Query {response.status_code} KO'
-                    )
+                logger.warning(f'Request {response.status_code} KO')
                 return None
         else:
             if response.text:
-                logger.trace(
-                    f'Request Query {response.status_code} KO '
-                    f'response:{json.loads(response.text)}'
-                    )
+                logger.trace(f'Request {response.status_code} KO ({json.loads(response.text)})')
                 return None
             else:
-                logger.warning(
-                    f'Request Query {response.status_code} KO'
-                    )
+                logger.warning(f'Request {response.status_code} KO')
                 return None
     else:
         logger.warning('Request Query KO')
