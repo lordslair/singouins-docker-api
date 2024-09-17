@@ -1,13 +1,12 @@
 # -*- coding: utf8 -*-
 
-from loguru import logger
-from random import randint
+# from loguru import logger
 
 from bestiaire._Mob import Mob
 
 
 class Salamander(Mob):
-    def __init__(self, creatureuuid, internal_name="default"):
+    def __init__(self, creatureuuid: str):
         super(Mob, self).__init__()
         Mob.__init__(self, creatureuuid)
 
@@ -15,18 +14,10 @@ class Salamander(Mob):
         while self.creature.hp.current > 0:
             self.get_pa()
             self.get_creature()
-
-            pas = f'[🔴 :{self.pa.redpa},🔵 :{self.pa.bluepa}] '
-            pos = f'@(x:{self.creature.x},y:{self.creature.y})'
-            hp = f'{self.creature.hp.current}/{self.creature.hp.max}HP'
-            logger.debug(f'{self.logh} | Alive:{hp} {pas} {pos}')
+            self.status()
 
             # MOVE
-            if self.pa.bluepa > 4 and randint(0, 1):
-                logger.success(f'{self.logh} | Will move')
-                # self.set_pos()
-            else:
-                logger.warning(f'{self.logh} | Will not move')
+            self.move()
 
             """
             # BASIC ATTACK
@@ -72,6 +63,3 @@ class Salamander(Mob):
 
     def hit(self):
         pass
-
-    def get_name(self):
-        return self.internal_name

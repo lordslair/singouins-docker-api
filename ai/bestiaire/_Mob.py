@@ -3,27 +3,25 @@
 import time
 import threading
 
-from abc                         import ABC, abstractmethod
-from loguru                      import logger
+from abc import ABC, abstractmethod
+from loguru  import logger
+from random import randint
 
-from utils.requests              import resolver_move
-
+from mongo.models.Creature import CreatureDocument
+from mongo.models.Instance import InstanceDocument
+from nosql.models.RedisPa import RedisPa
+from utils.requests import resolver_move
 from utils.computation import (
     closest_player_from_me,
     next_coords_to_creature,
     is_coords_empty,
     )
 
-from mongo.models.Creature import CreatureDocument
-from mongo.models.Instance import InstanceDocument
-
-from nosql.models.RedisPa import RedisPa
-
 
 class Mob(ABC, threading.Thread):
 
     @abstractmethod
-    def __init__(self, creatureuuid):
+    def __init__(self, creatureuuid: str):
         super(threading.Thread, self).__init__()
 
         # We replicate Creature attibutes into Mob object
@@ -57,18 +55,26 @@ class Mob(ABC, threading.Thread):
     def hit(self):
         pass
 
+    def move(self):
+        if self.pa.bluepa > 4 and randint(0, 1):
+            logger.success(f'{self.logh} | Will move')
+            # self.set_pos()
+        else:
+            logger.warning(f'{self.logh} | Will not move')
+
     def sleep(self):
         logger.debug(f'{self.logh} | Will rest ({self.instance.tick}s)')
         time.sleep(self.instance.tick)
 
-#
-#
-#
+    def status(self):
+        pas = f'[🔴 :{self.pa.redpa},🔵 :{self.pa.bluepa}] '
+        pos = f'@(x:{self.creature.x},y:{self.creature.y})'
+        hp = f'{self.creature.hp.current}/{self.creature.hp.max}HP'
+        logger.debug(f'{self.logh} | Alive:{hp} {pas} {pos}')
 
-    @abstractmethod
-    def get_name(self):
-        pass
-
+#
+#
+#
     def get_pa(self):
         try:
             Pa = RedisPa(creatureuuid=self.creature.id)
@@ -93,7 +99,6 @@ class Mob(ABC, threading.Thread):
 #
 #
 #
-
     def set_pos(self):
         # We check the closest PC in sight
         CreatureTarget = closest_player_from_me(self)
