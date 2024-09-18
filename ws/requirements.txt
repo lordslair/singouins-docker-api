@@ -8,7 +8,5 @@ asyncio==3.4.3
     # via -r requirements.in
 loguru==0.7.0
     # via -r requirements.in
-redis==5.0.7
-    # via -r requirements.in
-websockets==12.0
+websockets==13.0.1
     # via -r requirements.in
