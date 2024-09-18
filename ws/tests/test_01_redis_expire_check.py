@@ -6,21 +6,18 @@ import time
 
 
 # Redis variables
-REDIS_HOST = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_HOST", '127.0.0.1')
-REDIS_PORT = os.environ.get("SEP_BACKEND_REDIS_SVC_SERVICE_PORT", 6379)
-REDIS_DB_NAME = os.environ.get("SEP_REDIS_DB", 0)
-PUBSUB_PATH = os.environ.get('PUBSUB_PATH', '*')
-
-r = redis.StrictRedis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        db=REDIS_DB_NAME,
-        encoding='utf-8',
-        decode_responses=True,
-        )
+REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
+REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+REDIS_BASE = int(os.environ.get("REDIS_BASE", 0))
+# APP variables
+API_ENV = os.environ.get("API_ENV", None)
+# PubSub variables
+PS_EXPIRE = os.environ.get("PS_EXPIRE", '__keyevent@0__:expired')
 
 
 def test_redis_expire():
+    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
+
     INSTANCE_UUID = "00000000-0000-0000-0000-000000000000"
     CREATURE_UUID = "11111111-1111-1111-1111-111111111111"
     DATA          = "PyTest"
@@ -28,7 +25,7 @@ def test_redis_expire():
     FULLKEY       = f'{TYPE}:{INSTANCE_UUID}:{CREATURE_UUID}:{DATA}'
     # We subscribe
     pubsub = r.pubsub()
-    pubsub.psubscribe(PUBSUB_PATH)
+    pubsub.psubscribe(PS_EXPIRE)
     time.sleep(1)
     msg = pubsub.get_message()
     # We check the pubsub works
@@ -42,7 +39,7 @@ def test_redis_expire():
         }
     """
     assert msg['type'] == 'psubscribe'
-    assert msg['channel'] == PUBSUB_PATH
+    assert msg['channel'] == PS_EXPIRE
     # We SET the data
     r.set(FULLKEY, '')
     # We check the item was properly created
@@ -57,7 +54,7 @@ def test_redis_expire():
     """
     msg = pubsub.get_message()
     assert msg['type'] == 'pmessage'
-    assert msg['channel'] == f'__keyevent@{REDIS_DB_NAME}__:set'
+    assert msg['channel'] == f'__keyevent@{REDIS_BASE}__:set'
     assert msg['data'] == FULLKEY
     r.expire(FULLKEY, 1)
     # We wait EXPIRE and pubsub doing its job
@@ -74,5 +71,5 @@ def test_redis_expire():
     """
     msg = pubsub.get_message()
     assert msg['type'] == 'pmessage'
-    assert msg['channel'] == f'__keyevent@{REDIS_DB_NAME}__:expired'
+    assert msg['channel'] == f'__keyevent@{REDIS_BASE}__:expired'
     assert msg['data'] == FULLKEY

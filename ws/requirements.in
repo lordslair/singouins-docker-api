@@ -1,3 +1,3 @@
-loguru     ~= 0.7
-websockets ~= 12.0
-yarqueue   == 0.4.1
+asyncio==3.4.3
+loguru==0.7
+websockets==12.0

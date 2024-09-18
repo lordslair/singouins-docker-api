@@ -19,8 +19,6 @@ RUN apk update --no-cache \
         py3-pip>=23 \
     && apk add --no-cache --virtual .build-deps \
         gcc=~13 \
-        libc-dev=~0.7 \
-        libffi-dev=~3.4 \
         python3-dev=~3.11 \
     && su ws -c \
         "pip3 install --break-system-packages --user -U -r /code/requirements.txt" \
@@ -46,7 +44,6 @@ COPY --chown=ws:ws --from=builder /code /code
 
 # Copy application code
 COPY --chown=ws:ws /ws/main.py  /code/main.py
-COPY --chown=ws:ws /nosql       /code/nosql
 
 # Set working directory
 WORKDIR /code

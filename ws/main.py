@@ -1,156 +1,122 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
-# Inspired from https://github.com/aaugustin/websockets/issues/653
 
 import asyncio
+import datetime
 import json
+import redis.asyncio as redis
 import os
-import re
-import uuid
 import websockets
 
-from loguru                     import logger
-
-from nosql.connector            import r
-
-# Log System imports
-logger.info('[core] System imports OK')
+from loguru import logger
+from websockets import WebSocketServerProtocol
 
 # Redis variables
-REDIS_SLEEP = float(os.environ.get('REDIS_SLEEP', "0.1"))  # We receive a STR
-
+REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
+REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+REDIS_BASE = int(os.environ.get("REDIS_BASE", 0))
+logger.debug(f"REDIS_HOST: {REDIS_HOST}")
+logger.debug(f"REDIS_PORT: {REDIS_PORT}")
+logger.debug(f"REDIS_BASE: {REDIS_BASE}")
+# APP variables
+API_ENV = os.environ.get("API_ENV", None)
+# PubSub variables
+PS_BROADCAST = os.environ.get("PS_BROADCAST", f'ws-broadcast-{API_ENV.lower()}')
+PS_EXPIRE = os.environ.get("PS_EXPIRE", '__keyevent@0__:expired')
+logger.debug(f"PS_BROADCAST: {PS_BROADCAST}")
+logger.debug(f"PS_EXPIRE: {PS_EXPIRE}")
 # WebSocket variables
-WSS_HOST  = os.environ.get('WSS_HOST', '0.0.0.0')
-WSS_PORT  = os.environ.get('WSS_PORT', 5000)
-# Redus PubSub variables
-PUBSUB_PATH  = os.environ.get('PUBSUB_PATH', '*')
+WSS_HOST = os.environ.get('WSS_HOST', '0.0.0.0')
+WSS_PORT = int(os.environ.get('WSS_PORT', 5000))
+logger.debug(f"WSS_HOST: {WSS_HOST}")
+logger.debug(f"WSS_PORT: {WSS_PORT}")
 
 CLIENTS = set()
 
-# Starting subscription
-try:
+
+async def listen_to_broadcast() -> None:
+    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
     pubsub = r.pubsub()
-    pubsub.psubscribe(PUBSUB_PATH)
-except Exception as e:
-    logger.error(f'[core] Subscription to Redis:"{PUBSUB_PATH}" KO [{e}]')
-else:
-    logger.info(f'[core] Subscription to Redis:"{PUBSUB_PATH}" OK')
+    await pubsub.subscribe(PS_BROADCAST)
+
+    # Continuously listen for messages
+    async for message in pubsub.listen():
+        logger.trace(f'Pub/Sub received: {message}')
+        if message['type'] == 'message':
+            data = message['data'].decode('utf-8')
+            # Send the message to all connected WebSocket clients
+            await notify_clients(data)
 
 
-async def broadcast():
-    while True:
-        msg = pubsub.get_message()
-        if msg:
-            logger.debug(f'[pubsub] Consumer got <{msg}>')
+async def listen_to_expired() -> None:
+    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
+    pubsub = r.pubsub()
+    await pubsub.psubscribe('__keyevent@0__:expired')
 
-            # Detect the action which triggered the event
-            m = re.search(r"__keyevent@\w__:(?P<action>\w+)", msg['channel'])
-            if m is None:
-                # No action detected, we skip processing
-                logger.trace(
-                    f"Regex ?P<action> KO (channel:{msg['channel']}) - Skip"
-                    )
-                continue
-
-            if m.group('action') == 'expired':
-                # Here we get the EXPIRED KEYS
-                cplx_key = re.search(
-                    (
-                        r"(?P<key_root>[a-zA-Z]+):"
-                        r"(?P<key_uuid>[a-f0-9]{8}-[a-f0-9]{4}"
-                        r"-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):"
-                        r"(?P<key_string>[a-zA-Z]+)$"
-                        ),
-                    msg['data']
-                    )
-                await asyncio.gather(
-                    *[ws.send(
-                        json.dumps({
-                            "ciphered": False,
-                            "payload": {
-                                "type": cplx_key.group('key_root'),
-                                "data": cplx_key.group('key_string'),
-                                "creatureuuid": cplx_key.group('key_uuid'),
-                                "fullkey": msg['data'],
-                                },
-                            "embed": None,
-                            "scope": None,
-                            "source": 'redsub',
-                            })
-                        ) for ws in CLIENTS],
-                    return_exceptions=False,
-                    )
-
-        await asyncio.sleep(REDIS_SLEEP)
+    # Continuously listen for messages
+    async for message in pubsub.listen():
+        logger.trace(f'Pub/Sub received: {message}')
+        if message['type'] == 'pmessage':
+            expired_key = message['data'].decode()
+            # Check we match the API_ENV
+            if expired_key.startswith(API_ENV):
+                logger.debug(f"Key expired: {expired_key}")
+                # We split the key to grab the elements
+                splitted_key = expired_key.split(':')
+                # Build the message
+                message = json.dumps({
+                    "creature": splitted_key[2],
+                    "date": datetime.datetime.utcnow().isoformat(),
+                    "env": API_ENV,
+                    "event": "expired",
+                    "key": expired_key,
+                    "name": splitted_key[3],
+                    "type": splitted_key[1],
+                })
+                # Send the message to all connected WebSocket clients
+                await notify_clients(message)
 
 
-async def handler(websocket, path):
-    # When client connects
+async def notify_clients(message: str) -> None:
+    if CLIENTS:  # asyncio.wait doesn't accept an empty list
+        logger.info(f'Broadcasting message to {len(CLIENTS)} clients')
+        await asyncio.wait(
+            [asyncio.create_task(client.send(message)) for client in CLIENTS]
+            )
+
+
+async def websocket_handler(websocket: WebSocketServerProtocol, path: str) -> None:
+    # Register client
+    real_ip = websocket.request_headers['X-Real-IP']
+    logger.info(f'Client connection OK (@IP:{real_ip})')
+
     CLIENTS.add(websocket)
-    realip = websocket.request_headers['X-Real-IP']
-    ipuuid = str(uuid.uuid3(uuid.NAMESPACE_DNS, realip))
-    logger.info(f'[ws] Client connection OK (@IP:{realip})')
-
-    # Storing in redis client connlog
     try:
-        rkey   = f'wsclients:{str(uuid.uuid4())}'
-        r.set(rkey, realip)
-    except Exception as e:
-        logger.error(f'[ws] Client log KO (@IP:{realip}) [{e}]')
-    else:
-        logger.info(f'[ws] Client log OK (@IP:{realip})')
-
-    # Main loop
-    try:
-        # Receiving messages
-        async for msg in websocket:
-            # We do nothing if we receive a msg through WS
-            pass
-    except websockets.ConnectionClosedError:
-        logger.warning(f'[ws] Client lost (@IP:{realip})')
+        async for message in websocket:
+            logger.trace(f'WS received: {message}')
+            pass  # Do nothing with received messages for now
+    except websockets.exceptions.ConnectionClosed as e:
+        logger.debug(f'Client disconnected (@IP:{real_ip}): {e}')
     finally:
-        # At the end, we remove the connection
+        # Unregister client
+        logger.debug(f'Client remove OK (@IP:{real_ip})')
         CLIENTS.remove(websocket)
-        # We delete in redis client connlog
-        try:
-            r.delete(f'wsclients:{ipuuid}')
-        except Exception as e:
-            logger.error(f'[ws] Client remove KO (@IP:{realip}) [{e}]')
-        else:
-            logger.info(f'[ws] Client remove OK (@IP:{realip})')
-
-try:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.create_task(broadcast())
-except Exception as e:
-    logger.error(f'[core] Start Loop KO [{e}]')
-else:
-    logger.info('[core] Start Loop OK')
 
 
-# Opening Queue
-try:
-    start_server = websockets.serve(handler, WSS_HOST, WSS_PORT)
-except Exception as e:
-    logger.error(f'[core] Start WS KO (wss://{WSS_HOST}:{WSS_PORT}) [{e}]')
-else:
-    logger.info(f'[core] Start WS OK (wss://{WSS_HOST}:{WSS_PORT})')
+async def main() -> None:
+    # Start WebSocket server
+    logger.trace(f'WebSocket server start >> ({WSS_HOST}:{WSS_PORT})')
+    ws_server = await websockets.serve(websocket_handler, WSS_HOST, WSS_PORT)
+    logger.debug('WebSocket server start OK')
+    logger.debug('Asyncio.gather start >>')
+    await asyncio.gather(
+        ws_server.wait_closed(),
+        listen_to_broadcast(),
+        listen_to_expired(),
+        )
 
-# Looping to daemonize the Queue
-try:
-    loop.run_until_complete(start_server)
-    loop.run_forever()
-except KeyboardInterrupt:
-    try:
-        # We scan to find the connected clients
-        for key in r.scan_iter('wsclients:*'):
-            # We loop to delete all the redis entries
-            r.delete(key)
-    except Exception as e:
-        logger.error(f'[core] Cleaned wsclients KO [{e}]')
-    else:
-        logger.info('[core] Cleaned wsclients OK')
-    finally:
-        # We can proprerly exit now
-        logger.info('[core] Exiting')
+
+if __name__ == "__main__":
+    # Run the server
+    logger.info('Server starting...')
+    asyncio.run(main())
