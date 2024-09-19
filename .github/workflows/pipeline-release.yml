@@ -161,8 +161,8 @@ jobs:
           LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
           GUNICORN_CHDIR: ${{ secrets.GUNICORN_CHDIR }}
 
-          SEP_INTERNAL_TOKEN: ${{ secrets.SEP_INTERNAL_TOKEN }}
           SEP_SECRET_KEY: ${{ secrets.SEP_SECRET_KEY }}
+          API_ENV: ${{ vars.API_ENV }}
 
           SEP_SMTP_FROM: ${{ secrets.SEP_SMTP_FROM }}
           SEP_SMTP_SERVER: ${{ secrets.SEP_SMTP_SERVER }}
