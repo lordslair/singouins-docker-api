@@ -39,7 +39,7 @@ def test_redis_expire():
         }
     """
     assert msg['type'] == 'psubscribe'
-    assert msg['channel'] == PS_EXPIRE
+    assert msg['channel'].decode() == PS_EXPIRE
     # We SET the data
     r.set(FULLKEY, '')
     # We check the item was properly created
@@ -54,8 +54,8 @@ def test_redis_expire():
     """
     msg = pubsub.get_message()
     assert msg['type'] == 'pmessage'
-    assert msg['channel'] == f'__keyevent@{REDIS_BASE}__:set'
-    assert msg['data'] == FULLKEY
+    assert msg['channel'].decode() == f'__keyevent@{REDIS_BASE}__:set'
+    assert msg['data'].decode() == FULLKEY
     r.expire(FULLKEY, 1)
     # We wait EXPIRE and pubsub doing its job
     time.sleep(3)
@@ -71,5 +71,5 @@ def test_redis_expire():
     """
     msg = pubsub.get_message()
     assert msg['type'] == 'pmessage'
-    assert msg['channel'] == f'__keyevent@{REDIS_BASE}__:expired'
-    assert msg['data'] == FULLKEY
+    assert msg['channel'].decode() == f'__keyevent@{REDIS_BASE}__:expired'
+    assert msg['data'].decode() == FULLKEY
