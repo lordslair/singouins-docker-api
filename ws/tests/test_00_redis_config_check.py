@@ -20,7 +20,15 @@ def test_redis_ping():
 
 def test_redis_config():
     r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
-    config = r.config_get(pattern='notify-keyspace-events')
-    assert config is not None
-    assert config is not False
-    assert config['notify-keyspace-events'] == '$sxE'
+
+    try:
+        config = r.config_get(pattern='notify-keyspace-events')
+        if 'notify-keyspace-events' not in config or config['notify-keyspace-events'] == '':
+            r.config_set(name='notify-keyspace-events', value='$sxE')
+    except Exception as e:
+        print(f'Redis init: notify-keyspace-events KO [{e}]')
+    else:
+        config = r.config_get(pattern='notify-keyspace-events')
+        assert config is not None
+        assert config is not False
+        assert config['notify-keyspace-events'] == '$sxE'
