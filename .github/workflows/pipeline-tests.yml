@@ -172,6 +172,7 @@ jobs:
           GUNICORN_CHDIR: ${{ vars.GUNICORN_CHDIR }}
 
           SEP_SECRET_KEY: ${{ secrets.SEP_SECRET_KEY }}
+          API_ENV: ${{ vars.API_ENV }}
 
           MONGO_HOST: ${{ vars.MONGO_HOST }}
           MONGO_PASS: ${{ secrets.MONGO_PASS }}
