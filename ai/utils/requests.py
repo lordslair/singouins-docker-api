@@ -7,7 +7,6 @@ from loguru import logger
 
 from mongo.models.Creature import CreatureDocument
 from nosql.models.RedisSearch import RedisSearch
-
 from variables import RESOLVER_URL
 
 

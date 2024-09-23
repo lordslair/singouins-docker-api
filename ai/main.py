@@ -9,7 +9,7 @@ from flask import Flask, jsonify
 from loguru import logger
 from prometheus_client import start_http_server
 
-from nosql.connector import r, redis
+from utils.redis import r, redis
 from utils.actions import creature_init, creature_kill, creature_pop
 from utils.requests import resolver_generic_request_get
 
@@ -120,15 +120,17 @@ if __name__ == '__main__':
         # We expect something like this as message
         """
         {
-          "channel": <ai-{creature|instance}>,
-          "data": {
+          "channel": b'<ai-{creature|instance}>',
+          "data": b'{
             "action": <pop|kill>,
             "creature": <CreatureDocument.to_json()>
-            },
-          "pattern": <ai-{creature|instance}>,
+            }',
+          "pattern": b'<ai-{creature|instance}>',
           "type": "pmessage",
         }
         """
+
+        logger.success(msg)
 
         if msg['type'] != 'pmessage':
             logger.trace(f"Message receive do not contains a pmessage ({msg})")
@@ -136,7 +138,7 @@ if __name__ == '__main__':
         else:
             data = json.loads(msg['data'])
 
-        if msg['channel'] == CREATURE_PATH:
+        if msg['channel'].decode() == CREATURE_PATH:
             if data['action'] == 'pop':
                 creature_pop(data['creature'], threads)
             elif data['action'] == 'kill':

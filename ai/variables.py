@@ -19,6 +19,15 @@ logger.debug(f"API_ENV: {API_ENV}")
 logger.debug(f"INSTANCE_PATH: {INSTANCE_PATH}")
 logger.debug(f"CREATURE_PATH: {CREATURE_PATH}")
 
+# Redis variables
+REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+REDIS_BASE = os.environ.get("REDIS_BASE", 0)
+
+logger.debug(f"REDIS_HOST: {REDIS_HOST}")
+logger.debug(f"REDIS_PORT: {REDIS_PORT}")
+logger.debug(f"REDIS_BASE: {REDIS_BASE}")
+
 # Resolver variables
 RESOLVER_HOST = os.environ.get("RESOLVER_HOST", 'resolver-svc')
 RESOLVER_PORT = os.environ.get("RESOLVER_PORT", 3000)

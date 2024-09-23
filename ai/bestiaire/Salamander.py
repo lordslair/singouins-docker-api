@@ -21,7 +21,7 @@ class Salamander(Mob):
 
             """
             # BASIC ATTACK
-            if self.pa.redpa > 8 and randint(0, 1):
+            if self.pa.red > 8 and randint(0, 1):
                 # We check if something is nearby
                 (closest, coords) = closest_creature_from_creature(self)
                 if (self.x - 1 <= closest['x'] <= self.x + 1 and

@@ -4,13 +4,13 @@ import json
 
 from loguru import logger
 from mongoengine import Q
-from nosql.connector import r
 
 from bestiaire import (
     Salamander,
     Fungus
     )
 from mongo.models.Creature import CreatureDocument
+from utils.redis import r
 
 from variables import (
     CREATURE_PATH,

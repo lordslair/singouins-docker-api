@@ -9,8 +9,8 @@ from random import randint
 
 from mongo.models.Creature import CreatureDocument
 from mongo.models.Instance import InstanceDocument
-from nosql.models.RedisPa import RedisPa
 from utils.requests import resolver_move
+from utils.redis import r
 from utils.computation import (
     closest_player_from_me,
     next_coords_to_creature,
@@ -56,7 +56,7 @@ class Mob(ABC, threading.Thread):
         pass
 
     def move(self):
-        if self.pa.bluepa > 4 and randint(0, 1):
+        if self.pa.blue > 4 and randint(0, 1):
             logger.success(f'{self.logh} | Will move')
             # self.set_pos()
         else:
@@ -67,7 +67,7 @@ class Mob(ABC, threading.Thread):
         time.sleep(self.instance.tick)
 
     def status(self):
-        pas = f'[🔴 :{self.pa.redpa},🔵 :{self.pa.bluepa}] '
+        pas = f'[🔴 :{self.pa.red},🔵 :{self.pa.blue}] '
         pos = f'@(x:{self.creature.x},y:{self.creature.y})'
         hp = f'{self.creature.hp.current}/{self.creature.hp.max}HP'
         logger.debug(f'{self.logh} | Alive:{hp} {pas} {pos}')
@@ -76,14 +76,46 @@ class Mob(ABC, threading.Thread):
 #
 #
     def get_pa(self):
-        try:
-            Pa = RedisPa(creatureuuid=self.creature.id)
-        except Exception as e:
-            logger.error(f'{self.logh} | RedisPa Request KO [{e}]')
-        else:
-            if Pa is not False and Pa is not None:
-                self.pa = Pa
-            logger.trace(f'{self.logh} | RedisPa Request OK')
+        from variables import API_ENV
+
+        # Constants
+        RED_PA_MAX = 16
+        BLUE_PA_MAX = 8
+        PA_DURATION = self.instance.tick
+
+        # Define a simple class to store PA values
+        class PA:
+            def __init__(self):
+                self.red = 0
+                self.blue = 0
+
+        pa_info = {
+            'blue': {
+                'key': f"{API_ENV}:pas:{self.creature.id}:blue",
+                'max_pa': BLUE_PA_MAX,
+                'max_ttl': BLUE_PA_MAX * PA_DURATION,
+                'current_pa': BLUE_PA_MAX,
+            },
+            'red': {
+                'key': f"{API_ENV}:pas:{self.creature.id}:red",
+                'max_pa': RED_PA_MAX,
+                'max_ttl': RED_PA_MAX * PA_DURATION,
+                'current_pa': RED_PA_MAX,
+            }
+        }
+
+        # Initialize self.pa as an instance of the PA class if it doesn't exist
+        if not hasattr(self, 'pa'):
+            self.pa = PA()
+
+        for pa_color, pa_data in pa_info.items():
+            if r.exists(pa_data['key']):
+                pa_info[pa_data]['current_pa'] = int(
+                    round(pa_data['max_ttl'] - abs(r.ttl(pa_data['key'])) / PA_DURATION)
+                    )
+
+            # Dynamically assign the current_pa to self.pa based on the pa_type
+            setattr(self.pa, pa_color, pa_data['current_pa'])
 
     def get_creature(self):
         try:
