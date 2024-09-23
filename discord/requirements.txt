@@ -26,6 +26,8 @@ dnspython==2.6.1
     # via
     #   email-validator
     #   pymongo
+durationpy==0.7
+    # via kubernetes
 email-validator==2.2.0
     # via -r requirements.in
 frozenlist==1.4.1
@@ -39,7 +41,7 @@ idna==3.7
     #   email-validator
     #   requests
     #   yarl
-kubernetes==30.1.0
+kubernetes==31.0.0
     # via -r requirements.in
 loguru==0.7.2
     # via -r requirements.in

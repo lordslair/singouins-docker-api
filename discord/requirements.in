@@ -1,5 +1,5 @@
 email-validator ~= 2.2
-kubernetes      ~= 30.1
+kubernetes      ~= 31.0
 loguru          ~= 0.7
 mongoengine     ~= 0.28
 Pillow          ~= 10.4
