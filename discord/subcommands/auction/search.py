@@ -59,18 +59,26 @@ def search(group_auction, bot):
         # We get the Item from the Auctions
         try:
             if metatype and metaid:
-                logger.success(f"1 {metatype}, {metaid}")
                 query = Q(item__metatype=metatype) & Q(item__metaid=metaid)
             elif metatype:
-                logger.success(f"2 {metatype}, {metaid}")
                 query = Q(item__metatype=metatype)
             elif metaid:
-                logger.success(f"3 {metatype}, {metaid}")
                 query = Q(item__metaid=metaid)
             else:
-                logger.error(f"4 {metatype}, {metaid}")
+                pass
 
-            Auctions = AuctionDocument.objects(query)
+            Auctions = AuctionDocument.objects.get(query)
+        except AuctionDocument.DoesNotExist:
+            description = 'No items were found matching these criterias.'
+            logger.debug(f'{h} └──> {description}')
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=description,
+                    colour=discord.Colour.orange(),
+                    ),
+                ephemeral=True,
+                )
+            return
         except Exception as e:
             description = f'Auction-Search Query KO [{e}]'
             logger.error(f'{h} └──> {description}')
@@ -83,18 +91,7 @@ def search(group_auction, bot):
                 )
             return
 
-        if Auctions.count() == 0:
-            description = 'No items were found matching these criterias.'
-            logger.debug(f'{h} └──> {description}')
-            await ctx.respond(
-                embed=discord.Embed(
-                    description=description,
-                    colour=discord.Colour.orange(),
-                    ),
-                ephemeral=True,
-                )
-            return
-
+        # If we are here, Auctions QuerySet is not empty
         # Dirty Gruik to find the max(len(metaname))
         mw = max(len(Auction.item.name) for Auction in Auctions)
         # We need to put a floor to respect the Tableau header
