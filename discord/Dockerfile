@@ -48,6 +48,7 @@ COPY --chown=discord:discord /discord/commands.py   /code/commands.py
 COPY --chown=discord:discord /discord/tasks.py      /code/tasks.py
 COPY --chown=discord:discord /discord/variables.py  /code/variables.py
 COPY --chown=discord:discord /discord/subcommands   /code/subcommands
+COPY --chown=discord:discord /discord/subtasks      /code/subtasks
 COPY --chown=discord:discord /mongo                 /code/mongo
 COPY --chown=discord:discord /nosql                 /code/nosql
 
@@ -56,6 +57,3 @@ WORKDIR /code
 
 # Set user
 USER discord
-
-# Entry point
-ENTRYPOINT ["/code/main.py"]
