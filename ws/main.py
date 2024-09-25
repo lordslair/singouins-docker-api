@@ -20,6 +20,7 @@ logger.debug(f"REDIS_PORT: {REDIS_PORT}")
 logger.debug(f"REDIS_BASE: {REDIS_BASE}")
 # APP variables
 API_ENV = os.environ.get("API_ENV", None)
+logger.debug(f"API_ENV: {API_ENV}")
 # PubSub variables
 PS_BROADCAST = os.environ.get("PS_BROADCAST", f'ws-broadcast-{API_ENV.lower()}')
 PS_EXPIRE = os.environ.get("PS_EXPIRE", '__keyevent@0__:expired')
@@ -51,7 +52,7 @@ async def listen_to_broadcast() -> None:
 async def listen_to_expired() -> None:
     r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
     pubsub = r.pubsub()
-    await pubsub.psubscribe('__keyevent@0__:expired')
+    await pubsub.psubscribe(PS_EXPIRE)
 
     # Continuously listen for messages
     async for message in pubsub.listen():
