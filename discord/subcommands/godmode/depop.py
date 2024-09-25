@@ -16,7 +16,7 @@ from subcommands.godmode._autocomplete import (
     )
 
 from variables import (
-    URL_ASSETS,
+    env_vars,
     rarity_monster_types_discord as rmtd,
     )
 
@@ -103,8 +103,8 @@ def depop(group_godmode):
             embed.set_footer(text=f"CreatureUUID: {Creature.id}")
 
             URI_PNG = f'sprites/creatures/{Creature.race}.png'
-            logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
-            embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
+            logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
+            embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
 
             await ctx.respond(embed=embed)
             logger.info(f'{h} └──> Godmode-Depop Query OK')

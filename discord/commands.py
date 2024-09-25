@@ -2,7 +2,6 @@
 # -*- coding: utf8 -*-
 
 import discord
-import os
 import time
 
 from loguru import logger
@@ -14,21 +13,11 @@ from subcommands import (
     singouin,
     user,
     )
-
-# Log Internal imports
-logger.info('Imports OK')
-
-# Discord variables
-DISCORD_GUILD = os.environ.get("DISCORD_GUILD", None)
-DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-
-# Log Internal imports
-logger.info('Internal ENV vars loading OK')
-logger.debug(f'DISCORD_GUILD:{DISCORD_GUILD}')
+from variables import env_vars
 
 try:
-    if DISCORD_GUILD:
-        bot = discord.Bot(debug_guilds=[DISCORD_GUILD])
+    if env_vars['DISCORD_GUILD']:
+        bot = discord.Bot(debug_guilds=[env_vars['DISCORD_GUILD']])
     else:
         bot = discord.Bot()
 except Exception as e:
@@ -169,7 +158,7 @@ else:
 iter = 0
 while iter < 5:
     try:
-        bot.run(DISCORD_TOKEN)
+        bot.run(env_vars['DISCORD_TOKEN'])
         break
     except Exception as e:
         logger.error(f'Discord bot.run KO (Attempt: {iter+1}/5) [{e}]')

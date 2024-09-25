@@ -3,7 +3,6 @@
 import asyncio
 import discord
 import json
-import os
 import yarqueue
 
 from loguru import logger
@@ -13,15 +12,11 @@ from nosql.connector import r_no_decode
 from mongo.models.User import UserDocument
 
 from variables import (
+    env_vars,
     metaNames,
     rarity_item_types_discord,
     rarity_item_types_integer,
     )
-
-URL_ASSETS = os.environ.get("URL_ASSETS")
-API_ENV = os.environ.get("API_ENV", None)
-# YarQueue variables
-YQ_DISCORD = os.environ.get("YQ_DISCORD", f'{API_ENV}:yarqueue:discord')
 
 
 #
@@ -48,7 +43,7 @@ async def check(bot: discord.Client, timer: int):
     while bot.is_ready:
         if bot.user:
             # Opening Queue
-            msgs = yarqueue.Queue(name=YQ_DISCORD, redis=r_no_decode)
+            msgs = yarqueue.Queue(name=env_vars['YQ_DISCORD'], redis=r_no_decode)
 
             if msgs is None:
                 # If no msgs are received, GOTO next loop
@@ -134,8 +129,9 @@ async def check(bot: discord.Client, timer: int):
                         )
 
                     URI_PNG = f"sprites/{item['metatype']}s/{item['metaid']}.png"
-                    logger.debug(f"[embed.thumbnail] {URL_ASSETS}/{URI_PNG}")
-                    embed.set_thumbnail(url=f"{URL_ASSETS}/{URI_PNG}")
+                    URL_PNG = f"{env_vars['URL_ASSETS']}/{URI_PNG}"
+                    logger.debug(f"[embed.thumbnail] {URL_PNG}")
+                    embed.set_thumbnail(url=URL_PNG)
 
                     embed.set_footer(text=f"ItemUUID: {item['id']}")
                 else:

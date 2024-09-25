@@ -2,16 +2,11 @@
 # -*- coding: utf8 -*-
 
 import discord
-import os
 
-from distutils.util import strtobool
 from loguru import logger
 
 from subtasks import channels, ssl_cert, yqueue
-
-DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-SSL_CHECK = strtobool(os.getenv("SSL_CHECK", "True"))
-YQ_CHECK = strtobool(os.getenv("YQ_CHECK", "False"))
+from variables import env_vars
 
 try:
     bot = discord.Bot(intents=discord.Intents.all())
@@ -32,7 +27,7 @@ async def on_ready():
             logger.info(f'Discord on_ready OK ({bot.user})')
 
 # 86400s Tasks (@Daily)
-if SSL_CHECK:
+if env_vars['SSL_CHECK']:
     bot.loop.create_task(ssl_cert.validator(bot, 86400))
 # 3600s Tasks (@Hourly)
 bot.loop.create_task(channels.create(bot, 'Squad', 300))
@@ -41,12 +36,12 @@ bot.loop.create_task(channels.cleanup(bot, 'Korp', 300))
 bot.loop.create_task(channels.create(bot, 'Korp', 300))
 bot.loop.create_task(channels.create(bot, 'Squad', 300))
 # 60s Tasks (@1Minute)
-if YQ_CHECK:
+if env_vars['YQ_CHECK']:
     bot.loop.create_task(yqueue.check(bot, 60))
 
 # Run Discord bot
 try:
     logger.debug('Discord bot.run >>')
-    bot.run(DISCORD_TOKEN)
+    bot.run(env_vars['DISCORD_TOKEN'])
 except Exception as e:
     logger.error(f'Discord bot.run KO [{e}]')

@@ -2,7 +2,29 @@
 
 import os
 
+from distutils.util import strtobool
+from loguru import logger
+
 from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
+
+# Grab the environment variables
+env_vars = {
+    "API_ENV": os.environ.get("API_ENV", None),
+    "DISCORD_GUILD": os.environ.get("DISCORD_GUILD", None),
+    "DISCORD_TOKEN": os.environ.get("DISCORD_TOKEN"),
+    "SSL_CHECK": strtobool(os.getenv("SSL_CHECK", "True")),
+    "SSL_TARGET_HOST": os.environ.get("SSL_TARGET_HOST"),
+    "SSL_TARGET_PORT": os.environ.get("SSL_TARGET_PORT", 443),
+    "SSL_CHANNEL": os.environ.get("SSL_CHANNEL"),
+    "SSL_IMG_URL": os.environ.get("SSL_IMG_URL"),
+    "URL_ASSETS": os.environ.get("URL_ASSETS", 'https://singouins.github.io/assets'),
+    "YQ_DISCORD": os.environ.get("YQ_DISCORD", f'{os.environ.get("API_ENV", None)}:yarqueue:discord'), # noqa E501
+    "YQ_CHECK": strtobool(os.getenv("YQ_CHECK", "False")),
+}
+# Print the environment variables for debugging
+for var, value in env_vars.items():
+    logger.debug(f"{var}: {value}")
+
 
 """
 DISCLAIMER: This is some fat shit I dumped here
@@ -17,8 +39,6 @@ metaNames = {
     'weapon': [doc.to_mongo().to_dict() for doc in MetaWeapon.objects()],
     'race': [doc.to_mongo().to_dict() for doc in MetaRace.objects()]
 }
-
-URL_ASSETS = os.environ.get("URL_ASSETS")
 
 item_types_discord = {
     'armor': ':shirt:',

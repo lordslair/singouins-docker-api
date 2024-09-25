@@ -8,13 +8,13 @@ from PIL import Image
 from mongo.models.Creature import CreatureDocument
 from mongo.models.Item import ItemDocument
 
-from variables import URL_ASSETS, slots_armor, slots_weapon
+from variables import env_vars, slots_armor, slots_weapon
 
 
 def creature_sprite(creatureuuid, race):
     # We need to DL the base sprite
     logger.debug(f'Downloading base image for {creatureuuid} ({race})')
-    url = f'{URL_ASSETS}/sprites/creatures/{race}.png'
+    url = f"{env_vars['URL_ASSETS']}/sprites/creatures/{race}.png"
     logger.trace(f'Downloading {url} > /tmp/{creatureuuid}.png')
     urllib.request.urlretrieve(url, f'/tmp/{creatureuuid}.png')
 
@@ -34,7 +34,7 @@ def creature_sprite(creatureuuid, race):
             logger.debug(f'Equipped: [{slot_id}] {slot}:{Item.metaid}')
 
             file = f'/1/{Item.metaid}.png'
-            url = f'{URL_ASSETS}/sprites/{Item.metatype}s/{file}'
+            url = f"{env_vars['URL_ASSETS']}/sprites/{Item.metatype}s/{file}"
             logger.trace(f'Downloading {url} > /tmp/{creatureuuid}_{slot}.png')
             urllib.request.urlretrieve(url, f'/tmp/{creatureuuid}_{slot}.png')
             sprite_item_raw = Image.open(f'/tmp/{creatureuuid}_{slot}.png')
@@ -60,7 +60,7 @@ def creature_sprite(creatureuuid, race):
                 file = f'{Item.metaid}-1.png'
             else:
                 file = f'{Item.metaid}.png'
-            url = f'{URL_ASSETS}/sprites/{Item.metatype}s/{file}'
+            url = f"{env_vars['URL_ASSETS']}/sprites/{Item.metatype}s/{file}"
             logger.trace(f'Downloading {url} > /tmp/{creatureuuid}_{slot}.png')
             urllib.request.urlretrieve(url, f'/tmp/{creatureuuid}_{slot}.png')
             sprite_item_raw = Image.open(f'/tmp/{creatureuuid}_{slot}.png')
