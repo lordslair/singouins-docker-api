@@ -24,8 +24,10 @@ logger.debug(f"API_ENV: {API_ENV}")
 # PubSub variables
 PS_BROADCAST = os.environ.get("PS_BROADCAST", f'ws-broadcast-{API_ENV.lower()}')
 PS_EXPIRE = os.environ.get("PS_EXPIRE", '__keyevent@0__:expired')
+PS_SET = os.environ.get("PS_SET", '__keyevent@0__:set')
 logger.debug(f"PS_BROADCAST: {PS_BROADCAST}")
 logger.debug(f"PS_EXPIRE: {PS_EXPIRE}")
+logger.debug(f"PS_SET: {PS_SET}")
 # WebSocket variables
 WSS_HOST = os.environ.get('WSS_HOST', '0.0.0.0')
 WSS_PORT = int(os.environ.get('WSS_PORT', 5000))
@@ -78,6 +80,38 @@ async def listen_to_expired() -> None:
                 await notify_clients(message)
 
 
+async def listen_to_set() -> None:
+    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
+    pubsub = r.pubsub()
+    await pubsub.psubscribe(PS_SET)
+
+    # Continuously listen for messages
+    async for message in pubsub.listen():
+        logger.trace(f'Pub/Sub received: {message}')
+        if message['type'] == 'pmessage':
+            set_key = message['data'].decode()
+            # Check we match the API_ENV
+            if set_key.startswith(API_ENV):
+                # We split the key to grab the elements
+                splitted_key = set_key.split(':')
+                # Build the message
+                try:
+                    message = json.dumps({
+                        "creature": splitted_key[2],
+                        "date": datetime.datetime.utcnow().isoformat(),
+                        "env": API_ENV,
+                        "event": "set",
+                        "key": set_key,
+                        "name": splitted_key[3],
+                        "type": splitted_key[1],
+                    })
+                    # Send the message to all connected WebSocket clients
+                    await notify_clients(message)
+                    logger.debug(f"Key set: {set_key}")
+                except Exception as e:
+                    logger.trace(f"Key format not expected [{e}]")
+
+
 async def notify_clients(message: str) -> None:
     if CLIENTS:  # asyncio.wait doesn't accept an empty list
         logger.info(f'Broadcasting message to {len(CLIENTS)} clients')
@@ -114,6 +148,7 @@ async def main() -> None:
         ws_server.wait_closed(),
         listen_to_broadcast(),
         listen_to_expired(),
+        listen_to_set(),
         )
 
 
