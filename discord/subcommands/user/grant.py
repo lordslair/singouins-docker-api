@@ -22,20 +22,21 @@ def grant(group_user, bot):
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
         logger.info(f'{h} /{group_user} grant')
 
-        if UserDocument.objects(discord__name=ctx.author.name).count() == 0:
-            # Discord name not found in DB
-            msg = f'Unknown Discord Name:`{ctx.author.name}` in DB'
-            logger.trace(msg)
+        # Get the User
+        try:
+            User = UserDocument.objects(discord__name=ctx.author.name).get()
+        except UserDocument.DoesNotExist:
+            logger.warning("UserDocument Query KO (404)")
             await ctx.respond(
                 embed=discord.Embed(
-                    description=msg,
+                    description=f'Unknown Discord Name:`{ctx.author.name}` in DB',
                     colour=discord.Colour.orange(),
                     ),
                 ephemeral=True,
                 )
             return
-        else:
-            User = UserDocument.objects(discord__name=ctx.author.name).get()
+        except Exception as e:
+            logger.error(f'MongoDB Query KO [{e}]')
 
         # Get the Singouin role
         try:
@@ -69,21 +70,25 @@ def grant(group_user, bot):
         # Apply Squad roles if needed
         guild = ctx.guild
 
-        if CreatureDocument.objects(account=User.id).count() == 0:
-            # Discord found - but no Singouins in DB
-            # So we can stop here
-            msg = f'No Singouins found in DB for `{ctx.author.name}`'
-            logger.trace(msg)
-            await ctx.respond(
-                embed=discord.Embed(
-                    description=msg,
-                    colour=discord.Colour.orange(),
-                    ),
-                ephemeral=True,
-                )
-            return
+        # Get the Singouin(s)
+        try:
+            Creatures = CreatureDocument.objects(account=User.id)
+        except Exception as e:
+            logger.error(f'MongoDB Query KO [{e}]')
+        else:
+            if Creatures.count() == 0:
+                msg = f'No Singouins found in DB for `{ctx.author.name}`'
+                logger.warning(msg)
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=msg,
+                        colour=discord.Colour.orange(),
+                        ),
+                    ephemeral=True,
+                    )
+                return
 
-        for Creature in CreatureDocument.objects(account=User.id):
+        for Creature in Creatures:
             # Korp management
             if Creature.korp.id:
                 # Get the Korp role
