@@ -39,7 +39,7 @@ async def get_metanames_list(ctx: discord.AutocompleteContext):
             db_list.append(
                 discord.OptionChoice(
                     item['name'],
-                    value=item['_id'],
+                    value=str(item['_id']),
                     )
                 )
     except Exception as e:
