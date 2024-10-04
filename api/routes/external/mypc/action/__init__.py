@@ -2,15 +2,13 @@
 
 from .profession import skinning
 from .reload import reload
-from .resolver import (context, move, skill)
+from .resolver import resolver
 from .unload import unload
 
 
 __all__ = [
-    'context',
-    'move',
-    'skill',
     'reload',
+    'resolver',
     'skinning',
     'unload',
     ]

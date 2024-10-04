@@ -276,26 +276,13 @@ app.add_url_rule(
     view_func=routes.external.mypc.instance.leave,
     )
 #
-# Routes: /action/resolver
-#
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/resolver/context',
-    methods=['POST'],
-    view_func=routes.external.mypc.action.resolver.context,
-    )
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/resolver/move',
-    methods=['POST'],
-    view_func=routes.external.mypc.action.resolver.move,
-    )
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/action/resolver/skill/<string:skill_name>',
-    methods=['PUT'],
-    view_func=routes.external.mypc.action.resolver.skill,
-    )
-#
 # Routes: /action
 #
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/resolver',
+    methods=['POST'],
+    view_func=routes.external.mypc.action.resolver,
+    )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/reload/<uuid:itemuuid>',
     methods=['POST'],

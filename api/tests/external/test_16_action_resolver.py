@@ -25,7 +25,13 @@ RESOLVER_JSON = {
 }
 
 
-def test_singouins_action_resolver_context():
+def test_singouins_action_resolver_base():
+    if os.environ.get("CI"):
+        # Here we are inside GitHub CI process
+        # Gruik
+        # For now, unable to test this in GitHub
+        pytest.skip('For now, unable to test this in GitHub')
+
     response = requests.get(
         f'{API_URL}/mypc',
         headers={"Authorization": f"Bearer {access_token_get()}"},
@@ -46,7 +52,7 @@ def test_singouins_action_resolver_context():
         assert json.loads(response.text)['success'] is True
 
     response = requests.post(
-        f'{API_URL}/mypc/{CREATURE_ID}/action/resolver/context',
+        f'{API_URL}/mypc/{CREATURE_ID}/action/resolver',
         headers={"Authorization": f"Bearer {access_token_get()}"},
         json=RESOLVER_JSON,
         )
@@ -85,7 +91,7 @@ def test_singouins_action_resolver_move():
     RESOLVER_JSON['actor'] = pc['_id']
 
     response = requests.post(
-        f"{API_URL}/mypc/{CREATURE_ID}/action/resolver/move",
+        f"{API_URL}/mypc/{CREATURE_ID}/action/resolver",
         headers={"Authorization": f"Bearer {access_token_get()}"},
         json=RESOLVER_JSON,
         )
