@@ -1,13 +1,14 @@
 # -*- coding: utf8 -*-
 
-from datetime import datetime
+import datetime
+import uuid
+
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
 from mongo.models.Highscore import HighscoreDocument
 
-from nosql.models.RedisEffect import RedisEffect
 from nosql.models.RedisPa import RedisPa
 
 from utils.decorators import (
@@ -15,6 +16,9 @@ from utils.decorators import (
     check_creature_in_instance,
     check_creature_pa,
     )
+from utils.redis import r
+
+from variables import API_ENV
 
 #
 # Profession.tracking specifics
@@ -40,13 +44,22 @@ def tracking(creatureuuid):
     # We need to add the Effect for that
     # The real job is done in /view
 
-    RedisEffect(creatureuuid=g.Creature.id).new(
-        duration_base=DURATION,
-        extra=None,
-        instanceuuid=g.Creature.instance,
-        name=None,
-        source=None,
-    )
+    rpath = f'{API_ENV}:{g.Creature.instance}:effects:{g.Creature.id}'
+    rkey = f'{rpath}:{PROFESSION_NAME.capitalize()}'
+    r.hset(
+        rkey,
+        mapping={
+                "bearer": str(g.Creature.id),
+                "duration_base": DURATION,
+                "id": str(uuid.uuid4()),
+                "instance": str(g.Creature.instance),
+                "extra": 'None',
+                "name": PROFESSION_NAME.capitalize(),
+                "source": str(g.Creature.id),
+                "type": 'effect',
+            },
+        )
+    r.expire(rkey, DURATION)
 
     # We set the HighScores
     HighScores = HighscoreDocument.objects(_id=g.Creature.id)
@@ -71,7 +84,6 @@ def tracking(creatureuuid):
             "msg": msg,
             "payload": {
                 "pa": RedisPa(creatureuuid=creatureuuid).as_dict(),
-                "effects": [],
             }
         }
     ), 200

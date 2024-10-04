@@ -29,11 +29,13 @@ class ProfessionDocument(Document):
     - recycling (IntField)
     - skinning  (IntField)
     - tanning   (IntField)
+    - tracking  (IntField)
     - updated   (DateTimeField)
     """
     _id = UUIDField(binary=False, primary_key=True, default=uuid.uuid4())
     recycling = IntField(default=None)
     skinning = IntField(default=None)
+    tracking = IntField(default=None)
     tanning = IntField(default=None)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 

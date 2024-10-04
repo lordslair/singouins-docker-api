@@ -296,6 +296,11 @@ app.add_url_rule(
     methods=['POST'],
     view_func=routes.external.mypc.action.profession.tanning,
     )
+app.add_url_rule(
+    '/mypc/<uuid:creatureuuid>/action/profession/tracking',
+    methods=['POST'],
+    view_func=routes.external.mypc.action.profession.tracking,
+    )
 #
 # Routes: /events
 #
