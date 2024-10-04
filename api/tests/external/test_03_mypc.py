@@ -69,37 +69,14 @@ def test_singouins_mypc_view():
     assert json.loads(response.text)['success'] is True
 
 
-def test_singouins_mypc_effects():
-    response  = requests.get(
-        f'{API_URL}/mypc/{CREATURE_ID}/effects',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
+def test_singouins_mypc_actives():
+    for actives_type in ['cds', 'effects', 'statuses']:
+        response  = requests.get(
+            f'{API_URL}/mypc/{CREATURE_ID}/actives/{actives_type}',
+            headers={"Authorization": f"Bearer {access_token_get()}"},
+            )
 
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+        assert response.status_code == 200
+        assert json.loads(response.text)['success'] is True
 
-    assert isinstance(json.loads(response.text)['payload']['effects'], list)
-
-
-def test_singouins_mypc_cds():
-    response  = requests.get(
-        f'{API_URL}/mypc/{CREATURE_ID}/cds',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    assert isinstance(json.loads(response.text)['payload']['cds'], list)
-
-
-def test_singouins_mypc_statuses():
-    response  = requests.get(
-        f'{API_URL}/mypc/{CREATURE_ID}/statuses',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    assert isinstance(json.loads(response.text)['payload']['statuses'], list)
+        assert isinstance(json.loads(response.text)['payload'][actives_type], list)

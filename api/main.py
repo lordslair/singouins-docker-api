@@ -36,15 +36,13 @@ import routes.external.log
 import routes.external.map
 import routes.external.meta
 import routes.external.mypc
-import routes.external.mypc.cds
-import routes.external.mypc.effects
+import routes.external.mypc.actives
 import routes.external.mypc.events
 import routes.external.mypc.item
 import routes.external.mypc.inventory
 import routes.external.mypc.korp
 import routes.external.mypc.pa
 import routes.external.mypc.squad
-import routes.external.mypc.statuses
 import routes.external.mypc.view
 import routes.external.pc
 
@@ -182,21 +180,14 @@ app.add_url_rule(
     view_func=routes.external.mypc.pa.pa_get,
     )
 #
-# Routes: /cds
+# Routes: /actives
 #
 app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/cds',
+    '/mypc/<uuid:creatureuuid>/actives/<string:actives_type>',
     methods=['GET'],
-    view_func=routes.external.mypc.cds.cds_get,
+    view_func=routes.external.mypc.actives.actives_get,
     )
-#
-# Routes: /effects
-#
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/effects',
-    methods=['GET'],
-    view_func=routes.external.mypc.effects.effects_get,
-    )
+
 #
 # Routes: /highscores
 #
@@ -204,14 +195,6 @@ app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/highscores',
     methods=['GET'],
     view_func=routes.external.mypc.highscores.highscores_get,
-    )
-#
-# Routes: /statuses
-#
-app.add_url_rule(
-    '/mypc/<uuid:creatureuuid>/statuses',
-    methods=['GET'],
-    view_func=routes.external.mypc.statuses.statuses_get,
     )
 #
 # Routes: /view

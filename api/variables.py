@@ -2,7 +2,17 @@
 
 import os
 
+from loguru import logger
+
 from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
+
+# Redis variables
+REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
+REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+REDIS_BASE = int(os.environ.get("REDIS_BASE", 0))
+logger.debug(f"REDIS_HOST: {REDIS_HOST}")
+logger.debug(f"REDIS_PORT: {REDIS_PORT}")
+logger.debug(f"REDIS_BASE: {REDIS_BASE}")
 
 # API variables
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
