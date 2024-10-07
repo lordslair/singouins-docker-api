@@ -14,8 +14,7 @@ from utils.decorators import (
     check_creature_in_korp,
     check_korp_exists,
     )
-from utils.pubsub import cput
-from utils.queue import qput
+from utils.redis import cput, qput
 from variables import PS_BROADCAST, YQ_DISCORD
 
 #

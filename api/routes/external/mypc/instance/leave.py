@@ -10,13 +10,11 @@ from mongoengine import Q
 
 from mongo.models.Creature import CreatureDocument
 
-from nosql.connector import r
-
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_instance,
     )
-from utils.queue import qput
+from utils.redis import r, qput
 from variables import YQ_DISCORD
 
 

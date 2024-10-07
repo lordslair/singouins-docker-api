@@ -4,8 +4,6 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.models.RedisPa import RedisPa
-
 from mongo.models.Cosmetic import CosmeticDocument
 from mongo.models.Creature import CreatureDocument
 from mongo.models.Highscore import HighscoreDocument
@@ -14,6 +12,8 @@ from mongo.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
 from utils.decorators import check_creature_exists
+from utils.redis import r
+from variables import API_ENV
 
 
 # API: DELETE /mypc/<uuid:creatureuuid>
@@ -34,6 +34,9 @@ def mypc_del(creatureuuid):
 
     try:
         # We start do delete PC elements
+        # Redis PA
+        for color in ['blue', 'red']:
+            r.delete(f"{API_ENV}:pas:{creatureuuid}:{color}")
         # SatchelDocument
         if SatchelDocument.objects(_id=g.Creature.id):
             logger.debug(f'{g.h} SatchelDocument deletion >>')
@@ -49,8 +52,6 @@ def mypc_del(creatureuuid):
             logger.debug(f'{g.h} ProfessionDocument deletion >>')
             ProfessionDocument.objects(_id=g.Creature.id).get().delete()
             logger.debug(f'{g.h} ProfessionDocument deletion OK')
-        if RedisPa(creatureuuid=g.Creature.id).destroy():
-            logger.trace(f'{g.h} RedisPa delete OK')
         # CosmeticDocument
         if CosmeticDocument.objects(bearer=g.Creature.id):
             try:

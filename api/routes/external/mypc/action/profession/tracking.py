@@ -9,14 +9,12 @@ from loguru import logger
 
 from mongo.models.Highscore import HighscoreDocument
 
-from nosql.models.RedisPa import RedisPa
-
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_instance,
     check_creature_pa,
     )
-from utils.redis import r
+from utils.redis import r, get_pa, consume_pa
 
 from variables import API_ENV
 
@@ -70,10 +68,7 @@ def tracking(creatureuuid):
     HighScores.update(**highscores_update_query)
 
     # We consume the PA
-    RedisPa(creatureuuid=creatureuuid).consume(
-        bluepa=PA_COST_BLUE,
-        redpa=PA_COST_RED,
-    )
+    consume_pa(creatureuuid=creatureuuid, bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
 
     msg = f'{g.h} Profession Query OK (tracking)'
     logger.debug(msg)
@@ -83,7 +78,7 @@ def tracking(creatureuuid):
             "success": True,
             "msg": msg,
             "payload": {
-                "pa": RedisPa(creatureuuid=creatureuuid).as_dict(),
+                "pa": get_pa(creatureuuid=g.Creature.id),
             }
         }
     ), 200

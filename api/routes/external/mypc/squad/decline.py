@@ -13,8 +13,7 @@ from utils.decorators import (
     check_creature_in_squad,
     check_squad_exists,
     )
-from utils.pubsub import cput
-from utils.queue import qput
+from utils.redis import cput, qput
 from variables import PS_BROADCAST, YQ_DISCORD
 
 

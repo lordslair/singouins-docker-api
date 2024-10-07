@@ -2,11 +2,9 @@
 
 import datetime
 
-from flask                      import g, jsonify
-from flask_jwt_extended         import jwt_required
-from loguru                     import logger
-
-from nosql.models.RedisPa       import RedisPa
+from flask import g, jsonify
+from flask_jwt_extended import jwt_required
+from loguru import logger
 
 from mongo.models.Satchel import SatchelDocument
 
@@ -17,7 +15,7 @@ from utils.decorators import (
     check_creature_owned,
     check_creature_pa,
     )
-
+from utils.redis import get_pa, consume_pa
 from variables import metaNames
 
 #
@@ -75,7 +73,7 @@ def unload(creatureuuid, itemuuid):
         g.Item.updated = datetime.datetime.utcnow()
         g.Item.save()
         # We consume the PA
-        RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE)
+        consume_pa(creatureuuid=g.Creature.id, bluepa=PA_COST_BLUE)
     except Exception as e:
         msg = f'{g.h} Unload Query KO [{e}]'
         logger.error(msg)
@@ -94,8 +92,8 @@ def unload(creatureuuid, itemuuid):
                 "success": True,
                 "msg": msg,
                 "payload": {
-                    "red": RedisPa(creatureuuid=creatureuuid).as_dict()['red'],
-                    "blue": RedisPa(creatureuuid=creatureuuid).as_dict()['blue'],
+                    "red": get_pa(creatureuuid=g.Creature.id)['red'],
+                    "blue": get_pa(creatureuuid=g.Creature.id)['blue'],
                     "weapon": g.Item.to_mongo(),
                 },
             }

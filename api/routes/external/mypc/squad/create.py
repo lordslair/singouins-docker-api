@@ -10,7 +10,7 @@ from mongo.models.Creature import CreatureSquad
 from mongo.models.Squad import SquadDocument
 
 from utils.decorators import check_creature_exists
-from utils.queue import qput
+from utils.redis import qput
 from variables import YQ_DISCORD
 
 

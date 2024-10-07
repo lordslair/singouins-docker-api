@@ -4,14 +4,14 @@ from flask import g, jsonify, request
 from flask_jwt_extended import get_jwt_identity
 from loguru import logger
 
-from nosql.models.RedisPa         import RedisPa
-
 from mongo.models.Creature import CreatureDocument
 from mongo.models.Instance import InstanceDocument
 from mongo.models.Item import ItemDocument
 from mongo.models.Korp import KorpDocument
 from mongo.models.Squad import SquadDocument
 from mongo.models.User import UserDocument
+
+from utils.redis import get_pa
 
 
 def check_creature_exists(func):
@@ -195,22 +195,22 @@ def check_creature_pa(red=0, blue=0):
     """ Decorator to check if g.Creature has an amount of PA(red, blue) """
     def decorator(func):
         def wrapper(*args, **kwargs):
-            if RedisPa(creatureuuid=g.Creature.id).bluepa < blue:
+            if get_pa(creatureuuid=g.Creature.id)['blue']['pa'] < blue:
                 msg = f'{g.h} Not enough PA(blue) for this action'
                 return jsonify(
                     {
                         "success": False,
                         "msg": msg,
-                        "payload": RedisPa(creatureuuid=g.Creature.id).as_dict(),
+                        "payload": get_pa(creatureuuid=g.Creature.id),
                     }
                 ), 200
-            elif RedisPa(creatureuuid=g.Creature.id).redpa < red:
+            elif get_pa(creatureuuid=g.Creature.id)['red']['pa'] < red:
                 msg = f'{g.h} Not enough PA(red) for this action'
                 return jsonify(
                     {
                         "success": False,
                         "msg": msg,
-                        "payload": RedisPa(creatureuuid=g.Creature.id).as_dict(),
+                        "payload": get_pa(creatureuuid=g.Creature.id),
                     }
                 ), 200
             else:

@@ -22,14 +22,12 @@ from mongo.models.Creature import (
 from mongo.models.Instance import InstanceDocument
 from mongo.models.Meta import MetaMap
 
-from nosql.connector import r
-
 from routes.external.mypc.instance._tools import get_empty_coords
 from utils.decorators import (
     check_creature_exists,
     check_is_json,
     )
-from utils.queue import qput
+from utils.redis import cput, qput
 from variables import metaNames, rarity_array, YQ_DISCORD
 
 
@@ -178,14 +176,13 @@ def add(creatureuuid):
             else:
                 # We send in pubsub channel for IA to spawn the Mobs
                 try:
-                    r.publish(
-                        'ai-creature',
-                        json.dumps({
+                    # Broadcast Channel
+                    cput('ai-creature',
+                         json.dumps({
                             "action": 'pop',
                             "instance": newInstance.to_json(),
                             "creature": newMonster.to_json(),
-                            }),
-                        )
+                            }))
                 except Exception as e:
                     msg = f'{g.h} Publish(ai-creature/pop) KO [{e}]'
                     logger.error(msg)

@@ -49,7 +49,6 @@ COPY --chown=api:api --from=builder /code /code
 # Copy application code
 COPY --chown=api:api /api   /code
 COPY --chown=api:api /mongo /code/mongo
-COPY --chown=api:api /nosql /code/nosql
 
 # Set working directory
 WORKDIR /code

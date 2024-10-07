@@ -10,12 +10,11 @@ from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
-from nosql.models.RedisPa import RedisPa
-
 from utils.decorators import (
     check_creature_exists,
     check_creature_pa,
     )
+from utils.redis import get_pa, consume_pa
 
 #
 # Profession.tanning specifics
@@ -114,7 +113,7 @@ def tanning(creatureuuid, quantity):
     Satchel.update(**satchel_update_query)
 
     # We consume the PA
-    RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
+    consume_pa(creatureuuid=creatureuuid, bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
 
     # We're done
     msg = f'{g.h} Profession ({PROFESSION_NAME}) Query OK'
@@ -124,7 +123,7 @@ def tanning(creatureuuid, quantity):
             "success": True,
             "msg": msg,
             "payload": {
-                "pa": RedisPa(creatureuuid=creatureuuid).as_dict(),
+                "pa": get_pa(creatureuuid=g.Creature.id),
                 "resource": [
                     {
                         "count": resource_tanned['fur'],

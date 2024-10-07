@@ -6,9 +6,6 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from nosql.connector import r
-from nosql.models.RedisPa import RedisPa
-
 from mongo.models.Creature import CreatureSlot
 
 from utils.decorators import (
@@ -16,7 +13,7 @@ from utils.decorators import (
     check_creature_pa,
     check_item_exists,
     )
-
+from utils.redis import r, get_pa, consume_pa
 from variables import metaNames
 
 #
@@ -173,8 +170,8 @@ def equip(creatureuuid, type, slotname, itemuuid):
         g.Creature.save()
 
     # Here everything should be OK with the equip
-    # We consume the red PA (costpa) right now
-    RedisPa(creatureuuid=creatureuuid).consume(redpa=PA_COST_BLUE)
+    # We consume the PA
+    consume_pa(creatureuuid=creatureuuid, bluepa=PA_COST_BLUE)
 
     # We put the info in queue for ws
     try:
@@ -203,8 +200,8 @@ def equip(creatureuuid, type, slotname, itemuuid):
             "success": True,
             "msg": msg,
             "payload": {
-                "red": RedisPa(creatureuuid=creatureuuid).redpa,
-                "blue": RedisPa(creatureuuid=creatureuuid).bluepa,
+                "red": get_pa(creatureuuid=creatureuuid)['red'],
+                "blue": get_pa(creatureuuid=creatureuuid)['blue'],
                 "creature": g.Creature.to_mongo(),
             },
         }

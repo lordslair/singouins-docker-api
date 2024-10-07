@@ -13,13 +13,12 @@ from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
-from nosql.models.RedisPa import RedisPa
-
 from utils.decorators import (
     check_creature_exists,
     check_creature_in_instance,
     check_creature_pa,
     )
+from utils.redis import get_pa, consume_pa
 from variables import rarity_array
 
 #
@@ -156,7 +155,7 @@ def skinning(creatureuuid, resourceuuid):
     #        slots_used += resource
 
     # We consume the PA
-    RedisPa(creatureuuid=creatureuuid).consume(bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
+    consume_pa(creatureuuid=creatureuuid, bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
 
     if Corpse.delete():
         pass
@@ -179,7 +178,7 @@ def skinning(creatureuuid, resourceuuid):
             "success": True,
             "msg": msg,
             "payload": {
-                "pa": RedisPa(creatureuuid=creatureuuid).as_dict(),
+                "pa": get_pa(creatureuuid=g.Creature.id),
                 "resource": [
                     {
                         "count": skin_qty,
