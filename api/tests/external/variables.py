@@ -2,11 +2,25 @@
 
 import json
 import os
+import redis
 import requests
 import uuid
 
 GUNICORN_PORT   = os.environ.get("GUNICORN_PORT", 5000)
+API_ENV         = os.environ.get("API_ENV", 5000)
 API_URL         = f'http://127.0.0.1:{GUNICORN_PORT}'
+
+# Redis variables
+REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+REDIS_BASE = os.environ.get("REDIS_BASE", 0)
+
+r = redis.StrictRedis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db=REDIS_BASE,
+    encoding='utf-8',
+    )
 
 # Creature ID variables
 # The CREATURE_ID is supposed to be built with
