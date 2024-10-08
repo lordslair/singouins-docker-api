@@ -13,7 +13,7 @@ from mongo.models.Creature import CreatureDocument
 from utils.redis import r
 
 from variables import (
-    CREATURE_PATH,
+    env_vars,
     THREAD_COUNT_FUNGUS,
     THREAD_COUNT_SALAMANDER,
     THREAD_COUNT_TOTAL,
@@ -37,7 +37,7 @@ def creature_init():
             # to be treated in the listen() code
             try:
                 r.publish(
-                    CREATURE_PATH,
+                    env_vars['CREATURE_PATH'],
                     json.dumps({
                         "action": 'pop',
                         "creature": Creature.to_json(),

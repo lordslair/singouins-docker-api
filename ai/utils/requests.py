@@ -5,12 +5,12 @@ import requests
 
 from loguru import logger
 
-from variables import RESOLVER_URL
+from variables import env_vars
 
 
 def resolver_generic_request_get(path, code=200):
     try:
-        response = requests.get(f'{RESOLVER_URL}{path}', timeout=(1, 1))
+        response = requests.get(f"{env_vars['RESOLVER_URL']}{path}", timeout=(1, 1))
     except Exception as e:
         logger.error(f'Request Query KO [{e}]')
         return None
@@ -36,7 +36,7 @@ def resolver_move(self, targetx, targety):
         }
 
     try:
-        response = requests.post(f'{RESOLVER_URL}/', json=body, timeout=(1, 1))
+        response = requests.post(f"{env_vars['RESOLVER_URL']}/", json=body, timeout=(1, 1))
     except Exception as e:
         logger.error(f'Request Query KO [{e}]')
         return None
@@ -65,7 +65,7 @@ def resolver_basic_attack(self, target):
         }
 
     try:
-        response = requests.post(f'{RESOLVER_URL}/', json=body, timeout=(1, 1))
+        response = requests.post(f"{env_vars['RESOLVER_URL']}/", json=body, timeout=(1, 1))
     except Exception as e:
         logger.error(f'Request Query KO [{e}]')
         return None

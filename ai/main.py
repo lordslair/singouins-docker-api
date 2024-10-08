@@ -13,12 +13,7 @@ from utils.redis import r, redis
 from utils.actions import creature_init, creature_kill, creature_pop
 from utils.requests import resolver_generic_request_get
 
-from variables import (
-    CREATURE_PATH,
-    INSTANCE_PATH,
-    RESOLVER_CHECK_SKIP,
-    RESOLVER_URL,
-    )
+from variables import env_vars
 
 # Log System imports
 logger.info('[core] System imports OK')
@@ -29,7 +24,7 @@ app = Flask(__name__)
 # Pre-flight check for Resolver connection
 if os.environ.get("CI"):
     pass
-elif RESOLVER_CHECK_SKIP:
+elif env_vars['RESOLVER_CHECK_SKIP']:
     pass
 else:
     try:
@@ -37,16 +32,16 @@ else:
             path="/check"
         )
     except Exception as e:
-        logger.error(f'[core] >> Resolver KO ({RESOLVER_URL}) [{e}]')
+        logger.error(f"[core] >> Resolver KO ({env_vars['RESOLVER_URL']}) [{e}]")
         exit()
     else:
         if ret and ret['success'] is True:
-            logger.info(f'[core] >> Resolver OK ({RESOLVER_URL})')
+            logger.info(f"[core] >> Resolver OK ({env_vars['RESOLVER_URL']})")
         else:
-            logger.warning(f'[core] >> Resolver KO ({RESOLVER_URL})')
+            logger.warning(f"[core] >> Resolver KO ({env_vars['RESOLVER_URL']})")
 
 # Subscriber pattern
-SUB_PATHS = [CREATURE_PATH, INSTANCE_PATH]
+SUB_PATHS = [env_vars['CREATURE_PATH'], env_vars['INSTANCE_PATH']]
 
 # Opening Redis connection
 try:
@@ -136,7 +131,7 @@ if __name__ == '__main__':
         else:
             data = json.loads(msg['data'])
 
-        if msg['channel'].decode() == CREATURE_PATH:
+        if msg['channel'].decode() == env_vars['CREATURE_PATH']:
             if data['action'] == 'pop':
                 creature_pop(data['creature'], threads)
             elif data['action'] == 'kill':

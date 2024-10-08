@@ -10,31 +10,20 @@ THREAD_COUNT_TOTAL = Gauge('thread_count_total', 'Number of threads (total)')
 THREAD_COUNT_FUNGUS = Gauge('thread_count_fungus', 'Number of Fungus threads')
 THREAD_COUNT_SALAMANDER = Gauge('thread_count_salamander', 'Number of Salamander threads')
 
-# APP variables
-API_ENV = os.environ.get("API_ENV", None)
-INSTANCE_PATH = f'ai-instance-{API_ENV.lower()}'
-CREATURE_PATH = f'ai-creature-{API_ENV.lower()}'
+# Grab the environment variables
+env_vars = {
+    "API_ENV": os.environ.get("API_ENV", None),
+    "REDIS_HOST": os.environ.get("REDIS_HOST", '127.0.0.1'),
+    "REDIS_PORT": int(os.environ.get("REDIS_PORT", 6379)),
+    "REDIS_BASE": int(os.environ.get("REDIS_BASE", 0)),
+    "RESOLVER_HOST": os.environ.get("RESOLVER_HOST", 'resolver-svc'),
+    "RESOLVER_PORT": os.environ.get("RESOLVER_PORT", 3000),
+    "RESOLVER_CHECK_SKIP": os.environ.get("RESOLVER_CHECK_SKIP"),
+    "INSTANCE_PATH": f'ai-instance-{os.environ.get("API_ENV", None).lower()}',
+    "CREATURE_PATH": f'ai-creature-{os.environ.get("API_ENV", None).lower()}',
+}
+env_vars['RESOLVER_URL'] = f"http://{env_vars['RESOLVER_HOST']}:{env_vars['RESOLVER_PORT']}"
 
-logger.debug(f"API_ENV: {API_ENV}")
-logger.debug(f"INSTANCE_PATH: {INSTANCE_PATH}")
-logger.debug(f"CREATURE_PATH: {CREATURE_PATH}")
-
-# Redis variables
-REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
-REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
-REDIS_BASE = os.environ.get("REDIS_BASE", 0)
-
-logger.debug(f"REDIS_HOST: {REDIS_HOST}")
-logger.debug(f"REDIS_PORT: {REDIS_PORT}")
-logger.debug(f"REDIS_BASE: {REDIS_BASE}")
-
-# Resolver variables
-RESOLVER_HOST = os.environ.get("RESOLVER_HOST", 'resolver-svc')
-RESOLVER_PORT = os.environ.get("RESOLVER_PORT", 3000)
-RESOLVER_URL  = f'http://{RESOLVER_HOST}:{RESOLVER_PORT}'
-RESOLVER_CHECK_SKIP = os.environ.get("RESOLVER_CHECK_SKIP")
-
-logger.debug(f"RESOLVER_HOST: {RESOLVER_HOST}")
-logger.debug(f"RESOLVER_PORT: {RESOLVER_PORT}")
-logger.debug(f"RESOLVER_URL: {RESOLVER_URL}")
-logger.debug(f"RESOLVER_CHECK_SKIP: {RESOLVER_CHECK_SKIP}")
+# Print the environment variables for debugging
+for var, value in env_vars.items():
+    logger.debug(f"{var}: {value}")

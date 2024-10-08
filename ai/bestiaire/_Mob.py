@@ -16,6 +16,7 @@ from utils.computation import (
     next_coords_to_creature,
     is_coords_empty,
     )
+from variables import env_vars
 
 
 class Mob(ABC, threading.Thread):
@@ -76,8 +77,6 @@ class Mob(ABC, threading.Thread):
 #
 #
     def get_pa(self):
-        from variables import API_ENV
-
         # Constants
         RED_PA_MAX = 16
         BLUE_PA_MAX = 8
@@ -91,13 +90,13 @@ class Mob(ABC, threading.Thread):
 
         pa_info = {
             'blue': {
-                'key': f"{API_ENV}:pas:{self.creature.id}:blue",
+                'key': f"{env_vars['API_ENV']}:pas:{self.creature.id}:blue",
                 'max_pa': BLUE_PA_MAX,
                 'max_ttl': BLUE_PA_MAX * PA_DURATION,
                 'current_pa': BLUE_PA_MAX,
             },
             'red': {
-                'key': f"{API_ENV}:pas:{self.creature.id}:red",
+                'key': f"{env_vars['API_ENV']}:pas:{self.creature.id}:red",
                 'max_pa': RED_PA_MAX,
                 'max_ttl': RED_PA_MAX * PA_DURATION,
                 'current_pa': RED_PA_MAX,
