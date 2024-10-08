@@ -30,7 +30,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
-mongoengine==0.28.2
+mongoengine==0.29.1
     # via -r requirements.in
 prometheus-client==0.20.0
     # via prometheus-flask-exporter
