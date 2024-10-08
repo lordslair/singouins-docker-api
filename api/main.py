@@ -107,7 +107,7 @@ app.add_url_rule('/auth/register', methods=['POST'], view_func=routes.auth.regis
 #
 # Routes /meta
 #
-app.add_url_rule('/meta/item/<string:metatype>', methods=['GET'], view_func=routes.meta.external_meta_get_one)  # noqa: E501
+app.add_url_rule('/meta/item/<string:metatype>', methods=['GET'], view_func=routes.meta.meta_get_one)  # noqa: E501
 #
 # Routes: /pc
 #

@@ -11,7 +11,7 @@ from mongoengine.connection import get_db
 #
 # API: GET /meta/item/<string:metatype>
 @jwt_required()
-def external_meta_get_one(metatype):
+def meta_get_one(metatype):
 
     try:
         # Get the database object
