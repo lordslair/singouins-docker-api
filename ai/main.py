@@ -130,8 +130,6 @@ if __name__ == '__main__':
         }
         """
 
-        logger.success(msg)
-
         if msg['type'] != 'pmessage':
             logger.trace(f"Message receive do not contains a pmessage ({msg})")
             continue

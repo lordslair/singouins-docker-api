@@ -70,6 +70,7 @@ def pa(group_singouin):
                     filename=f'{Creature.id}.png'
                     )
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
+            logger.info(f'{h} ├──> Singouin-PA Query OK')
         except Exception as e:
             description = f'Singouin-PA Query KO [{e}]'
             logger.error(f'{h} └──> {description}')
@@ -82,5 +83,8 @@ def pa(group_singouin):
                 )
             return
         else:
-            await ctx.respond(embed=embed, ephemeral=True, file=file)
-            logger.info(f'{h} └──> Singouin-PA Query OK')
+            try:
+                await ctx.respond(embed=embed, ephemeral=True, file=file)
+                logger.info(f'{h} └──> Answer send OK')
+            except Exception as e:
+                logger.info(f'{h} └──> Answer send KO [{e}]')

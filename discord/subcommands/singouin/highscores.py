@@ -65,8 +65,6 @@ def highscores(group_singouin, bot):
             msg = f'Max HighScores Query KO [{e}]'
             logger.error(msg)
 
-        logger.success(maxhs_score)
-
         # We check if the Creature is the TOP1 or not
         medal = {}
         for hs in maxhs_score.keys():

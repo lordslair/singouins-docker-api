@@ -64,6 +64,7 @@ def show(group_singouin, bot):
                 description=mydesc,
                 colour=discord.Colour.blue()
             )
+            logger.info(f'{h} ├──> Singouin-List Query OK')
         except Exception as e:
             description = f'Singouin-List Query KO [{e}]'
             logger.error(f'{h} └──> {description}')
@@ -76,5 +77,8 @@ def show(group_singouin, bot):
                 )
             return
         else:
-            await ctx.respond(embed=embed, ephemeral=True)
-            logger.info(f'{h} └──> Singouin-List Query OK')
+            try:
+                await ctx.respond(embed=embed, ephemeral=True)
+                logger.info(f'{h} └──> Answer send OK')
+            except Exception as e:
+                logger.info(f'{h} └──> Answer send KO [{e}]')

@@ -60,7 +60,6 @@ async def get_monsters_in_instance_list(ctx: discord.AutocompleteContext):
     db_list = []
     for Creature in Creatures:
         metaRace = metaNames['race'][Creature.race - 1]
-        logger.success(f"{rmte[Creature.rarity]} ({Creature.rarity}) {metaRace['name']}")
         db_list.append(
             discord.OptionChoice(
                 f"{rmte[Creature.rarity]} {metaRace['name']} (ID: {Creature.id})",

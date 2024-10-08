@@ -100,7 +100,6 @@ def initialize_mongodb_map():
             logger.trace(f"MongoDB init: >> singouins/_maps/{map_id}")
             with open(filename, 'r') as file:
                 map_data = json.load(file)
-                logger.success(map_data)
                 # Create an instance of the Map document
                 map_doc = MetaMap(
                     _id=map_id,
