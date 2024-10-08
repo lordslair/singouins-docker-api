@@ -30,7 +30,12 @@ def creature_sprite(creatureuuid, race):
                 # Nothing equipped, we go next
                 continue
 
-            Item = ItemDocument.objects(_id=slot_id).get()
+            try:
+                Item = ItemDocument.objects(_id=slot_id).get()
+            except ItemDocument.DoesNotExist:
+                logger.warning(f'ItemDocument(_id={slot_id}) Query KO (404)')
+                continue
+
             logger.debug(f'Equipped: [{slot_id}] {slot}:{Item.metaid}')
 
             file = f'/1/{Item.metaid}.png'
@@ -48,6 +53,12 @@ def creature_sprite(creatureuuid, race):
             slot_id = getattr(Creature.slots, slot)
             if slot_id is None:
                 # Nothing equipped, we go next
+                continue
+
+            try:
+                Item = ItemDocument.objects(_id=slot_id).get()
+            except ItemDocument.DoesNotExist:
+                logger.warning(f'ItemDocument(_id={slot_id}) Query KO (404)')
                 continue
 
             Item = ItemDocument.objects(_id=slot_id).get()

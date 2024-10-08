@@ -8,12 +8,12 @@ from loguru import logger
 
 from mongo.models.Creature import CreatureDocument
 
-from nosql.connector import r
-
 from subcommands.godmode._autocomplete import (
     get_instances_list,
     get_singouins_in_instance_list,
     )
+from utils.redis import r
+from variables import env_vars
 
 
 def reset(group_godmode):
@@ -45,11 +45,9 @@ def reset(group_godmode):
 
         try:
             Creature = CreatureDocument.objects(_id=singouinuuid).get()
-
-            if r.exists(f'pa:{Creature.id}:blue'):
-                r.delete(f'pa:{Creature.id}:blue')
-            if r.exists(f'pa:{Creature.id}:red'):
-                r.delete(f'pa:{Creature.id}:red')
+            for color in ['blue', 'red']:
+                if r.exists(f"{env_vars['API_ENV']}:pas:{Creature.id}:{color}"):
+                    r.delete(f"{env_vars['API_ENV']}:pas:{Creature.id}:{color}")
         except Exception as e:
             description = f'Godmode-Reset Query KO [{e}]'
             logger.error(f'{h} └──> {description}')

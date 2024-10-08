@@ -6,8 +6,6 @@ from discord.commands import option
 from discord.ext import commands
 from loguru import logger
 
-from nosql.connector import r
-
 from mongo.models.Creature import CreatureDocument
 
 from subcommands.godmode._autocomplete import (
@@ -15,6 +13,7 @@ from subcommands.godmode._autocomplete import (
     get_monsters_in_instance_list
     )
 
+from utils.redis import cput
 from variables import (
     env_vars,
     rarity_monster_types_discord as rmtd,
@@ -66,14 +65,10 @@ def depop(group_godmode):
             # We destroy the Creature
             Creature.delete()
             # We put the info in pubsub channel for IA to regulate the instance
-            try:
-                pmsg = {
-                    "action": 'kill',
-                    "creature": Creature.to_json(),
-                    }
-                r.publish('ai-creature', pmsg)
-            except Exception as e:
-                logger.error(f'Publish(ai-creature) KO [{e}]')
+            cput(f"ai-creature-{env_vars['API_ENV'].lower()}", {
+                "action": 'kill',
+                "creature": Creature.to_json(),
+                })
         except Exception as e:
             description = f'Godmode-Depop Query KO [{e}]'
             logger.error(f'{h} └──> {description}')

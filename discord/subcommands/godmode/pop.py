@@ -8,8 +8,6 @@ from discord.ext import commands
 from loguru import logger
 from random import randint
 
-from nosql.connector import r
-
 from mongo.models.Creature import (
     CreatureDocument,
     CreatureHP,
@@ -27,6 +25,7 @@ from subcommands.godmode._autocomplete import (
     get_rarity_monsters_list
     )
 
+from utils.redis import cput
 from variables import (
     env_vars,
     metaNames,
@@ -137,16 +136,11 @@ def pop(group_godmode):
             return
 
         # We put the info in pubsub channel for IA to populate the instance
-        try:
-            pmsg = {
-                "action": 'pop',
-                "creature": newCreature.to_json(),
-                "instance": Instance.to_json(),
-                }
-            r.publish('ai-creature', pmsg)
-        except Exception as e:
-            msg = f'Publish(ai-creature) KO [{e}]'
-            logger.error(msg)
+        cput(f"ai-creature-{env_vars['API_ENV'].lower()}", {
+            "action": 'pop',
+            "creature": newCreature.to_json(),
+            "instance": Instance.to_json(),
+            })
 
         # MongoDB CreatureDocument should be created
         # Pub/Sub message should be sent

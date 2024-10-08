@@ -7,10 +7,8 @@ import yarqueue
 
 from loguru import logger
 
-from nosql.connector import r_no_decode
-
 from mongo.models.User import UserDocument
-
+from utils.redis import r
 from variables import (
     env_vars,
     metaNames,
@@ -43,7 +41,7 @@ async def check(bot: discord.Client, timer: int):
     while bot.is_ready:
         if bot.user:
             # Opening Queue
-            msgs = yarqueue.Queue(name=env_vars['YQ_DISCORD'], redis=r_no_decode)
+            msgs = yarqueue.Queue(name=env_vars['YQ_DISCORD'], redis=r)
 
             if msgs is None:
                 # If no msgs are received, GOTO next loop

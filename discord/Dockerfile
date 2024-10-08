@@ -50,7 +50,6 @@ COPY --chown=discord:discord /discord/variables.py  /code/variables.py
 COPY --chown=discord:discord /discord/subcommands   /code/subcommands
 COPY --chown=discord:discord /discord/subtasks      /code/subtasks
 COPY --chown=discord:discord /mongo                 /code/mongo
-COPY --chown=discord:discord /nosql                 /code/nosql
 
 # Set working directory
 WORKDIR /code

@@ -7,10 +7,11 @@ from discord.ext import commands
 from loguru import logger
 
 from mongo.models.Creature import CreatureDocument
-from nosql.models.RedisPa import RedisPa
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
+
+from utils.redis import get_pa
 
 
 def pa(group_singouin):
@@ -39,26 +40,26 @@ def pa(group_singouin):
 
         try:
             Creature = CreatureDocument.objects(_id=singouinuuid).get()
-            Pa = RedisPa(creatureuuid=singouinuuid)
+            PA = get_pa(creatureuuid=singouinuuid)
 
             embed = discord.Embed(
                 title=Creature.name,
                 colour=discord.Colour.blue()
             )
 
-            redbar    = Pa.redpa * ':red_square:'
-            redbar   += (16 - Pa.redpa) * ':white_large_square:'
-            bluebar   = Pa.bluepa * ':blue_square:'
-            bluebar  += (8 - Pa.bluepa) * ':white_large_square:'
+            redbar    = PA['red']['pa'] * ':red_square:'
+            redbar   += (16 - PA['red']['pa']) * ':white_large_square:'
+            bluebar   = PA['blue']['pa'] * ':blue_square:'
+            bluebar  += (8 - PA['blue']['pa']) * ':white_large_square:'
 
             embed.add_field(
                 name='PA Count:',
                 value=(
-                    f"> {redbar} ({Pa.redpa}/16)\n"
-                    f"> :clock1: : {Pa.redttnpa}s \n"
+                    f"> {redbar} ({PA['red']['pa']}/16)\n"
+                    f"> :clock1: : {PA['red']['ttnpa']}s \n"
                     f"▬▬\n"
-                    f"> {bluebar} ({Pa.bluepa}/8)\n"
-                    f"> :clock1: : {Pa.bluettnpa}s"
+                    f"> {bluebar} ({PA['blue']['pa']}/8)\n"
+                    f"> :clock1: : {PA['blue']['ttnpa']}s"
                     ),
                 inline=False,
                 )
