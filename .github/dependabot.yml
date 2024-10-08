@@ -18,10 +18,6 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip"
-    directory: "/nosql"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "pip"
     directory: "/mongo"
     schedule:
       interval: "weekly"

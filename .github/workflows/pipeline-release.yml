@@ -12,60 +12,12 @@ permissions:
   contents: read
 
 jobs:
-  nosql-pytest:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [ "3.11" ]
-
-    steps:
-    - name: Checkout 🛎️
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }} 🐍
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install requirements ⏬
-      run: |
-        echo "--- Installing PIP"
-        python -m pip install --upgrade pip
-        if [ -f nosql/requirements.txt ]; \
-          then pip install -r nosql/requirements.txt; \
-        fi
-
-    - name: Lint with flake8 📝
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        echo "--- Linting with flake8"
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    - name: Start Redis 🛢️
-      uses: caiomarruda/redisearch-action@v1.0.1
-      with:
-        redis version: ${{ vars.REDIS_VERSION }}
-
-    - name: Test with PyTest ⚙️
-      env:
-          LOGURU_LEVEL: ${{ vars.LOGURU_LEVEL }}
-      run: |
-        echo "--- Starting PyTest"
-        pytest nosql
-
-
   mongo-pytest:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         python-version: [ "3.11" ]
-
-    needs:
-    - nosql-pytest
-
-    if: ${{ needs.nosql-pytest.result == 'success' }}
 
     steps:
     - name: Checkout 🛎️
@@ -170,8 +122,6 @@ jobs:
           SEP_SMTP_PASS: ${{ secrets.SEP_SMTP_PASS }}
           SEP_SMTP_HOSTNAME: ${{ secrets.SEP_SMTP_HOSTNAME }}
       run: |
-        echo "--- Moving nosql lib where it belongs"
-        cp -a nosql ${{ matrix.python-app }}/
         echo "--- Starting app in background"
         # Used for ws, ai
         if [ -f ${{ matrix.python-app }}/main.py ]
