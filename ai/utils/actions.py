@@ -87,11 +87,12 @@ def creature_pop(creature: str, threads: list):
 
 def creature_kill(creature: str, threads: list):
     # We have to kill an existing creature somewhere
+    creature = json.loads(creature)
     try:
         killed = False
         name = f"[{creature['_id']}] {creature['name']}"
         for i, t in enumerate(threads):
-            if t.creature.id == creature['_id']:
+            if str(t.creature.id) == creature['_id']:
                 # We got the dead Creature
                 logger.trace(f'Creature to kill found: {name}')
                 t.creature.hp = 0
