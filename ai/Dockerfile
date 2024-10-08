@@ -42,8 +42,8 @@ COPY --chown=ai:ai --from=builder /code /code
 COPY --chown=ai:ai /ai/bestiaire    /code/bestiaire
 COPY --chown=ai:ai /ai/utils        /code/utils
 COPY --chown=ai:ai /ai/main.py      /code/main.py
+COPY --chown=ai:ai /ai/variables.py /code/variables.py
 COPY --chown=ai:ai /mongo           /code/mongo
-COPY --chown=ai:ai /nosql           /code/nosql
 
 # Set working directory
 WORKDIR /code
