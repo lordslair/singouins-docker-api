@@ -27,26 +27,26 @@ from utils.gunilog                 import (InterceptHandler,
                                            StandaloneApplication,
                                            StubbedGunicornLogger)
 
-import routes.external.mypc.action
-import routes.external.mypc.action.profession
-import routes.external.mypc.instance
+import routes.mypc.action
+import routes.mypc.action.profession
+import routes.mypc.instance
 
-import routes.external.auth
-import routes.external.log
-import routes.external.map
-import routes.external.meta
-import routes.external.mypc
-import routes.external.mypc.actives
-import routes.external.mypc.events
-import routes.external.mypc.item
-import routes.external.mypc.inventory
-import routes.external.mypc.korp
-import routes.external.mypc.pa
-import routes.external.mypc.squad
-import routes.external.mypc.view
-import routes.external.pc
+import routes.auth
+import routes.log
+import routes.map
+import routes.meta
+import routes.mypc
+import routes.mypc.actives
+import routes.mypc.events
+import routes.mypc.item
+import routes.mypc.inventory
+import routes.mypc.korp
+import routes.mypc.pa
+import routes.mypc.squad
+import routes.mypc.view
+import routes.pc
 
-import routes.external.mypc.highscores
+import routes.mypc.highscores
 
 app = Flask(__name__)
 CORS(app)                         # We wrap around all the app the CORS
@@ -100,32 +100,32 @@ def check():
 app.add_url_rule(
     '/auth/confirm/<string:token>',
     methods=['GET'],
-    view_func=routes.external.auth.confirm,
+    view_func=routes.auth.confirm,
     )
 app.add_url_rule(
     '/auth/delete',
     methods=['DELETE'],
-    view_func=routes.external.auth.delete,
+    view_func=routes.auth.delete,
     )
 app.add_url_rule(
     '/auth/infos',
     methods=['GET'],
-    view_func=routes.external.auth.infos,
+    view_func=routes.auth.infos,
     )
 app.add_url_rule(
     '/auth/login',
     methods=['POST'],
-    view_func=routes.external.auth.login,
+    view_func=routes.auth.login,
     )
 app.add_url_rule(
     '/auth/refresh',
     methods=['POST'],
-    view_func=routes.external.auth.refresh,
+    view_func=routes.auth.refresh,
     )
 app.add_url_rule(
     '/auth/register',
     methods=['POST'],
-    view_func=routes.external.auth.register,
+    view_func=routes.auth.register,
     )
 #
 # Routes /meta
@@ -133,7 +133,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/meta/item/<string:metatype>',
     methods=['GET'],
-    view_func=routes.external.meta.external_meta_get_one,
+    view_func=routes.meta.external_meta_get_one,
     )
 #
 # Routes: /pc
@@ -141,17 +141,17 @@ app.add_url_rule(
 app.add_url_rule(
     '/pc/<uuid:creatureuuid>',
     methods=['GET'],
-    view_func=routes.external.pc.pc_get_one,
+    view_func=routes.pc.pc_get_one,
     )
 app.add_url_rule(
     '/pc/<uuid:creatureuuid>/item',
     methods=['GET'],
-    view_func=routes.external.pc.pc_item_get_all,
+    view_func=routes.pc.pc_item_get_all,
     )
 app.add_url_rule(
     '/pc/<uuid:creatureuuid>/event',
     methods=['GET'],
-    view_func=routes.external.pc.pc_event_get_all,
+    view_func=routes.pc.pc_event_get_all,
     )
 #
 # Routes: /mypc
@@ -159,17 +159,17 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc',
     methods=['POST'],
-    view_func=routes.external.mypc.mypc_add,
+    view_func=routes.mypc.mypc_add,
     )
 app.add_url_rule(
     '/mypc',
     methods=['GET'],
-    view_func=routes.external.mypc.mypc_get_all,
+    view_func=routes.mypc.mypc_get_all,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>',
     methods=['DELETE'],
-    view_func=routes.external.mypc.mypc_del,
+    view_func=routes.mypc.mypc_del,
     )
 #
 # Routes: /pa
@@ -177,7 +177,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/pa',
     methods=['GET'],
-    view_func=routes.external.mypc.pa.pa_get,
+    view_func=routes.mypc.pa.pa_get,
     )
 #
 # Routes: /actives
@@ -185,7 +185,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/actives/<string:actives_type>',
     methods=['GET'],
-    view_func=routes.external.mypc.actives.actives_get,
+    view_func=routes.mypc.actives.actives_get,
     )
 
 #
@@ -194,7 +194,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/highscores',
     methods=['GET'],
-    view_func=routes.external.mypc.highscores.highscores_get,
+    view_func=routes.mypc.highscores.highscores_get,
     )
 #
 # Routes: /view
@@ -202,7 +202,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/view',
     methods=['GET'],
-    view_func=routes.external.mypc.view.view_get,
+    view_func=routes.mypc.view.view_get,
     )
 #
 # Routes /item
@@ -210,7 +210,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/item',
     methods=['GET'],
-    view_func=routes.external.mypc.item.item_get,
+    view_func=routes.mypc.item.item_get,
     )
 #
 # Routes /inventory/item
@@ -218,22 +218,22 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/equip/<string:type>/<string:slotname>',  # noqa E501
     methods=['POST'],
-    view_func=routes.external.mypc.inventory.equip,
+    view_func=routes.mypc.inventory.equip,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset/<int:offsetx>/<int:offsety>',
     methods=['POST'],
-    view_func=routes.external.mypc.inventory.offset,
+    view_func=routes.mypc.inventory.offset,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/offset',
     methods=['DELETE'],
-    view_func=routes.external.mypc.inventory.offset,
+    view_func=routes.mypc.inventory.offset,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/inventory/item/<uuid:itemuuid>/unequip/<string:type>/<string:slotname>',  # noqa E501
     methods=['POST'],
-    view_func=routes.external.mypc.inventory.unequip,
+    view_func=routes.mypc.inventory.unequip,
     )
 #
 # Routes: /instance
@@ -241,22 +241,22 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/instance',
     methods=['PUT'],
-    view_func=routes.external.mypc.instance.add,
+    view_func=routes.mypc.instance.add,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/instance/<uuid:instanceuuid>',
     methods=['GET'],
-    view_func=routes.external.mypc.instance.instance_get,
+    view_func=routes.mypc.instance.instance_get,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/instance/<uuid:instanceuuid>/join',
     methods=['POST'],
-    view_func=routes.external.mypc.instance.join,
+    view_func=routes.mypc.instance.join,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/instance/<uuid:instanceuuid>/leave',
     methods=['POST'],
-    view_func=routes.external.mypc.instance.leave,
+    view_func=routes.mypc.instance.leave,
     )
 #
 # Routes: /action
@@ -264,42 +264,42 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/resolver',
     methods=['POST'],
-    view_func=routes.external.mypc.action.resolver,
+    view_func=routes.mypc.action.resolver,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/reload/<uuid:itemuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.action.reload,
+    view_func=routes.mypc.action.reload,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/unload/<uuid:itemuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.action.unload,
+    view_func=routes.mypc.action.unload,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/gathering',
     methods=['PUT'],
-    view_func=routes.external.mypc.action.profession.gathering,
+    view_func=routes.mypc.action.profession.gathering,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.action.profession.recycling,
+    view_func=routes.mypc.action.profession.recycling,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/skinning/<uuid:resourceuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.action.profession.skinning,
+    view_func=routes.mypc.action.profession.skinning,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/tanning/<int:quantity>',
     methods=['POST'],
-    view_func=routes.external.mypc.action.profession.tanning,
+    view_func=routes.mypc.action.profession.tanning,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/action/profession/tracking',
     methods=['POST'],
-    view_func=routes.external.mypc.action.profession.tracking,
+    view_func=routes.mypc.action.profession.tracking,
     )
 #
 # Routes: /events
@@ -307,7 +307,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/event',
     methods=['GET'],
-    view_func=routes.external.mypc.events.mypc_event_get_all,
+    view_func=routes.mypc.events.mypc_event_get_all,
     )
 #
 # Routes /korp
@@ -315,42 +315,42 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp',
     methods=['POST'],
-    view_func=routes.external.mypc.korp.korp_create,
+    view_func=routes.mypc.korp.korp_create,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>',
     methods=['GET'],
-    view_func=routes.external.mypc.korp.korp_get,
+    view_func=routes.mypc.korp.korp_get,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>',
     methods=['DELETE'],
-    view_func=routes.external.mypc.korp.korp_delete,
+    view_func=routes.mypc.korp.korp_delete,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>/invite/<uuid:targetuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.korp.korp_invite,
+    view_func=routes.mypc.korp.korp_invite,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>/kick/<uuid:targetuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.korp.korp_kick,
+    view_func=routes.mypc.korp.korp_kick,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>/accept',
     methods=['POST'],
-    view_func=routes.external.mypc.korp.korp_accept,
+    view_func=routes.mypc.korp.korp_accept,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>/leave',
     methods=['POST'],
-    view_func=routes.external.mypc.korp.korp_leave,
+    view_func=routes.mypc.korp.korp_leave,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/korp/<uuid:korpuuid>/decline',
     methods=['POST'],
-    view_func=routes.external.mypc.korp.korp_decline,
+    view_func=routes.mypc.korp.korp_decline,
     )
 
 #
@@ -360,42 +360,42 @@ app.add_url_rule(
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad',
     methods=['POST'],
-    view_func=routes.external.mypc.squad.squad_create,
+    view_func=routes.mypc.squad.squad_create,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>',
     methods=['GET'],
-    view_func=routes.external.mypc.squad.squad_get,
+    view_func=routes.mypc.squad.squad_get,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>',
     methods=['DELETE'],
-    view_func=routes.external.mypc.squad.squad_delete,
+    view_func=routes.mypc.squad.squad_delete,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>/invite/<uuid:targetuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.squad.squad_invite,
+    view_func=routes.mypc.squad.squad_invite,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>/kick/<uuid:targetuuid>',
     methods=['POST'],
-    view_func=routes.external.mypc.squad.squad_kick,
+    view_func=routes.mypc.squad.squad_kick,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>/accept',
     methods=['POST'],
-    view_func=routes.external.mypc.squad.squad_accept,
+    view_func=routes.mypc.squad.squad_accept,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>/leave',
     methods=['POST'],
-    view_func=routes.external.mypc.squad.squad_leave,
+    view_func=routes.mypc.squad.squad_leave,
     )
 app.add_url_rule(
     '/mypc/<uuid:creatureuuid>/squad/<uuid:squaduuid>/decline',
     methods=['POST'],
-    view_func=routes.external.mypc.squad.squad_decline,
+    view_func=routes.mypc.squad.squad_decline,
     )
 #
 # Routes /map
@@ -403,7 +403,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/map/<int:map_id>',
     methods=['GET'],
-    view_func=routes.external.map.map_get,
+    view_func=routes.map.map_get,
     )
 #
 # Routes /log
@@ -411,7 +411,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/log',
     methods=['POST'],
-    view_func=routes.external.log.front,
+    view_func=routes.log.front,
     )
 
 if __name__ == '__main__':

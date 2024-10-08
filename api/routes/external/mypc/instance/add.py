@@ -22,7 +22,7 @@ from mongo.models.Creature import (
 from mongo.models.Instance import InstanceDocument
 from mongo.models.Meta import MetaMap
 
-from routes.external.mypc.instance._tools import get_empty_coords
+from routes.mypc.instance._tools import get_empty_coords
 from utils.decorators import (
     check_creature_exists,
     check_is_json,

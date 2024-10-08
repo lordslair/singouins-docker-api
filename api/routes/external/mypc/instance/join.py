@@ -6,7 +6,7 @@ from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
 
-from routes.external.mypc.instance._tools import get_empty_coords
+from routes.mypc.instance._tools import get_empty_coords
 from utils.decorators import (
     check_creature_exists,
     check_instance_exists,
