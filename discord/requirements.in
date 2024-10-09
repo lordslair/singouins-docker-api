@@ -3,5 +3,5 @@ kubernetes      ~= 31.0
 loguru          ~= 0.7
 mongoengine     ~= 0.29
 Pillow          ~= 10.4
-py-cord         ~= 2.5.0
+py-cord         ~= 2.6.1
 yarqueue        == 0.4.1
