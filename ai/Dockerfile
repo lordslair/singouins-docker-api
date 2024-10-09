@@ -15,7 +15,7 @@ COPY --chown=ai:ai /ai/requirements.txt /code/requirements.txt
 # Install dependencies
 RUN apk update --no-cache \
     && apk add --no-cache \
-        python3=~3.11 \
+        python3>=3.11 \
         py3-pip>=23 \
     && su ai -c \
         "pip3 install --break-system-packages --user -U -r /code/requirements.txt"
@@ -32,7 +32,7 @@ ENV PATH="/code/.local/bin:${PATH}"
 # Install dependencies
 RUN apk update --no-cache \
     && apk add --no-cache \
-        python3=~3.11 \
+        python3>=3.11 \
         py3-pip>=23
 
 # Copy the necessary files from the build stage

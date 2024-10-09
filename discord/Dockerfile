@@ -15,12 +15,12 @@ COPY --chown=discord:discord /discord/requirements.txt /code/requirements.txt
 # Install dependencies
 RUN apk update --no-cache \
     && apk add --no-cache \
-        python3=~3.11 \
+        python3>=3.11 \
         py3-pip>=23 \
     && apk add --no-cache --virtual .build-deps \
-        gcc=~13 \
-        libc-dev=~0.7 \
-        python3-dev=~3.11 \
+        gcc>=13 \
+        libc-dev>=0.7 \
+        python3-dev>=3.11 \
     && su discord -c \
         "pip3 install --break-system-packages --user -U -r /code/requirements.txt" \
     && apk del .build-deps
@@ -37,7 +37,7 @@ ENV PATH="/code/.local/bin:${PATH}"
 # Install dependencies
 RUN apk update --no-cache \
     && apk add --no-cache \
-        python3=~3.11 \
+        python3>=3.11 \
         py3-pip>=23
 
 # Copy the necessary files from the build stage
