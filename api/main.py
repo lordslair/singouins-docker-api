@@ -13,6 +13,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from variables import (
+    API_ENV,
     SEP_SECRET_KEY,
     GUNICORN_BIND,
     GUNICORN_CHDIR,
@@ -28,7 +29,7 @@ from utils.gunilog import (
     StandaloneApplication,
     StubbedGunicornLogger,
     )
-
+from utils.redis import r
 
 import routes.auth
 import routes.log
@@ -70,6 +71,14 @@ app.config['JWT_SECRET_KEY'] = SEP_SECRET_KEY
 jwt = JWTManager(app)
 
 
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload["jti"]
+    token_type = jwt_payload.get("type", "access")  # This will be 'access' or 'refresh'
+    token_in_redis = r.get(f"{API_ENV}:auth:{token_type}_jti:{jti}")
+    return token_in_redis.decode() == 'revoked'
+
+
 @app.before_request
 def before_request_time():
     g.start = time.time()
@@ -102,6 +111,7 @@ app.add_url_rule('/auth/confirm/<string:token>', methods=['GET'], view_func=rout
 app.add_url_rule('/auth/delete', methods=['DELETE'], view_func=routes.auth.delete)
 app.add_url_rule('/auth/infos', methods=['GET'], view_func=routes.auth.infos)
 app.add_url_rule('/auth/login', methods=['POST'], view_func=routes.auth.login)
+app.add_url_rule('/auth/logout', methods=['DELETE'], view_func=routes.auth.logout)
 app.add_url_rule('/auth/refresh', methods=['POST'], view_func=routes.auth.refresh)
 app.add_url_rule('/auth/register', methods=['POST'], view_func=routes.auth.register)
 #

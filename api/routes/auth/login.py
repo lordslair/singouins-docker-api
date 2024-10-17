@@ -4,13 +4,22 @@ import datetime
 
 from flask import jsonify, request
 from flask_bcrypt import check_password_hash
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    JWTManager,
+    )
 from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from mongo.models.User import UserDocument
 from utils.decorators import check_is_json
-from variables import TOKEN_DURATION
+from utils.redis import r
+from variables import API_ENV, TOKEN_DURATION
+
+# Initialize JWTManager for Flask
+jwt = JWTManager()
 
 
 class LoginUserSchema(BaseModel):
@@ -36,6 +45,7 @@ def login():
         User = UserDocument.objects(name=Login.username).get()
     except UserDocument.DoesNotExist:
         logger.debug("UserDocument Query KO (404)")
+        return jsonify({"msg": "User not found"}), 404
 
     # If password mismatch
     if not check_password_hash(User.hash, Login.password):
@@ -47,14 +57,26 @@ def login():
             }
         ), 401
 
-    # Identity can be any data that is json serializable
+    # Create tokens
+    access_token = create_access_token(
+        identity=Login.username,
+        expires_delta=datetime.timedelta(minutes=TOKEN_DURATION)
+    )
+    refresh_token = create_refresh_token(identity=Login.username)
+
+    # Decode tokens to get the jti (JWT ID)
+    access_jti = decode_token(access_token)["jti"]
+    refresh_jti = decode_token(refresh_token)["jti"]
+
+    # Store tokens in Redis for future revocation
+    r.set(f"{API_ENV}:auth:access_jti:{access_jti}", Login.username, ex=TOKEN_DURATION * 60)
+    r.set(f"{API_ENV}:auth:refresh_jti:{refresh_jti}", Login.username, ex=30 * 24 * 60 * 60)
+
+    # Return tokens
     logger.trace("Access Token Query OK")
     return jsonify(
         {
-            'access_token': create_access_token(
-                identity=Login.username,
-                expires_delta=datetime.timedelta(minutes=TOKEN_DURATION)
-            ),
-            'refresh_token': create_refresh_token(identity=Login.username)
+            'access_token': access_token,
+            'refresh_token': refresh_token
         }
     ), 200
