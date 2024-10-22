@@ -40,10 +40,10 @@ def test_singouins_auth_logout():
     access_token = response.json().get("access_token")
     access_header = {"Authorization": f"Bearer {access_token}"}
 
+    # We check token revokation through logout
     response = requests.delete(f'{API_URL}/auth/logout', headers=access_header)
     assert response.status_code == 200
-    assert response.json().get("access_token")
-    assert response.json().get("refresh_token")
+    assert 'JTI Revokation OK' in response.json().get("msg")
 
     # We check token is revoked and access Unauthorized
     response  = requests.get(f'{API_URL}/auth/infos', headers=access_header)
