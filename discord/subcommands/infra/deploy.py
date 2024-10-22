@@ -91,7 +91,7 @@ def deploy(group_admin):
                                 client.V1EnvVar(
                                     name='CUST_GIT_QUIET',
                                     value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                        secret_key_ref=client.V1SecretKeySelector(  # noqa: E501
                                             name='git-secret',
                                             key='git-angular-quiet',
                                             )
@@ -100,7 +100,7 @@ def deploy(group_admin):
                                 client.V1EnvVar(
                                     name='CUST_GIT_REPO',
                                     value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                        secret_key_ref=client.V1SecretKeySelector(  # noqa: E501
                                             name='git-secret',
                                             key='git-angular-repo',
                                             )
@@ -109,7 +109,7 @@ def deploy(group_admin):
                                 client.V1EnvVar(
                                     name='CUST_GIT_USER',
                                     value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                        secret_key_ref=client.V1SecretKeySelector(  # noqa: E501
                                             name='git-secret',
                                             key='git-angular-user',
                                             )
@@ -118,7 +118,7 @@ def deploy(group_admin):
                                 client.V1EnvVar(
                                     name='CUST_GIT_TOKEN',
                                     value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                        secret_key_ref=client.V1SecretKeySelector(  # noqa: E501
                                             name='git-secret',
                                             key='git-angular-token',
                                             )
@@ -127,7 +127,7 @@ def deploy(group_admin):
                                 client.V1EnvVar(
                                     name='CUST_OUTPUT_PATH',
                                     value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector( # noqa E501
+                                        secret_key_ref=client.V1SecretKeySelector(  # noqa: E501
                                             name='git-secret',
                                             key='git-angular-output-path',
                                             )
@@ -143,7 +143,7 @@ def deploy(group_admin):
                     volumes=[
                         client.V1Volume(
                             name='websites',
-                            persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource( # noqa E501
+                            persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(  # noqa: E501
                                 claim_name='nginx-www-pvc',
                                 ),
                             ),
