@@ -1,27 +1,21 @@
 # -*- coding: utf8 -*-
 
-import json
 import requests
 
 from variables import (
     API_ENV,
     API_URL,
     CREATURE_ID,
-    access_token_get,
     r,
     )
 
 
-def test_singouins_pa():
-    response  = requests.get(
-        f'{API_URL}/mypc/{CREATURE_ID}/pa',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-
+def test_singouins_pa(jwt_header):
+    response  = requests.get(f'{API_URL}/mypc/{CREATURE_ID}/pa', headers=jwt_header['access'])
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-    assert json.loads(response.text)['payload']['blue']['ttnpa'] > 0
-    assert json.loads(response.text)['payload']['red']['ttnpa'] > 0
+    assert response.json().get("success") is True
+    assert response.json().get("payload")['blue']['ttnpa'] > 0
+    assert response.json().get("payload")['red']['ttnpa'] > 0
 
 
 def test_singouins_pa_reset():

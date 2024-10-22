@@ -1,9 +1,7 @@
 # -*- coding: utf8 -*-
 
-import json
 import os
 import redis
-import requests
 import uuid
 
 GUNICORN_PORT   = os.environ.get("GUNICORN_PORT", 5000)
@@ -35,22 +33,27 @@ AUTH_PAYLOAD    = {'username': USER_NAME, 'password': 'plop'}
 MAP_ID          = 1
 METAS           = ['armor', 'weapon', 'race']
 
-
-def access_token_get():
-    try:
-        response = requests.post(f'{API_URL}/auth/login', json=AUTH_PAYLOAD)
-    except Exception as e:
-        print(e)
-        return
-    else:
-        return json.loads(response.text)['access_token']
-
-
-def refresh_token_get():
-    try:
-        response = requests.post(f'{API_URL}/auth/login', json=AUTH_PAYLOAD)
-    except Exception as e:
-        print(e)
-        return
-    else:
-        return json.loads(response.text)['refresh_token']
+PJTEST_BODY = {
+    'name': CREATURE_NAME,
+    'gender': True,
+    'race': 2,
+    'vocation': 3,
+    'cosmetic': {
+        'metaid': 8,
+        'data': {
+            'hasGender': True,
+            'beforeArmor': False,
+            'hideArmor': None,
+        }
+    },
+    'equipment': {
+        'righthand': {
+            'metaid': 34,
+            'metatype': 'weapon'
+        },
+        'lefthand': {
+            'metaid': 11,
+            'metatype': 'weapon'
+        }
+    }
+}

@@ -1,20 +1,11 @@
 # -*- coding: utf8 -*-
 
-import json
 import requests
 
-from variables import (
-    API_URL,
-    MAP_ID,
-    access_token_get,
-    )
+from variables import API_URL, MAP_ID
 
 
-def test_singouins_map():
-    response  = requests.get(
-        f'{API_URL}/map/{MAP_ID}',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-
+def test_singouins_map(jwt_header):
+    response  = requests.get(f'{API_URL}/map/{MAP_ID}', headers=jwt_header['access'])
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True

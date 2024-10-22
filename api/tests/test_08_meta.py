@@ -1,20 +1,12 @@
 # -*- coding: utf8 -*-
 
-import json
 import requests
 
-from variables import (
-    API_URL,
-    METAS,
-    access_token_get,
-    )
+from variables import API_URL, METAS
 
 
-def test_singouins_meta():
+def test_singouins_meta(jwt_header):
     for meta in METAS:
-        response  = requests.get(
-            f'{API_URL}/meta/item/{meta}',
-            headers={"Authorization": f"Bearer {access_token_get()}"},
-            )
+        response  = requests.get(f'{API_URL}/meta/item/{meta}', headers=jwt_header['access'])
         assert response.status_code == 200
-        assert json.loads(response.text)['success'] is True
+        assert response.json().get("success") is True

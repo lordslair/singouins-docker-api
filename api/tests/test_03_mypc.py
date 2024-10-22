@@ -1,82 +1,29 @@
 # -*- coding: utf8 -*-
 
-import json
 import requests
 
-from variables import (
-    API_URL,
-    CREATURE_ID,
-    CREATURE_NAME,
-    access_token_get,
-    )
+from variables import API_URL, CREATURE_ID, CREATURE_NAME, PJTEST_BODY
 
 
-def test_singouins_mypc_create():
-    payload  = {
-        'name': CREATURE_NAME,
-        'gender': True,
-        'race': 2,
-        'vocation': 3,
-        'cosmetic': {
-            'metaid': 8,
-            'data': {
-                'hasGender': True,
-                'beforeArmor': False,
-                'hideArmor': None,
-            }
-        },
-        'equipment': {
-            'righthand': {
-                'metaid': 34,
-                'metatype': 'weapon'
-            },
-            'lefthand': {
-                'metaid': 11,
-                'metatype': 'weapon'
-            }
-        }
-    }
-
-    response  = requests.post(
-        f'{API_URL}/mypc',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        json=payload,
-        )
-
+def test_singouins_mypc_create(jwt_header):
+    response  = requests.post(f'{API_URL}/mypc', headers=jwt_header['access'], json=PJTEST_BODY)
     assert response.status_code == 201
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
-def test_singouins_mypc_infos():
-    response  = requests.get(
-        f'{API_URL}/mypc',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
+def test_singouins_mypc_get(mypc):
+    assert mypc['indexed'][CREATURE_ID]['name'] == CREATURE_NAME
 
+
+def test_singouins_mypc_view(jwt_header):
+    response  = requests.get(f'{API_URL}/mypc/{CREATURE_ID}/view', headers=jwt_header['access'])
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-    assert json.loads(response.text)['payload'][0]['name'] == CREATURE_NAME
+    assert response.json().get("success") is True
 
 
-def test_singouins_mypc_view():
-    response  = requests.get(
-        f'{API_URL}/mypc/{CREATURE_ID}/view',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-
-    assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
-
-
-def test_singouins_mypc_actives():
+def test_singouins_mypc_actives(jwt_header):
     for actives_type in ['cds', 'effects', 'statuses']:
-        response  = requests.get(
-            f'{API_URL}/mypc/{CREATURE_ID}/actives/{actives_type}',
-            headers={"Authorization": f"Bearer {access_token_get()}"},
-            )
-
+        response  = requests.get(f'{API_URL}/mypc/{CREATURE_ID}/actives/{actives_type}', headers=jwt_header['access'])  # noqa: E501
         assert response.status_code == 200
-        assert json.loads(response.text)['success'] is True
-
-        assert isinstance(json.loads(response.text)['payload'][actives_type], list)
+        assert response.json().get("success") is True
+        assert isinstance(response.json().get("payload")[actives_type], list)

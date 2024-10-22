@@ -1,16 +1,10 @@
 # -*- coding: utf8 -*-
 
-import json
 import requests
 import os
 import pytest
 
-from variables import (
-    API_URL,
-    CREATURE_ID,
-    CREATURE_NAME,
-    access_token_get,
-    )
+from variables import API_URL, CREATURE_ID
 
 RESOLVER_JSON = {
     "name": "RegularMovesFightClass",
@@ -25,42 +19,28 @@ RESOLVER_JSON = {
 }
 
 
-def test_singouins_action_resolver_base():
+def test_singouins_action_resolver_base(jwt_header, mypc):
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         pytest.skip('For now, unable to test this in GitHub')
 
-    response = requests.get(
-        f'{API_URL}/mypc',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-    pcs = json.loads(response.text)['payload']
-    # We need the PC (name:PJTest)
-    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
-
+    pc = mypc['indexed'][CREATURE_ID]
     if 'instance' not in pc:
+        BODY = {"mapid": 1, "hardcore": True, "fast": False, "public": True}
         # We need to have the PJ in an instance - we open a new one
-        response = requests.put(
-            f"{API_URL}/mypc/{CREATURE_ID}/instance",
-            headers={"Authorization": f"Bearer {access_token_get()}"},
-            json={"mapid": 1, "hardcore": True, "fast": False, "public": True}
-            )
+        response = requests.put(f"{API_URL}/mypc/{CREATURE_ID}/instance", headers=jwt_header['access'], json=BODY)  # noqa: E501
 
         assert response.status_code == 201
-        assert json.loads(response.text)['success'] is True
+        assert response.json().get("success") is True
 
-    response = requests.post(
-        f'{API_URL}/mypc/{CREATURE_ID}/action/resolver',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        json=RESOLVER_JSON,
-        )
+    response = requests.post(f'{API_URL}/mypc/{CREATURE_ID}/action/resolver', headers=jwt_header['access'], json=RESOLVER_JSON)  # noqa: E501
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
-    context = json.loads(response.text)['payload']['internal']['context']
+    context = response.json().get("payload")['internal']['context']
 
     assert isinstance(context['creatures'], list)
     assert len(context['creatures']) > 0
@@ -72,29 +52,19 @@ def test_singouins_action_resolver_base():
     assert isinstance(context['status'], list)
 
 
-def test_singouins_action_resolver_move():
+def test_singouins_action_resolver_move(jwt_header, mypc):
     if os.environ.get("CI"):
         # Here we are inside GitHub CI process
         # Gruik
         # For now, unable to test this in GitHub
         pytest.skip('For now, unable to test this in GitHub')
 
-    response = requests.get(
-        f'{API_URL}/mypc',
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        )
-    pcs = json.loads(response.text)['payload']
-    # We need the PC (name:PJTest)
-    pc = [x for x in pcs if x['name'] == CREATURE_NAME][0]
+    pc = mypc['indexed'][CREATURE_ID]
 
     RESOLVER_JSON['params']['options'] = {"path": [{"x": pc['x'] + 1, "y": pc['y'] - 1}]}
     RESOLVER_JSON['actor'] = pc['_id']
 
-    response = requests.post(
-        f"{API_URL}/mypc/{CREATURE_ID}/action/resolver",
-        headers={"Authorization": f"Bearer {access_token_get()}"},
-        json=RESOLVER_JSON,
-        )
+    response = requests.post(f"{API_URL}/mypc/{CREATURE_ID}/action/resolver", headers=jwt_header['access'], json=RESOLVER_JSON)  # noqa: E501
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True

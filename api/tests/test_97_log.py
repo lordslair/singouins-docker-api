@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import json
 import requests
 
 from variables import API_URL
@@ -16,7 +15,7 @@ def test_singouins_log_trace():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
 def test_singouins_log_debug():
@@ -29,7 +28,7 @@ def test_singouins_log_debug():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
 def test_singouins_log_info():
@@ -42,7 +41,7 @@ def test_singouins_log_info():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
 def test_singouins_log_success():
@@ -55,7 +54,7 @@ def test_singouins_log_success():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
 def test_singouins_log_warn():
@@ -68,7 +67,7 @@ def test_singouins_log_warn():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
 def test_singouins_log_error():
@@ -81,7 +80,7 @@ def test_singouins_log_error():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
 
 
 def test_singouins_log_critical():
@@ -94,4 +93,4 @@ def test_singouins_log_critical():
         )
 
     assert response.status_code == 200
-    assert json.loads(response.text)['success'] is True
+    assert response.json().get("success") is True
