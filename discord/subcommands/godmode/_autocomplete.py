@@ -33,15 +33,13 @@ async def get_instances_list(ctx: discord.AutocompleteContext):
 
 
 async def get_metanames_list(ctx: discord.AutocompleteContext):
+    # Get the current user input
+    user_input = ctx.value.lower()
     try:
         db_list = []
         for item in metaNames[ctx.options["metatype"]]:
-            db_list.append(
-                discord.OptionChoice(
-                    item['name'],
-                    value=str(item['_id']),
-                    )
-                )
+            if user_input in item['name'].lower():
+                db_list.append(discord.OptionChoice(item['name'], value=str(item['_id'])))
     except Exception as e:
         logger.error(f'metaNames Query KO [{e}]')
         return None
