@@ -55,16 +55,22 @@ def give(group_godmode):
         description="Item Name",
         autocomplete=get_metanames_list,
         )
+    @option(
+        "bound_type",
+        description="Bound Type",
+        choices=['BoE', 'BoP'],
+        )
     async def give(
         ctx,
         singouinuuid: str,
         rarity: str,
         metatype: str,
         metaid: int,
+        bound_type: str,
     ):
 
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
-        logger.info(f'{h} /{group_godmode} give {singouinuuid} {rarity} {metatype} {metaid}')
+        logger.info(f'{h} /{group_godmode} give {singouinuuid} {rarity} {metatype} {metaid} {bound_type}')  # noqa: E501
 
         Creature = CreatureDocument.objects(_id=singouinuuid).get()
 
@@ -76,11 +82,16 @@ def give(group_godmode):
             else:
                 max_ammo = None
 
+            if bound_type == 'BoE':
+                bound = False
+            else:
+                bound = True
+
             Item = ItemDocument(
                 ammo=max_ammo,
                 bearer=singouinuuid,
-                bound=True,
-                bound_type='BoP',
+                bound=bound,
+                bound_type=bound_type,
                 metaid=metaid,
                 metatype=metatype,
                 rarity=rarity,
