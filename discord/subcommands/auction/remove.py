@@ -12,7 +12,7 @@ from mongo.models.Item import ItemDocument
 from subcommands.auction._autocomplete import get_singouin_auctions_list
 from subcommands.singouin._autocomplete import get_mysingouins_list
 
-from variables import item_types_discord, rarity_item_types_discord
+from variables import env_vars, item_types_discord, rarity_item_types_discord
 
 
 def remove(group_auction):
@@ -105,6 +105,12 @@ def remove(group_auction):
             colour=discord.Colour.green(),
             )
         embed.set_footer(text=f"ItemUUID: {Item.id}")
+
+        # We add Thumbnail
+        URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
+        logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
+        embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
+
         await ctx.respond(embed=embed, ephemeral=True)
         logger.info(f'{h} └──> Auction-Remove Query OK')
         return

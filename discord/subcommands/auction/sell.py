@@ -13,7 +13,7 @@ from mongo.models.Item import ItemDocument
 from subcommands.auction._autocomplete import get_singouin_auctionable_item_list
 from subcommands.singouin._autocomplete import get_mysingouins_list
 
-from variables import item_types_discord, metaNames, rarity_item_types_discord
+from variables import env_vars, item_types_discord, metaNames, rarity_item_types_discord
 
 
 def sell(group_auction):
@@ -47,15 +47,9 @@ def sell(group_auction):
         logger.info(f'{h} /{group_auction} sell {selleruuid} {itemuuid} {price}')
 
         try:
-            Item = ItemDocument.objects(
-                _id=itemuuid,
-                auctioned=False,
-                bearer=selleruuid,
-                bound_type='BoE',
-                ).get()
             Creature = CreatureDocument.objects(_id=selleruuid).get()
-        except ItemDocument.DoesNotExist:
-            msg = 'Item NotFound or not matching criterias'
+        except CreatureDocument.DoesNotExist:
+            msg = 'Seller NotFound'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -65,8 +59,16 @@ def sell(group_auction):
                 )
             logger.info(f'{h} └──> Auction-Sell Query KO ({msg})')
             return
-        except CreatureDocument.DoesNotExist:
-            msg = 'Seller NotFound'
+
+        try:
+            Item = ItemDocument.objects(
+                _id=itemuuid,
+                auctioned=False,
+                bearer=selleruuid,
+                bound_type='BoE',
+                ).get()
+        except ItemDocument.DoesNotExist:
+            msg = 'Item NotFound or not matching criterias'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -119,6 +121,12 @@ def sell(group_auction):
             colour=discord.Colour.green(),
             )
         embed.set_footer(text=f"ItemUUID: {Item.id}")
+
+        # We add Thumbnail
+        URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
+        logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
+        embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
+
         await ctx.respond(embed=embed, ephemeral=True)
         logger.info(f'{h} └──> Auction-Sell Query OK')
         return
