@@ -10,10 +10,12 @@ ENV PIP_NO_CACHE_DIR=1 \
     PATH="/code/.local/bin:${PATH}"
 
 # Copy only requirements to leverage Docker cache
-COPY --chown=discord:discord /discord/requirements.txt /code/requirements.txt
+COPY --chown=discord:discord /discord/requirements.txt /tmp/requirements.txt
 
 # Install dependencies
-RUN apk update --no-cache \
+RUN mkdir /code \
+    && chown discord:discord /code \
+    && apk update --no-cache \
     && apk add --no-cache \
         python3>=3.11 \
         py3-pip>=23 \
@@ -22,7 +24,7 @@ RUN apk update --no-cache \
         libc-dev>=0.7 \
         python3-dev>=3.11 \
     && su discord -c \
-        "pip3 install --break-system-packages --user -U -r /code/requirements.txt" \
+        "pip3 install --break-system-packages --user -U -r /tmp/requirements.txt" \
     && apk del .build-deps
 
 # Stage 2: Final
@@ -44,12 +46,8 @@ RUN apk update --no-cache \
 COPY --chown=discord:discord --from=builder /code /code
 
 # Copy application code
-COPY --chown=discord:discord /discord/commands.py   /code/commands.py
-COPY --chown=discord:discord /discord/tasks.py      /code/tasks.py
-COPY --chown=discord:discord /discord/variables.py  /code/variables.py
-COPY --chown=discord:discord /discord/subcommands   /code/subcommands
-COPY --chown=discord:discord /discord/subtasks      /code/subtasks
-COPY --chown=discord:discord /mongo                 /code/mongo
+COPY --chown=discord:discord /discord   /code
+COPY --chown=discord:discord /mongo     /code/mongo
 
 # Set working directory
 WORKDIR /code

@@ -1,0 +1,6 @@
+# Global exclusions
+*/Dockerfile
+*/requirements.in
+
+# Exclusions for Discord
+discord/resources
