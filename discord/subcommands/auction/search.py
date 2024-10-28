@@ -48,7 +48,7 @@ def search(group_auction, bot):
         try:
             if metaid and isinstance(metaid, str):
                 metaid = int(metaid)
-                search = f'*{metaNames[metatype][metaid]}*'
+                search = f"*{metaNames[metatype][metaid]['name']}*"
             else:
                 metaid = None
                 search = '*'
@@ -67,18 +67,7 @@ def search(group_auction, bot):
             else:
                 pass
 
-            Auctions = AuctionDocument.objects.get(query)
-        except AuctionDocument.DoesNotExist:
-            description = 'No items were found matching these criterias.'
-            logger.debug(f'{h} └──> {description}')
-            await ctx.respond(
-                embed=discord.Embed(
-                    description=description,
-                    colour=discord.Colour.orange(),
-                    ),
-                ephemeral=True,
-                )
-            return
+            Auctions = AuctionDocument.objects(query)
         except Exception as e:
             description = f'Auction-Search Query KO [{e}]'
             logger.error(f'{h} └──> {description}')
@@ -90,6 +79,18 @@ def search(group_auction, bot):
                 ephemeral=True,
                 )
             return
+        else:
+            if len(Auctions) == 0:
+                description = 'No items were found matching these criterias.'
+                logger.debug(f'{h} └──> {description}')
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=description,
+                        colour=discord.Colour.orange(),
+                        ),
+                    ephemeral=True,
+                    )
+                return
 
         # If we are here, Auctions QuerySet is not empty
         # Dirty Gruik to find the max(len(metaname))
@@ -103,13 +104,7 @@ def search(group_auction, bot):
         itemname, price, seller, end = 'Item name', 'Price', 'Seller', 'End'
         description = f"💱 `{itemname:{mw}}` | `{price:8}` | `{end:8}` | `{seller:{sw}}`\n"
         itemname, seller = '-' * (mw + 3), '-' * sw
-        description += (
-                f"`{itemname:{mw}}` | "
-                f"`--------` | "
-                f"`--------` | "
-                f"`{seller:{sw}}`"
-                f"\n"
-                )
+        description += "`{itemname:{mw}}` | `--------` | `--------` | `{seller:{sw}}`\n"
         # We loop on items retrieved in Auctions
         for Auction in Auctions:
             description += (
@@ -123,6 +118,7 @@ def search(group_auction, bot):
                 )
 
         logger.info(f'{h} └──> Auction-Search Query OK')
+        logger.success(f'Searched for {metatype.upper()}:{search}')
         await ctx.respond(
                 embed=discord.Embed(
                     title=f'Searched for {metatype.upper()}:{search}',

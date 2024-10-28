@@ -52,17 +52,9 @@ def remove(group_auction):
         logger.info(f'{h} /{group_auction} remove {selleruuid} {auctionuuid}')
 
         try:
-            Auction = AuctionDocument.objects(
-                _id=auctionuuid,
-                seller__id=selleruuid,
-                ).get()
-            Item = ItemDocument.objects(
-                _id=Auction.item.id,
-                auctioned=True,
-                bearer=selleruuid,
-                ).get()
-        except ItemDocument.DoesNotExist:
-            msg = 'Item NotFound'
+            Auction = AuctionDocument.objects(_id=auctionuuid, seller__id=selleruuid).get()  # noqa: E501
+        except AuctionDocument.DoesNotExist:
+            msg = 'Auction NotFound'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -72,8 +64,11 @@ def remove(group_auction):
                 )
             logger.info(f'{h} └──> Auction-Remove Query KO ({msg})')
             return
-        except AuctionDocument.DoesNotExist:
-            msg = 'Auction NotFound'
+
+        try:
+            Item = ItemDocument.objects(_id=Auction.item.id, auctioned=True, bearer=selleruuid).get()  # noqa: E501
+        except ItemDocument.DoesNotExist:
+            msg = 'Item NotFound'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
