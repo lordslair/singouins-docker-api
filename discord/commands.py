@@ -8,6 +8,7 @@ from loguru import logger
 
 from subcommands import (
     auction,
+    bazaar,
     infra,
     godmode,
     singouin,
@@ -78,6 +79,20 @@ else:
     auction.sell(group_auction)
     auction.show(group_auction, bot)
     logger.debug(f'[{group_auction}] Commands OK')
+#
+# /bazaar Commands (for @Singouins)
+#
+try:
+    group_bazaar  = bot.create_group(
+        description="Commands related to Bazaar usage",
+        name='bazaar',
+        )
+except Exception as e:
+    logger.error(f'[{group_bazaar}] Command Group KO [{e}]')
+else:
+    logger.debug(f'[{group_bazaar}] Command Group OK')
+    bazaar.sell(group_bazaar, bot)
+    logger.debug(f'[{group_bazaar}] Commands OK')
 #
 # /godmode Commands (for @Admins)
 #
