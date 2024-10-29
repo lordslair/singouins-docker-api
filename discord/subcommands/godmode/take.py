@@ -17,7 +17,7 @@ from subcommands.godmode._autocomplete import (
 from variables import (
     env_vars,
     metaNames,
-    rarity_item_types_discord,
+    rarity_item_types_discord as ritd,
     )
 
 
@@ -51,6 +51,7 @@ def take(group_godmode):
         try:
             Creature = CreatureDocument.objects(_id=singouinuuid).get()
             Item = ItemDocument.objects(_id=itemuuid).get()
+            Item.delete()
         except CreatureDocument.DoesNotExist:
             msg = 'Auction NotFound'
             await ctx.respond(
@@ -84,42 +85,27 @@ def take(group_godmode):
                 )
             return
 
-        try:
-            Item.delete()
-        except Exception as e:
-            description = f'Godmode-Take Query KO [{e}]'
-            logger.error(f'{h} └──> {description}')
-            await ctx.respond(
-                embed=discord.Embed(
-                    description=description,
-                    colour=discord.Colour.red(),
-                    )
-                )
-            return
-        else:
-            embed = discord.Embed(
-                title="An item slowly vanishes!",
-                colour=discord.Colour.green()
-                )
+        embed = discord.Embed(
+            title="An item slowly vanishes!",
+            colour=discord.Colour.green()
+            )
 
-            embed_field_name = (
-                f"{rarity_item_types_discord[Item.rarity]} "
-                f"{metaNames[Item.metatype][Item.metaid]['name']}"
-                )
-            embed_field_value  = f"> Bearer : `{Creature.name}`\n"
-            embed_field_value += f"> Bearer : `UUID({Item.bearer})`\n"
+        meta = [x for x in metaNames[Item.metatype] if x['_id'] == Item.metaid][0]
+        embed_field_name = f"{ritd[Item.rarity]} {meta['name']}"
+        embed_field_value  = f"> Bearer : `{Creature.name}`\n"
+        embed_field_value += f"> Bearer : `UUID({Item.bearer})`\n"
 
-            embed.add_field(
-                name=f'**{embed_field_name}**',
-                value=embed_field_value,
-                inline=True,
-                )
+        embed.add_field(
+            name=f'**{embed_field_name}**',
+            value=embed_field_value,
+            inline=True,
+            )
 
-            embed.set_footer(text=f"ItemUUID: {Item.id}")
+        embed.set_footer(text=f"ItemUUID: {Item.id}")
 
-            URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
-            logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
-            embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
+        URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
+        logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
+        embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
 
-            await ctx.respond(embed=embed)
-            logger.info(f'{h} └──> Godmode-Take Query OK')
+        await ctx.respond(embed=embed)
+        logger.info(f'{h} └──> Godmode-Take Query OK')

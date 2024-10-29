@@ -18,7 +18,7 @@ from subcommands.godmode._autocomplete import (
 from variables import (
     env_vars,
     metaNames,
-    rarity_item_types_discord,
+    rarity_item_types_discord as ritd,
     )
 
 
@@ -75,10 +75,25 @@ def give(group_godmode):
         Creature = CreatureDocument.objects(_id=singouinuuid).get()
 
         try:
+            Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        except CreatureDocument.DoesNotExist:
+            msg = 'Singouin NotFound'
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{h} └──> Godmode-Give Query KO ({msg})')
+            return
+
+        try:
+            meta = [x for x in metaNames[metatype] if x['_id'] == metaid][0]
             if metatype == 'armor':
                 max_ammo = None
             elif metatype == 'weapon':
-                max_ammo = metaNames[metatype][metaid]['max_ammo']
+                max_ammo = meta['max_ammo']
             else:
                 max_ammo = None
 
@@ -113,15 +128,10 @@ def give(group_godmode):
             colour=discord.Colour.green()
             )
 
-        embed_field_name = (
-            f"{rarity_item_types_discord[Item.rarity]} "
-            f"{metaNames[Item.metatype][Item.metaid]['name']}"
-            )
+        embed_field_name = f"{ritd[Item.rarity]} {meta['name']}"
         embed_field_value  = f"> Bearer : `{Creature.name}`\n"
         embed_field_value += f"> Bearer : `UUID({Item.bearer})`\n"
-        embed_field_value += (
-            f"> Bound : `{Item.bound} ({Item.bound_type})`\n"
-            )
+        embed_field_value += f"> Bound : `{Item.bound} ({Item.bound_type})`\n"
 
         if max_ammo:
             embed_field_value += f"> Ammo : `{Item.ammo}/{max_ammo}`\n"
