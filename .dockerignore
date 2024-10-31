@@ -3,4 +3,4 @@
 */requirements.in
 
 # Exclusions for Discord
-discord/resources
+discord/resources/source
