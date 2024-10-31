@@ -52,7 +52,6 @@ COPY --chown=api:api /mongo /code/mongo
 
 # Set working directory
 WORKDIR /code
-RUN rm requirements.* Dockerfile*
 
 # Set user
 USER api
