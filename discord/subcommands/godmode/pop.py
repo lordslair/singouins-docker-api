@@ -28,7 +28,7 @@ from subcommands.godmode._autocomplete import (
 from utils.redis import cput
 from variables import (
     env_vars,
-    metaNames,
+    metaIndexed,
     rarity_monster_types_discord as rmtd,
     )
 
@@ -89,21 +89,21 @@ def pop(group_godmode):
 
         # We create the Monster
         try:
-            metaMonster = metaNames['race'][monster - 1]
-            logger.trace(f"{h} ├──> Godmode-Pop {rmtd[rarity]} {metaMonster['name']}")
+            metaRace = metaIndexed['race'][race_id]
+            logger.trace(f"{h} ├──> Godmode-Pop {rmtd[rarity]} {metaRace['name']}")
 
             newCreature = CreatureDocument(
-                _id=uuid.uuid3(uuid.NAMESPACE_DNS, metaMonster['name']),
+                _id=uuid.uuid3(uuid.NAMESPACE_DNS, metaRace['name']),
                 account=None,
                 gender=True,
                 hp=CreatureHP(
-                    base=metaMonster['min_m'] + 100,
-                    current=metaMonster['min_m'] + 100,
-                    max=metaMonster['min_m'] + 100,
+                    base=metaRace['min_m'] + 100,
+                    current=metaRace['min_m'] + 100,
+                    max=metaRace['min_m'] + 100,
                     ),
-                instance=instanceuuid,
+                instance=instance_uuid,
                 korp=CreatureKorp(),
-                name=metaMonster['name'],
+                name=metaRace['name'],
                 race=monster,
                 rarity=rarity,
                 squad=CreatureSquad(),
@@ -112,12 +112,12 @@ def pop(group_godmode):
                     spec=CreatureStatsType(),
                     race=CreatureStatsType(),
                     total=CreatureStatsType(
-                        b=metaMonster['min_b'],
-                        g=metaMonster['min_g'],
-                        m=metaMonster['min_m'],
-                        p=metaMonster['min_p'],
-                        r=metaMonster['min_r'],
-                        v=metaMonster['min_v'],
+                        b=metaRace['min_b'],
+                        g=metaRace['min_g'],
+                        m=metaRace['min_m'],
+                        p=metaRace['min_p'],
+                        r=metaRace['min_r'],
+                        v=metaRace['min_v'],
                     ),
                 ),
                 x=posx,

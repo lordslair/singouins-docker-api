@@ -11,6 +11,7 @@ from mongo.models.Instance import InstanceDocument
 from mongo.models.Item import ItemDocument
 
 from variables import (
+    metaIndexed,
     metaNames,
     rarity_item_types_emoji as rite,
     rarity_monster_types_emoji as rmte,
@@ -57,7 +58,7 @@ async def get_monsters_in_instance_list(ctx: discord.AutocompleteContext):
 
     db_list = []
     for Creature in Creatures:
-        metaRace = metaNames['race'][Creature.race - 1]
+        metaRace = metaIndexed['race'][Creature.race]
         db_list.append(
             discord.OptionChoice(
                 f"{rmte[Creature.rarity]} {metaRace['name']} (ID: {Creature.id})",
@@ -157,8 +158,6 @@ async def get_singouin_inventory_item_list(ctx: discord.AutocompleteContext):
                 logger.trace(f"Item({Item.id}) equipped, we skip it")
                 continue
 
-            name = metaNames[Item.metatype][Item.metaid]['name']
-            db_list.append(
-                discord.OptionChoice(f"{rite[Item.rarity]} {name}", value=str(Item.id))
-                )
+            name = metaIndexed[Item.metatype][Item.metaid]['name']
+            db_list.append(discord.OptionChoice(f"{rite[Item.rarity]} {name}", value=str(Item.id)))
     return db_list

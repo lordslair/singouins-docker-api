@@ -16,7 +16,7 @@ from subcommands.godmode._autocomplete import (
 
 from variables import (
     env_vars,
-    metaNames,
+    metaIndexed,
     rarity_item_types_discord as ritd,
     )
 
@@ -90,7 +90,7 @@ def take(group_godmode):
             colour=discord.Colour.green()
             )
 
-        meta = [x for x in metaNames[Item.metatype] if x['_id'] == Item.metaid][0]
+        meta = metaIndexed[Item.metatype][Item.metaid]
         embed_field_name = f"{ritd[Item.rarity]} {meta['name']}"
         embed_field_value  = f"> Bearer : `{Creature.name}`\n"
         embed_field_value += f"> Bearer : `UUID({Item.bearer})`\n"

@@ -17,7 +17,7 @@ from subcommands.godmode._autocomplete import (
 
 from variables import (
     env_vars,
-    metaNames,
+    metaIndexed,
     rarity_item_types_discord as ritd,
     )
 
@@ -89,7 +89,7 @@ def give(group_godmode):
             return
 
         try:
-            meta = [x for x in metaNames[metatype] if x['_id'] == metaid][0]
+            meta = metaIndexed[metatype][metaid]
             if metatype == 'armor':
                 max_ammo = None
             elif metatype == 'weapon':
