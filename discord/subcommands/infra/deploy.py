@@ -23,12 +23,7 @@ def deploy(group_admin):
     @option(
         "env",
         description="Target environment",
-        autocomplete=discord.utils.basic_autocomplete(
-            [
-                discord.OptionChoice("DEV"),
-                discord.OptionChoice("PROD"),
-                ]
-            )
+        choices=['DEV', 'PROD'],
         )
     async def deploy(
         ctx,
