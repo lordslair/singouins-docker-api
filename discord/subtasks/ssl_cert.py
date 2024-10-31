@@ -15,7 +15,6 @@ async def validator(bot: discord.Client, timer: int):
         if bot.user:
             try:
                 context = ssl.create_default_context()
-                SSL_TARGET = env_vars['SSL_TARGET_HOST'] + ':' + env_vars['SSL_TARGET_PORT']
 
                 with socket.create_connection(
                     (env_vars['SSL_TARGET_HOST'], env_vars['SSL_TARGET_PORT'])
@@ -26,10 +25,10 @@ async def validator(bot: discord.Client, timer: int):
                     ) as ssock:
                         certificate = ssock.getpeercert()
             except Exception as e:
-                logger.error(f"SSL Cert Query KO ({SSL_TARGET}) [{e}]")
+                logger.error(f"SSL Cert Query KO [{e}]")
                 continue
             else:
-                logger.trace(f"SSL Cert Query OK ({SSL_TARGET})")
+                logger.trace("SSL Cert Query OK ")
 
             try:
                 channel = discord.utils.get(bot.get_all_channels(), name=env_vars['SSL_CHANNEL'])
@@ -42,11 +41,13 @@ async def validator(bot: discord.Client, timer: int):
                 days_left = (cert_expires - datetime.now()).days
                 common_name = certificate['subject'][0][0][1]
                 description = f'The SSL cert. for {common_name} expires in **{days_left}** days'
+                file = discord.File('/code/resources/ssl_cert.png', filename='ssl_cert.png')
 
                 if days_left > 15:
                     # Everything is fine
                     logger.debug(description)
                     embed = None
+                    file = None
                 elif 7 < days_left < 15:
                     # We need to do something
                     logger.warning(description)
@@ -55,7 +56,7 @@ async def validator(bot: discord.Client, timer: int):
                         description=description,
                         colour=discord.Colour.orange()
                     )
-                    embed.set_thumbnail(url=env_vars['SSL_IMG_URL'])
+                    embed.set_thumbnail(url='attachment://ssl_cert.png')
                 elif days_left <= 7:
                     # We need to do something FAST
                     logger.error(description)
@@ -64,13 +65,13 @@ async def validator(bot: discord.Client, timer: int):
                         description=description,
                         colour=discord.Colour.red()
                     )
-                    embed.set_thumbnail(url=env_vars['SSL_IMG_URL'])
+                    embed.set_thumbnail(url='attachment://ssl_cert.png')
             except Exception as e:
                 logger.error(f'Discord Embed KO [{e}]')
                 continue
             else:
                 if embed:
-                    await channel.send(embed=embed)
+                    await channel.send(embed=embed, file=file)
                     logger.trace('Discord Embed OK')
 
         await asyncio.sleep(timer)

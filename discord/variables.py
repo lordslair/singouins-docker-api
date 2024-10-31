@@ -19,7 +19,6 @@ env_vars = {
     "SSL_TARGET_HOST": os.environ.get("SSL_TARGET_HOST"),
     "SSL_TARGET_PORT": os.environ.get("SSL_TARGET_PORT", 443),
     "SSL_CHANNEL": os.environ.get("SSL_CHANNEL"),
-    "SSL_IMG_URL": os.environ.get("SSL_IMG_URL"),
     "URL_ASSETS": os.environ.get("URL_ASSETS", 'https://singouins.github.io/assets'),
     "YQ_DISCORD": os.environ.get("YQ_DISCORD", f'{os.environ.get("API_ENV", None)}:yarqueue:discord'), # noqa E501
     "YQ_CHECK": strtobool(os.getenv("YQ_CHECK", "False")),
