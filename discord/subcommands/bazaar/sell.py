@@ -15,7 +15,7 @@ from subcommands.singouin._autocomplete import get_mysingouins_list
 
 from variables import (
     item_types_discord as itd,
-    metaNames,
+    metaIndexed,
     rarity_item,
     rarity_item_types_discord as ritd,
     )
@@ -88,7 +88,7 @@ def sell(group_bazaar, bot):
             logger.info(f'{h} └──> Bazaar-Sell Query KO ({msg})')
             return
         else:
-            meta = [x for x in metaNames[Item.metatype] if x['_id'] == Item.metaid][0]
+            meta = metaIndexed[Item.metatype][Item.metaid]
             sizex, sizey = map(int, meta['size'].split("x"))
             item_price = sizex * sizey * (meta['tier'] + 1) * rarity_item.index(Item.rarity) // 2
 

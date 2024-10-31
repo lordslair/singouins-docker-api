@@ -6,7 +6,7 @@ from loguru import logger
 
 from mongo.models.Item import ItemDocument
 
-from variables import metaNames, rarity_item, rarity_item_types_emoji as rite
+from variables import metaIndexed, rarity_item, rarity_item_types_emoji as rite
 
 
 async def get_singouin_saleable_item_list(ctx: discord.AutocompleteContext):
@@ -33,7 +33,7 @@ async def get_singouin_saleable_item_list(ctx: discord.AutocompleteContext):
     for Item in Items:
         eh = rite[Item.rarity]
 
-        meta = [x for x in metaNames[Item.metatype] if x['_id'] == Item.metaid][0]
+        meta = metaIndexed[Item.metatype][Item.metaid]
         sizex, sizey = map(int, meta['size'].split("x"))
 
         item_price = sizex * sizey * (meta['tier'] + 1) * rarity_item.index(Item.rarity) // 2

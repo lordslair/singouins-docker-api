@@ -41,6 +41,11 @@ metaNames = {
     'weapon': [doc.to_mongo().to_dict() for doc in MetaWeapon.objects()],
     'race': [doc.to_mongo().to_dict() for doc in MetaRace.objects()]
 }
+metaIndexed = {
+    'armor': {armor["_id"]: armor for armor in metaNames['armor']},
+    'weapon': {weapon["_id"]: weapon for weapon in metaNames['weapon']},
+    'race': {race["_id"]: race for race in metaNames['race']},
+}
 
 # Rarities Emojis, Discord tags, and color integers
 rarity_emoji = ['🟤 ', '⚪ ', '🟢 ', '🔵 ', '🟣 ', '🟠 ']
