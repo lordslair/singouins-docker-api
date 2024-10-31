@@ -25,26 +25,26 @@ def reset(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "instanceuuid",
+        "instance_uuid",
         description="Instance UUID",
         autocomplete=get_instances_list
         )
     @option(
-        "singouinuuid",
+        "singouin_uuid",
         description="Singouin UUID",
         autocomplete=get_singouins_in_instance_list
         )
     async def reset(
         ctx,
-        instanceuuid: str,
-        singouinuuid: str,
+        instance_uuid: str,
+        singouin_uuid: str,
     ):
 
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
-        logger.info(f'{h} /{group_godmode} reset {instanceuuid} {singouinuuid}')
+        logger.info(f'{h} /{group_godmode} reset {instance_uuid} {singouin_uuid}')
 
         try:
-            Creature = CreatureDocument.objects(_id=singouinuuid).get()
+            Creature = CreatureDocument.objects(_id=singouin_uuid).get()
             for color in ['blue', 'red']:
                 if r.exists(f"{env_vars['API_ENV']}:pas:{Creature.id}:{color}"):
                     r.delete(f"{env_vars['API_ENV']}:pas:{Creature.id}:{color}")

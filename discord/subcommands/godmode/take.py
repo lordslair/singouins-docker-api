@@ -30,27 +30,27 @@ def take(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "singouinuuid",
+        "singouin_uuid",
         description="Singouin UUID",
         autocomplete=get_singouins_list
         )
     @option(
-        "itemuuid",
+        "item_uuid",
         description="Item UUID",
         autocomplete=get_singouin_inventory_item_list
         )
     async def take(
         ctx,
-        singouinuuid: str,
-        itemuuid: str,
+        singouin_uuid: str,
+        item_uuid: str,
     ):
 
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
-        logger.info(f'{h} /{group_godmode} take {singouinuuid} {itemuuid}')
+        logger.info(f'{h} /{group_godmode} take {singouin_uuid} {item_uuid}')
 
         try:
-            Creature = CreatureDocument.objects(_id=singouinuuid).get()
-            Item = ItemDocument.objects(_id=itemuuid).get()
+            Creature = CreatureDocument.objects(_id=singouin_uuid).get()
+            Item = ItemDocument.objects(_id=item_uuid).get()
             Item.delete()
         except CreatureDocument.DoesNotExist:
             msg = 'Auction NotFound'

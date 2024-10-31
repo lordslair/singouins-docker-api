@@ -42,12 +42,12 @@ def pop(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "monster",
+        "race_id",
         description="Monster Race",
         autocomplete=get_monster_race_list
         )
     @option(
-        "instanceuuid",
+        "instance_uuid",
         description="Instance UUID",
         autocomplete=get_instances_list
         )
@@ -68,18 +68,18 @@ def pop(group_godmode):
         )
     async def pop(
         ctx,
-        monster: int,
-        instanceuuid: str,
+        race_id: int,
+        instance_uuid: str,
         rarity: str,
         posx: int,
         posy: int,
     ):
 
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
-        logger.info(f'{h} /{group_godmode} pop {monster} {instanceuuid} {rarity}')
+        logger.info(f'{h} /{group_godmode} pop {race_id} {instance_uuid} {rarity}')
 
         try:
-            Instance = InstanceDocument.objects(_id=instanceuuid).get()
+            Instance = InstanceDocument.objects(_id=instance_uuid).get()
         except InstanceDocument.DoesNotExist:
             logger.debug(f"{h} ├──> Godmode-Pop InstanceDocument Query KO (404)")
             return None
@@ -104,7 +104,7 @@ def pop(group_godmode):
                 instance=instance_uuid,
                 korp=CreatureKorp(),
                 name=metaRace['name'],
-                race=monster,
+                race=race_id,
                 rarity=rarity,
                 squad=CreatureSquad(),
                 slots=CreatureSlots(),

@@ -31,7 +31,7 @@ def give(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "singouinuuid",
+        "singouin_uuid",
         description="Singouin UUID",
         autocomplete=get_singouins_list
         )
@@ -62,7 +62,7 @@ def give(group_godmode):
         )
     async def give(
         ctx,
-        singouinuuid: str,
+        singouin_uuid: str,
         rarity: str,
         metatype: str,
         metaid: int,
@@ -70,12 +70,12 @@ def give(group_godmode):
     ):
 
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
-        logger.info(f'{h} /{group_godmode} give {singouinuuid} {rarity} {metatype} {metaid} {bound_type}')  # noqa: E501
+        logger.info(f'{h} /{group_godmode} give {singouin_uuid} {rarity} {metatype} {metaid} {bound_type}')  # noqa: E501
 
-        Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        Creature = CreatureDocument.objects(_id=singouin_uuid).get()
 
         try:
-            Creature = CreatureDocument.objects(_id=singouinuuid).get()
+            Creature = CreatureDocument.objects(_id=singouin_uuid).get()
         except CreatureDocument.DoesNotExist:
             msg = 'Singouin NotFound'
             await ctx.respond(
@@ -104,7 +104,7 @@ def give(group_godmode):
 
             Item = ItemDocument(
                 ammo=max_ammo,
-                bearer=singouinuuid,
+                bearer=singouin_uuid,
                 bound=bound,
                 bound_type=bound_type,
                 metaid=metaid,

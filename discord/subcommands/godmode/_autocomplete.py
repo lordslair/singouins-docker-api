@@ -50,7 +50,7 @@ async def get_metanames_list(ctx: discord.AutocompleteContext):
 
 async def get_monsters_in_instance_list(ctx: discord.AutocompleteContext):
     try:
-        query = (Q(instance=ctx.options['instanceuuid']) & Q(race__gt=10))
+        query = (Q(instance=ctx.options['instance_uuid']) & Q(race__gt=10))
         Creatures = CreatureDocument.objects(query)
     except Exception as e:
         logger.error(f'MongoDB Query KO [{e}]')
@@ -99,7 +99,7 @@ async def get_rarity_monsters_list(ctx: discord.AutocompleteContext):
 
 async def get_singouins_in_instance_list(ctx: discord.AutocompleteContext):
     try:
-        query = (Q(instance=ctx.options['instanceuuid']) & Q(account__exists=True))
+        query = (Q(instance=ctx.options['instance_uuid']) & Q(account__exists=True))
         Creatures = CreatureDocument.objects(query)
     except Exception as e:
         logger.error(f'MongoDB Query KO [{e}]')
@@ -137,7 +137,7 @@ async def get_singouins_list(ctx: discord.AutocompleteContext):
 
 async def get_singouin_inventory_item_list(ctx: discord.AutocompleteContext):
     try:
-        Items = ItemDocument.objects(bearer=ctx.options['singouinuuid'])
+        Items = ItemDocument.objects(bearer=ctx.options['singouin_uuid'])
     except Exception as e:
         logger.error(f'MongoDB Query KO [{e}]')
     else:

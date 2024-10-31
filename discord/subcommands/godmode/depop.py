@@ -29,25 +29,25 @@ def depop(group_godmode):
     @commands.guild_only()  # Hides the command from the menu in DMs
     @commands.has_any_role('Team')
     @option(
-        "instanceuuid",
+        "instance_uuid",
         description="Instance UUID",
         autocomplete=get_instances_list
         )
     @option(
-        "creatureuuid",
+        "creature_uuid",
         description="Creature UUID",
         autocomplete=get_monsters_in_instance_list
         )
     async def depop(
         ctx,
-        instanceuuid: str,
-        creatureuuid: str,
+        instance_uuid: str,
+        creature_uuid: str,
     ):
 
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
-        logger.info(f'{h} /{group_godmode} depop {instanceuuid} {creatureuuid}')
+        logger.info(f'{h} /{group_godmode} depop {instance_uuid} {creature_uuid}')
 
-        Creature = CreatureDocument.objects(_id=creatureuuid).get()
+        Creature = CreatureDocument.objects(_id=creature_uuid).get()
         logger.trace(f"{h} ├──> Godmode-Depop {rmtd[Creature.rarity]} {Creature.name}")
 
         # WE WILL KILL HERE ONLY NON PLAYABLE CREATURES FOR SAFETY
