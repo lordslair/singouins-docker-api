@@ -108,7 +108,7 @@ def remove(group_auction):
 
         # We add Thumbnail
         URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
-        logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
+        logger.trace(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
         embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
 
         await ctx.respond(embed=embed, ephemeral=True)

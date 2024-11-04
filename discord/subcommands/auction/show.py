@@ -10,7 +10,7 @@ from mongo.models.Auction import AuctionDocument
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.auction._tools import auction_time_left
 
-from variables import item_types_discord, metaNames, rarity_item_types_discord
+from variables import item_types_discord as itd, metaIndexed, rarity_item_types_discord as ritd
 
 
 def show(group_auction, bot):
@@ -32,19 +32,31 @@ def show(group_auction, bot):
         h = f'[#{ctx.channel.name}][{ctx.author.name}]'
         logger.info(f'{h} /{group_auction} show {selleruuid}')
 
-        Auctions = AuctionDocument.objects(seller__id=selleruuid)
-
-        if Auctions.count() == 0:
-            msg = 'You are not selling anything in the Auction House'
+        try:
+            Auctions = AuctionDocument.objects(seller__id=selleruuid)
+        except Exception as e:
+            description = f'Auction-Show Query KO [{e}]'
+            logger.error(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
-                    description=msg,
-                    colour=discord.Colour.orange()
+                    description=description,
+                    colour=discord.Colour.red(),
                     ),
                 ephemeral=True,
                 )
-            logger.debug(f'{h} └──> Auction-Show Query KO ({msg})')
             return
+        else:
+            if Auctions.count() == 0:
+                msg = 'You are not selling anything in the Auction House'
+                await ctx.respond(
+                    embed=discord.Embed(
+                        description=msg,
+                        colour=discord.Colour.orange()
+                        ),
+                    ephemeral=True,
+                    )
+                logger.debug(f'{h} └──> Auction-Show Query OK ({msg})')
+                return
 
         # Dirty Gruik to find the max(len(metaname))
         w = max(len(Auction.item.name) for Auction in Auctions)
@@ -58,13 +70,10 @@ def show(group_auction, bot):
         description += f"`{itemname:{w}}` | `--------` | `--------`\n"
         # We loop on items retrieved in Auctions
         for Auction in Auctions:
-            itemname = metaNames[Auction.item.metatype][Auction.item.metaid]['name']
+            itemname = metaIndexed[Auction.item.metatype][Auction.item.metaid]['name']
             description += (
-                f"{item_types_discord[Auction.item.metatype]} "
-                f"{rarity_item_types_discord[Auction.item.rarity]} "
-                f"`{itemname:{w}}` | "
-                f"`{Auction.price:5}` "
-                f"{discord.utils.get(bot.emojis, name='moneyB')} | "
+                f"{itd[Auction.item.metatype]} {ritd[Auction.item.rarity]} `{itemname:{w}}` | "
+                f"`{Auction.price:5}` {discord.utils.get(bot.emojis, name='moneyB')} | "
                 f"`{auction_time_left(Auction.created):8}`"
                 "\n"
                 )

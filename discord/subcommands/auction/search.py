@@ -11,7 +11,7 @@ from mongo.models.Auction import AuctionDocument
 from subcommands.auction._tools import auction_time_left
 from subcommands.godmode._autocomplete import get_metanames_list
 
-from variables import metaNames, rarity_item_types_discord
+from variables import metaIndexed, rarity_item_types_discord as ritd
 
 
 def search(group_auction, bot):
@@ -48,7 +48,7 @@ def search(group_auction, bot):
         try:
             if metaid and isinstance(metaid, str):
                 metaid = int(metaid)
-                search = f"*{metaNames[metatype][metaid]['name']}*"
+                search = f"*{metaIndexed[metatype][metaid]['name']}*"
             else:
                 metaid = None
                 search = '*'
@@ -104,21 +104,18 @@ def search(group_auction, bot):
         itemname, price, seller, end = 'Item name', 'Price', 'Seller', 'End'
         description = f"💱 `{itemname:{mw}}` | `{price:8}` | `{end:8}` | `{seller:{sw}}`\n"
         itemname, seller = '-' * (mw + 3), '-' * sw
-        description += "`{itemname:{mw}}` | `--------` | `--------` | `{seller:{sw}}`\n"
+        description += f"`{itemname:{mw}}` | `--------` | `--------` | `{seller:{sw}}`\n"
         # We loop on items retrieved in Auctions
         for Auction in Auctions:
             description += (
-                f"{rarity_item_types_discord[Auction.item.rarity]} "
-                f"`{Auction.item.name:{mw}}` | "
-                f"`{Auction.price:5}` "
-                f"{discord.utils.get(bot.emojis, name='moneyB')} | "
+                f"{ritd[Auction.item.rarity]} `{Auction.item.name:{mw}}` | "
+                f"`{Auction.price:5}` {discord.utils.get(bot.emojis, name='moneyB')} | "
                 f"`{auction_time_left(Auction.created):8}` | "
                 f"`{Auction.seller.name:{sw}}`"
                 "\n"
                 )
 
         logger.info(f'{h} └──> Auction-Search Query OK')
-        logger.success(f'Searched for {metatype.upper()}:{search}')
         await ctx.respond(
                 embed=discord.Embed(
                     title=f'Searched for {metatype.upper()}:{search}',

@@ -13,7 +13,12 @@ from mongo.models.Item import ItemDocument
 from subcommands.auction._autocomplete import get_singouin_auctionable_item_list
 from subcommands.singouin._autocomplete import get_mysingouins_list
 
-from variables import env_vars, item_types_discord, metaNames, rarity_item_types_discord
+from variables import (
+    env_vars,
+    item_types_discord as itd,
+    metaIndexed,
+    rarity_item_types_discord as ritd,
+    )
 
 
 def sell(group_auction):
@@ -85,7 +90,7 @@ def sell(group_auction):
                     id=Item.id,
                     metaid=Item.metaid,
                     metatype=Item.metatype,
-                    name=metaNames[Item.metatype][Item.metaid]['name'],
+                    name=metaIndexed[Item.metatype][Item.metaid]['name'],
                     rarity=Item.rarity,
                 ),
                 price=price,
@@ -113,18 +118,14 @@ def sell(group_auction):
 
         embed = discord.Embed(
             title="Added to the Auction House:",
-            description=(
-                f"> {item_types_discord[Item.metatype]} "
-                f"{rarity_item_types_discord[Item.rarity]} **{newAuction.item.name}** "
-                f"(Price:{price})"
-                ),
+            description=f"> {itd[Item.metatype]} {ritd[Item.rarity]} **{newAuction.item.name}** (Price:{price})",  # noqa: E501
             colour=discord.Colour.green(),
             )
         embed.set_footer(text=f"ItemUUID: {Item.id}")
 
         # We add Thumbnail
         URI_PNG = f'sprites/{Item.metatype}s/{Item.metaid}.png'
-        logger.debug(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
+        logger.trace(f"[embed.thumbnail] {env_vars['URL_ASSETS']}/{URI_PNG}")
         embed.set_thumbnail(url=f"{env_vars['URL_ASSETS']}/{URI_PNG}")
 
         await ctx.respond(embed=embed, ephemeral=True)

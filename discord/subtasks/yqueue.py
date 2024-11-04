@@ -11,7 +11,7 @@ from mongo.models.User import UserDocument
 from utils.redis import r
 from variables import (
     env_vars,
-    metaNames,
+    metaIndexed,
     rarity_item_types_discord,
     rarity_item_types_integer,
     )
@@ -108,7 +108,7 @@ async def check(bot: discord.Client, timer: int):
 
                     embed_field_name = (
                         f"{rarity_item_types_discord[item['rarity']]} "
-                        f"{metaNames[item['metatype']][item['metaid']]}"
+                        f"{metaIndexed[item['metatype']][item['metaid']]}"
                         )
 
                     embed_field_value  = f"> Bound : `{item['bound']} ({item['bound_type']})`\n"

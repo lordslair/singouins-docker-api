@@ -7,7 +7,7 @@ from loguru import logger
 from mongo.models.Auction import AuctionDocument
 from mongo.models.Item import ItemDocument
 
-from variables import metaNames, rarity_item_types_emoji
+from variables import metaIndexed, rarity_item_types_emoji
 
 
 async def get_auctioned_item_list(ctx: discord.AutocompleteContext):
@@ -41,10 +41,8 @@ async def get_singouin_auctionable_item_list(ctx: discord.AutocompleteContext):
         db_list = []
         for Item in Items:
             eh = rarity_item_types_emoji[Item.rarity]
-            name = metaNames[Item.metatype][Item.metaid]['name']
-            db_list.append(
-                discord.OptionChoice(f"{eh} {name}", value=f"{Item.id}")
-                )
+            name = metaIndexed[Item.metatype][Item.metaid]['name']
+            db_list.append(discord.OptionChoice(f"{eh} {name}", value=f"{Item.id}"))
     return db_list
 
 

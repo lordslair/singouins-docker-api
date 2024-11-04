@@ -3,7 +3,6 @@
 import discord
 
 from loguru import logger
-from operator import itemgetter
 from mongoengine import Q
 
 from mongo.models.Creature import CreatureDocument
@@ -12,7 +11,6 @@ from mongo.models.Item import ItemDocument
 
 from variables import (
     metaIndexed,
-    metaNames,
     rarity_item_types_emoji as rite,
     rarity_monster_types_emoji as rmte,
     )
@@ -36,13 +34,14 @@ async def get_instances_list(ctx: discord.AutocompleteContext):
 async def get_metanames_list(ctx: discord.AutocompleteContext):
     # Get the current user input
     user_input = ctx.value.lower()
+    db_list = []
     try:
-        db_list = []
-        for meta in metaNames[ctx.options["metatype"]]:
+        for meta_id in metaIndexed[ctx.options["metatype"]]:
+            meta = metaIndexed[ctx.options["metatype"]][meta_id]
             if user_input in meta['name'].lower():
                 db_list.append(discord.OptionChoice(meta['name'], value=str(meta['_id'])))
     except Exception as e:
-        logger.error(f'metaNames Query KO [{e}]')
+        logger.error(f'metaIndexed Query KO [{e}]')
         return None
     else:
         return db_list
@@ -69,13 +68,14 @@ async def get_monsters_in_instance_list(ctx: discord.AutocompleteContext):
 
 
 async def get_monster_race_list(ctx: discord.AutocompleteContext):
+    db_list = []
     try:
-        db_list = []
-        for race in sorted(metaNames['race'], key=itemgetter('name')):
-            if race['_id'] > 10:
+        for race_id in metaIndexed['race']:
+            if race_id > 10:
+                race = metaIndexed['race'][race_id]
                 db_list.append(discord.OptionChoice(race['name'], value=race['_id']))
     except Exception as e:
-        logger.error(f'metaNames Query KO [{e}]')
+        logger.error(f'metaIndexed Query KO [{e}]')
         return None
     else:
         return db_list

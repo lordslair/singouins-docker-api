@@ -11,7 +11,7 @@ from mongo.models.Creature import CreatureDocument
 from mongo.models.Item import ItemDocument
 from mongo.models.Satchel import SatchelDocument
 
-from variables import rarity_item_types_discord
+from variables import ritd
 
 
 class buyView(View):
@@ -88,6 +88,7 @@ class buyView(View):
         try:
             # We delete the auction
             Auction.delete()
+            Item.auctionned = False
             # We do the financial transaction
             SatchelBuyer.banana -= Auction.price
             SatchelBuyer.updated = datetime.datetime.utcnow()
@@ -112,10 +113,7 @@ class buyView(View):
         else:
             embed = discord.Embed(
                 title='You successfully acquired:',
-                description=(
-                    f"{rarity_item_types_discord[Auction.rarity]} "
-                    f"**{Auction.item.name}** (Price:{Auction.price})"
-                    ),
+                description=f"{ritd[Auction.rarity]} **{Auction.item.name}** (Price:{Auction.price})",  # noqa: E501
                 colour=discord.Colour.green(),
                 )
             embed.set_footer(text=f"ItemUUID: {Auction.item.id}")
