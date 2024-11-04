@@ -14,6 +14,7 @@ from subcommands import (
     singouin,
     user,
     )
+from subtasks import channels, ssl_cert, yqueue
 from variables import env_vars
 
 try:
@@ -167,6 +168,20 @@ else:
     user.grant(group_user, bot)
     user.link(group_user, bot)
     logger.debug(f'[{group_name}] Commands OK')
+
+
+# 86400s Tasks (@Daily)
+if env_vars['SSL_CHECK']:
+    bot.loop.create_task(ssl_cert.validator(bot, 86400))
+# 3600s Tasks (@Hourly)
+bot.loop.create_task(channels.create(bot, 'Squad', 300))
+bot.loop.create_task(channels.cleanup(bot, 'Korp', 300))
+# 300s Tasks (@5Minutes)
+bot.loop.create_task(channels.create(bot, 'Korp', 300))
+bot.loop.create_task(channels.create(bot, 'Squad', 300))
+# 60s Tasks (@1Minute)
+if env_vars['YQ_CHECK']:
+    bot.loop.create_task(yqueue.check(bot, 60))
 
 
 # Run Discord bot
