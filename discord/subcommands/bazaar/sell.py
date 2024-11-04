@@ -97,8 +97,12 @@ def sell(group_bazaar, bot):
             Satchel.currency.banana += item_price
             Satchel.updated = datetime.datetime.utcnow()
             Satchel.save()
-            # We delete the Item
-            Item.delete()
+            # We shelve the Item
+            Item.bearer = "00000000-cafe-cafe-cafe-000000000000"
+            Item.bound = False
+            Item.state = 100
+            Item.updated = datetime.datetime.utcnow()
+            Item.save()
         except Exception as e:
             description = f'Bazaar-Sell Query KO [{e}]'
             logger.error(f'{h} └──> {description}')
