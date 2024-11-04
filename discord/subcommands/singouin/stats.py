@@ -103,11 +103,8 @@ def stats(group_singouin, bot):
             """
 
             # We check if we have a sprite to add as thumbnail
-            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
-                file = discord.File(
-                    f'/tmp/{Creature.id}.png',
-                    filename=f'{Creature.id}.png'
-                    )
+            if creature_sprite(Creature):
+                file = discord.File(f'/tmp/{Creature.id}.png', filename=f'{Creature.id}.png')
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
         except Exception as e:
             description = f'Singouin-Stats Query KO [{e}]'
