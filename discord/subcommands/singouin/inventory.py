@@ -11,7 +11,7 @@ from mongo.models.Item import ItemDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
-from variables import metaNames, rarity_item_types_discord
+from variables import item_types_discord as itd, metaIndexed, rarity_item_types_discord as ritd
 
 
 def inventory(group_singouin):
@@ -37,20 +37,29 @@ def inventory(group_singouin):
         logger.info(f'{h} /{group_singouin} inventory {singouinuuid}')
 
         file = None
-
-        Creature = CreatureDocument.objects(_id=singouinuuid).get()
         Items = ItemDocument.objects(metatype__in=["weapon", "armor"])
 
+        try:
+            Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        except CreatureDocument.DoesNotExist:
+            msg = 'Creature NotFound'
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{h} └──> Singouin-Inventory Query KO ({msg})')
+            return
+        except Exception as e:
+            logger.error(f'MongoDB Query KO [{e}]')
+
         embed = discord.Embed(
-            title=f"{Creature.name} - Inventory",
+            title=Creature.name,
             # description='Profil:',
             colour=discord.Colour.blue()
             )
-
-        emojis = {
-            'armor': ':shirt:',
-            'weapon': ':dagger:'
-        }
 
         try:
             value = ''
@@ -65,9 +74,8 @@ def inventory(group_singouin):
                     # Item is auctionned, we DO NOT list it
                     continue
                 value += (
-                    f"> {emojis[Item.metatype]} {rarity_item_types_discord[Item.rarity]} "
-                    f"[{Item.bound_type}] "
-                    f"{metaNames[Item.metatype][Item.metaid]['name']} \n"
+                    f"> {itd[Item.metatype]} {ritd[Item.rarity]} "
+                    f"[{Item.bound_type}] {metaIndexed[Item.metatype][Item.metaid]['name']} \n"
                     )
 
             # We looped over all items in Singouin's pockets

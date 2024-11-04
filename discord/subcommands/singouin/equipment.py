@@ -12,7 +12,7 @@ from mongo.models.Item import ItemDocument
 from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
 from variables import (
-    metaNames,
+    metaIndexed,
     rarity_item_types_discord,
     slots_armor,
     slots_weapon,
@@ -43,7 +43,19 @@ def equipment(group_singouin):
 
         file = None
 
-        Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        try:
+            Creature = CreatureDocument.objects(_id=singouinuuid).get()
+        except CreatureDocument.DoesNotExist:
+            msg = 'Seller NotFound'
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{h} └──> Bazaar-Sell Query KO ({msg})')
+            return
 
         try:
             embed = discord.Embed(
@@ -62,18 +74,18 @@ def equipment(group_singouin):
             """
 
             value  = ''
-            for piece in slots_armor:
-                logger.debug(f'EquippedItem search: {piece}')
-                EquippedItem = getattr(Creature.slots, piece)
+            for slot_name in slots_armor:
+                logger.debug(f'EquippedItem search: {slot_name}')
+                EquippedItem = getattr(Creature.slots, slot_name)
                 if EquippedItem:
-                    logger.trace(f'EquippedItem found: {piece}')
+                    logger.trace(f'EquippedItem found: {slot_name}')
                     Item = ItemDocument.objects(_id=EquippedItem._id).get()
                     square = rarity_item_types_discord[Item.rarity]
-                    name   = metaNames[Item.metatype][Item.metaid]['name']
+                    name   = metaIndexed[Item.metatype][Item.metaid]['name']
                     item   = f'{square} {name}'
                 else:
                     item   = ':no_entry_sign:'
-                value += f"> {slots_armor[piece]} : {item}\n"
+                value += f"> {slots_armor[slot_name]} : {item}\n"
 
             embed.add_field(
                 name='**Equipment**',
@@ -88,18 +100,18 @@ def equipment(group_singouin):
             """
 
             value   = ''
-            for weapon in slots_weapon:
-                logger.debug(f'EquippedWeapon search: {weapon}')
-                EquippedWeapon = getattr(Creature.slots, weapon)
-                if EquippedWeapon:
-                    logger.trace(f'EquippedWeapon found: {weapon}')
-                    Item = ItemDocument.objects(_id=EquippedWeapon._id).get()
+            for slot_name in slots_weapon:
+                logger.debug(f'EquippedItem search: {slot_name}')
+                EquippedItem = getattr(Creature.slots, slot_name)
+                if EquippedItem:
+                    logger.trace(f'EquippedItem found: {slot_name}')
+                    Item = ItemDocument.objects(_id=EquippedItem.id).get()
                     square = rarity_item_types_discord[Item.rarity]
-                    name   = metaNames[Item.metatype][Item.metaid]['name']
+                    name   = metaIndexed[Item.metatype][Item.metaid]['name']
                     item   = f'{square} {name}'
                 else:
                     item   = ':no_entry_sign:'
-                value += f"> {slots_weapon[weapon]} : {item}\n"
+                value += f"> {slots_weapon[slot_name]} : {item}\n"
 
             embed.add_field(
                 name='**Weapons**',
@@ -108,8 +120,11 @@ def equipment(group_singouin):
                 )
 
             # We check if we have a sprite to add as thumbnail
-            if creature_sprite(Creature):
-                file = discord.File(f'/tmp/{Creature.id}.png', filename=f'{Creature.id}.png')
+            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
+                file = discord.File(
+                    f'/tmp/{Creature.id}.png',
+                    filename=f'{Creature.id}.png'
+                    )
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
 
         except Exception as e:
