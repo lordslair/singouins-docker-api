@@ -13,10 +13,37 @@ from subcommands.singouin._autocomplete import get_mysingouins_list
 from subcommands.singouin._tools import creature_sprite
 from variables import (
     metaIndexed,
-    rarity_item_types_discord,
+    rarity_item_types_discord as ritd,
     slots_armor,
     slots_weapon,
     )
+
+
+def slottype_generator(Creature: CreatureDocument, slots: dict):
+    """
+    Generates a formatted string representing the equipped items
+    for the specified creature and their corresponding slots.
+
+    Parameters:
+    - Creature (CreatureDocument): The creature object containing equipped items.
+    - slots (dict): A dictionary mapping slot names to their descriptions.
+
+    Returns:
+    - str: A formatted string listing each slot with its corresponding item or a no-entry sign.
+    """
+    value   = ''
+    for slot_name in slots:
+        logger.debug(f'EquippedItem search: {slot_name}')
+        EquippedItem = getattr(Creature.slots, slot_name)
+        if EquippedItem:
+            Item = ItemDocument.objects(_id=EquippedItem.id).get()
+            logger.trace(f'EquippedItem found: {Item.id}')
+            item   = f"{ritd[Item.rarity]} {metaIndexed[Item.metatype][Item.metaid]['name']}"
+        else:
+            item   = ':no_entry_sign:'
+        value += f"> {slots[slot_name]} : {item}\n"
+
+    return value
 
 
 def equipment(group_singouin):
@@ -46,7 +73,7 @@ def equipment(group_singouin):
         try:
             Creature = CreatureDocument.objects(_id=singouinuuid).get()
         except CreatureDocument.DoesNotExist:
-            msg = 'Seller NotFound'
+            msg = 'Creature NotFound'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -54,77 +81,26 @@ def equipment(group_singouin):
                     ),
                 ephemeral=True,
                 )
-            logger.info(f'{h} └──> Bazaar-Sell Query KO ({msg})')
+            logger.info(f'{h} └──> Singouin-Equipment Query KO ({msg})')
             return
+        except Exception as e:
+            logger.error(f'MongoDB Query KO [{e}]')
 
         try:
             embed = discord.Embed(
                 title=Creature.name,
-                # description='Profil:',
                 colour=discord.Colour.blue()
                 )
 
-            """
-            emojiHE = discord.utils.get(client.emojis, name='itemHead')
-            emojiSH = discord.utils.get(client.emojis, name='itemShoulders')
-            emojiTO = discord.utils.get(client.emojis, name='itemTorso')
-            emojiHA = discord.utils.get(client.emojis, name='itemHands')
-            emojiLE = discord.utils.get(client.emojis, name='itemLegs')
-            emojiFE = discord.utils.get(client.emojis, name='itemFeet')
-            """
+            armors_data = slottype_generator(Creature, slots=slots_armor)
+            embed.add_field(name='**Equipment**', value=armors_data, inline=True)
 
-            value  = ''
-            for slot_name in slots_armor:
-                logger.debug(f'EquippedItem search: {slot_name}')
-                EquippedItem = getattr(Creature.slots, slot_name)
-                if EquippedItem:
-                    logger.trace(f'EquippedItem found: {slot_name}')
-                    Item = ItemDocument.objects(_id=EquippedItem._id).get()
-                    square = rarity_item_types_discord[Item.rarity]
-                    name   = metaIndexed[Item.metatype][Item.metaid]['name']
-                    item   = f'{square} {name}'
-                else:
-                    item   = ':no_entry_sign:'
-                value += f"> {slots_armor[slot_name]} : {item}\n"
-
-            embed.add_field(
-                name='**Equipment**',
-                value=value,
-                inline=True,
-                )
-
-            """
-            emojiHO = discord.utils.get(client.emojis, name='itemHolster')
-            emojiLH = discord.utils.get(client.emojis, name='itemLHand')
-            emojiRH = discord.utils.get(client.emojis, name='itemRHand')
-            """
-
-            value   = ''
-            for slot_name in slots_weapon:
-                logger.debug(f'EquippedItem search: {slot_name}')
-                EquippedItem = getattr(Creature.slots, slot_name)
-                if EquippedItem:
-                    logger.trace(f'EquippedItem found: {slot_name}')
-                    Item = ItemDocument.objects(_id=EquippedItem.id).get()
-                    square = rarity_item_types_discord[Item.rarity]
-                    name   = metaIndexed[Item.metatype][Item.metaid]['name']
-                    item   = f'{square} {name}'
-                else:
-                    item   = ':no_entry_sign:'
-                value += f"> {slots_weapon[slot_name]} : {item}\n"
-
-            embed.add_field(
-                name='**Weapons**',
-                value=value,
-                inline=True,
-                )
+            weapons_data = slottype_generator(Creature, slots=slots_weapon)
+            embed.add_field(name='**Weapons**', value=weapons_data, inline=True)
 
             # We check if we have a sprite to add as thumbnail
-            if creature_sprite(race=Creature.race, creatureuuid=Creature.id):
-                file = discord.File(
-                    f'/tmp/{Creature.id}.png',
-                    filename=f'{Creature.id}.png'
-                    )
+            if creature_sprite(Creature):
+                file = discord.File(f'/tmp/{Creature.id}.png', filename=f'{Creature.id}.png')
                 embed.set_thumbnail(url=f'attachment://{Creature.id}.png')
 
         except Exception as e:
