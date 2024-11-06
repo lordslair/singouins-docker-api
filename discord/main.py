@@ -18,10 +18,12 @@ from subtasks import channels, ssl_cert, yqueue
 from variables import env_vars
 
 try:
+    intents = discord.Intents.default()
+    intents.members = True  # Enable the members intent
     if env_vars['DISCORD_GUILD']:
-        bot = discord.Bot(debug_guilds=[env_vars['DISCORD_GUILD']])
+        bot = discord.Bot(intents=intents, debug_guilds=[env_vars['DISCORD_GUILD']])
     else:
-        bot = discord.Bot()
+        bot = discord.Bot(intents=intents)
 except Exception as e:
     logger.error(f'Discord connection KO [{e}]')
 else:
