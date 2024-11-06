@@ -1,7 +1,9 @@
 # -*- coding: utf8 -*-
 
+from bson import json_util
 import datetime
 import discord
+import json
 
 from discord.ui         import View
 from loguru             import logger
@@ -11,7 +13,8 @@ from mongo.models.Creature import CreatureDocument
 from mongo.models.Item import ItemDocument
 from mongo.models.Satchel import SatchelDocument
 
-from variables import ritd
+from utils.redis import r
+from variables import env_vars, rarity_item_types_discord as ritd
 
 
 class buyView(View):
@@ -32,6 +35,7 @@ class buyView(View):
             Auction = AuctionDocument.objects(_id=self.auctionuuid).get()
             Item = ItemDocument.objects(_id=Auction.item.id, auctioned=True).get()
             CreatureBuyer = CreatureDocument.objects(_id=self.buyeruuid).get()
+            CreatureSeller = CreatureDocument.objects(_id=Auction.seller.id).get()
             SatchelBuyer = SatchelDocument.objects(_id=self.buyeruuid).get()
             SatchelSeller = SatchelDocument.objects(_id=Auction.seller.id).get()
         except AuctionDocument.DoesNotExist:
@@ -46,7 +50,7 @@ class buyView(View):
             logger.info(f'{self.h} └──> Auction-Buy Query KO ({msg})')
             return
         except CreatureDocument.DoesNotExist:
-            msg = 'Auction NotFound'
+            msg = 'CreatureDocument NotFound (404)'
             await interaction.response.edit_message(
                 embed=discord.Embed(
                     description=msg,
@@ -121,6 +125,26 @@ class buyView(View):
                 embed=embed,
                 view=None,
                 )
+
+            # Optionnal, sends a DM to a registered user
+            try:
+                # Convert the MongoDB document to JSON, handling datetime fields
+                creature_json = json.loads(json_util.dumps(CreatureSeller.to_mongo().to_dict()))
+                r.publish(
+                    env_vars['PS_DISCORD'],
+                    json.dumps({
+                        "creature": creature_json,
+                        "msg": (
+                            f":scales: Someone bought for `{Auction.price:4}`:banana: the item: "
+                            f"{ritd[Item.rarity]} {Auction.item.name}"
+                            ),
+                        "embed": False,
+                        })
+                )
+            except Exception as e:
+                logger.error(f"Discord msg publish KO [{e}]")
+            else:
+                logger.trace("Discord msg publish OK")
 
     @discord.ui.button(
         label='Abort mission!',

@@ -14,7 +14,7 @@ from subcommands import (
     singouin,
     user,
     )
-from subtasks import channels, ssl_cert, yqueue
+from subtasks import channels, ssl_cert, yqueue, pubsub
 from variables import env_vars
 
 try:
@@ -39,6 +39,8 @@ async def on_ready():
     else:
         if channel:
             logger.info(f'Discord on_ready OK ({bot.user})')
+    # Always looping for Pub/Sub task
+    bot.loop.create_task(pubsub.check(bot))
 
 
 # Additionnal error detector to answer properly
