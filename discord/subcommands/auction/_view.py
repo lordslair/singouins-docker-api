@@ -10,6 +10,7 @@ from loguru             import logger
 
 from mongo.models.Auction import AuctionDocument
 from mongo.models.Creature import CreatureDocument
+from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Item import ItemDocument
 from mongo.models.Satchel import SatchelDocument
 
@@ -38,6 +39,8 @@ class buyView(View):
             CreatureSeller = CreatureDocument.objects(_id=Auction.seller.id).get()
             SatchelBuyer = SatchelDocument.objects(_id=self.buyeruuid).get()
             SatchelSeller = SatchelDocument.objects(_id=Auction.seller.id).get()
+            HighscoreBuyer = HighscoreDocument.objects(_id=Auction.seller.id).get()
+            HighscoreSeller = HighscoreDocument.objects(_id=Auction.seller.id).get()
         except AuctionDocument.DoesNotExist:
             msg = 'Auction NotFound'
             await interaction.response.edit_message(
@@ -59,6 +62,17 @@ class buyView(View):
                 view=None,
                 )
             logger.info(f'{self.h} └──> Auction-Buy Query KO ({msg})')
+            return
+        except HighscoreDocument.DoesNotExist:
+            msg = 'HighscoreDocument NotFound (404)'
+            await interaction.response.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{self.h} └──> Bazaar-Sell Query KO ({msg})')
             return
         except ItemDocument.DoesNotExist:
             msg = 'Item NotFound'
@@ -104,6 +118,13 @@ class buyView(View):
             Item.bearer = CreatureBuyer.id
             Item.updated = datetime.datetime.utcnow()
             Item.save()
+            # Highscore
+            HighscoreSeller.internal.item.sold += 1
+            HighscoreSeller.updated = datetime.datetime.utcnow()
+            HighscoreSeller.save()
+            HighscoreBuyer.internal.item.bought += 1
+            HighscoreBuyer.updated = datetime.datetime.utcnow()
+            HighscoreBuyer.save()
         except Exception as e:
             msg = f'{self.h} Auction buy KO [{e}]'
             logger.error(msg)

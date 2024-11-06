@@ -7,6 +7,7 @@ from discord.commands import option
 from loguru import logger
 
 from mongo.models.Creature import CreatureDocument
+from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Item import ItemDocument
 from mongo.models.Satchel import SatchelDocument
 
@@ -50,6 +51,19 @@ def sell(group_bazaar, bot):
             Creature = CreatureDocument.objects(_id=seller_uuid).get()
         except CreatureDocument.DoesNotExist:
             msg = 'Seller NotFound'
+            await ctx.respond(
+                embed=discord.Embed(
+                    description=msg,
+                    colour=discord.Colour.orange()
+                    ),
+                ephemeral=True,
+                )
+            logger.info(f'{h} └──> Bazaar-Sell Query KO ({msg})')
+            return
+        try:
+            Highscore = HighscoreDocument.objects(_id=seller_uuid).get()
+        except HighscoreDocument.DoesNotExist:
+            msg = 'HighscoreDocument NotFound (404)'
             await ctx.respond(
                 embed=discord.Embed(
                     description=msg,
@@ -103,6 +117,8 @@ def sell(group_bazaar, bot):
             Item.state = 100
             Item.updated = datetime.datetime.utcnow()
             Item.save()
+            # Highscore
+            Highscore.internal.item.sold += 1
         except Exception as e:
             description = f'Bazaar-Sell Query KO [{e}]'
             logger.error(f'{h} └──> {description}')
