@@ -92,15 +92,15 @@ class buyView(View):
         try:
             # We delete the auction
             Auction.delete()
-            Item.auctionned = False
             # We do the financial transaction
-            SatchelBuyer.banana -= Auction.price
+            SatchelBuyer.currency.banana -= Auction.price
             SatchelBuyer.updated = datetime.datetime.utcnow()
             SatchelBuyer.save()
-            SatchelSeller.banana += round(Auction.price * 0.9)
+            SatchelSeller.currency.banana += Auction.price
             SatchelSeller.updated = datetime.datetime.utcnow()
             SatchelSeller.save()
             # We change the Item owner
+            Item.auctioned = False
             Item.bearer = CreatureBuyer.id
             Item.updated = datetime.datetime.utcnow()
             Item.save()
@@ -117,7 +117,7 @@ class buyView(View):
         else:
             embed = discord.Embed(
                 title='You successfully acquired:',
-                description=f"{ritd[Auction.rarity]} **{Auction.item.name}** (Price:{Auction.price})",  # noqa: E501
+                description=f"{ritd[Item.rarity]} **{Auction.item.name}** (Price:{Auction.price})",
                 colour=discord.Colour.green(),
                 )
             embed.set_footer(text=f"ItemUUID: {Auction.item.id}")
@@ -164,12 +164,14 @@ class buyView(View):
 
     async def on_timeout(self):
         # This method is called when the view times out
-        # (i.e., when the timeout period elapses without interaction)
         for item in self.children:
             item.disabled = True
-        # Edit the message to disable the button after timeout
-        await self.message.edit(view=self)
-        logger.trace(f'{self.h} └──> Auction-Buy Timeout')
+        try:
+            # Edit the message to disable the button after timeout
+            await self.message.edit(view=self)
+        except discord.NotFound:
+            pass
+            # logger.warning(f'{self.h} └──> Message not found for Auction-Buy Timeout. (deleted)')
 
     async def interaction_check(self, interaction):
         if interaction.user != self.ctx.author:
