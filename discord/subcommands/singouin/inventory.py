@@ -69,9 +69,9 @@ def inventory(group_singouin):
                     logger.trace(f'{h} ├──> Equipped')
                     # Item is equipped, we DO NOT list it
                     continue
-                elif hasattr(Item, 'auctionned'):
-                    logger.trace(f'{h} ├──> Auctionned')
-                    # Item is auctionned, we DO NOT list it
+                elif hasattr(Item, 'auctioned'):
+                    logger.trace(f'{h} ├──> Auctioned')
+                    # Item is auctioned, we DO NOT list it
                     continue
                 value += (
                     f"> {itd[Item.metatype]} {ritd[Item.rarity]} "
