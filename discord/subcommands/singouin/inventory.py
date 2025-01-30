@@ -37,7 +37,7 @@ def inventory(group_singouin):
         logger.info(f'{h} /{group_singouin} inventory {singouinuuid}')
 
         file = None
-        Items = ItemDocument.objects(metatype__in=["weapon", "armor"])
+        Items = ItemDocument.objects(bearer=singouinuuid, metatype__in=["weapon", "armor"])
 
         try:
             Creature = CreatureDocument.objects(_id=singouinuuid).get()
@@ -69,7 +69,7 @@ def inventory(group_singouin):
                     logger.trace(f'{h} ├──> Equipped')
                     # Item is equipped, we DO NOT list it
                     continue
-                elif hasattr(Item, 'auctioned'):
+                elif hasattr(Item, 'auctioned') and Item.auctioned is True:
                     logger.trace(f'{h} ├──> Auctioned')
                     # Item is auctioned, we DO NOT list it
                     continue
