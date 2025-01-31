@@ -30,7 +30,7 @@ def str2typed(string: str):
 
     :return: The appropriately typed value: None, bool, int, or str.
     """
-    # Normalize the input by stripping whitespace and converting to lowercase
+    # Normalize the input by stripping whitespace and converting to lc
     # Check if the string matches any known representations of None
     if string.strip().lower() in ("none", "null", "nil", ""):
         return None
