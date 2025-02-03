@@ -33,10 +33,10 @@ class ProfessionDocument(Document):
     - updated   (DateTimeField)
     """
     _id = UUIDField(binary=False, primary_key=True, default=uuid.uuid4())
-    recycling = IntField(default=None)
-    skinning = IntField(default=None)
-    tracking = IntField(default=None)
-    tanning = IntField(default=None)
+    recycling = IntField(required=True, default=0)
+    skinning = IntField(required=True, default=0)
+    tanning = IntField(required=True, default=0)
+    tracking = IntField(required=True, default=0)
     updated = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
