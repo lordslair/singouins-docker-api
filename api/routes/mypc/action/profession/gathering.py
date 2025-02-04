@@ -1,21 +1,23 @@
 # -*- coding: utf8 -*-
 
-from datetime import datetime
+import datetime
+import random
+
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
-from random import choices
 
 from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Profession import ProfessionDocument
 from mongo.models.Resource import ResourceDocument
+from mongo.models.Satchel import SatchelDocument
 
-from utils.decorators import (
-    check_creature_exists,
-    check_creature_in_instance,
-    check_creature_pa,
+from routes.mypc.action.profession._tools import (
+    probabilistic_binary,
+    profession_gain,
+    profession_scaled,
     )
-from utils.redis import get_pa, consume_pa
+from utils.redis import get_pa
 from variables import rarity_array
 
 #
@@ -29,7 +31,7 @@ PROFESSION_NAME = 'gathering'
 #
 # Routes /mypc/<uuid:creatureuuid>/action
 #
-# API: POST ../profession/gathering/<uuid:resourceuuid>
+# API: POST /mypc/<uuid:creatureuuid>/action/profession/gathering/<uuid:resourceuuid>
 @jwt_required()
 # Custom decorators
 @check_creature_exists
@@ -52,70 +54,44 @@ def gathering(creatureuuid, resourceuuid):
 
     Profession = ProfessionDocument.objects(_id=creatureuuid).get()
 
-    # We calculate the amount of Profession points acquired
-    # You CANNOT get more than 1 point
-    # You CAN have 0 points if you are already skilled enough and learned nothing
-    if 100 <= Profession.gathering:         # 100+
-        pass
-    elif 75 <= Profession.gathering < 100:  # 75-99
-        count = choices([0, 1], weights=[70, 30])[0]
-    elif 50 <= Profession.gathering < 75:   # 50-74
-        count = choices([0, 1], weights=[60, 40])[0]
-    elif 25 <= Profession.gathering < 50:   # 25-49
-        count = choices([0, 1], weights=[50, 50])[0]
-    elif Profession.gathering < 25:         # 0-24
-        count = 1
-    # We INCR the Profession accordingly
-    if count >= 1:
-        profession_update_query = {
-            f'inc__{PROFESSION_NAME}': count,
-            "set__updated": datetime.datetime.utcnow(),
-            }
-        Profession.update(**profession_update_query)
+    # We calculate the total quantity
+    varx = 5 - rarity_array['item'].index(Resource.rarity)  # between 0 and 5
+    vary = 0                                                # between 0 and 8
+    varz = probabilistic_binary(g.Creature.stats.total.m)   # between 0 and 1
 
-    """
-    We cap possible gathered resources to Resource.rarity
-    rarity_array = [
-        'Broken',
-        'Common',
-        'Uncommon',
-        'Rare',
-        'Epic',
-        'Legendary',
-    ]
-    """
-    local_rarity_array = rarity_array.copy()
-    while len(local_rarity_array) > rarity_array.index(Resource.rarity) + 1:
-        local_rarity_array.pop(rarity_array.index(Resource.rarity) + 1)
-    """
-    After this point, as exemple
-    if the Resource.rarity == 'Rare':
-        local_rarity_array = ['Broken', 'Common', 'Uncommon', 'Rare']
-    """
+    # We tune a bit vary to have a better distribution
+    for _ in range(profession_scaled(Profession.skinning)):
+        vary += random.randint(1, 2)
 
-    # We find out quantity and quality/rarity
-    # If a resource is high quality, the Player will have less quantity
-    rarity = choices(rarity_array, k=1)[0]
-    quantity = max(
-        0,
-        1 + round(Profession.gathering/20 - rarity_array.index(rarity))
-        )
+    quantity = varx + vary + varz
+    logger.trace(f"{g.h} Roll for {PROFESSION_NAME}: {varx} + {vary} + {varz} == {quantity}")  # noqa: E501
+
+    # We update the Profession score
+    profession_gain(g.Creature.id, PROFESSION_NAME, Profession.gathering)
 
     # We set the HighScores
-    HighScores = HighscoreDocument.objects(_id=g.Creature.id)
-    #
-    HighScores.update_one(inc__profession__gathering=1)
-    HighScores.update_one(inc__internal__ore__obtained=quantity)
-    #
-    HighScores.update(set__updated=datetime.utcnow())
+    highscores_update_query = {
+        f'inc__profession__{PROFESSION_NAME}': 1,
+        'inc__internal__ore__obtained': quantity,
+        "set__updated": datetime.datetime.utcnow(),
+        }
+    HighscoreDocument.objects(_id=g.Creature.id).update_one(**highscores_update_query)
 
-    # We add the resources in the Wallet
-    #
-    # TODO
-    #
+    # We add the resources in the Satchel
+    Satchel = SatchelDocument.objects(_id=creatureuuid).get()
+    Satchel.update(
+        inc__resource__ore=quantity,
+        set__updated=datetime.datetime.utcnow()
+    )
+    Satchel.reload()
 
-    # We consume the PA
-    consume_pa(creatureuuid=creatureuuid, bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
+    # We delete the Resource in DB
+    try:
+        Resource.delete()
+    except Exception as e:
+        logger.error(f'{g.h} Resource destroy KO (failed or no resource was deleted) [{e}]')
+    else:
+        logger.trace(f'{g.h} Resource destroy OK')
 
     # We're done
     msg = f'{g.h} Profession ({PROFESSION_NAME}) Query OK'
@@ -126,11 +102,11 @@ def gathering(creatureuuid, resourceuuid):
             "msg": msg,
             "payload": {
                 "pa": get_pa(creatureuuid=g.Creature.id),
-                "resource": {
+                "resource": [{
                     "count": quantity,
-                    "material": Resource.material,
-                    "rarity": rarity,
-                },
+                    "material": 'ore',
+                    "rarity": None,
+                }],
             }
         }
     ), 200

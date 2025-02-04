@@ -138,10 +138,10 @@ app.add_url_rule('/mypc/<uuid:creatureuuid>/action/unload/<uuid:itemuuid>', meth
 # Routes: /action/item
 app.add_url_rule('/mypc/<uuid:creatureuuid>/action/item/catalyze/<uuid:itemuuid>', methods=['PUT'], view_func=routes.mypc.action.item.catalyze)  # noqa: E501
 # Routes: /action/profession
-app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/gathering', methods=['PUT'], view_func=routes.mypc.action.profession.gathering)  # noqa: E501
+app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/gathering/<uuid:resourceuuid>', methods=['POST'], view_func=routes.mypc.action.profession.gathering)  # noqa: E501
 app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>', methods=['POST'], view_func=routes.mypc.action.profession.recycling)  # noqa: E501
 app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/skinning/<uuid:resourceuuid>', methods=['POST'], view_func=routes.mypc.action.profession.skinning)  # noqa: E501
-app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/tanning/<int:quantity>', methods=['POST'], view_func=routes.mypc.action.profession.tanning)  # noqa: E501
+app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/tanning', methods=['POST'], view_func=routes.mypc.action.profession.tanning)  # noqa: E501
 app.add_url_rule('/mypc/<uuid:creatureuuid>/action/profession/tracking', methods=['POST'], view_func=routes.mypc.action.profession.tracking)  # noqa: E501
 # Routes: /actives
 app.add_url_rule('/mypc/<uuid:creatureuuid>/actives/<string:actives_type>', methods=['GET'], view_func=routes.mypc.actives.actives_get)  # noqa: E501

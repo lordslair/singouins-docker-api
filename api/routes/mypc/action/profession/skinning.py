@@ -1,24 +1,23 @@
 # -*- coding: utf8 -*-
 
-
 import datetime
+import random
+
 from flask import g, jsonify
 from flask_jwt_extended import jwt_required
 from loguru import logger
-from math import floor
-from random import choices, randint
 
 from mongo.models.Corpse import CorpseDocument
 from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
-from utils.decorators import (
-    check_creature_exists,
-    check_creature_in_instance,
-    check_creature_pa,
+from routes.mypc.action.profession._tools import (
+    probabilistic_binary,
+    profession_gain,
+    profession_scaled,
     )
-from utils.redis import get_pa, consume_pa
+from utils.redis import get_pa
 from variables import rarity_array
 
 #
@@ -27,9 +26,6 @@ from variables import rarity_array
 PA_COST_RED = 0
 PA_COST_BLUE = 2
 PROFESSION_NAME = 'skinning'
-"""
-This Profession HAVE TO be executed in Instance.
-"""
 
 
 #
@@ -42,10 +38,11 @@ This Profession HAVE TO be executed in Instance.
 @check_creature_in_instance
 @check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
 def skinning(creatureuuid, resourceuuid):
+
     # Check if the corpse exists
-    if CorpseDocument.objects(_id=resourceuuid):
-        Corpse = CorpseDocument.objects(_id=resourceuuid).get
-    else:
+    try:
+        Corpse = CorpseDocument.objects(_id=resourceuuid).get()
+    except CorpseDocument.DoesNotExist:
         msg = f'{g.h} CorpseUUID({resourceuuid}) NotFound'
         logger.warning(msg)
         return jsonify(
@@ -57,7 +54,7 @@ def skinning(creatureuuid, resourceuuid):
         ), 200
 
     if abs(Corpse.x - g.Creature.x) > 1 or abs(Corpse.y - g.Creature.y) > 1:
-        msg = f'{g.h} Corpse not in range'
+        msg = f'{g.h} CorpseUUID({resourceuuid}) not in range'
         logger.warning(msg)
         return jsonify(
             {
@@ -69,83 +66,41 @@ def skinning(creatureuuid, resourceuuid):
 
     Profession = ProfessionDocument.objects(_id=creatureuuid).get()
 
-    # We calculate the amount of Profession points acquired
-    if 100 <= Profession.skinning:         # 100+
-        pass
-    elif 75 <= Profession.skinning < 100:  # 75-99
-        count = choices([0, 1], weights=[70, 30])[0]
-    elif 50 <= Profession.skinning < 75:   # 50-74
-        count = choices([0, 1], weights=[60, 40])[0]
-    elif 25 <= Profession.skinning < 50:   # 25-49
-        count = choices([0, 1], weights=[50, 50])[0]
-    elif Profession.skinning < 25:         # 0-24
-        count = 1
-    # We INCR the Profession accordingly
-    if count >= 1:
-        profession_update_query = {
-            f'inc__{PROFESSION_NAME}': count,
-            "set__updated": datetime.datetime.utcnow(),
-            }
-        Profession.update(**profession_update_query)
+    # We update the Profession score
+    profession_gain(g.Creature.id, PROFESSION_NAME, Profession.skinning)
 
-    """
-    * Quantity skinned depends on Profession, Corpse.rarity, and Stats
+    # To check what's going to be created
+    resource_skinned = {'skin': 0, 'meat': 0}
 
-    NB:
-    Profession.skinning/20    is between 0 and 5
-    (Stats.p + Stats.r)/2/100 is between 0 and 2
-    Complete skinning result  is between 0 and (5 + 5D3 + 2)
+    for resource in resource_skinned:
+        # We calculate the total quantity
+        varx = rarity_array['creature'].index(Corpse.rarity)   # between 0 and 5
+        vary = 0                                               # between 0 and 4
+        varz = probabilistic_binary(g.Creature.stats.total.r)  # between 0 and 1
 
-    # skin/peau
-    * Small :  0 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Medium : 1 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Big :    2 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Unique : 3 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Boss :   4 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * God :    5 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
+        # We tune a bit vary to have a better distribution
+        for _ in range(profession_scaled(Profession.skinning)):
+            vary += random.randint(1, 2)
 
-    # Viande/Meat
-    * Small :  0 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Medium : 1 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Big :    2 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Unique : 3 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * Boss :   4 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    * God :    5 + (Profession.skinning/20) D3 + (Stats.p + Stats.r)/2/100
-    """
-
-    """ We roll twice the same formula, just to have different results for skin and meat """
-    logger.trace(
-        f"{g.h} Roll for skinning: {rarity_array['creature'].index(Corpse.rarity)}"
-        f' + {floor(Profession.skinning/20)}D3'
-        f' + {floor((g.Creature.stats.total.p + g.Creature.stats.total.r) / 2 / 100)}'
-        )
-    # We roll for skin
-    skin_qty = rarity_array['creature'].index(Corpse.rarity) \
-        + floor(Profession.skinning/20) * randint(1, 3) \
-        + floor((g.Creature.stats.total.p + g.Creature.stats.total.r) / 2 / 100)
-    # We roll for meat
-    meat_qty = rarity_array['creature'].index(Corpse.rarity) \
-        + floor(Profession.skinning/20) * randint(1, 3) \
-        + floor((g.Creature.stats.total.p + g.Creature.stats.total.r) / 2 / 100)
+        resource_skinned[resource] = varx + vary + varz
+        logger.trace(f"{g.h} Roll for {PROFESSION_NAME}/{resource}: {varx} + {vary} + {varz} == {resource_skinned[resource]}")  # noqa: E501
 
     # We set the HighScores
-    HighScores = HighscoreDocument.objects(_id=g.Creature.id)
     highscores_update_query = {
         f'inc__profession__{PROFESSION_NAME}': 1,
-        'inc__internal__meat__obtained': meat_qty,
-        'inc__internal__skin__obtained': skin_qty,
+        'inc__internal__meat__obtained': resource_skinned['meat'],
+        'inc__internal__skin__obtained': resource_skinned['skin'],
         "set__updated": datetime.datetime.utcnow(),
         }
-    HighScores.update(**highscores_update_query)
+    HighscoreDocument.objects(_id=g.Creature.id).update_one(**highscores_update_query)
 
     # We add the resources in the Satchel
-    Satchel = SatchelDocument.objects(_id=creatureuuid).get()
     satchel_update_query = {
-        "inc__resource__meat": meat_qty,
-        "inc__resource__skin": skin_qty,
+        "inc__resource__meat": resource_skinned['meat'],
+        "inc__resource__skin": resource_skinned['skin'],
         "set__updated": datetime.datetime.utcnow(),
         }
-    Satchel.update(**satchel_update_query)
+    SatchelDocument.objects(_id=creatureuuid).update_one(**satchel_update_query)
 
     # Little snippet to check amount of resources // slots
     # slots_used = 0
@@ -154,21 +109,12 @@ def skinning(creatureuuid, resourceuuid):
     #    for resource in resource_data.values():
     #        slots_used += resource
 
-    # We consume the PA
-    consume_pa(creatureuuid=creatureuuid, bluepa=PA_COST_BLUE, redpa=PA_COST_RED)
-
-    if Corpse.delete():
-        pass
+    try:
+        Corpse.delete()
+    except Exception as e:
+        logger.error(f'{g.h} Corpse destroy KO (failed or no corpse was deleted) [{e}]')
     else:
-        msg = f'{g.h} Corpse destroy KO'
-        logger.warning(msg)
-        return jsonify(
-            {
-                "success": False,
-                "msg": msg,
-                "payload": None,
-            }
-        ), 200
+        logger.trace(f'{g.h} Corpse destroy OK')
 
     # We're done
     msg = f'{g.h} Profession ({PROFESSION_NAME}) Query OK'
@@ -181,14 +127,14 @@ def skinning(creatureuuid, resourceuuid):
                 "pa": get_pa(creatureuuid=g.Creature.id),
                 "resource": [
                     {
-                        "count": skin_qty,
-                        "material": 'skin',
-                        "rarity": 'common',
+                        "count": resource_skinned['meat'],
+                        "material": 'meat',
+                        "rarity": None,
                         },
                     {
-                        "count": meat_qty,
-                        "material": 'meat',
-                        "rarity": 'common',
+                        "count": resource_skinned['skin'],
+                        "material": 'skin',
+                        "rarity": None,
                         },
                     ],
                 "inventory": "HARDCODED_VALUE",
