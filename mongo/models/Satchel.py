@@ -31,11 +31,13 @@ class SatchelResource(EmbeddedDocument):
     - fur       (IntField)
     - leather   (IntField)
     - meat      (IntField)
+    - ore       (IntField)
     - skin      (IntField)
     """
     fur = IntField(required=True, default=0)
     leather = IntField(required=True, default=0)
     meat = IntField(required=True, default=0)
+    ore = IntField(required=True, default=0)
     skin = IntField(required=True, default=0)
 
 
