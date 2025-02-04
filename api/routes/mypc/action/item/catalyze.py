@@ -8,11 +8,7 @@ from loguru import logger
 
 from mongo.models.Satchel import SatchelDocument
 
-from utils.decorators import (
-    check_creature_exists,
-    check_item_exists,
-    check_creature_pa,
-    )
+from routes._decorators import exists, belongs
 from utils.redis import get_pa, consume_pa
 from variables import rarity_array
 
@@ -29,9 +25,10 @@ PA_COST_BLUE = 2
 # API: PUT /mypc/<uuid:creatureuuid>/action/item/catalyze/<uuid:itemuuid>
 @jwt_required()
 # Custom decorators
-@check_creature_exists
-@check_item_exists
-@check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@exists.creature
+@exists.pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@exists.item
+@belongs.item_to_creature
 def catalyze(creatureuuid, itemuuid):
 
     if g.Item.rarity == 'Legendary':

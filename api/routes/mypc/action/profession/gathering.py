@@ -12,6 +12,7 @@ from mongo.models.Profession import ProfessionDocument
 from mongo.models.Resource import ResourceDocument
 from mongo.models.Satchel import SatchelDocument
 
+from routes._decorators import belongs, exists
 from routes.mypc.action.profession._tools import (
     probabilistic_binary,
     profession_gain,
@@ -34,9 +35,9 @@ PROFESSION_NAME = 'gathering'
 # API: POST /mypc/<uuid:creatureuuid>/action/profession/gathering/<uuid:resourceuuid>
 @jwt_required()
 # Custom decorators
-@check_creature_exists
-@check_creature_in_instance
-@check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@exists.creature
+@belongs.creature_in_instance
+@exists.pa(red=PA_COST_RED, blue=PA_COST_BLUE, consume=True)
 def gathering(creatureuuid, resourceuuid):
     # Check if the resource exists
     if ResourceDocument.objects(_id=resourceuuid):

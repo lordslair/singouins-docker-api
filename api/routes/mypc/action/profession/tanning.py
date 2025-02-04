@@ -10,6 +10,7 @@ from random import choices
 from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Satchel import SatchelDocument
 
+from routes._decorators import exists
 from routes.mypc.action.profession._tools import profession_gain
 from utils.redis import get_pa
 
@@ -24,11 +25,11 @@ PROFESSION_NAME = 'tanning'
 #
 # Routes /mypc/<uuid:creatureuuid>/action
 #
-# API: POST ../profession/tanning/<int:quantity>
+# API: POST /mypc/<uuid:creatureuuid>/action/profession/tanning
 @jwt_required()
 # Custom decorators
-@check_creature_exists
-@check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@exists.creature
+@exists.pa(red=PA_COST_RED, blue=PA_COST_BLUE, consume=True)
 def tanning(creatureuuid):
     Satchel = SatchelDocument.objects(_id=creatureuuid).get()
 

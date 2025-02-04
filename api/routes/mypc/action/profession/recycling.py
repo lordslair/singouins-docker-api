@@ -10,6 +10,7 @@ from mongo.models.Highscore import HighscoreDocument
 from mongo.models.Profession import ProfessionDocument
 from mongo.models.Satchel import SatchelDocument
 
+from routes._decorators import exists, belongs
 from routes.mypc.action.profession._tools import (
     probabilistic_binary,
     profession_gain,
@@ -32,9 +33,10 @@ PROFESSION_NAME = 'recycling'
 # API: POST /mypc/<uuid:creatureuuid>/action/profession/recycling/<uuid:itemuuid>
 @jwt_required()
 # Custom decorators
-@check_creature_exists
-@check_item_exists
-@check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@exists.creature
+@exists.pa(red=PA_COST_RED, blue=PA_COST_BLUE, consume=True)
+@exists.item
+@belongs.item_to_creature
 def recycling(creatureuuid, itemuuid):
     Profession = ProfessionDocument.objects(_id=creatureuuid).get()
 

@@ -9,6 +9,7 @@ from loguru import logger
 
 from mongo.models.Highscore import HighscoreDocument
 
+from routes._decorators import belongs, exists
 from utils.redis import r, get_pa
 
 from variables import API_ENV
@@ -26,12 +27,12 @@ PROFESSION_NAME = 'tracking'
 #
 # Routes /mypc/<uuid:creatureuuid>/action
 #
-# API: POST ../profession/tracking
+# API: POST /mypc/<uuid:creatureuuid>/action/profession/tracking
 @jwt_required()
 # Custom decorators
-@check_creature_exists
-@check_creature_in_instance
-@check_creature_pa(red=PA_COST_RED, blue=PA_COST_BLUE)
+@exists.creature
+@belongs.creature_in_instance
+@exists.pa(red=PA_COST_RED, blue=PA_COST_BLUE, consume=True)
 def tracking(creatureuuid):
     """ Applies a temporary tracking Effect to a Creature. """
 
