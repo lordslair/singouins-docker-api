@@ -4,6 +4,7 @@
 .
 ├── _id (UUIDField)
 ├── active (BooleanField)
+├── created (DateTimeField)
 ├── discord
 │   ├── ack (BooleanField)
 │   └── name (StringField)

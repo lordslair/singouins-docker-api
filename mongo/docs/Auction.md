@@ -1,10 +1,16 @@
-# Collection: creature
+# Collection: auction
 
 
 .
 ├── _id (UUIDField)
 ├── created (DateTimeField)
-├── item (EmbeddedDocumentField)
+├── item
+│   ├── id (UUIDField)
+│   ├── metaid (UUIDField)
+│   ├── metatype (StringField)
+│   └── rarity (StringField)
 ├── price (IntField)
-├── seller (EmbeddedDocumentField)
+├── seller
+│   ├── id (UUIDField)
+│   └── name (StringField)
 └── updated (DateTimeField)

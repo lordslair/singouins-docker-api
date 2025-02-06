@@ -26,6 +26,7 @@ class ProfessionDocument(Document):
 
     Fields:
     - _id       (UUIDField)
+    - gathering (IntField)
     - recycling (IntField)
     - skinning  (IntField)
     - tanning   (IntField)

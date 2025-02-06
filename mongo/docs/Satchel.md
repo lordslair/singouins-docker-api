@@ -16,11 +16,19 @@
 │   ├── rocket (IntField)
 │   └── shell (IntField)
 ├── currency
-│   ├── bananas (IntField)
-│   └── sausages (IntField)
+│   ├── banana (IntField)
+│   └── sausage (IntField)
 ├── resource
 │   ├── fur (IntField)
 │   ├── leather (IntField)
 │   ├── meat (IntField)
+│   ├── ore (IntField)
 │   └── skin (IntField)
+├── shard
+│   ├── broken (IntField)
+│   ├── common (IntField)
+│   ├── uncommon (IntField)
+│   ├── rare (IntField)
+│   ├── epic (IntField)
+│   └── legendary (IntField)
 └── updated (DateTimeField)

@@ -20,9 +20,6 @@
 ├── name (StringField)
 ├── race (IntField)
 ├── rarity (StringField)
-├── squad
-│   ├── id (UUIDField)
-│   └── rank (StringField)
 ├── slots
 │   ├── feet
 │   │   ├── id (UUIDField)
@@ -60,6 +57,9 @@
 │       ├── id (UUIDField)
 │       ├── metaid (IntField)
 │       └── metatype (StringField)
+├── squad
+│   ├── id (UUIDField)
+│   └── rank (StringField)
 ├── stats
 │   ├── race
 │   │   ├── b (IntField)
