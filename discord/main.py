@@ -96,7 +96,8 @@ except Exception as e:
     logger.error(f'[{group_bazaar}] Command Group KO [{e}]')
 else:
     logger.debug(f'[{group_bazaar}] Command Group OK')
-    bazaar.sell(group_bazaar, bot)
+    bazaar.ammo(group_bazaar, bot)
+    bazaar.item(group_bazaar, bot)
     logger.debug(f'[{group_bazaar}] Commands OK')
 #
 # /godmode Commands (for @Admins)

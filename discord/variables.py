@@ -54,10 +54,10 @@ rarity_discord = [':brown_square:', ':white_large_square:', ':green_square:', ':
 rarity_integer = [10197915, 16777215, 8311585, 4886754, 9442302, 16098851]
 
 # Rarity dictionnaries for Items
-rarity_item = ['Broken', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary']
-rarity_item_types_emoji = dict(zip(rarity_item, rarity_emoji))
-rarity_item_types_discord = dict(zip(rarity_item, rarity_discord))
-rarity_item_types_integer = dict(zip(rarity_item, rarity_integer))
+RARITY_ITEM = ['Broken', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary']
+rarity_item_types_emoji = dict(zip(RARITY_ITEM, rarity_emoji))
+rarity_item_types_discord = dict(zip(RARITY_ITEM, rarity_discord))
+rarity_item_types_integer = dict(zip(RARITY_ITEM, rarity_integer))
 
 # Rarity dictionnaries for Monsters
 rarity_monster = ['Small', 'Medium', 'Big', 'Unique', 'Boss', 'God']
@@ -82,4 +82,46 @@ slots_weapon = {
     'lefthand': ':left_fist:',
     'righthand': ':right_fist:',
 }
-slots_types = slots_armor | slots_weapon
+slots_types = slots_armor | slots_weapon  # Merge the dicts into one
+
+#
+# Ammunition CONSTANTS
+#
+AMMO_BULLET = {
+    'cal22':   {'price': 0.1, 'emoji': 'ammoCal22'},
+    'cal223':  {'price': 0.3, 'emoji': 'ammoCal223'},
+    'cal311':  {'price': 0.5, 'emoji': 'ammoCal311'},
+    'cal50':   {'price': 1,   'emoji': 'ammoCal50'},
+    'cal55':   {'price': 2,   'emoji': 'ammoCal55'},
+}
+AMMO_SPECIAL = {
+    'arrow':   {'price': 1,   'emoji': 'ammoArrow'},
+    'bolt':    {'price': 1,   'emoji': 'ammoBolt'},
+    'fuel':    {'price': 1,   'emoji': 'ammoFuel'},
+    'grenade': {'price': 1,   'emoji': 'ammoGrenade'},
+    'rocket':  {'price': 1,   'emoji': 'ammoRocket'},
+    'shell':   {'price': 1,   'emoji': 'ammoShell'},
+}
+AMMUNITIONS = AMMO_BULLET | AMMO_SPECIAL   # Merge the dicts into one
+
+#
+# Shards CONSTANTS
+#
+SHARDS = {
+    'Broken':    {'price': 1,   'emoji': 'shardBroken'},
+    'Common':    {'price': 1,   'emoji': 'shardCommon'},
+    'Uncommon':  {'price': 1,   'emoji': 'shardUncommon'},
+    'Rare':      {'price': 1,   'emoji': 'shardRare'},
+    'Epic':      {'price': 1,   'emoji': 'shardEpic'},
+    'Legendary': {'price': 1,   'emoji': 'shardLegendary'},
+}
+
+#
+# Resources CONSTANTS
+#
+RESOURCES = {
+    'Fur':     {'price': 1,   'emoji': 'shardBroken'},
+    'Leather': {'price': 1,   'emoji': 'shardCommon'},
+    'Meat':    {'price': 1,   'emoji': 'cut_of_meat'},
+    'Skin':    {'price': 1,   'emoji': 'shardRare'},
+}

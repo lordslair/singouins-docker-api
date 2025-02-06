@@ -5,15 +5,40 @@ import discord
 from loguru import logger
 
 from mongo.models.Item import ItemDocument
+from mongo.models.Satchel import SatchelDocument
 
-from variables import metaIndexed, rarity_item, rarity_item_types_emoji as rite
+from variables import AMMUNITIONS, metaIndexed, RARITY_ITEM, rarity_item_types_emoji as rite
+
+
+async def get_singouin_saleable_ammo_list(ctx: discord.AutocompleteContext):
+    # Pre-flight check
+    db_list = []
+
+    try:
+        Satchel = SatchelDocument.objects(_id=ctx.options['singouin_uuid']).get()
+    except SatchelDocument.DoesNotExist:
+        logger.debug("SatchelDocument Query KO (404)")
+    except Exception as e:
+        logger.error(f'MongoDB Query KO [{e}]')
+
+    try:
+        for caliber, price in AMMUNITIONS.items():
+            logger.success(caliber)
+            if getattr(Satchel.ammo, caliber) >= 10:
+                item_name = caliber.capitalize()
+                item_price = price * 10
+                db_list.append(discord.OptionChoice(f"💥 10x {item_name} ({item_price})", value=caliber))  # noqa: E501
+    except Exception as e:
+        logger.error(f'AMMUNITIONS Query KO [{e}]')
+    else:
+        return db_list
 
 
 async def get_singouin_saleable_item_list(ctx: discord.AutocompleteContext):
     # Pre-flight check
     db_list = []
     try:
-        Items = ItemDocument.objects(auctioned=False, bearer=ctx.options['seller_uuid'])
+        Items = ItemDocument.objects(auctioned=False, bearer=ctx.options['singouin_uuid'])
     except Exception as e:
         logger.error(f'MongoDB Query KO [{e}]')
     else:
@@ -36,7 +61,8 @@ async def get_singouin_saleable_item_list(ctx: discord.AutocompleteContext):
         meta = metaIndexed[Item.metatype][Item.metaid]
         sizex, sizey = map(int, meta['size'].split("x"))
 
-        item_price = sizex * sizey * (meta['tier'] + 1) * rarity_item.index(Item.rarity) // 2
-        db_list.append(discord.OptionChoice(f"{eh} {meta['name']} ({item_price})", value=str(Item.id)))  # noqa: E501
+        item_name = meta['name']
+        item_price = sizex * sizey * (meta['tier'] + 1) * RARITY_ITEM.index(Item.rarity) // 2
+        db_list.append(discord.OptionChoice(f"{eh} {item_name} ({item_price})", value=str(Item.id)))  # noqa: E501
 
     return db_list
