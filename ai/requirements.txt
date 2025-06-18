@@ -4,7 +4,7 @@
 #
 #    pip-compile --strip-extras requirements.in
 #
-blinker==1.8.2
+blinker==1.9.0
     # via flask
 certifi==2024.8.30
     # via requests
@@ -14,7 +14,7 @@ click==8.1.7
     # via flask
 dnspython==2.7.0
     # via pymongo
-flask==3.0.3
+flask==3.1.1
     # via
     #   -r requirements.in
     #   prometheus-flask-exporter
@@ -28,6 +28,7 @@ loguru==0.7.3
     # via -r requirements.in
 markupsafe==3.0.1
     # via
+    #   flask
     #   jinja2
     #   werkzeug
 mongoengine==0.29.1
@@ -44,5 +45,5 @@ requests==2.32.4
     # via -r requirements.in
 urllib3==2.2.3
     # via requests
-werkzeug==3.0.6
+werkzeug==3.1.3
     # via flask
