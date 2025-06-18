@@ -141,9 +141,9 @@ jobs:
         if [ -f ${{ matrix.python-app }}/main.py ]
           then python3 ${{ matrix.python-app }}/main.py &
         fi
-        echo "--- Sleep(3)"
-        sleep 3
-        echo "--- Starting PyTest"
+        echo "--- Sleep(${{ vars.STARTUP_SLEEP }}) (`date`)"
+        sleep ${{ vars.STARTUP_SLEEP }}
+        echo "--- Starting PyTest (`date`)"
         pytest ${{ matrix.python-app }}/tests/
 
   build-push:
