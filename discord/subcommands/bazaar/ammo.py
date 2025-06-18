@@ -9,7 +9,7 @@ from loguru import logger
 from mongo.models.Satchel import SatchelDocument
 
 from subcommands.singouin._autocomplete import get_mysingouins_list
-from subcommands.bazaar._autocomplete import get_singouin_saleable_ammo_list
+from subcommands.bazaar._autocomplete import get_singouin_bazaar_ammo_list
 
 from variables import AMMUNITIONS
 
@@ -33,7 +33,7 @@ def ammo(group_bazaar, bot):
     @option(
         "caliber",
         description="Caliber",
-        autocomplete=get_singouin_saleable_ammo_list
+        autocomplete=get_singouin_bazaar_ammo_list
         )
     async def ammo(
         ctx: discord.ApplicationContext,
@@ -61,22 +61,23 @@ def ammo(group_bazaar, bot):
 
         try:
             # We get ammunition price (/unit)
-            item_price = AMMUNITIONS[caliber]
-            item_emoji = discord.utils.get(bot.emojis, name=f'ammo{caliber.capitalize()}')
-            embed_desc = f"> {item_emoji} **{caliber.capitalize()}** (Price:{item_price})"
+            item_price = AMMUNITIONS[caliber]['price']
+            item_emoji = discord.utils.get(bot.emojis, name=AMMUNITIONS[caliber]['emoji'])
+            embed_desc = f"> {item_emoji} 10x **{caliber.capitalize()}**"
 
+            item_price_total = int(item_price * 10)
             if action_type == 'Sell':
                 # We do the financial transaction
-                Satchel.currency.banana += item_price * 10
+                Satchel.currency.banana += item_price_total
                 # We update the Ammunition count
-                setattr(Satchel.ammo, caliber, getattr(Satchel.ammo, caliber, 0) + 10)
+                setattr(Satchel.ammo, caliber, getattr(Satchel.ammo, caliber, 0) - 10)
                 embed_title = 'Sold to the Bazaar:'
 
             elif action_type == 'Buy':
                 # We do the financial transaction
-                Satchel.currency.banana -= item_price * 10
+                Satchel.currency.banana -= item_price_total
                 # We update the Ammunition count
-                setattr(Satchel.ammo, caliber, getattr(Satchel.ammo, caliber, 0) - 10)
+                setattr(Satchel.ammo, caliber, getattr(Satchel.ammo, caliber, 0) + 10)
                 embed_title = 'Bought from the Bazaar:'
 
             Satchel.updated = datetime.datetime.utcnow()
@@ -98,7 +99,7 @@ def ammo(group_bazaar, bot):
             description=embed_desc,
             colour=discord.Colour.green(),
             )
-        embed.set_footer(text=f"Account balance: {Satchel.currency.banana} 🍌")
+        embed.set_footer(text=f"New Account balance: {Satchel.currency.banana} 🍌")
 
         # We add Thumbnail
         file = discord.File('/code/resources/bazaar_256x256.png', filename='bazaar.png')

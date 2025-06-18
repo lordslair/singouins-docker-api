@@ -35,9 +35,10 @@ def squad(group_singouin, bot):
         file = None
 
         Creature = CreatureDocument.objects(_id=singouinuuid).get()
-        if Creature.squad:
-            if SquadDocument.objects(_id=Creature.squad.id).count() == 0:
-                # Discord name not found in DB
+        if Creature.squad.id:
+            try:
+                Squad = SquadDocument.objects(_id=Creature.squad.id).get()
+            except SquadDocument.DoesNotExist:
                 msg = f'Squad `{Creature.squad.id}` NotFound in DB'
                 logger.warning(msg)
                 await ctx.respond(
@@ -48,11 +49,9 @@ def squad(group_singouin, bot):
                     ephemeral=True,
                     )
                 return
-            else:
-                Squad = SquadDocument.objects(_id=Creature.squad.id).get()
         else:
             description = f"Your Singouin **{Creature.name}** is not in a Squad"
-            logger.error(f'{h} └──> {description}')
+            logger.debug(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,

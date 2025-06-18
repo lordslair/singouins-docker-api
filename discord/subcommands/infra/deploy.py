@@ -11,6 +11,13 @@ from kubernetes import config
 
 from subcommands.infra._tools import log_pretty
 
+#
+# Globals used to build the ENV VAR for the batch
+#
+CUST_OUTPUT_PATH = '/var/www/websites'
+CUST_DOMAIN = 'singouins.com'
+CUST_SUBDOMAIN = 'games'
+
 
 def deploy(group_admin):
     @group_admin.command(
@@ -38,9 +45,9 @@ def deploy(group_admin):
         namespace = 'singouins-networking'
 
         if env == 'dev':
-            output_folder = 'games.dev.singouins.com'
+            output_folder = f'{CUST_SUBDOMAIN}.dev.{CUST_DOMAIN}'
         else:
-            output_folder = 'games.singouins.com'
+            output_folder = f'{CUST_SUBDOMAIN}.{CUST_DOMAIN}'
 
         try:
             config.load_kube_config("/etc/k8s/kubeconfig.yaml")
@@ -68,21 +75,14 @@ def deploy(group_admin):
                             name=pod_name,
                             image_pull_policy="IfNotPresent",
                             volume_mounts=[
-                                client.V1VolumeMount(
-                                    name="websites",
-                                    mount_path='/var/www/websites',
-                                    ),
-                                client.V1VolumeMount(
-                                    name="deployer-sh",
-                                    mount_path='/code',
-                                    ),
+                                client.V1VolumeMount(name="websites", mount_path=CUST_OUTPUT_PATH),
+                                client.V1VolumeMount(name="deployer-sh", mount_path='/code'),
                                 ],
                             command=["/code/job-front-deployer.sh"],
                             env=[
-                                client.V1EnvVar(
-                                    name='CUST_GIT_BRANCH',
-                                    value=f'build-{env}',
-                                    ),
+                                client.V1EnvVar(name='CUST_GIT_BRANCH', value=f'build-{env}'),
+                                client.V1EnvVar(name='CUST_OUTPUT_PATH', value=CUST_OUTPUT_PATH),
+                                client.V1EnvVar(name='CUST_OUTPUT_FOLDER', value=output_folder),
                                 client.V1EnvVar(
                                     name='CUST_GIT_QUIET',
                                     value_from=client.V1EnvVarSource(
@@ -118,19 +118,6 @@ def deploy(group_admin):
                                             key='git-angular-token',
                                             )
                                         )
-                                    ),
-                                client.V1EnvVar(
-                                    name='CUST_OUTPUT_PATH',
-                                    value_from=client.V1EnvVarSource(
-                                        secret_key_ref=client.V1SecretKeySelector(  # noqa: E501
-                                            name='git-secret',
-                                            key='git-angular-output-path',
-                                            )
-                                        )
-                                    ),
-                                client.V1EnvVar(
-                                    name='CUST_OUTPUT_FOLDER',
-                                    value=output_folder,
                                     ),
                                 ],
                             )

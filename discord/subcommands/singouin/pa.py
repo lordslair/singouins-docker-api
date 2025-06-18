@@ -83,6 +83,5 @@ def pa(group_singouin):
         else:
             try:
                 await ctx.respond(embed=embed, ephemeral=True, file=file)
-                logger.info(f'{h} └──> Answer send OK')
             except Exception as e:
-                logger.info(f'{h} └──> Answer send KO [{e}]')
+                logger.error(f'{h} └──> Answer send KO [{e}]')

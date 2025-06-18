@@ -81,14 +81,12 @@ def highscores(group_singouin, bot):
 
         # Iterate over HighscoreDocument fields
         for field_name, field in Highscore._fields.items():
-            logger.info(field_name)
             if field_name in ['_id', 'created', 'updated', 'internal']:
                 continue
 
             embed_field_value = ""
             value = getattr(Highscore, field_name)
             if isinstance(value, EmbeddedDocument):
-                print(f"{field_name.capitalize()}:")
                 for sub_field_name, sub_field in value._fields.items():
                     sub_field_value = getattr(value, sub_field_name)
                     embed_field_value += f"> {sub_field_name} : `{sub_field_value}`\n"

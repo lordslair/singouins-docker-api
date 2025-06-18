@@ -35,9 +35,10 @@ def korp(group_singouin, bot):
         file = None
 
         Creature = CreatureDocument.objects(_id=singouinuuid).get()
-        if Creature.korp:
-            if KorpDocument.objects(_id=Creature.korp.id).count() == 0:
-                # Discord name not found in DB
+        if Creature.korp.id:
+            try:
+                Korp = KorpDocument.objects(_id=Creature.korp.id).get()
+            except KorpDocument.DoesNotExist:
                 msg = f'Korp `{Creature.korp.id}` NotFound in DB'
                 logger.warning(msg)
                 await ctx.respond(
@@ -48,11 +49,9 @@ def korp(group_singouin, bot):
                     ephemeral=True,
                     )
                 return
-            else:
-                Korp = KorpDocument.objects(_id=Creature.korp.id).get()
         else:
             description = f"Your Singouin **{Creature.name}** is not in a Korp"
-            logger.error(f'{h} └──> {description}')
+            logger.debug(f'{h} └──> {description}')
             await ctx.respond(
                 embed=discord.Embed(
                     description=description,

@@ -36,7 +36,15 @@ def slottype_generator(Creature: CreatureDocument, slots: dict):
         logger.debug(f'EquippedItem search: {slot_name}')
         EquippedItem = getattr(Creature.slots, slot_name)
         if EquippedItem:
-            Item = ItemDocument.objects(_id=EquippedItem.id).get()
+            try:
+                Item = ItemDocument.objects(_id=EquippedItem.id).get()
+            except ItemDocument.DoesNotExist:
+                logger.debug(f"ItemDocument Query KO (404) [_id={EquippedItem.id}]")
+                continue
+            except Exception as e:
+                logger.error(f'MongoDB Query KO [{e}]')
+                continue
+
             logger.trace(f'EquippedItem found: {Item.id}')
             item   = f"{ritd[Item.rarity]} {metaIndexed[Item.metatype][Item.metaid]['name']}"
         else:

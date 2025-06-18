@@ -10,28 +10,41 @@ from mongo.models.Satchel import SatchelDocument
 from variables import AMMUNITIONS, metaIndexed, RARITY_ITEM, rarity_item_types_emoji as rite
 
 
-async def get_singouin_saleable_ammo_list(ctx: discord.AutocompleteContext):
+async def get_singouin_bazaar_ammo_list(ctx: discord.AutocompleteContext):
     # Pre-flight check
     db_list = []
 
-    try:
-        Satchel = SatchelDocument.objects(_id=ctx.options['singouin_uuid']).get()
-    except SatchelDocument.DoesNotExist:
-        logger.debug("SatchelDocument Query KO (404)")
-    except Exception as e:
-        logger.error(f'MongoDB Query KO [{e}]')
+    # We check if we are going to sell, or to buy
+    if ctx.options['action_type'] == 'Sell':
+        try:
+            Satchel = SatchelDocument.objects(_id=ctx.options['singouin_uuid']).get()
+        except SatchelDocument.DoesNotExist:
+            logger.debug("SatchelDocument Query KO (404)")
+        except Exception as e:
+            logger.error(f'MongoDB Query KO [{e}]')
 
-    try:
-        for caliber, price in AMMUNITIONS.items():
-            logger.success(caliber)
-            if getattr(Satchel.ammo, caliber) >= 10:
-                item_name = caliber.capitalize()
-                item_price = price * 10
-                db_list.append(discord.OptionChoice(f"💥 10x {item_name} ({item_price})", value=caliber))  # noqa: E501
-    except Exception as e:
-        logger.error(f'AMMUNITIONS Query KO [{e}]')
+        try:
+            for ammo_cal, ammo_info in AMMUNITIONS.items():
+                ammo_stock = getattr(Satchel.ammo, ammo_cal)
+                if ammo_stock >= 10:
+                    item_name = ammo_cal.capitalize()
+                    item_price = ammo_info['price']
+                    db_list.append(discord.OptionChoice(f"💥 10x {item_name} ({item_price}/u) [{ammo_stock}]", value=ammo_cal))  # noqa: E501
+        except Exception as e:
+            logger.error(f'AMMUNITIONS Query KO [{e}]')
+        else:
+            return db_list
     else:
-        return db_list
+        try:
+            for ammo_cal, ammo_info in AMMUNITIONS.items():
+                ammo_stock = '∞'  # Bazaar has unlimited stock for now
+                item_name = ammo_cal.capitalize()
+                item_price = ammo_info['price']
+                db_list.append(discord.OptionChoice(f"💥 10x {item_name} ({item_price}/u) [{ammo_stock}]", value=ammo_cal))  # noqa: E501
+        except Exception as e:
+            logger.error(f'AMMUNITIONS Query KO [{e}]')
+        else:
+            return db_list
 
 
 async def get_singouin_saleable_item_list(ctx: discord.AutocompleteContext):
