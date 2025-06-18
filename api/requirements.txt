@@ -68,7 +68,7 @@ pymongo==4.10.1
     # via mongoengine
 redis==5.1.1
     # via yarqueue
-requests==2.32.3
+requests==2.32.4
     # via -r requirements.in
 strenum==0.4.15
     # via yarqueue
