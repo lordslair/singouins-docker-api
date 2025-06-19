@@ -28,7 +28,7 @@ flask==3.0.3
     #   prometheus-flask-exporter
 flask-bcrypt==1.0.1
     # via -r requirements.in
-flask-cors==5.0.0
+flask-cors==6.0.0
     # via -r requirements.in
 flask-jwt-extended==4.7.1
     # via -r requirements.in
@@ -81,6 +81,7 @@ urllib3==2.5.0
 werkzeug==3.0.6
     # via
     #   flask
+    #   flask-cors
     #   flask-jwt-extended
 yarqueue==0.4.1
     # via -r requirements.in
