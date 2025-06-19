@@ -87,7 +87,7 @@ six==1.16.0
     #   python-dateutil
 strenum==0.4.15
     # via yarqueue
-urllib3==2.2.3
+urllib3==2.5.0
     # via
     #   kubernetes
     #   requests
