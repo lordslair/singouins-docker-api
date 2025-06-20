@@ -4,7 +4,6 @@ import json
 import redis
 import yarqueue
 
-from distutils.util import strtobool
 from flask import jsonify
 from loguru import logger
 
@@ -16,6 +15,19 @@ except Exception as e:
     logger.error(f'Redis Connection KO (r) [{e}]')
 else:
     logger.debug('Redis Connection OK (r)')
+
+
+def str2bool(value: str) -> bool:
+    _MAP = {
+        'true': True,
+        'on': True,
+        'false': False,
+        'off': False
+    }
+    try:
+        return _MAP[str(value).lower()]
+    except KeyError:
+        raise ValueError('"{}" is not a valid bool value'.format(value))
 
 
 def str2typed(string: str):
@@ -37,7 +49,7 @@ def str2typed(string: str):
 
     # Check if the string can be interpreted as a boolean
     try:
-        return bool(strtobool(string))
+        return str2bool(string)
     except ValueError:
         pass
 

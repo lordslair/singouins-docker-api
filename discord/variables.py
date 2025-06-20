@@ -2,10 +2,23 @@
 
 import os
 
-from distutils.util import strtobool
 from loguru import logger
 
 from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
+
+
+def str2bool(value: str) -> bool:
+    _MAP = {
+        'true': True,
+        'on': True,
+        'false': False,
+        'off': False
+    }
+    try:
+        return _MAP[str(value).lower()]
+    except KeyError:
+        raise ValueError('"{}" is not a valid bool value'.format(value))
+
 
 # Grab the environment variables
 env_vars = {
@@ -16,13 +29,13 @@ env_vars = {
     "REDIS_HOST": os.environ.get("REDIS_HOST", '127.0.0.1'),
     "REDIS_PORT": int(os.environ.get("REDIS_PORT", 6379)),
     "REDIS_BASE": int(os.environ.get("REDIS_BASE", 0)),
-    "SSL_CHECK": strtobool(os.getenv("SSL_CHECK", "True")),
+    "SSL_CHECK": str2bool(os.getenv("SSL_CHECK", "True")),
     "SSL_TARGET_HOST": os.environ.get("SSL_TARGET_HOST"),
     "SSL_TARGET_PORT": os.environ.get("SSL_TARGET_PORT", 443),
     "SSL_CHANNEL": os.environ.get("SSL_CHANNEL"),
     "URL_ASSETS": os.environ.get("URL_ASSETS", 'https://singouins.github.io/assets'),
     "YQ_DISCORD": os.environ.get("YQ_DISCORD", f'{os.environ.get("API_ENV", None)}:yarqueue:discord'), # noqa E501
-    "YQ_CHECK": strtobool(os.getenv("YQ_CHECK", "False")),
+    "YQ_CHECK": str2bool(os.getenv("YQ_CHECK", "False")),
 }
 # Print the environment variables for debugging
 for var, value in env_vars.items():
