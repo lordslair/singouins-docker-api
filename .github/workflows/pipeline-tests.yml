@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.11", "3.12" ]
 
     steps:
     - name: Checkout 🛎️
@@ -68,7 +68,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.11", "3.12" ]
         python-app: [ "ai", "ws", "api" ]
 
     needs:
