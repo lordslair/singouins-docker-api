@@ -11,36 +11,29 @@ import websockets
 from loguru import logger
 from websockets import ServerConnection
 
-# Redis variables
-REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
-REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
-REDIS_BASE = int(os.environ.get("REDIS_BASE", 0))
-logger.debug(f"REDIS_HOST: {REDIS_HOST}")
-logger.debug(f"REDIS_PORT: {REDIS_PORT}")
-logger.debug(f"REDIS_BASE: {REDIS_BASE}")
-# APP variables
-API_ENV = os.environ.get("API_ENV", None)
-logger.debug(f"API_ENV: {API_ENV}")
-# PubSub variables
-PS_BROADCAST = os.environ.get("PS_BROADCAST", f'ws-broadcast-{API_ENV.lower()}')
-PS_EXPIRE = os.environ.get("PS_EXPIRE", '__keyevent@0__:expired')
-PS_SET = os.environ.get("PS_SET", '__keyevent@0__:set')
-logger.debug(f"PS_BROADCAST: {PS_BROADCAST}")
-logger.debug(f"PS_EXPIRE: {PS_EXPIRE}")
-logger.debug(f"PS_SET: {PS_SET}")
-# WebSocket variables
-WSS_HOST = os.environ.get('WSS_HOST', '0.0.0.0')
-WSS_PORT = int(os.environ.get('WSS_PORT', 5000))
-logger.debug(f"WSS_HOST: {WSS_HOST}")
-logger.debug(f"WSS_PORT: {WSS_PORT}")
+# Grab the environment variables
+env_vars = {
+    "API_ENV": os.environ.get("API_ENV", None),
+    "REDIS_HOST": os.environ.get("REDIS_HOST", '127.0.0.1'),
+    "REDIS_PORT": int(os.environ.get("REDIS_PORT", 6379)),
+    "REDIS_BASE": int(os.environ.get("REDIS_BASE", 0)),
+    "PS_BROADCAST": os.environ.get("PS_BROADCAST", f'ws-broadcast-{os.environ.get("API_ENV", None).lower()}'),  # noqa: E501
+    "PS_EXPIRE": os.environ.get("PS_EXPIRE", '__keyevent@0__:expired'),
+    "PS_SET": os.environ.get("PS_SET", '__keyevent@0__:set'),
+    "WSS_HOST": os.environ.get('WSS_HOST', '0.0.0.0'),
+    "WSS_PORT": int(os.environ.get('WSS_PORT', 5000)),
+}
+# Print the environment variables for debugging
+for var, value in env_vars.items():
+    logger.debug(f"{var}: {value}")
 
 CLIENTS = set()
 
 
 async def listen_to_broadcast() -> None:
-    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
+    r = redis.Redis(host=env_vars['REDIS_HOST'], port=env_vars['REDIS_PORT'], db=env_vars['REDIS_BASE'])  # noqa: E501
     pubsub = r.pubsub()
-    await pubsub.subscribe(PS_BROADCAST)
+    await pubsub.subscribe(env_vars['PS_BROADCAST'])
 
     # Continuously listen for messages
     async for message in pubsub.listen():
@@ -52,9 +45,9 @@ async def listen_to_broadcast() -> None:
 
 
 async def listen_to_expired() -> None:
-    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
+    r = redis.Redis(host=env_vars['REDIS_HOST'], port=env_vars['REDIS_PORT'], db=env_vars['REDIS_BASE'])  # noqa: E501
     pubsub = r.pubsub()
-    await pubsub.psubscribe(PS_EXPIRE)
+    await pubsub.psubscribe(env_vars['PS_EXPIRE'])
 
     # Continuously listen for messages
     async for message in pubsub.listen():
@@ -62,7 +55,7 @@ async def listen_to_expired() -> None:
         if message['type'] == 'pmessage':
             expired_key = message['data'].decode()
             # Check we match the API_ENV
-            if expired_key.startswith(API_ENV):
+            if expired_key.startswith(env_vars['API_ENV']):
                 logger.debug(f"Key expired: {expired_key}")
                 # We split the key to grab the elements
                 splitted_key = expired_key.split(':')
@@ -70,7 +63,7 @@ async def listen_to_expired() -> None:
                 message = json.dumps({
                     "creature": splitted_key[2],
                     "date": datetime.datetime.utcnow().isoformat(),
-                    "env": API_ENV,
+                    "env": env_vars['API_ENV'],
                     "event": "expired",
                     "key": expired_key,
                     "name": splitted_key[3],
@@ -81,9 +74,9 @@ async def listen_to_expired() -> None:
 
 
 async def listen_to_set() -> None:
-    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_BASE)
+    r = redis.Redis(host=env_vars['REDIS_HOST'], port=env_vars['REDIS_PORT'], db=env_vars['REDIS_BASE'])  # noqa: E501
     pubsub = r.pubsub()
-    await pubsub.psubscribe(PS_SET)
+    await pubsub.psubscribe(env_vars['PS_SET'])
 
     # Continuously listen for messages
     async for message in pubsub.listen():
@@ -91,7 +84,7 @@ async def listen_to_set() -> None:
         if message['type'] == 'pmessage':
             set_key = message['data'].decode()
             # Check we match the API_ENV
-            if set_key.startswith(API_ENV):
+            if set_key.startswith(env_vars['API_ENV']):
                 # We split the key to grab the elements
                 splitted_key = set_key.split(':')
                 # Build the message
@@ -99,7 +92,7 @@ async def listen_to_set() -> None:
                     message = json.dumps({
                         "creature": splitted_key[2],
                         "date": datetime.datetime.utcnow().isoformat(),
-                        "env": API_ENV,
+                        "env": env_vars['API_ENV'],
                         "event": "set",
                         "key": set_key,
                         "name": splitted_key[3],
@@ -140,8 +133,8 @@ async def websocket_handler(websocket: ServerConnection, path: str) -> None:
 
 async def main() -> None:
     # Start WebSocket server
-    logger.trace(f'WebSocket server start >> ({WSS_HOST}:{WSS_PORT})')
-    ws_server = await websockets.serve(websocket_handler, WSS_HOST, WSS_PORT)
+    logger.trace(f"WebSocket server start >> ({env_vars['WSS_HOST']}:{env_vars['WSS_PORT']})")
+    ws_server = await websockets.serve(websocket_handler, env_vars['WSS_HOST'], env_vars['WSS_PORT'])  # noqa: E501
     logger.debug('WebSocket server start OK')
     logger.debug('Asyncio.gather start >>')
     await asyncio.gather(
