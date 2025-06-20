@@ -9,7 +9,7 @@ import os
 import websockets
 
 from loguru import logger
-from websockets import WebSocketServerProtocol
+from websockets import ServerConnection
 
 # Redis variables
 REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
@@ -120,7 +120,7 @@ async def notify_clients(message: str) -> None:
             )
 
 
-async def websocket_handler(websocket: WebSocketServerProtocol, path: str) -> None:
+async def websocket_handler(websocket: ServerConnection, path: str) -> None:
     # Register client
     real_ip = websocket.request_headers['X-Real-IP']
     logger.info(f'Client connection OK (@IP:{real_ip})')
