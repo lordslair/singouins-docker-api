@@ -3,34 +3,27 @@
 import smtplib
 
 from email.mime.multipart import MIMEMultipart
-from email.mime.text      import MIMEText
-from loguru               import logger
+from email.mime.text import MIMEText
+from loguru import logger
 
-from utils.variables import (SMTP_FROM,
-                             SMTP_SERVER,
-                             SMTP_USER,
-                             SMTP_PASS,
-                             SMTP_HOSTNAME)
+from variables import env_vars
 
 
 def send(adress, subject, body):
-
-    message            = MIMEMultipart()
-    message['From']    = SMTP_FROM
-    message['To']      = adress
+    message = MIMEMultipart()
+    message['From'] = env_vars['SMTP_FROM']
+    message['To'] = adress
     message['Subject'] = subject
 
     message_content = MIMEText(body, "html")
     message.attach(message_content)
 
     try:
-        mail = smtplib.SMTP_SSL(SMTP_SERVER,
-                                local_hostname=SMTP_HOSTNAME)
-
-        mail.connect(host=SMTP_SERVER)
+        mail = smtplib.SMTP_SSL(env_vars['SMTP_SERVER'], local_hostname=env_vars['SMTP_HOSTNAME'])
+        mail.connect(host=env_vars['SMTP_SERVER'])
         mail.ehlo()
         mail.set_debuglevel(0)
-        mail.login(SMTP_USER, SMTP_PASS)
+        mail.login(env_vars['SMTP_USER'], env_vars['SMTP_PASS'])
         mail.sendmail(message["From"], message["To"], message.as_string())
         mail.close()
     except smtplib.SMTPException as e:

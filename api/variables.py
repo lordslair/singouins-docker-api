@@ -6,6 +6,18 @@ from loguru import logger
 
 from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
 
+# Grab the environment variables
+env_vars = {
+    "SMTP_FROM": os.environ['SEP_SMTP_FROM'],
+    "SMTP_SERVER": os.environ['SEP_SMTP_SERVER'],
+    "SMTP_USER": os.environ['SEP_SMTP_USER'],
+    "SMTP_PASS": os.environ['SEP_SMTP_PASS'],
+    "SMTP_HOSTNAME": os.environ['SEP_SMTP_HOSTNAME'],
+}
+# Print the environment variables for debugging
+for var, value in env_vars.items():
+    logger.debug(f"{var}: {value}")
+
 # Redis variables
 REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
