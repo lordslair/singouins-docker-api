@@ -16,7 +16,7 @@ from pydantic import BaseModel, ValidationError
 from mongo.models.User import UserDocument
 from utils.decorators import check_is_json
 from utils.redis import r
-from variables import API_ENV, TOKEN_DURATION
+from variables import env_vars, TOKEN_DURATION
 
 # Initialize JWTManager for Flask
 jwt = JWTManager()
@@ -69,8 +69,8 @@ def login():
     refresh_jti = decode_token(refresh_token)["jti"]
 
     # Store tokens in Redis for future revocation
-    r.set(f"{API_ENV}:auth:access_jti:{access_jti}", Login.username, ex=TOKEN_DURATION * 60)
-    r.set(f"{API_ENV}:auth:refresh_jti:{refresh_jti}", Login.username, ex=30 * 24 * 60 * 60)
+    r.set(f"{env_vars['API_ENV']}:auth:access_jti:{access_jti}", Login.username, ex=TOKEN_DURATION * 60)  # noqa: E501
+    r.set(f"{env_vars['API_ENV']}:auth:refresh_jti:{refresh_jti}", Login.username, ex=30 * 24 * 60 * 60)  # noqa: E501
 
     # Return tokens
     logger.trace("Access Token Query OK")

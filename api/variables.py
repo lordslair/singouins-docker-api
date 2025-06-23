@@ -8,6 +8,10 @@ from mongo.models.Meta import MetaArmor, MetaRace, MetaWeapon
 
 # Grab the environment variables
 env_vars = {
+    "API_ENV": os.environ.get("API_ENV", None),
+    "REDIS_HOST": os.environ.get("REDIS_HOST", '127.0.0.1'),
+    "REDIS_PORT": int(os.environ.get("REDIS_PORT", 6379)),
+    "REDIS_BASE": int(os.environ.get("REDIS_BASE", 0)),
     "SMTP_FROM": os.environ['SEP_SMTP_FROM'],
     "SMTP_SERVER": os.environ['SEP_SMTP_SERVER'],
     "SMTP_USER": os.environ['SEP_SMTP_USER'],
@@ -18,23 +22,14 @@ env_vars = {
 for var, value in env_vars.items():
     logger.debug(f"{var}: {value}")
 
-# Redis variables
-REDIS_HOST = os.environ.get("REDIS_HOST", '127.0.0.1')
-REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
-REDIS_BASE = int(os.environ.get("REDIS_BASE", 0))
-logger.debug(f"REDIS_HOST: {REDIS_HOST}")
-logger.debug(f"REDIS_PORT: {REDIS_PORT}")
-logger.debug(f"REDIS_BASE: {REDIS_BASE}")
-
 # API variables
 SEP_SECRET_KEY = os.environ['SEP_SECRET_KEY']
 TOKEN_DURATION = int(os.environ.get("SEP_TOKEN_DURATION", 60))
 API_URL = os.environ.get("API_URL", 'http://127.0.0.1:5000')
-API_ENV = os.environ.get("API_ENV", None)
 
 # YarQueue variables
-YQ_BROADCAST = os.environ.get("YQ_BROADCAST", f'{API_ENV}:yarqueue:broadcast')
-YQ_DISCORD   = os.environ.get("YQ_DISCORD", f'{API_ENV}:yarqueue:discord')
+YQ_BROADCAST = os.environ.get("YQ_BROADCAST", f"{env_vars['API_ENV']}:yarqueue:broadcast")
+YQ_DISCORD   = os.environ.get("YQ_DISCORD", f"{env_vars['API_ENV']}:yarqueue:discord")
 # PubSub variables
 PS_BROADCAST = os.environ.get("PS_BROADCAST", 'ws-broadcast')
 

@@ -40,10 +40,16 @@ prometheus-flask-exporter==0.23.1
 pymongo==4.10.1
     # via mongoengine
 redis==6.2.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   yarqueue
 requests==2.32.4
     # via -r requirements.in
+strenum==0.4.15
+    # via yarqueue
 urllib3==2.5.0
     # via requests
 werkzeug==3.1.3
     # via flask
+yarqueue==0.4.1
+    # via -r requirements.in

@@ -13,7 +13,7 @@ from mongo.models.Satchel import SatchelDocument
 
 from utils.decorators import check_creature_exists
 from utils.redis import r
-from variables import API_ENV
+from variables import env_vars
 
 
 # API: DELETE /mypc/<uuid:creatureuuid>
@@ -36,7 +36,7 @@ def mypc_del(creatureuuid):
         # We start do delete PC elements
         # Redis PA
         for color in ['blue', 'red']:
-            r.delete(f"{API_ENV}:pas:{creatureuuid}:{color}")
+            r.delete(f"{env_vars['API_ENV']}:pas:{creatureuuid}:{color}")
         # SatchelDocument
         if SatchelDocument.objects(_id=g.Creature.id):
             logger.debug(f'{g.h} SatchelDocument deletion >>')

@@ -4,3 +4,4 @@ mongoengine==0.29.1
 prometheus-flask-exporter==0.23.1
 redis==6.2.0
 requests==2.32.4
+yarqueue== 0.4.1

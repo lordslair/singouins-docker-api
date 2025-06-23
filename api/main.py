@@ -13,7 +13,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from variables import (
-    API_ENV,
+    env_vars,
     SEP_SECRET_KEY,
     GUNICORN_BIND,
     GUNICORN_CHDIR,
@@ -76,7 +76,7 @@ jwt = JWTManager(app)
 def check_if_token_revoked(jwt_header, jwt_payload):
     jti = jwt_payload["jti"]
     token_type = jwt_payload.get("type", "access")  # This will be 'access' or 'refresh'
-    token_in_redis = r.get(f"{API_ENV}:auth:{token_type}_jti:{jti}")
+    token_in_redis = r.get(f"{env_vars['API_ENV']}:auth:{token_type}_jti:{jti}")
     return token_in_redis.decode() == 'revoked'
 
 

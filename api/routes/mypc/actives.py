@@ -7,7 +7,7 @@ from loguru import logger
 from utils.decorators import check_creature_exists
 from utils.redis import r, str2typed
 
-from variables import API_ENV
+from variables import env_vars
 
 
 #
@@ -31,7 +31,7 @@ def actives_get(creatureuuid, actives_type):
 
     try:
         # Get all keys matching the pattern
-        rpath = f'{API_ENV}:{g.Creature.instance}:{actives_type}:{g.Creature.id}:*'
+        rpath = f"{env_vars['API_ENV']}:{g.Creature.instance}:{actives_type}:{g.Creature.id}:*"
         keys = r.keys(rpath)
 
         if len(keys) == 0:

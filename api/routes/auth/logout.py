@@ -6,7 +6,7 @@ from loguru import logger
 
 from utils.redis import r
 
-from variables import API_ENV
+from variables import env_vars
 
 # Initialize JWTManager for Flask
 jwt = JWTManager()
@@ -17,7 +17,7 @@ jwt = JWTManager()
 def logout():
     jti = get_jwt()["jti"]
     try:
-        r.set(f"{API_ENV}:auth:access_jti:{jti}", "revoked")  # Mark token as revoked in Redis
+        r.set(f"{env_vars['API_ENV']}:auth:access_jti:{jti}", "revoked")  # Mark token as revoked
     except Exception as e:
         msg = f'JTI Revokation KO [{e}]'
         logger.error(msg)

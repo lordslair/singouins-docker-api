@@ -12,7 +12,7 @@ from mongo.models.Highscore import HighscoreDocument
 from routes._decorators import belongs, exists
 from utils.redis import r, get_pa
 
-from variables import API_ENV
+from variables import env_vars
 
 #
 # Profession.tracking specifics
@@ -37,7 +37,7 @@ def tracking(creatureuuid):
     """ Applies a temporary tracking Effect to a Creature. """
 
     try:
-        rpath = f'{API_ENV}:{g.Creature.instance}:effects:{g.Creature.id}'
+        rpath = f"{env_vars['API_ENV']}:{g.Creature.instance}:effects:{g.Creature.id}"
         rkey = f'{rpath}:{PROFESSION_NAME.capitalize()}'
 
         r.hset(
