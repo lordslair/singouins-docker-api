@@ -39,7 +39,7 @@ idna==3.10
     #   email-validator
     #   requests
     #   yarl
-kubernetes==31.0.0
+kubernetes==33.1.0
     # via -r requirements.in
 loguru==0.7.3
     # via -r requirements.in
