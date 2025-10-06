@@ -59,7 +59,7 @@ prometheus-client==0.21.0
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.23.2
     # via -r requirements.in
-pydantic==2.11.7
+pydantic==2.11.10
     # via -r requirements.in
 pydantic-core==2.33.2
     # via pydantic
