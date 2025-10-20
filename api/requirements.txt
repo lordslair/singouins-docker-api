@@ -59,9 +59,9 @@ prometheus-client==0.21.0
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.23.2
     # via -r requirements.in
-pydantic==2.11.7
+pydantic==2.12.3
     # via -r requirements.in
-pydantic-core==2.33.2
+pydantic-core==2.41.4
     # via pydantic
 pyjwt==2.10.1
     # via flask-jwt-extended
@@ -73,12 +73,12 @@ requests==2.32.4
     # via -r requirements.in
 strenum==0.4.15
     # via yarqueue
-typing-extensions==4.14.0
+typing-extensions==4.15.0
     # via
     #   pydantic
     #   pydantic-core
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via pydantic
 urllib3==2.5.0
     # via requests
