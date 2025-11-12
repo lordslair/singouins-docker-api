@@ -3,5 +3,5 @@ loguru==0.7.3
 mongoengine==0.29.1
 prometheus-flask-exporter==0.23.2
 redis==7.0.1
-requests==2.32.4
+requests==2.32.5
 yarqueue== 0.4.1
