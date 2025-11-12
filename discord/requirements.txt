@@ -39,7 +39,7 @@ idna==3.10
     #   email-validator
     #   requests
     #   yarl
-kubernetes==33.1.0
+kubernetes==34.1.0
     # via -r requirements.in
 loguru==0.7.3
     # via -r requirements.in
@@ -50,9 +50,7 @@ multidict==6.5.0
     #   aiohttp
     #   yarl
 oauthlib==3.3.1
-    # via
-    #   kubernetes
-    #   requests-oauthlib
+    # via requests-oauthlib
 pillow==11.3.0
     # via -r requirements.in
 propcache==0.3.2
@@ -89,7 +87,7 @@ six==1.17.0
     #   python-dateutil
 strenum==0.4.15
     # via yarqueue
-urllib3==2.5.0
+urllib3==2.3.0
     # via
     #   kubernetes
     #   requests
