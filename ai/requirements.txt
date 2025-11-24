@@ -39,7 +39,7 @@ prometheus-flask-exporter==0.23.2
     # via -r requirements.in
 pymongo==4.10.1
     # via mongoengine
-redis==7.0.1
+redis==7.1.0
     # via
     #   -r requirements.in
     #   yarqueue
