@@ -10,5 +10,5 @@ loguru==0.7.3
     # via -r requirements.in
 redis==7.0.1
     # via -r requirements.in
-websockets==15.0.1
+websockets==16.0
     # via -r requirements.in
