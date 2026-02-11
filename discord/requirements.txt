@@ -51,7 +51,7 @@ multidict==6.5.0
     #   yarl
 oauthlib==3.3.1
     # via requests-oauthlib
-pillow==12.0.0
+pillow==12.1.1
     # via -r requirements.in
 propcache==0.3.2
     # via
