@@ -1,4 +1,4 @@
 asyncio==4.0.0
 loguru==0.7.3
-redis==7.0.1
+redis==7.1.1
 websockets==15.0.1
