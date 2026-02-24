@@ -53,7 +53,7 @@ propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
-py-cord==2.6.1
+py-cord==2.7.1
     # via -r requirements.in
 pymongo==4.10.1
     # via mongoengine
@@ -75,6 +75,8 @@ six==1.17.0
     #   python-dateutil
 strenum==0.4.15
     # via yarqueue
+typing-extensions==4.15.0
+    # via py-cord
 urllib3==2.6.3
     # via
     #   kubernetes
