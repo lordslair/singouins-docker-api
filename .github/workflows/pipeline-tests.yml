@@ -16,18 +16,14 @@ jobs:
   mongo-pytest:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: [ "3.11", "3.12", "3.13" ]
-
     steps:
     - name: Checkout 🛎️
       uses: actions/checkout@v6
 
-    - name: Set up Python ${{ matrix.python-version }} 🐍
+    - name: Set up Python ${{ vars.python-version }} 🐍
       uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ vars.python-version }}
 
     - name: Install requirements ⏬
       run: |
@@ -68,7 +64,6 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.11", "3.12", "3.13" ]
         python-app: [ "ai", "ws", "api" ]
 
     needs:
@@ -83,10 +78,10 @@ jobs:
     - name: Checkout 🛎️
       uses: actions/checkout@v6
 
-    - name: Set up Python ${{ matrix.python-version }} [${{ matrix.python-app }}] 🐍
+    - name: Set up Python ${{ vars.python-version }} [${{ matrix.python-app }}] 🐍
       uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ vars.python-version }}
 
     - name: Install requirements ⏬
       run: |
