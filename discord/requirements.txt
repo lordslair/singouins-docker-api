@@ -59,7 +59,7 @@ propcache==0.3.2
     #   yarl
 py-cord==2.6.1
     # via -r requirements.in
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa
