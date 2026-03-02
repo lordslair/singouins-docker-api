@@ -28,5 +28,5 @@ pygments==2.19.2
     # via pytest
 pymongo==4.13.2
     # via mongoengine
-pytest==9.0.1
+pytest==9.0.2
     # via -r requirements.in
