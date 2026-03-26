@@ -9,5 +9,5 @@ loguru==0.7.3
 mongoengine==0.29.1
 pydantic==2.12.4
 prometheus-flask-exporter==0.23.2
-requests==2.32.5
+requests==2.33.0
 yarqueue==0.4.1
