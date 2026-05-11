@@ -77,7 +77,7 @@ strenum==0.4.15
     # via yarqueue
 typing-extensions==4.15.0
     # via py-cord
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   kubernetes
     #   requests
