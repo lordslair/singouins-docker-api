@@ -18,7 +18,7 @@ flask==3.1.2
     # via
     #   -r requirements.in
     #   prometheus-flask-exporter
-idna==3.10
+idna==3.15
     # via requests
 itsdangerous==2.2.0
     # via flask
