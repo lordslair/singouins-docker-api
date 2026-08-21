@@ -43,7 +43,7 @@ redis==8.1.0
     # via
     #   -r requirements.in
     #   yarqueue
-requests==2.33.0
+requests==2.34.2
     # via -r requirements.in
 strenum==0.4.15
     # via yarqueue
