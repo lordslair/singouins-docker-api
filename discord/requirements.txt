@@ -53,7 +53,7 @@ propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
-py-cord==2.7.1
+py-cord==2.7.2
     # via -r requirements.in
 pymongo==4.10.1
     # via mongoengine
