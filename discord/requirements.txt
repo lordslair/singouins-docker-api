@@ -39,7 +39,7 @@ kubernetes==35.0.0
     # via -r requirements.in
 loguru==0.7.3
     # via -r requirements.in
-mongoengine==0.29.1
+mongoengine==0.29.3
     # via -r requirements.in
 multidict==6.5.0
     # via
